@@ -4,12 +4,11 @@ import os
 import glob
 from datetime import datetime
 from astropy.io import fits
-import logging
-from logging.config import fileConfig
-fileConfig('./config/logging.cfg')
 
-from lib.reconstructor import Reconstructor
-from lib.visual import imshow
+from holopy.logging import logging
+
+from holopy.core.reconstructor import Reconstructor
+# from lib.visual import imshow
 
 
 class HolographicReconstructor(Reconstructor):

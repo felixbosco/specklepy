@@ -1,8 +1,7 @@
 import sys
-import logging
-from logging.config import fileConfig
-fileConfig('./config/logging.cfg')
 from PyQt5 import QtWidgets, QtGui, QtCore
+
+from holopy.logging import logging
 
 
 class Window(QtWidgets.QMainWindow):

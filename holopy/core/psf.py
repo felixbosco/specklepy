@@ -3,12 +3,11 @@ import sys
 import numpy as np
 import glob
 from astropy.io import fits
-import logging
-from logging.config import fileConfig
-fileConfig('./config/logging.cfg')
 
-from lib.rectangle import Rectangle
-from lib.refsource import RefSource
+from holopy.logging import logging
+
+# from lib.rectangle import Rectangle
+# from lib.refsource import RefSource
 
 
 class PsfEstimator(object):

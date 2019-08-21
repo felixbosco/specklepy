@@ -1,8 +1,7 @@
 import os
 from configparser import SafeConfigParser
-import logging
-from logging.config import fileConfig
-fileConfig('./config/logging.cfg')
+
+from holopy.logging import logging
 
 
 class Reconstructor(object):
