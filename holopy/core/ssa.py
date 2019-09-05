@@ -35,17 +35,8 @@ class SSAReconstructor(Reconstructor):
                 fits.writeto(self.tmp + save_to, data=current_reconstruction)
         logging.info("Reconstruction finished...")
 
-        # save the result to a file in self.output
+        # Save the result to a file in self.output
         self.outfile.data = reconstruction
-        # hdu = fits.PrimaryHDU(reconstruction)
-        # hdu.header['OBJECT'] = 'Holopy SSA reconstruction'
-        # for index, file in enumerate(file_list):
-        #     hdu.header['HIERARCH HOLOPY FILE {}'.format(index)] = os.path.basename(file)
-        # hdu.header['DATE'] = str(datetime.now())
-        # hdulist = fits.HDUList([hdu])
-        # logging.info("Saving result to: {}".format(self.output + 'ssa.fits'))
-        # hdulist.writeto(self.output + 'ssa.fits', overwrite=True)
-        # logging.info("Saving successful!")
 
         return reconstruction
 

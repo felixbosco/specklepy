@@ -7,7 +7,7 @@ from holopy.logging import logging
 
 class Outfile(object):
 
-    def __init__(self, file_list, filename=None):
+    def __init__(self, file_list, filename=None, cards={}, header_prefix="HIERARCH HOLOPY "):
         if filename is None:
             self.filename = self._make_time_stamp() + ".fits"
         else:
@@ -22,13 +22,22 @@ class Outfile(object):
         hdu.header.set('NAXIS1', hdr_input['NAXIS1'])
         hdu.header.set('NAXIS2', hdr_input['NAXIS2'])
 
+        # Add cards from cards dictionary to header
+        for key in cards:
+            hdu.header.set(header_prefix + key, cards[key])
+
+        # Add list of files to header
+        for index, file in enumerate(file_list):
+            hdu.header.set(header_prefix + "FILE {} NAME".format(index), file)
+            hdu.header.set(header_prefix + "FILE {} FRAMENUMBER".format(index), fits.getheader(file)['NAXIS3'])
+
         # Initialize data
         hdu.data = np.zeros( (hdr_input['NAXIS1'], hdr_input['NAXIS2']) )
+        hdu.header.set('DATE', str(datetime.now()))
 
         # Write to files
-        hdulist = fits.HDUList([hdu])
         logging.info("Saving results to: {}".format(self.filename))
-        hdulist.writeto(self.filename, overwrite=True)
+        hdu.writeto(self.filename, overwrite=True)
         logging.info("File initialized!")
 
 
@@ -40,6 +49,7 @@ class Outfile(object):
     def data(self, data):
         with fits.open(self.filename, mode='update') as hdulist:
             hdulist[0].data = data
+            hdulist.header.set('DATE', str(datetime.now()))
             hdulist.flush()
 
 

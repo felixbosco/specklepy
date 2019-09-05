@@ -51,7 +51,7 @@ def main(options=None):
         logging.warn("No parameter file was provided! Reconstruction is executed with default values.")
 
     # Execute reconstruction
-    outfile = Outfile(file_list=filehandler.files, filename=args.output)
+    outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
     ssa_reconstructor = SSAReconstructor(outfile=outfile)
     ssa_reconstructor(filehandler.files)
 
