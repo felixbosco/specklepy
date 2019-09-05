@@ -52,7 +52,7 @@ def main(options=None):
 
     # Execute reconstruction
     outfile = Outfile(file_list=filehandler.files, filename=args.output)
-    ssa_reconstructor = SSAReconstructor(output=outfile)
+    ssa_reconstructor = SSAReconstructor(outfile=outfile)
     ssa_reconstructor(filehandler.files)
 
 

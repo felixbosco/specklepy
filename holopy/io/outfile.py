@@ -27,9 +27,20 @@ class Outfile(object):
 
         # Write to files
         hdulist = fits.HDUList([hdu])
-        logging.info("Saving result to: {}".format(self.filename))
+        logging.info("Saving results to: {}".format(self.filename))
         hdulist.writeto(self.filename, overwrite=True)
-        logging.info("Saving successful!")
+        logging.info("File initialized!")
+
+
+    @property
+    def data(self):
+        return fits.getdata(self.filename)
+
+    @data.setter
+    def data(self, data):
+        with fits.open(self.filename, mode='update') as hdulist:
+            hdulist[0].data = data
+            hdulist.flush()
 
 
     def _make_time_stamp(self):

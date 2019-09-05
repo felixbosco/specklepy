@@ -12,9 +12,9 @@ class TestAperture(unittest.TestCase):
     def test_init(self):
         FileHandler(self.filename)
 
-    # def test_create_outfile(self):
-    #     fh = FileHandler(self.filename)
-    #     fh.create_outfile()
+    def test_str(self):
+        fh = FileHandler(self.filename)
+        print(fh)
 
 if __name__ == "__main__":
     unittest.main()

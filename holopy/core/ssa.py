@@ -5,6 +5,7 @@ from datetime import datetime
 from astropy.io import fits
 
 from holopy.logging import logging
+from holopy.io.outfile import Outfile
 from holopy.core.reconstructor import Reconstructor
 
 
@@ -35,15 +36,16 @@ class SSAReconstructor(Reconstructor):
         logging.info("Reconstruction finished...")
 
         # save the result to a file in self.output
-        hdu = fits.PrimaryHDU(reconstruction)
-        hdu.header['OBJECT'] = 'Holopy SSA reconstruction'
-        for index, file in enumerate(file_list):
-            hdu.header['HIERARCH HOLOPY FILE {}'.format(index)] = os.path.basename(file)
-        hdu.header['DATE'] = str(datetime.now())
-        hdulist = fits.HDUList([hdu])
-        logging.info("Saving result to: {}".format(self.output + 'ssa.fits'))
-        hdulist.writeto(self.output + 'ssa.fits', overwrite=True)
-        logging.info("Saving successful!")
+        self.outfile.data = reconstruction
+        # hdu = fits.PrimaryHDU(reconstruction)
+        # hdu.header['OBJECT'] = 'Holopy SSA reconstruction'
+        # for index, file in enumerate(file_list):
+        #     hdu.header['HIERARCH HOLOPY FILE {}'.format(index)] = os.path.basename(file)
+        # hdu.header['DATE'] = str(datetime.now())
+        # hdulist = fits.HDUList([hdu])
+        # logging.info("Saving result to: {}".format(self.output + 'ssa.fits'))
+        # hdulist.writeto(self.output + 'ssa.fits', overwrite=True)
+        # logging.info("Saving successful!")
 
         return reconstruction
 

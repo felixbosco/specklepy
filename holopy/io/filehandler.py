@@ -75,7 +75,3 @@ class FileHandler(object):
             for filename in f.readlines():
                 filename = filename.replace('\n', '')
                 self.files.append(filename)
-
-
-    # def create_outfile(self, filename=None):
-    #     return Outfile(file_list=self.files, filename=filename)
