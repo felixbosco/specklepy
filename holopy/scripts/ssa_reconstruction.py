@@ -3,6 +3,7 @@ import argparse
 try:
     from holopy.io.filehandler import FileHandler
     from holopy.logging import logging
+    from holopy.core.ssa import SSAReconstructor
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -14,6 +15,7 @@ except ModuleNotFoundError:
     # Repeat import
     from holopy.io.filehandler import FileHandler
     from holopy.logging import logging
+    from holopy.core.ssa import SSAReconstructor
 
 
 
@@ -23,7 +25,8 @@ def parser(options=None):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-f', '--file', type=str, default=None, help='Fits file or generic file name to consider for the SSA reconstruction.')
-    parser.add_argument('-o', '--output', type=str, default=None, help='Name of output file.')
+    parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
+    parser.add_argument('-o', '--output', type=str, default=None, help='Name of the output file.')
 
     if options is None:
         args = parser.parse_args()
@@ -42,12 +45,12 @@ def main(options=None):
         logging.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
 
-    logging.info(str(filehandler))
+    if args.parameter_file is None:
+        logging.warn("No parameter file was provided! Reconstruction is executed with default values.")
 
-    # for filename in filehandler:
-    #     slit = Slit(filename, datamodel=datamodel)
-    #     slit.centroid(nbins=args.nbins)
-    #     slit.writeto(args.dir + filename.replace('.fits', '.spam'))
+    # Execute reconstruction
+    ssa_reconstructor = SSAReconstructor(output=args.output)
+    ssa_reconstructor(filehandler.files)
 
 
 if __name__ == '__main__':

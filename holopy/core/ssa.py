@@ -11,11 +11,14 @@ from holopy.core.reconstructor import Reconstructor
 class SSAReconstructor(Reconstructor):
 
     def __init__(self, **kwargs):
-        super(SSAReconstructor, self).__init__(**kwargs)
+        # super(SSAReconstructor, self).__init__(**kwargs)
+        for key in kwargs:
+            self.__setattr__(key, kwargs[key])
 
-    def reconstruct(self):
+
+    def __call__(self, file_list):
         logging.info("Starting reconstruction with {}...".format(self.__class__.__name__))
-        file_list = glob.glob(self.input + self.cube_file)
+        # file_list = glob.glob(self.input + self.cube_file)
 
         for index, file in enumerate(file_list):
             cube = fits.getdata(file)
