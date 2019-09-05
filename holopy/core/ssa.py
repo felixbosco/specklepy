@@ -53,13 +53,14 @@ class SSAReconstructor(Reconstructor):
 
         # compute shifts
         for index, frame in enumerate(cube):
-            print('Estimating the shift in frame {:4}.'.format(index + 1), end='\r')
+            print('Estimating the shift in frame {:4}...'.format(index + 1), end='\r')
             indizes.append(np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape)))
         shifts = self._compute_shifts(indizes)
+        print('Estimated all shifts                           ', end='\r')
 
         # shift frames and add to out
         for index, frame in enumerate(cube):
-            print('Adding the frame {:4}.'.format(index + 1), end='\r')
+            print('Adding the frame {:4}...'.format(index + 1), end='\r')
             out += self._shift_array(frame, shifts[index])
         return out
 

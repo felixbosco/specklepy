@@ -5,12 +5,16 @@ from copy import copy
 
 class Aperture(object):
 
-    def __init__(self, x0, y0, radius, data, mask='circular'):
+    def __init__(self, x0, y0, radius, data, mask='circular', subset_only=True):
         self.x0 = x0
         self.y0 = y0
         self.radius = radius
 
-        self.data = copy(data[x0 - radius : x0 + radius + 1, y0 - radius : y0 + radius + 1])
+        if subset_only:
+            self.data = copy(data[x0 - radius : x0 + radius + 1, y0 - radius : y0 + radius + 1])
+        else:
+            self.data = copy(data)
+
         if mask is None:
             pass
         elif mask is 'circular':
