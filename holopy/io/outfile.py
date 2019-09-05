@@ -49,8 +49,9 @@ class Outfile(object):
     def data(self, data):
         with fits.open(self.filename, mode='update') as hdulist:
             hdulist[0].data = data
-            hdulist.header.set('DATE', str(datetime.now()))
+            hdulist[0].header.set('DATE', str(datetime.now()))
             hdulist.flush()
+        logging.info("Updating data in {}".format(self.filename))
 
 
     def _make_time_stamp(self):
