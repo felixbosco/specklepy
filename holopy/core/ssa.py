@@ -6,10 +6,10 @@ from astropy.io import fits
 
 from holopy.logging import logging
 from holopy.io.outfile import Outfile
-from holopy.core.reconstructor import Reconstructor
+# from holopy.core.reconstructor import Reconstructor
 
 
-class SSAReconstructor(Reconstructor):
+class SSAReconstructor(object):
 
     def __init__(self, **kwargs):
         # super(SSAReconstructor, self).__init__(**kwargs)
