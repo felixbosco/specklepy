@@ -2,6 +2,7 @@ import glob
 from astropy.io import fits
 
 from holopy.logging import logging
+from holopy.io.outfile import Outfile
 
 
 class FileHandler(object):
@@ -63,6 +64,7 @@ class FileHandler(object):
         else:
             raise TypeError("FileHandler got input of unexpected type ({}).".format(type(input)))
 
+
     def _read_file_list_file(self, input):
         """
         Interpretes text file input.
@@ -73,3 +75,8 @@ class FileHandler(object):
             for filename in f.readlines():
                 filename = filename.replace('\n', '')
                 self.files.append(filename)
+
+
+    def create_outfile(self):
+        header = fits.getheader(self.files[0])
+        return Outfile(hdr=header, file_list=self.files)
