@@ -1,6 +1,6 @@
 import argparse
 
-
+from holopy.io.filehandler import FileHandler
 
 
 
@@ -29,16 +29,10 @@ def main(options=None):
         logging.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
 
-    if args.datamodel is not None:
-        datamodel = interprete_datamodel(args.datamodel)
-    else:
-        logging.error("No datamodel was provided! Use --help for instructions.")
-        raise RuntimeError("No datamodel was provided! Use --help for instructions.")
-
-    for filename in filehandler:
-        slit = Slit(filename, datamodel=datamodel)
-        slit.centroid(nbins=args.nbins)
-        slit.writeto(args.dir + filename.replace('.fits', '.spam'))
+    # for filename in filehandler:
+    #     slit = Slit(filename, datamodel=datamodel)
+    #     slit.centroid(nbins=args.nbins)
+    #     slit.writeto(args.dir + filename.replace('.fits', '.spam'))
 
 
 if __name__ == '__main__':
