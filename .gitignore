@@ -1,0 +1,6 @@
+# Extensions
+*.pyc
+*.fits
+
+# Directories
+*.egg-info
