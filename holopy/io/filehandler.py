@@ -25,6 +25,11 @@ class FileHandler(object):
         self.index += 1
         return result
 
+    def __str__(self):
+        s = "<holopy.io.filehandler.FileHandler object>\n"
+        s += str(self.files)
+        return s
+
 
     def _characterize_input(self, input):
         """

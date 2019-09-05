@@ -1,6 +1,19 @@
 import argparse
 
-from holopy.io.filehandler import FileHandler
+try:
+    from holopy.io.filehandler import FileHandler
+    from holopy.logging import logging
+except ModuleNotFoundError:
+    # Prepare import with hardcoded path
+    import warnings
+    PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_holopy'
+    warnings.warn("Importing spampy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
+    import sys
+    sys.path.insert(0, PATH)
+
+    # Repeat import
+    from holopy.io.filehandler import FileHandler
+    from holopy.logging import logging
 
 
 
@@ -28,6 +41,8 @@ def main(options=None):
     else:
         logging.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
+
+    logging.info(str(filehandler))
 
     # for filename in filehandler:
     #     slit = Slit(filename, datamodel=datamodel)
