@@ -77,6 +77,5 @@ class FileHandler(object):
                 self.files.append(filename)
 
 
-    def create_outfile(self):
-        header = fits.getheader(self.files[0])
-        return Outfile(hdr=header, file_list=self.files)
+    # def create_outfile(self, filename=None):
+    #     return Outfile(file_list=self.files, filename=filename)

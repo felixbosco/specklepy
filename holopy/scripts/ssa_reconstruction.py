@@ -2,6 +2,7 @@ import argparse
 
 try:
     from holopy.io.filehandler import FileHandler
+    from holopy.io.outfile import Outfile
     from holopy.logging import logging
     from holopy.core.ssa import SSAReconstructor
 except ModuleNotFoundError:
@@ -14,6 +15,7 @@ except ModuleNotFoundError:
 
     # Repeat import
     from holopy.io.filehandler import FileHandler
+    from holopy.io.outfile import Outfile
     from holopy.logging import logging
     from holopy.core.ssa import SSAReconstructor
 
@@ -49,7 +51,8 @@ def main(options=None):
         logging.warn("No parameter file was provided! Reconstruction is executed with default values.")
 
     # Execute reconstruction
-    ssa_reconstructor = SSAReconstructor(output=args.output)
+    outfile = Outfile(file_list=filehandler.files, filename=args.output)
+    ssa_reconstructor = SSAReconstructor(output=outfile)
     ssa_reconstructor(filehandler.files)
 
 
