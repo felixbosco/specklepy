@@ -15,6 +15,8 @@ class Aperture(object):
             pass
         elif mask is 'circular':
             self.data = np.ma.masked_array(self.data, mask=self.make_mask())
+        else:
+            raise ValueError("Mask type '{}' of Aperture instance not understood.".format(mask))
 
     @property
     def width(self):
