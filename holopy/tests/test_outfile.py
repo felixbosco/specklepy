@@ -1,5 +1,7 @@
 import unittest
+import numpy as np
 from holopy.io.filehandler import FileHandler
+from holopy.io.outfile import Outfile
 
 
 class TestAperture(unittest.TestCase):
