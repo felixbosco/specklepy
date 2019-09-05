@@ -2,7 +2,7 @@ import unittest
 from holopy.io.filehandler import FileHandler
 
 
-class TestAperture(unittest.TestCase):
+class TestFileHandler(unittest.TestCase):
 
     def setUp(self):
         self.filename = "data/test/example_cube.fits"
