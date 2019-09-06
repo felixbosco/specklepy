@@ -68,10 +68,10 @@ def main(options=None):
 
     # Prepare noise statistics
     image = fits.getdata(args.file)
-    noise_box = Aperture(params.noiseBoxX, params.noiseBoxY, params.noiseBoxHalfWidth, data=image, mask=None).data
-    if plot:
-        imshow(noise_box)
-    mean, median, std = sigma_clipped_stats(noise_box, sigma=3.0)
+    # noise_box = Aperture(params.noiseBoxX, params.noiseBoxY, params.noiseBoxHalfWidth, data=image, mask=None).data
+    # if plot:
+    #     imshow(noise_box)
+    mean, median, std = sigma_clipped_stats(image, sigma=3.0)
     logging.info("Noise statistics:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(mean, median, std))
 
     # Find stars
@@ -81,21 +81,26 @@ def main(options=None):
         image -= median
     logging.info("Finding sources...")
     sources = daofind(image)
+    sources.sort('peak', reverse=True)
     for col in sources.colnames:
         sources[col].info.format = '%.8g'  # for consistent table output
-    print(sources)
+    logging.info("Found {} sources:\n{}".format(len(sources), sources))
 
+
+    # Write results to file
     logging.info("Writing list of sources to file {}".format(params.allStarsFile))
-    sources.write(params.allStarsFile)
+    sources.write(params.allStarsFile, format='ascii', overwrite=True)
 
-
-    positions = np.transpose((sources['xcentroid'], sources['ycentroid']))
-    apertures = CircularAperture(positions, r=4.)
-    norm = ImageNormalize(stretch=SqrtStretch())
-    plt.imshow(image, cmap='Greys', origin='lower', norm=norm)
-    apertures.plot(color='blue', lw=1.5, alpha=0.5)
-    plt.show()
-    plt.close()
+    # Plot results
+    if plot:
+        positions = np.transpose((sources['xcentroid'], sources['ycentroid']))
+        apertures = CircularAperture(positions, r=4.)
+        norm = ImageNormalize(stretch=SqrtStretch())
+        plt.imshow(image, cmap='Greys', origin='lower', norm=norm)
+        plt.colorbar(pad=0.0)
+        apertures.plot(color='blue', lw=1.5, alpha=0.5)
+        plt.show()
+        plt.close()
 
 
 if __name__ == '__main__':
