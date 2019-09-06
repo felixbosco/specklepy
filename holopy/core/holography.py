@@ -18,9 +18,10 @@ class HolographicReconstructor(object):
         # super(HolographicReconstructor, self).__init__(**kwargs)
         if not isinstance(params, ParamHandler):
             raise TypeError("params argument of the HolographicReconstructor class must be instance of holopy.io.paramhandler.ParamHandler!")
+        self.params = params
 
 
-    def __call__(self, outfile=None, **kwargs):
+    def __call__(self, save=True, **kwargs):
         if not 'object_file' in kwargs:
             self.estimate_psfs()
             object = self.estimate_object()
@@ -46,8 +47,8 @@ class HolographicReconstructor(object):
         # logging.info("Saving result to: {}".format(self.output + 'holo.fits'))
         # hdulist.writeto(self.output + 'holo.fits', overwrite=True)
         # logging.info("Saving successful!")
-        if outfile is not None:
-            outfile.data = reconstruction
+        if save:
+            params.outFile.data = reconstruction
 
         return reconstruction
 

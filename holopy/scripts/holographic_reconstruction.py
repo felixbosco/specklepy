@@ -57,7 +57,7 @@ def main(options=None):
 
     # Instantiate handler classes
     filehandler = FileHandler(params.inDir)
-    outfile = Outfile(file_list=filehandler.files, filename=params.outFile, cards={"RECONSTRUCTION": "SSA"})
+    params.outFile = Outfile(file_list=filehandler.files, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
     holographic_reconstruction = HolographicReconstructor(params)
