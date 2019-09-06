@@ -28,7 +28,9 @@ class FileHandler(object):
 
     def __str__(self):
         s = "<holopy.io.filehandler.FileHandler object>\n"
-        s += str(self.files)
+        s += "> List of files:\n"
+        for file in self.files:
+            s += "> {}\n".format(file)
         return s
 
 
