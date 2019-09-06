@@ -13,10 +13,10 @@ class ParamHandler(object):
         self.defaults_file = defaults_file
 
         # Check whether files exist
-        # if not os.path.isfile(self.parameter_file):
-        #     raise FileNotFoundError("Parameter file {} not found!".format(self.parameter_file))
-        # if not os.path.isfile(self.defaults_file):
-        #     raise FileNotFoundError("Defaults file {} not found!".format(self.defaults_file))
+        if not os.path.isfile(self.parameter_file):
+            raise FileNotFoundError("Parameter file {} not found!".format(self.parameter_file))
+        if not os.path.isfile(self.defaults_file):
+            raise FileNotFoundError("Defaults file {} not found!".format(self.defaults_file))
 
         # Read parameter_file
         parser = ConfigParser()
