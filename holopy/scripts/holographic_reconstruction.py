@@ -41,10 +41,17 @@ def main(options=None):
 
     args = parser(options=options)
 
+    defaults_file = "holopy/config/holography_defaults.cfg"
+    essential_attributes = ['inDir', 'tmpDir', 'outFile', 'refSourceFile', 'maskRadius', 'noiseThreshold']
+    make_dirs = ['inDir', 'tmpDir']
+
     if args.parameter_file is None:
         raise RuntimeError("No parameter file was provided! Use --help for instructions.")
     else:
-        params = ParamHandler(args.parameter_file)
+        params = ParamHandler(args.parameter_file,
+                        defaults_file=defaults_file,
+                        essential_attributes=essential_attributes,
+                        make_dirs=make_dirs)
 
     # Execute reconstruction
     outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
