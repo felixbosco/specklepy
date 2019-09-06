@@ -4,7 +4,7 @@ try:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.core.ssa import SSAReconstructor
+    from holopy.core.ssa import HolographicReconstructor
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -17,7 +17,7 @@ except ModuleNotFoundError:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.core.ssa import SSAReconstructor
+    from holopy.core.ssa import HolographicReconstructor
 
 
 
@@ -41,9 +41,12 @@ def main(options=None):
 
     if args.parameter_file is None:
         raise RuntimeError("No parameter file was provided! Use --help for instructions.")
+    else:
+        params = Parfile(args.parameter_file)
 
     # Execute reconstruction
-    pass
+    outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
+    holographic_reconstruction = HolographicReconstructor(params)
 
 
 if __name__ == '__main__':

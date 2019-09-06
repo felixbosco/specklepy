@@ -11,13 +11,14 @@ from holopy.core.reconstructor import Reconstructor
 # from lib.visual import imshow
 
 
-class HolographicReconstructor(Reconstructor):
+class HolographicReconstructor(object):
 
     def __init__(self, **kwargs):
-        super(HolographicReconstructor, self).__init__(**kwargs)
+        # super(HolographicReconstructor, self).__init__(**kwargs)
+        pass
 
 
-    def reconstruct(self, **kwargs):
+    def __call__(self, **kwargs):
         if not 'object_file' in kwargs:
             self.estimate_psfs()
             object = self.estimate_object()
