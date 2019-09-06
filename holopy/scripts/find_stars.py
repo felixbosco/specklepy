@@ -1,12 +1,20 @@
 import argparse
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
-import photutils as pu
+from photutils import DAOStarFinder
+
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.visualization import SqrtStretch
+from astropy.visualization.mpl_normalize import ImageNormalize
+from photutils import CircularAperture
 
 
 try:
+    from holopy.logging import logging
     from holopy.io.paramhandler import ParamHandler
     from holopy.core.aperture import Aperture
+    from holopy.utils.imshow import imshow
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -16,8 +24,10 @@ except ModuleNotFoundError:
     sys.path.insert(0, PATH)
 
     # Repeat import
+    from holopy.logging import logging
     from holopy.io.paramhandler import ParamHandler
     from holopy.core.aperture import Aperture
+    from holopy.utils.imshow import imshow
 
 
 def parser(options=None):
@@ -41,8 +51,10 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
+    plot = False
+    background_subtraction = True
     defaults_file = "holopy/config/holography_defaults.cfg"
-    essential_attributes = ['allStarsFile', 'noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth', 'noiseThreshold']
+    essential_attributes = ['allStarsFile', 'noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth', 'noiseThreshold', 'starfinderFwhm']
 
     if args.file is None:
         logging.error("No file or file list was provided! Use --help for instructions.")
@@ -54,10 +66,36 @@ def main(options=None):
     else:
         params = ParamHandler(parameter_file=args.parameter_file, defaults_file=defaults_file, essential_attributes=essential_attributes)
 
+    # Prepare noise statistics
     image = fits.getdata(args.file)
-    noise_box = Aperture(params.noiseBoxX, params.noiseBoxY, params.noiseBoxHalfWidth, data=image)
-    mean, median, std = sigma_clipped_stats(image, sigma=3.0)
-    print(mean, median, std)
+    noise_box = Aperture(params.noiseBoxX, params.noiseBoxY, params.noiseBoxHalfWidth, data=image, mask=None).data
+    if plot:
+        imshow(noise_box)
+    mean, median, std = sigma_clipped_stats(noise_box, sigma=3.0)
+    logging.info("Noise statistics:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(mean, median, std))
+
+    # Find stars
+    daofind = DAOStarFinder(fwhm=params.starfinderFwhm, threshold=params.noiseThreshold*std)
+    if background_subtraction:
+        logging.info("Subtracting background...")
+        image -= median
+    logging.info("Finding sources...")
+    sources = daofind(image)
+    for col in sources.colnames:
+        sources[col].info.format = '%.8g'  # for consistent table output
+    print(sources)
+
+    logging.info("Writing list of sources to file {}".format(params.allStarsFile))
+    sources.write(params.allStarsFile)
+
+
+    positions = np.transpose((sources['xcentroid'], sources['ycentroid']))
+    apertures = CircularAperture(positions, r=4.)
+    norm = ImageNormalize(stretch=SqrtStretch())
+    plt.imshow(image, cmap='Greys', origin='lower', norm=norm)
+    apertures.plot(color='blue', lw=1.5, alpha=0.5)
+    plt.show()
+    plt.close()
 
 
 if __name__ == '__main__':
