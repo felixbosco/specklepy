@@ -17,7 +17,7 @@ class SSAReconstructor(object):
             self.__setattr__(key, kwargs[key])
 
 
-    def __call__(self, file_list, outfile):
+    def __call__(self, file_list, outfile=None):
         logging.info("Starting reconstruction with {}...".format(self.__class__.__name__))
         # file_list = glob.glob(self.input + self.cube_file)
 
@@ -36,7 +36,8 @@ class SSAReconstructor(object):
         logging.info("Reconstruction finished...")
 
         # Save the result to a file in self.output
-        outfile.data = reconstruction
+        if outfile is not None:
+            outfile.data = reconstruction
 
         return reconstruction
 

@@ -16,6 +16,7 @@ except ModuleNotFoundError:
     # Repeat import
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
+    from holopy.io.paramhandler import ParamHandler
     from holopy.logging import logging
     from holopy.core.ssa import HolographicReconstructor
 
@@ -42,7 +43,7 @@ def main(options=None):
     if args.parameter_file is None:
         raise RuntimeError("No parameter file was provided! Use --help for instructions.")
     else:
-        params = Parfile(args.parameter_file)
+        params = ParamHandler(args.parameter_file)
 
     # Execute reconstruction
     outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})

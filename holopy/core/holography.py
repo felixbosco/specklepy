@@ -7,7 +7,7 @@ from astropy.io import fits
 
 from holopy.logging import logging
 
-from holopy.core.reconstructor import Reconstructor
+# from holopy.core.reconstructor import Reconstructor
 # from lib.visual import imshow
 
 
@@ -18,7 +18,7 @@ class HolographicReconstructor(object):
         pass
 
 
-    def __call__(self, **kwargs):
+    def __call__(self, outfile=None, **kwargs):
         if not 'object_file' in kwargs:
             self.estimate_psfs()
             object = self.estimate_object()
@@ -35,15 +35,17 @@ class HolographicReconstructor(object):
         reconstruction = np.fft.fftshift(np.abs(np.fft.ifft2(apodized)))
 
         # save the result to a file in self.output
-        hdu = fits.PrimaryHDU(reconstruction)
-        hdu.header['OBJECT'] = 'Holopy holographic reconstruction'
-        for index, file in enumerate(glob.glob(self.input + self.cube_file)):
-            hdu.header['HIERARCH HOLOPY FILE {}'.format(index)] = os.path.basename(file)
-        hdu.header['DATE'] = str(datetime.now())
-        hdulist = fits.HDUList([hdu])
-        logging.info("Saving result to: {}".format(self.output + 'holo.fits'))
-        hdulist.writeto(self.output + 'holo.fits', overwrite=True)
-        logging.info("Saving successful!")
+        # hdu = fits.PrimaryHDU(reconstruction)
+        # hdu.header['OBJECT'] = 'Holopy holographic reconstruction'
+        # for index, file in enumerate(glob.glob(self.input + self.cube_file)):
+        #     hdu.header['HIERARCH HOLOPY FILE {}'.format(index)] = os.path.basename(file)
+        # hdu.header['DATE'] = str(datetime.now())
+        # hdulist = fits.HDUList([hdu])
+        # logging.info("Saving result to: {}".format(self.output + 'holo.fits'))
+        # hdulist.writeto(self.output + 'holo.fits', overwrite=True)
+        # logging.info("Saving successful!")
+        if outfile is not None:
+            outfile.data = reconstruction
 
         return reconstruction
 

@@ -2,7 +2,7 @@ import unittest
 from holopy.io.parfile import Parfile
 
 
-class TestParfile(unittest.TestCase):
+class TestParamHandler(unittest.TestCase):
 
     def setUp(self):
         pass
