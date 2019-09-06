@@ -5,7 +5,7 @@ try:
     from holopy.io.outfile import Outfile
     from holopy.io.paramhandler import ParamHandler
     from holopy.logging import logging
-    from holopy.core.ssa import HolographicReconstructor
+    from holopy.core.holography import HolographicReconstructor
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     from holopy.io.outfile import Outfile
     from holopy.io.paramhandler import ParamHandler
     from holopy.logging import logging
-    from holopy.core.ssa import HolographicReconstructor
+    from holopy.core.holography import HolographicReconstructor
 
 
 
@@ -41,20 +41,25 @@ def main(options=None):
 
     args = parser(options=options)
 
+    # Default values
     defaults_file = "holopy/config/holography_defaults.cfg"
     essential_attributes = ['inDir', 'tmpDir', 'outFile', 'refSourceFile', 'maskRadius', 'noiseThreshold']
     make_dirs = ['inDir', 'tmpDir']
 
+    # Read parameters from file
     if args.parameter_file is None:
         raise RuntimeError("No parameter file was provided! Use --help for instructions.")
     else:
-        params = ParamHandler(args.parameter_file,
+        params = ParamHandler(parameter_file=args.parameter_file,
                         defaults_file=defaults_file,
                         essential_attributes=essential_attributes,
                         make_dirs=make_dirs)
 
+    # Instantiate handler classes
+    filehandler = FileHandler(params.inDir)
+    outfile = Outfile(file_list=filehandler.files, filename=params.outFile, cards={"RECONSTRUCTION": "SSA"})
+
     # Execute reconstruction
-    outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
     holographic_reconstruction = HolographicReconstructor(params)
 
 

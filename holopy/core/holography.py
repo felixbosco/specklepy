@@ -6,6 +6,7 @@ from datetime import datetime
 from astropy.io import fits
 
 from holopy.logging import logging
+from holopy.io.paramhandler import ParamHandler
 
 # from holopy.core.reconstructor import Reconstructor
 # from lib.visual import imshow
@@ -13,9 +14,10 @@ from holopy.logging import logging
 
 class HolographicReconstructor(object):
 
-    def __init__(self, **kwargs):
+    def __init__(self, params, **kwargs):
         # super(HolographicReconstructor, self).__init__(**kwargs)
-        pass
+        if not isinstance(params, ParamHandler):
+            raise TypeError("params argument of the HolographicReconstructor class must be instance of holopy.io.paramhandler.ParamHandler!")
 
 
     def __call__(self, outfile=None, **kwargs):
