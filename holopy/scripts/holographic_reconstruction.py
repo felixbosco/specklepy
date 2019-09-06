@@ -3,6 +3,7 @@ import argparse
 try:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
+    from holopy.io.paramhandler import ParamHandler
     from holopy.logging import logging
     from holopy.core.ssa import HolographicReconstructor
 except ModuleNotFoundError:
