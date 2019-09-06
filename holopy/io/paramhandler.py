@@ -15,10 +15,15 @@ class ParamHandler(object):
         parser = ConfigParser()
         parser.optionxform = str  # make option names case sensitive
         logging.info("Reading parameter file {}".format(self.parameter_file))
-        with open(self.parameter_file, 'r') as configfile:
-            configs = parser.read(configfile)
-        for section in configs:#.sections():
+        parser.read(self.parameter_file)
+        for section in parser.sections():
+            setattr(self, section, {})
+
             print(section)
+            for key in parser[section]:
+                setattr(getattr(self, section), key, parser[section][key])
+                print(key)
+        print(self.__dict__)
 
         return None
         found = parser.read(parameter_file)
