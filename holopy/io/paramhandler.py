@@ -2,6 +2,7 @@ import os
 from configparser import ConfigParser
 
 from holopy.logging import logging
+from holopy.utils.listing import Listing
 
 
 class ParamHandler(object):
@@ -11,28 +12,25 @@ class ParamHandler(object):
         self.parameter_file = parameter_file
         self.defaults_file = defaults_file
 
+        # Check whether files exist
+        if not os.path.isfile(self.parameter_file):
+            raise FileNotFoundError
+        if not os.path.isfile(self.defaults_file):
+            raise FileNotFoundError
+
+
         # Read parameter_file
         parser = ConfigParser()
         parser.optionxform = str  # make option names case sensitive
         logging.info("Reading parameter file {}".format(self.parameter_file))
         parser.read(self.parameter_file)
         for section in parser.sections():
-            setattr(self, section, {})
-
-            print(section)
+            setattr(self, section, Listing())
             for key in parser[section]:
                 setattr(getattr(self, section), key, parser[section][key])
-                print(key)
-        print(self.__dict__)
 
         return None
-        found = parser.read(parameter_file)
-        if not found:
-            raise ValueError('Parameter file {} not found!'.format(parameter_file))
-
-        for name in self.config_file_sections:
-            self.__dict__.update(parser.items(name))
-
+        
         # Complete attribute list from defaults file
         for attr in essential_attributes:
             pass
