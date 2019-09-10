@@ -7,6 +7,7 @@ from astropy.io import fits
 
 from holopy.logging import logging
 from holopy.io.paramhandler import ParamHandler
+from holopy.core.apodizer import Apodizer
 
 # from holopy.core.reconstructor import Reconstructor
 # from lib.visual import imshow

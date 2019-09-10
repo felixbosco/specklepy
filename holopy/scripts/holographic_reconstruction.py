@@ -43,7 +43,7 @@ def main(options=None):
 
     # Default values
     defaults_file = "holopy/config/holography_defaults.cfg"
-    essential_attributes = ['inDir', 'tmpDir', 'outFile', 'refSourceFile', 'maskRadius', 'noiseThreshold']
+    essential_attributes = ['inDir', 'tmpDir', 'outFile', 'refSourceFile', 'maskRadius', 'noiseThreshold', 'apodizationWidth', 'apodizationType']
     make_dirs = ['inDir', 'tmpDir']
 
     # Read parameters from file
