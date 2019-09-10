@@ -1,5 +1,7 @@
 import unittest
+from matplotlib.colors import LogNorm
 from holopy.core.apodizer import Apodizer
+from holopy.utils.imshow import imshow
 
 
 class TestApodizer(unittest.TestCase):
@@ -8,13 +10,14 @@ class TestApodizer(unittest.TestCase):
         pass
 
     def test_init(self):
-        Apodizer('Gaussian')
-        Apodizer('Airy')
+        Apodizer('Gaussian', 256)
+        Apodizer('Airy', 256)
         with self.assertRaises(ValueError):
-            Apodizer('Nonsense')
+            Apodizer('Nonsense', 256)
 
     def test_call(self):
-        pass
+        apodizer = Apodizer('Gaussian', 256, radius=10)
+        imshow(apodizer())
 
 if __name__ == "__main__":
     unittest.main()
