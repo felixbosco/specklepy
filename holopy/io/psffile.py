@@ -68,4 +68,4 @@ class PSFfile(object):
             hdulist[0].data[frame_index] = data
             hdulist[0].header.set('DATE', str(datetime.now()))
             hdulist.flush()
-        logging.info("Updating data in {}".format(self.filename))
+        # logging.info("Updating data in {}".format(self.filename))
