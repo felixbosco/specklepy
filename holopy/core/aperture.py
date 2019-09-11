@@ -11,7 +11,7 @@ class Aperture(object):
         self.radius = radius
 
         if subset_only:
-            self.data = copy(data[x0 - radius : x0 + radius + 1, y0 - radius : y0 + radius + 1])
+            self.data = copy(data[self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
         else:
             self.data = copy(data)
 
@@ -31,5 +31,5 @@ class Aperture(object):
 
     def make_mask(self):
         xx, yy = np.mgrid[:self.data.shape[0], :self.data.shape[1]]
-        distance_map = np.sqrt(np.square(xx - self.radius) + np.square(yy - self.radius))
+        distance_map = np.sqrt(np.square(xx - self.x0) + np.square(yy - self.y0))
         return np.ma.masked_greater(distance_map, self.radius).mask

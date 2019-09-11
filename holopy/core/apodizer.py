@@ -21,6 +21,22 @@ class Apodizer(object):
         else:
             raise ValueError("Function value <{}> for Apodizer class is not recognized!".format(function))
 
+
     def __call__(self):
         y, x = np.mgrid[0:self.size, 0:self.size]
         return self.model(x, y)
+
+
+    def apodize(self):
+        y, x = np.mgrid[0:self.size, 0:self.size]
+        OTF = (np.fft.fft2(self.model(x, y)))
+
+
+    def PSF(self, size=None):
+        if size is not None:
+            self.size = size
+        y, x = np.mgrid[0:self.size, 0:self.size]
+        self.psf = self.model(x, y)
+
+
+    def OTF
