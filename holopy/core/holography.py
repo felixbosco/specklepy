@@ -39,15 +39,6 @@ class HolographicReconstructor(object):
         reconstruction = np.fft.fftshift(np.abs(np.fft.ifft2(apodized)))
 
         # save the result to a file in self.output
-        # hdu = fits.PrimaryHDU(reconstruction)
-        # hdu.header['OBJECT'] = 'Holopy holographic reconstruction'
-        # for index, file in enumerate(glob.glob(self.input + self.cube_file)):
-        #     hdu.header['HIERARCH HOLOPY FILE {}'.format(index)] = os.path.basename(file)
-        # hdu.header['DATE'] = str(datetime.now())
-        # hdulist = fits.HDUList([hdu])
-        # logging.info("Saving result to: {}".format(self.output + 'holo.fits'))
-        # hdulist.writeto(self.output + 'holo.fits', overwrite=True)
-        # logging.info("Saving successful!")
         if save:
             params.outFile.data = reconstruction
 
