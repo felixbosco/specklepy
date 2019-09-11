@@ -18,9 +18,9 @@ class Outfile(object):
 
         # Initialize header
         hdr_input = fits.getheader(file_list[0])
-        hdu.header.set('NAXIS', 2)
-        hdu.header.set('NAXIS1', hdr_input['NAXIS1'])
-        hdu.header.set('NAXIS2', hdr_input['NAXIS2'])
+        # hdu.header.set('NAXIS', 2)
+        # hdu.header.set('NAXIS1', hdr_input['NAXIS1'])
+        # hdu.header.set('NAXIS2', hdr_input['NAXIS2'])
 
         # Add cards from cards dictionary to header
         for key in cards:

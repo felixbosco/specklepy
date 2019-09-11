@@ -5,6 +5,7 @@ from photutils.psf import extract_stars
 from photutils.psf import EPSFBuilder
 
 from holopy.io.paramhandler import ParamHandler
+from holopy.io.psffile import PSFfile
 
 class PSFExtractor(object):
 
@@ -21,10 +22,7 @@ class PSFExtractor(object):
         epsf_builder = EPSFBuilder(oversampling=4, maxiters=3, progress_bar=False)
 
         for file in self.params.inFiles:
-            _, filename = path.split(file)
-            psf_outfile = filename.replace('.fits', '_psfs.fits')
-            psf_outfile = self.params.tmpDir + 'psf/' + psf_outfile
-            print(psf_outfile)
+            psf_file = PSFfile(file, params.tmpDir, frame_shape=)
 
         # stars = extract_stars(NDData(data=data), self.star_table, size=25)
         # epsf, fitted_stars = epsf_builder(stars)
