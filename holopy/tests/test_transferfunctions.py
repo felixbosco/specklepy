@@ -15,7 +15,7 @@ class TestTransferFunctions(unittest.TestCase):
         self.aperture = Aperture(x0=128, y0=128, radius=32, data=data, subset_only=False)().filled(0)
         imshow(self.aperture)
 
-    def test_init(self):
+    def test_psf(self):
         psf = psf(self.aperture)
         imshow(psf, norm=LogNorm())
 
