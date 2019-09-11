@@ -8,7 +8,7 @@ class TestPSFExtractor(unittest.TestCase):
     def setUp(self):
         self.parameter_file = "data/test/test_parfile.ini"
         self.defaults_file = "holopy/config/holography_defaults.cfg"
-        self.essential_attributes = ['inDir', 'tmpDir', 'refSourceFile']
+        self.essential_attributes = ['inDir', 'tmpDir', 'refSourceFile', 'psfRadius']
         self.make_dirs = ['tmpDir']
         self.params = ParamHandler(parameter_file=self.parameter_file,
                         defaults_file=self.defaults_file,

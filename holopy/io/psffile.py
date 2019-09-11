@@ -30,10 +30,6 @@ class PSFfile(object):
 
         # Initialize header
         hdr_input = fits.getheader(inFile)
-        # hdu.header.set('NAXIS',  hdr_input['NAXIS'])
-        # hdu.header.set('NAXIS1', frame_shape[0])
-        # hdu.header.set('NAXIS2', frame_shape[1])
-        # hdu.header.set('NAXIS3', hdr_input['NAXIS3'])
 
         # Add cards from cards dictionary to header
         for key in cards:
@@ -49,7 +45,7 @@ class PSFfile(object):
         hdu.header.set('DATE', str(datetime.now()))
 
         # Write to files
-        logging.info("Saving results to: {}".format(self.filename))
+        logging.info("Saving PSFs to file {}".format(self.filename))
         hdu.writeto(self.filename, overwrite=True)
         logging.info("File initialized!")
 

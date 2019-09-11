@@ -1,9 +1,11 @@
 from os import path
+from astropy.io import fits
 from astropy.table import Table
 from astropy.nddata import NDData
 from photutils.psf import extract_stars
 from photutils.psf import EPSFBuilder
 
+from holopy.logging import logging
 from holopy.io.paramhandler import ParamHandler
 from holopy.io.psffile import PSFfile
 
@@ -19,10 +21,17 @@ class PSFExtractor(object):
 
 
     def extract(self):
+        box_size = self.params.psfRadius * 2 + 1
         epsf_builder = EPSFBuilder(oversampling=4, maxiters=3, progress_bar=False)
 
         for file in self.params.inFiles:
-            psf_file = PSFfile(file, params.tmpDir, frame_shape=)
+            logging.info("Extracting PSFs from file {}".format(file))
+            psf_file = PSFfile(file, self.params.tmpDir, frame_shape=(box_size, box_size))
 
-        # stars = extract_stars(NDData(data=data), self.star_table, size=25)
-        # epsf, fitted_stars = epsf_builder(stars)
+            frame_number = fits.getheader(file)['NAXIS3']
+            for frame_index in range(frame_number):
+                print(frame_index)
+                with fits.open(file) as hdulist:
+                    frame = hdulist[0].data[frame_index]
+                    stars = extract_stars(NDData(data=frame), self.star_table, size=box_size)
+                    # epsf, fitted_stars = epsf_builder(stars)
