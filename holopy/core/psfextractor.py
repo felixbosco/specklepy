@@ -30,7 +30,7 @@ class PSFExtractor(object):
 
             frame_number = fits.getheader(file)['NAXIS3']
             for frame_index in range(frame_number):
-                print(frame_index)
+                print(frame_index, end='')
                 with fits.open(file) as hdulist:
                     frame = hdulist[0].data[frame_index]
                     stars = extract_stars(NDData(data=frame), self.star_table, size=box_size)

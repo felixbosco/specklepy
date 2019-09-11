@@ -81,7 +81,10 @@ def main(options=None):
         image -= median
     logging.info("Finding sources...")
     sources = daofind(image)
-    sources.sort('peak', reverse=True)
+    sources.sort('flux', reverse=True)
+    sources.rename_column('xcentroid', 'x')
+    sources.rename_column('ycentroid', 'y')
+    sources.keep_columns(['x', 'y', 'flux'])
     for col in sources.colnames:
         sources[col].info.format = '%.8g'  # for consistent table output
     logging.info("Found {} sources:\n{}".format(len(sources), sources))
