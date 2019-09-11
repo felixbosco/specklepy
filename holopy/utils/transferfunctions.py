@@ -12,3 +12,6 @@ def powerspec(array):
 
 def psf(aperture):
     return powerspec(aperture)
+
+def ft(arg):
+    return otf(arg)
