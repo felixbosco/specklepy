@@ -1,6 +1,6 @@
 from photutils import EPSFBuilder
 
-class PsfExtractor(object):
+class PSFExtractor(object):
 
     def __init__(self):
         pass
