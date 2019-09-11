@@ -2,6 +2,8 @@ import numpy as np
 from astropy.modeling.models import Gaussian2D
 from astropy.modeling.models import AiryDisk2D
 
+from holopy.utils.transferfunctions import otf
+
 class Apodizer(object):
 
     def __init__(self, function, size, **kwargs):
@@ -27,16 +29,9 @@ class Apodizer(object):
         return self.model(x, y)
 
 
-    def apodize(self):
+    def apodize(self, object):
         y, x = np.mgrid[0:self.size, 0:self.size]
-        OTF = (np.fft.fft2(self.model(x, y)))
-
-
-    def PSF(self, size=None):
-        if size is not None:
-            self.size = size
-        y, x = np.mgrid[0:self.size, 0:self.size]
-        self.psf = self.model(x, y)
-
-
-    def OTF
+        apodization_psf = self.model(x, y)
+        apodization_otf = otf(apodization_psf)
+        tmp = np.multiply(object, apodization_otf)
+        return otf(tmp)
