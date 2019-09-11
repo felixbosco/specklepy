@@ -2,7 +2,6 @@ import os
 from configparser import ConfigParser
 
 from holopy.logging import logging
-from holopy.utils.listing import Listing
 
 
 class ParamHandler(object):
@@ -33,7 +32,7 @@ class ParamHandler(object):
                     setattr(self, key, value)
 
 
-        # Complete attribute list from defaults file
+        # Complete list of essential attributes from defaults file
         defaults = ConfigParser()
         defaults.optionxform = str  # make option names case sensitive
         logging.info("Reading defaults file {}".format(self.defaults_file))
