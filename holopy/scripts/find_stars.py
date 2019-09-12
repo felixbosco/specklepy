@@ -14,7 +14,7 @@ try:
     from holopy.logging import logging
     from holopy.io.paramhandler import ParamHandler
     from holopy.core.aperture import Aperture
-    from holopy.utils.imshow import imshow
+    from holopy.utils.plot import imshow
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -27,7 +27,7 @@ except ModuleNotFoundError:
     from holopy.logging import logging
     from holopy.io.paramhandler import ParamHandler
     from holopy.core.aperture import Aperture
-    from holopy.utils.imshow import imshow
+    from holopy.utils.plot import imshow
 
 
 def parser(options=None):

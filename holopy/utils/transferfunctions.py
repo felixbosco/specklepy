@@ -15,3 +15,10 @@ def psf(aperture):
 
 def ft(arg):
     return otf(arg)
+
+def powerspec1d(array):
+    center = (array.shape[0] / 2, array.shape[1])
+    xx, yy = np.mgrid[:array.shape[0], :array.shape[1]]
+    Fourier_distance = np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
+    signal = powerspec(array)
+    return Fourier_distance.reshape((-1)), signal.reshape((-1))

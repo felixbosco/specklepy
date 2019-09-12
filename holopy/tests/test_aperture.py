@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from holopy.core.aperture import Aperture
-from holopy.utils.imshow import imshow
+from holopy.utils.plot import imshow
 
 
 class TestAperture(unittest.TestCase):

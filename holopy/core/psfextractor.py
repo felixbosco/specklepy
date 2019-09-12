@@ -10,7 +10,7 @@ from holopy.logging import logging
 from holopy.io.paramhandler import ParamHandler
 from holopy.io.psffile import PSFfile
 
-from holopy.utils.imshow import imshow
+from holopy.utils.plot import imshow
 
 class PSFExtractor(object):
 

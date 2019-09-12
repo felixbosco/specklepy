@@ -1,7 +1,7 @@
 import unittest
 from matplotlib.colors import LogNorm
 from holopy.core.apodizer import Apodizer
-from holopy.utils.imshow import imshow
+from holopy.utils.plot import imshow
 
 
 class TestApodizer(unittest.TestCase):

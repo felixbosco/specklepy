@@ -8,3 +8,6 @@ def imshow(image, title=None, norm=None):
     plt.colorbar(pad=0.0)
     plt.show()
     plt.close()
+
+def plot_powerspec1d(image):
+    pass

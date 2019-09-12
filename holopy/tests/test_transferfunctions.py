@@ -4,7 +4,7 @@ from matplotlib.colors import LogNorm
 
 from holopy.core.aperture import Aperture
 from holopy.utils.transferfunctions import psf, otf, mtf, powerspec
-from holopy.utils.imshow import imshow
+from holopy.utils.plot import imshow
 
 
 class TestTransferFunctions(unittest.TestCase):
