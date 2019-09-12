@@ -11,13 +11,16 @@ class TestTransferFunctions(unittest.TestCase):
 
     def setUp(self):
         size = 256
-        data = np.ones((size, size))
-        self.aperture = Aperture(x0=128, y0=128, radius=32, data=data, subset_only=False)().filled(0)
-        imshow(self.aperture, title="Aperture")
+        amp = np.ones((size, size))
+        pha = np.random.rand(size, size) * 1e-1
+        imshow(pha, title="Phase")
+        amp = Aperture(x0=128, y0=128, radius=64, data=amp, subset_only=False)()
+        self.aperture = amp * np.exp(1j * pha)
+        imshow(np.abs(self.aperture), title="abs Aperture")
 
     def test_psf(self):
-        psf = psf(self.aperture)
-        imshow(psf, title="PSF", norm=LogNorm())
+        psf_image = psf(self.aperture)
+        imshow(psf_image, title="PSF", norm=LogNorm())
 
 if __name__ == "__main__":
     unittest.main()
