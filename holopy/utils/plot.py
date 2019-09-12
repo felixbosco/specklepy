@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from holopy.config import plotting
+from holopy.utils import transferfunctions as tf
 
 def imshow(image, title=None, norm=None):
     plt.figure()
@@ -10,4 +11,16 @@ def imshow(image, title=None, norm=None):
     plt.close()
 
 def plot_powerspec1d(image):
-    pass
+    plt.figure()
+    if len(image.shape) is 2:
+        xdata, ydata = tf.powerspec1d(image)
+        plt.plot(xdata, ydata, '-')
+    elif len(image.shape) is 3:
+        for frame in image:
+            xdata, ydata = tf.powerspec1d(frame)
+            plt.plot(xdata, ydata, '-')
+    plt.xlabel('uv Radius (pixel)')
+    plt.ylabel('Signal')
+    plt.ylim(0.0)
+    plt.show()
+    plt.close()
