@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from holopy.config import plotting
 
 def imshow(image, title=None, norm=None):
     plt.figure()
