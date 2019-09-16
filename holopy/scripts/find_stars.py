@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
     PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_holopy'
-    warnings.warning("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
+    warnings.warn("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
     import sys
     sys.path.insert(0, PATH)
 
@@ -66,6 +66,9 @@ def main(options=None):
     else:
         params = ParamHandler(parameter_file=args.parameter_file, defaults_file=defaults_file, essential_attributes=essential_attributes)
 
+    if args.outfile is None:
+        args.outfile = params.allStarsFile
+
     # Prepare noise statistics
     image = fits.getdata(args.file)
     # noise_box = Aperture(params.noiseBoxX, params.noiseBoxY, params.noiseBoxHalfWidth, data=image, mask=None).data
@@ -91,8 +94,8 @@ def main(options=None):
 
 
     # Write results to file
-    logging.info("Writing list of sources to file {}".format(params.allStarsFile))
-    sources.write(params.allStarsFile, format='ascii', overwrite=True)
+    logging.info("Writing list of sources to file {}".format(args.outfile))
+    sources.write(args.outfile, format='ascii', overwrite=True)
 
     # Plot results
     if plot:
