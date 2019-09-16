@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
     PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_holopy'
-    warnings.warn("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
+    warnings.warning("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
     import sys
     sys.path.insert(0, PATH)
 
