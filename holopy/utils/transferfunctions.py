@@ -1,6 +1,5 @@
 import numpy as np
 from numpy.fft import fft2, fftshift
-# from holopy.utils.plot import imshow
 
 def otf(psf):
     return fftshift(fft2(psf))
@@ -17,15 +16,11 @@ def psf(aperture):
 def ft(arg):
     return otf(arg)
 
-def powerspec1d(array, flatten=True, average=True, plot_intermediate=False):
+def powerspec1d(array, flatten=True, average=True):
     center = (array.shape[0] / 2, array.shape[1] / 2)
     xx, yy = np.mgrid[:array.shape[0], :array.shape[1]]
     Fourier_distance = np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
-    # if plot_intermediate:
-    #     imshow(Fourier_distance, title='Fourier distance')
     signal = powerspec(array)
-    # if plot_intermediate:
-    #     imshow(signal, title='Signal')
 
     # Flatten the arrays
     if flatten:
