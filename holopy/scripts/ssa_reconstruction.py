@@ -48,7 +48,7 @@ def main(options=None):
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
 
     if args.parameter_file is None:
-        logging.warn("No parameter file was provided! Reconstruction is executed with default values.")
+        logging.warning("No parameter file was provided! Reconstruction is executed with default values.")
 
     # Execute reconstruction
     outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})

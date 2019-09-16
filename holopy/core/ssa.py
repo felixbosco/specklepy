@@ -24,18 +24,13 @@ class SSAReconstructor(object):
         for index, file in enumerate(file_list):
             cube = fits.getdata(file)
             if index == 0:
-                reconstruction = np.zeros(cube[0].shape)
+                reconstruction = self._ssa(cube)
+            else:
+                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube))
 
-            current_reconstruction = self._ssa(cube)
-            reconstruction += current_reconstruction
-
-            save_to = os.path.basename(file)
-            save_to = save_to.replace('.fits', '_ssa.fits')
-            if hasattr(self, 'save_tmp') and self.save_tmp:
-                fits.writeto(self.tmp + save_to, data=current_reconstruction)
         logging.info("Reconstruction finished...")
 
-        # Save the result to a file in self.output
+        # Save the result to an Outfile
         if outfile is not None:
             outfile.data = reconstruction
 
@@ -48,21 +43,22 @@ class SSAReconstructor(object):
         of a fits cube and return or write the result to a file.
         """
 
-        # initialize
+        # Initialize
         indizes = []
         out = np.zeros(cube[0].shape)
 
-        # compute shifts
+        # Compute shifts
         for index, frame in enumerate(cube):
             print('Estimating the shift in frame {:4}...'.format(index + 1), end='\r')
             indizes.append(np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape)))
         shifts = self._compute_shifts(indizes)
         print('Estimated all shifts                           ', end='\r')
 
-        # shift frames and add to out
+        # Shift frames and add to out
         for index, frame in enumerate(cube):
             print('Adding the frame {:4}...'.format(index + 1), end='\r')
             out += self._shift_array(frame, shifts[index])
+
         return out
 
 
@@ -92,3 +88,10 @@ class SSAReconstructor(object):
         pad_array = array[max(0, shift[0]) : shape[0]+min(0, shift[0]) , max(0, shift[1]) : shape[1]+min(0, shift[1])]
         pad_vector = self._create_pad_vector(shift)
         return np.pad(pad_array, pad_vector, mode='constant')
+
+
+    def _align_reconstructions(self, previous, current):
+        previous_x0, previous_y0 = np.unravel_index(np.argmax(previous, axis=None), previous.shape)
+        current_x0, current_y0 = np.unravel_index(np.argmax(current, axis=None), current.shape)
+        shift = (current_x0 - previous_x0, current_y0 - previous_y0)
+        return previous + self._shift_array(current, shift)
