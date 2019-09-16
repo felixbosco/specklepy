@@ -3,4 +3,5 @@
 *.fits
 
 # Directories
+*.egg
 *.egg-info
