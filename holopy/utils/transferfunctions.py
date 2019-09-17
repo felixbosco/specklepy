@@ -20,7 +20,9 @@ def powerspec1d(array, flatten=True, average=True, pixel_scale=None):
     center = (array.shape[0] / 2, array.shape[1] / 2)
     xx, yy = np.mgrid[:array.shape[0], :array.shape[1]]
     Fourier_radius = np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
+    Fourier_radius = np.ma.masked_greater(Fourier_radius, center[0])
     signal = powerspec(array)
+    signal = np.ma.masked_array(signal, mask=Fourier_radius.mask)
 
     # Flatten the arrays
     if flatten:
@@ -39,7 +41,9 @@ def powerspec1d(array, flatten=True, average=True, pixel_scale=None):
 
     # Apply pixel_scale
     if pixel_scale is not None:
-        xdata = xdata / pixel_scale
+        size = array.shape[0]
+        freq1 = np.fft.fftfreq(size, pixel_scale.value)[1]
+        xdata = xdata * freq1 / pixel_scale.unit
     else:
         pass
 

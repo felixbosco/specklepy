@@ -27,7 +27,7 @@ class TestTransferFunctions(unittest.TestCase):
         psf_image = psf(self.aperture)
         plot_powerspec1d(psf_image, title='simple')
         plot_powerspec1d(psf_image, title='no average', average=False)
-        plot_powerspec1d(psf_image, title='pixel_scale', pixel_scale=15*u.mas)
+        # plot_powerspec1d(psf_image, title='pixel_scale', pixel_scale=15*u.mas)
 
 if __name__ == "__main__":
     unittest.main()
