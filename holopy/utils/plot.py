@@ -11,18 +11,18 @@ def imshow(image, title=None, norm=None):
     plt.show()
     plt.close()
 
-def plot_powerspec1d(image, average=True):
+def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
     plt.figure()
     if len(image.shape) is 2:
-        xdata, ydata = tf.powerspec1d(image, average=average)
+        xdata, ydata = tf.powerspec1d(image, average=average, pixel_scale=pixel_scale)
         plt.plot(xdata, ydata, '-')
     elif len(image.shape) is 3:
         for frame in image:
-            xdata, ydata = tf.powerspec1d(frame, average=average)
+            xdata, ydata = tf.powerspec1d(frame, average=average, pixel_scale=pixel_scale)
             plt.plot(xdata, ydata, '-')
     plt.xlabel('uv Radius (pixel)')
     plt.ylabel('Signal')
-    # plt.ylim(0.0)
+    plt.title(title)
     plt.grid()
     plt.show()
     plt.close()

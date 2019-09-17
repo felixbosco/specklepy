@@ -16,22 +16,31 @@ def psf(aperture):
 def ft(arg):
     return otf(arg)
 
-def powerspec1d(array, flatten=True, average=True):
+def powerspec1d(array, flatten=True, average=True, pixel_scale=None):
     center = (array.shape[0] / 2, array.shape[1] / 2)
     xx, yy = np.mgrid[:array.shape[0], :array.shape[1]]
-    Fourier_distance = np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
+    Fourier_radius = np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
     signal = powerspec(array)
 
     # Flatten the arrays
     if flatten:
-        Fourier_distance = Fourier_distance.reshape((-1))
+        Fourier_radius = Fourier_radius.reshape((-1))
         signal = signal.reshape((-1))
 
         # Average signal along Fourier distance
         if average:
-            xdata = np.unique(Fourier_distance)
+            xdata = np.unique(Fourier_radius)
             ydata = np.zeros(xdata.shape)
             for index, value in enumerate(xdata):
-                ydata[index] = np.mean(signal[np.where(Fourier_distance == value)])
-            return xdata, ydata
-    return Fourier_distance, signal
+                ydata[index] = np.mean(signal[np.where(Fourier_radius == value)])
+        else:
+            xdata = Fourier_radius
+            ydata = signal
+
+    # Apply pixel_scale
+    if pixel_scale is not None:
+        xdata = xdata / pixel_scale
+    else:
+        pass
+
+    return xdata, ydata
