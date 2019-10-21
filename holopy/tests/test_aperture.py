@@ -16,11 +16,12 @@ class TestAperture(unittest.TestCase):
     def test_init(self):
         Aperture(8, 8, radius=4, data=self.test_data)
 
+
     def test_call(self):
+        imshow(self.test_data)
         test_aperture = Aperture(8, 8, radius=4, data=self.test_data)
-        test_aperture()
+        imshow(test_aperture())
         test_aperture = Aperture(64, 64, radius=16, data=self.test_data_large)
-        test_aperture()
         imshow(test_aperture())
 
 if __name__ == "__main__":
