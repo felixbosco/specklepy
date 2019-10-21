@@ -52,9 +52,9 @@ def main(options=None):
 
     # Test of the heavy spot of the aperture
     moment0 = np.sum(cube, axis=0)
-    aperture = Aperture(*args.index, args.radius, data=moment0, subset_only=False)
-    max = np.unravel_index(np.argmax(aperture(), axis=None), aperture().shape)
-    imshow(aperture())
+    moment0_aperture = Aperture(*args.index, args.radius, data=moment0, subset_only=False)
+    max = np.unravel_index(np.argmax(moment0_aperture.data, axis=None), moment0_aperture.data.shape)
+    imshow(moment0_aperture.data, title="Aperture in the integrated cube")
     if max == args.index:
         logging.info("Index {} is identical with the maximum of the integrated cube image {}.".format(args.index, max))
     else:
@@ -63,13 +63,17 @@ def main(options=None):
         if answer.lower() == "yes":
             logging.info("Replacing index {} by the maximum of the integrated cube image {}...".format(args.index, max))
             args.index = max
+            moment0_aperture = Aperture(*args.index, args.radius, data=moment0, mask=None, subset_only=True)
+            if answer and answer.lower() == "yes":
+                imshow(moment0_aperture.data, title="Updated aperture")
         else:
             logging.info("Continuing with the central index {}...".format(args.index))
-    del aperture
+    del moment0_aperture
 
     # Analysis
-    aperture = Aperture(*args.index, args.radius, data=moment0, mask=None, subset_only=True)
-    imshow(aperture.data)
+    aperture = Aperture(*args.index, args.radius, data=cube, mask=None, subset_only=True)
+    print(aperture.data.shape)
+
 
 
 
