@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from holopy.config import plotting
 from holopy.utils import transferfunctions as tf
 
+
 def imshow(image, title=None, norm=None):
     plt.figure()
     plt.imshow(image, norm=norm)
@@ -10,6 +11,7 @@ def imshow(image, title=None, norm=None):
     plt.colorbar(pad=0.0)
     plt.show()
     plt.close()
+
 
 def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
     plt.figure()
@@ -24,5 +26,14 @@ def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
     plt.ylabel('Signal')
     plt.title(title)
     plt.grid()
+    plt.show()
+    plt.close()
+
+
+def plot_simple(xdata, ydata, title=None, xlabel=None, ylabel=None):
+    plt.plot(xdata, ydata)
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     plt.show()
     plt.close()

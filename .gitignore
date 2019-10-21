@@ -5,3 +5,5 @@
 # Directories
 *.egg
 *.egg-info
+/data/test/*
+/data/example/*dat

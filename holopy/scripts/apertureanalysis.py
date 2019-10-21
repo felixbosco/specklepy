@@ -21,7 +21,7 @@ except ModuleNotFoundError:
     # Repeat import
     from holopy.logging import logging
     from holopy.core.aperture import Aperture
-    from holopy.utils.plot import imshow
+    from holopy.utils.plot import imshow, plot_simple
     from holopy.utils import transferfunctions as tf
 
 
@@ -35,6 +35,8 @@ def parser(options=None):
     parser.add_argument('-i', '--index', nargs='+', type=int, help='Center index of the aperture to analyse. Provide this as "--index 123 456", without other symbols.')
     parser.add_argument('-r', '--radius', type=int, default=10, help='Radius of the aperture to analyse in pix.')
     parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the file to write the results to. Default is to just repace .fits by .dat.')
+    parser.add_argument('-p', '--pixel_scale', type=float, default=None, help='Pixel scale in arcsec for computing the spatial frequencies.')
+    parser.add_argument('-v', '--visual', type=bool, default=False, help='Show the plots?')
 
     if options is None:
         args = parser.parse_args()
@@ -50,6 +52,8 @@ def main(options=None):
 
     # Interprete input
     args.index = tuple(args.index)
+    if args.visual:
+        raise ValueError('')
     if args.file is None:
         if args.Fourier_file is not None:
             start_with_Fourier_file = True
@@ -75,7 +79,7 @@ def main(options=None):
         moment0 = np.sum(cube, axis=0)
         aperture = Aperture(*args.index, args.radius, data=moment0, subset_only=False)
         max = np.unravel_index(np.argmax(aperture.data, axis=None), aperture.data.shape)
-        if show:
+        if args.visual:
             imshow(aperture.data, title="Aperture in the integrated cube")
         if max == args.index:
             logging.info("Index {} is identical with the maximum of the integrated cube image {}.".format(args.index, max))
@@ -86,8 +90,8 @@ def main(options=None):
                 logging.info("Replacing index {} by the maximum of the integrated cube image {}...".format(args.index, max))
                 args.index = max
                 aperture = Aperture(*args.index, args.radius, data=moment0, mask=None, subset_only=True)
-                if answer and answer.lower() == "yes":
-                    if show:
+                if answer and (answer.lower() == "yes" or answer == ''):
+                    if args.visual:
                         imshow(aperture.data, title="Updated aperture")
             else:
                 logging.info("Continuing with the central index {}...".format(args.index))
@@ -123,10 +127,10 @@ def main(options=None):
     # Show interim results
     Fourier_cube = fits.getdata(args.Fourier_file)
     Fourier_mean = np.mean(Fourier_cube, axis=0)
-    Fourier_var = np.var(Fourier_cube, axis=0)
-    if show:
+    Fourier_var = np.var(Fourier_cube, axis=0)  # Compute variance to average linearly in the following
+    if args.visual:
         imshow(Fourier_mean, title="Mean of the Fourier transformed cube along the time axis", norm=LogNorm())
-        imshow(Fourier_var, title="Standard deviation in the Fourier transformed cube along the time axis", norm=LogNorm())
+        imshow(np.sqrt(Fourier_var), title="Standard deviation in the Fourier transformed cube along the time axis", norm=LogNorm())
 
     # Compute Fourier radius map and mask
     center = (Fourier_mean.shape[0] / 2, Fourier_mean.shape[1] / 2)
@@ -148,14 +152,19 @@ def main(options=None):
     for index, value in enumerate(xdata):
         ydata[index] = np.mean(Fourier_mean[np.where(Fourier_radius == value)])
         edata[index] = np.mean(Fourier_var[np.where(Fourier_radius == value)])
+    # Turn variance into standard deviation
+    edata = np.sqrt(edata)
 
-    if show:
-        plt.plot(xdata, ydata)
-        plt.show()
-        plt.close()
+    if args.pixel_scale is not None:
+        logging.warn("Handling the pixel scale is not implemented yet!")
+
+    if args.visual:
+        plot_simple(xdata, ydata,
+                    title="{}\nCenter={} Radius={}".format(args.Fourier_file, args.index, args.radius),
+                    xlabel="Fourier radius")
 
     # Save power spectra to outfile
-    caption = "Fourier_radius mean var"
+    caption = "Fourier_radius mean std"
     data = np.concatenate(([xdata], [ydata], [edata]), axis=0).transpose()
     np.savetxt(args.outfile, data, header=caption)
 
