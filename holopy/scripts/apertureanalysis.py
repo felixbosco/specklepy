@@ -68,10 +68,8 @@ def main(options=None):
     del aperture
 
     # Analysis
-    aperture = Aperture(*args.index, args.radius, data=moment0, subset_only=False)
-    imshow(moment0)
-    print(type(aperture()))
-    imshow(aperture())
+    aperture = Aperture(*args.index, args.radius, data=moment0, mask=None, subset_only=True)
+    imshow(aperture.data)
 
 
 
