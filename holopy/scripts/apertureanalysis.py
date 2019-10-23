@@ -106,6 +106,7 @@ def main(options=None):
         logging.info("Initializing Fourier file {}".format(args.Fourier_file))
         header = fits.getheader(args.file)
         header.set('HIERARCH HOLOPY TYPE', 'Fourier transform of an aperture')
+        header.set('HIERARCH HOLOPY ORIGIN', args.file)
         header.set('HIERARCH HOLOPY APERTURE INDEX', str(args.index))
         header.set('HIERARCH HOLOPY APERTURE RADIUS', args.radius)
         header.set('UPDATED', str(datetime.now()))

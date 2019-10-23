@@ -16,11 +16,11 @@ class TestApertureAnalysis(unittest.TestCase):
     #                 -i 654 714 \
     #                 -r 100')
 
-    def test_execute_from_Fourier_file(self):
-        os.system('python holopy/scripts/apertureanalysis.py \
-                    -F data/test/example_cube_Fourier.fits \
-                    -i 658 723 \
-                    -r 200')
+    # def test_execute_from_Fourier_file(self):
+    #     os.system('python holopy/scripts/apertureanalysis.py \
+    #                 -F data/test/example_cube_Fourier.fits \
+    #                 -i 658 723 \
+    #                 -r 200')
 
     # def test_magnitude(self):
     #     radius = 1.5
@@ -42,6 +42,51 @@ class TestApertureAnalysis(unittest.TestCase):
     #                     -i {} {} \
     #                     -r {} \
     #                     -o data/example/esm_200ms_x100_ct_{}mag_{}pix.dat'.format(*indices[mag], radius, mag, radius))
+
+    # def test_exposure_time(self):
+    #     radius = 1.5
+    #     pixel_scale = 0.0107421875
+    #     radius = int(radius / pixel_scale)
+    #
+    #     indices = {'12.0': (256, 256),
+    #              '12.5': (512, 256),
+    #              '13.0': (768, 256),
+    #              '13.5': (256, 512),
+    #              '14.0': (512, 512),
+    #              '14.5': (768, 512),
+    #              '15.0': (256, 768),
+    #              '15.5': (512, 768),
+    #              '16.0': (768, 768)}
+    #     mag = '12.0'
+    #     exposure_times = [200, 600, 1000, 1400, 1800, 2200]
+    #     for expt in exposure_times:
+    #         os.system('python holopy/scripts/apertureanalysis.py \
+    #                     -f data/example/glao_{}ms_x100_ct.fits \
+    #                     -i {} {} \
+    #                     -r {} \
+    #                     -o data/example/glao_{}ms_x100_ct_{}mag_{}pix.dat'.format(expt, *indices[mag], radius, expt, mag, radius))
+
+    def test_aoli(self):
+        radius = 1.5
+        fov = 36 # arcsec
+        detectors_peraxis =  2
+        pix_per_detector = 1024
+        pixel_scale = fov / detectors_peraxis / pix_per_detector
+        radius = int(radius / pixel_scale)
+        print(radius)
+
+        index = (420, 517)
+        index = (888, 516)
+        from glob import glob
+        DATA_PATH = '../../aoli/aoli_fits/'
+
+        for path in glob(DATA_PATH + 'HD207470_CLOSED_*.fits'):
+            file = path.split('/')[-1]
+            os.system('python holopy/scripts/apertureanalysis.py \
+                     -f {} \
+                     -i {} {} \
+                     -r {} \
+                     -o data/example/{}.dat'.format(path, *index, radius, file))
 
 
 if __name__ == "__main__":
