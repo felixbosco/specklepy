@@ -1,7 +1,11 @@
 import numpy as np
 from copy import copy
+from astropy.io import fits
+from datetime import datetime
 
-# from holopy.logging import logging
+from holopy.logging import logging
+from holopy.utils import transferfunctions as tf
+
 
 class Aperture(object):
 
@@ -33,6 +37,10 @@ class Aperture(object):
     def width(self):
         return self.radius * 2 + 1
 
+    @property
+    def index(self):
+        return (self.x0, self.y0)
+
     def __call__(self):
         return self.data
 
@@ -47,3 +55,37 @@ class Aperture(object):
             mask_2D = np.ma.masked_greater(distance_map, self.radius).mask
             mask_3D = np.expand_dims(mask2D, axis=0)
             return np.repeat(mask3D, repeats=self.data.shape[0], axis=0)
+
+    def initialize_Fourier_file(self, infile, Fourier_file):
+        self.infile = infile
+        self.Fourier_file = Fourier_file
+        logging.info("Initializing Fourier file {}".format(self.Fourier_file))
+        header = fits.getheader(self.infile)
+        header.set('HIERARCH HOLOPY TYPE', 'Fourier transform of an aperture')
+        header.set('HIERARCH HOLOPY ORIGIN', self.infile)
+        header.set('HIERARCH HOLOPY APERTURE INDEX', str(self.index))
+        header.set('HIERARCH HOLOPY APERTURE RADIUS', self.radius)
+        header.set('UPDATED', str(datetime.now()))
+        data = np.zeros(self.data.shape)
+        fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
+        logging.info("Initialized {}".format(self.Fourier_file))
+
+    def powerspec_to_file(self, infile=None, Fourier_file=None):
+        if not hasattr(self, 'Fourier_file'):
+            self.initialize_Fourier_file(infile, Fourier_file)
+
+        with fits.open(self.Fourier_file, mode='update') as hdulist:
+            for index, frame in enumerate(self.data):
+                print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
+                hdulist[0].data[index] = tf.powerspec(frame)
+                hdulist.flush()
+            print()
+        logging.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
+
+    def powerspec(self):
+        self.Fourier_data = np.zeros(self.data.shape)
+        for index, frame in enumerate(self.data):
+            print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
+            self.Fourier_data[index] = tf.powerspec(frame)
+        print()
+        logging.info("Computed the Fourier transform of every frame.")
