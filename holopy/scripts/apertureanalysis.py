@@ -36,7 +36,7 @@ def parser(options=None):
     parser.add_argument('-r', '--radius', type=int, default=10, help='Radius of the aperture to analyse in pix.')
     parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the file to write the results to. Default is to just repace .fits by .dat.')
     parser.add_argument('-p', '--pixel_scale', type=float, default=None, help='Pixel scale in arcsec for computing the spatial frequencies.')
-    parser.add_argument('-v', '--visual', type=bool, default=False, help='Show the plots?')
+    parser.add_argument('-v', '--visual', action='store_const', const=True, default=False, help='Show the plots?')
 
     if options is None:
         args = parser.parse_args()
@@ -52,8 +52,7 @@ def main(options=None):
 
     # Interprete input
     args.index = tuple(args.index)
-    if args.visual:
-        raise ValueError('')
+    
     if args.file is None:
         if args.Fourier_file is not None:
             start_with_Fourier_file = True

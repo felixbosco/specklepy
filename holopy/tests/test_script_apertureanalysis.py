@@ -4,11 +4,11 @@ import os
 
 class TestApertureAnalysis(unittest.TestCase):
 
-    # def test_execute(self):
-    #     os.system('python holopy/scripts/apertureanalysis.py \
-    #                 -f data/test/example_cube.fits \
-    #                 -i 658 723 \
-    #                 -r 100')
+    def test_execute(self):
+        os.system('python holopy/scripts/apertureanalysis.py \
+                    -f data/test/example_cube.fits \
+                    -i 658 723 \
+                    -r 100')
 
     # def test_first_guess(self):
     #     os.system('python holopy/scripts/apertureanalysis.py \
@@ -66,27 +66,54 @@ class TestApertureAnalysis(unittest.TestCase):
     #                     -r {} \
     #                     -o data/example/glao_{}ms_x100_ct_{}mag_{}pix.dat'.format(expt, *indices[mag], radius, expt, mag, radius))
 
-    def test_aoli(self):
-        radius = 1.5
-        fov = 36 # arcsec
-        detectors_peraxis =  2
-        pix_per_detector = 1024
-        pixel_scale = fov / detectors_peraxis / pix_per_detector
-        radius = int(radius / pixel_scale)
-        print(radius)
+    # def test_aoli_HD(self):
+    #     radius = 1.5
+    #     fov = 36 # arcsec
+    #     detectors_peraxis =  2
+    #     pix_per_detector = 1024
+    #     pixel_scale = fov / detectors_peraxis / pix_per_detector
+    #     radius = int(radius / pixel_scale)
+    #     print(radius)
+    #
+    #     index = (517, 420) # Primary CLOSED
+    #     index = (513, 416) # Primary OPEN
+    #     # index = (516, 888) # Tertiary
+    #     from glob import glob
+    #     DATA_PATH = '../../aoli/aoli_fits/'
+    #
+    #     for path in sorted(glob(DATA_PATH + 'HD207470_OPEN_*.fits')):
+    #     # for path in ['HD207470_CLOSED_1_Fourier.fits']:
+    #         file = path.split('/')[-1]
+    #         os.system('python holopy/scripts/apertureanalysis.py \
+    #                  -f {} \
+    #                  -i {} {} \
+    #                  -r {} \
+    #                  -v True \
+    #                  -o data/example/{}.dat'.format(path, *index, radius, file))
 
-        index = (420, 517)
-        index = (888, 516)
-        from glob import glob
-        DATA_PATH = '../../aoli/aoli_fits/'
-
-        for path in glob(DATA_PATH + 'HD207470_CLOSED_*.fits'):
-            file = path.split('/')[-1]
-            os.system('python holopy/scripts/apertureanalysis.py \
-                     -f {} \
-                     -i {} {} \
-                     -r {} \
-                     -o data/example/{}.dat'.format(path, *index, radius, file))
+    # def test_aoli_HIP(self):
+    #     radius = 1.5
+    #     fov = 36 # arcsec
+    #     detectors_peraxis =  2
+    #     pix_per_detector = 1024
+    #     pixel_scale = fov / detectors_peraxis / pix_per_detector
+    #     radius = int(radius / pixel_scale)
+    #     print(radius)
+    #
+    #     index = (488, 522) # Primary CLOSED
+    #     # index = (488, 522) # Primary OPEN
+    #     from glob import glob
+    #     DATA_PATH = '../../aoli/aoli_fits/'
+    #
+    #     for file_index, path in enumerate(sorted(glob(DATA_PATH + 'HIP_10644_Flat_mirror_*.fits'))):
+    #         visual = '--visual' if file_index==0 else ''
+    #         file = path.split('/')[-1]
+    #         os.system('python holopy/scripts/apertureanalysis.py \
+    #                  -f {} \
+    #                  -i {} {} \
+    #                  -r {} \
+    #                  {} \
+    #                  -o data/example/{}.dat'.format(path, *index, radius, visual, file))
 
 
 if __name__ == "__main__":
