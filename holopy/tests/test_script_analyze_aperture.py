@@ -2,22 +2,22 @@ import unittest
 import os
 
 
-class TestApertureAnalysis(unittest.TestCase):
+class TestAnalyzeAperture(unittest.TestCase):
 
     def test_execute(self):
-        os.system('python holopy/scripts/apertureanalysis.py \
+        os.system('python holopy/scripts/analyze_aperture.py \
                     -f data/test/example_cube.fits \
                     -i 658 723 \
                     -r 100')
 
     # def test_first_guess(self):
-    #     os.system('python holopy/scripts/apertureanalysis.py \
+    #     os.system('python holopy/scripts/analyze_aperture.py \
     #                 -f data/test/example_cube.fits \
     #                 -i 654 714 \
     #                 -r 100')
 
     # def test_execute_from_Fourier_file(self):
-    #     os.system('python holopy/scripts/apertureanalysis.py \
+    #     os.system('python holopy/scripts/analyze_aperture.py \
     #                 -F data/test/example_cube_Fourier.fits \
     #                 -i 658 723 \
     #                 -r 200')
@@ -37,7 +37,7 @@ class TestApertureAnalysis(unittest.TestCase):
     #              '15.5': (512, 768),
     #              '16.0': (768, 768)}
     #     for mag in indices:
-    #         os.system('python holopy/scripts/apertureanalysis.py \
+    #         os.system('python holopy/scripts/analyze_aperture.py \
     #                     -f data/example/esm_200ms_x100_ct.fits \
     #                     -i {} {} \
     #                     -r {} \
@@ -60,7 +60,7 @@ class TestApertureAnalysis(unittest.TestCase):
     #     mag = '12.0'
     #     exposure_times = [200, 600, 1000, 1400, 1800, 2200]
     #     for expt in exposure_times:
-    #         os.system('python holopy/scripts/apertureanalysis.py \
+    #         os.system('python holopy/scripts/analyze_aperture.py \
     #                     -f data/example/glao_{}ms_x100_ct.fits \
     #                     -i {} {} \
     #                     -r {} \
@@ -84,7 +84,7 @@ class TestApertureAnalysis(unittest.TestCase):
     #     for path in sorted(glob(DATA_PATH + 'HD207470_OPEN_*.fits')):
     #     # for path in ['HD207470_CLOSED_1_Fourier.fits']:
     #         file = path.split('/')[-1]
-    #         os.system('python holopy/scripts/apertureanalysis.py \
+    #         os.system('python holopy/scripts/analyze_aperture.py \
     #                  -f {} \
     #                  -i {} {} \
     #                  -r {} \
@@ -108,7 +108,7 @@ class TestApertureAnalysis(unittest.TestCase):
     #     for file_index, path in enumerate(sorted(glob(DATA_PATH + 'HIP_10644_Flat_mirror_*.fits'))):
     #         visual = '--visual' if file_index==0 else ''
     #         file = path.split('/')[-1]
-    #         os.system('python holopy/scripts/apertureanalysis.py \
+    #         os.system('python holopy/scripts/analyze_aperture.py \
     #                  -f {} \
     #                  -i {} {} \
     #                  -r {} \
