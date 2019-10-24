@@ -100,27 +100,6 @@ def main(options=None):
         aperture = Aperture(*args.index, args.radius, data=cube, mask=None, subset_only=True)
         del cube
         logging.info("The aperture has shape {}.".format(aperture.data.shape))
-
-        # Initialize Fourier File
-        # logging.info("Initializing Fourier file {}".format(args.Fourier_file))
-        # header = fits.getheader(args.file)
-        # header.set('HIERARCH HOLOPY TYPE', 'Fourier transform of an aperture')
-        # header.set('HIERARCH HOLOPY ORIGIN', args.file)
-        # header.set('HIERARCH HOLOPY APERTURE INDEX', str(args.index))
-        # header.set('HIERARCH HOLOPY APERTURE RADIUS', args.radius)
-        # header.set('UPDATED', str(datetime.now()))
-        # data = np.zeros(aperture.data.shape)
-        # fits.writeto(args.Fourier_file, data=data, header=header, overwrite=True)
-        # logging.info("Initialized {}".format(args.Fourier_file))
-        #
-        # # Fourier transform analysis
-        # with fits.open(args.Fourier_file, mode='update') as hdulist:
-        #     for index, frame in enumerate(aperture.data):
-        #         print("\rFourier transforming frame {}/{}".format(index+1, aperture.data.shape[0]), end='')
-        #         hdulist[0].data[index] = tf.powerspec(frame)
-        #         hdulist.flush()
-        #     print()
-        # logging.info("Computed the Fourier transform of every frame and saved them to {}".format(args.Fourier_file))
         aperture.powerspec_to_file(args.file, args.Fourier_file)
         del aperture
 
