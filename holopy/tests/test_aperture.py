@@ -29,7 +29,7 @@ class TestAperture(unittest.TestCase):
 
     def test_encircled_energy(self):
         aperture = Aperture(8, 8, radius=4, data=self.test_data)
-        aperture.get_encircled_energy()
+        aperture.get_encircled_energy(saveto='data/test/example_encircled_energy.dat')
 
 
     def test_call(self):

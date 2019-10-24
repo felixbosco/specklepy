@@ -54,9 +54,11 @@ class Aperture(object):
         return self.data
 
 
-    def make_distance_map(self):
+    def make_distance_map(self, center=None):
+        if center is None:
+            center = self.index
         xx, yy = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
-        return np.sqrt(np.square(xx - self.x0) + np.square(yy - self.y0))
+        return np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
 
 
     def make_mask(self):
@@ -138,6 +140,7 @@ class Aperture(object):
 
 
     def get_encircled_energy(self, saveto=None):
+        # Integrate data if 3D
         if self.data.ndim == 3:
             logging.info("Aperture data are 3D and integrated before the encircled energy is estimated.")
             # Integrate the data cube
@@ -145,19 +148,23 @@ class Aperture(object):
         else:
             self.tmp = copy(self.data)
 
-        # logging.warning('encircled_energy() is not implemented yet.')
-
+        # Initialize variables
         rdata = np.arange(0, self.radius, 1)
         out = np.zeros((self.radius))
-        distance_map = self.make_distance_map()
-        for index, subset_radius in enumerate(rdata):
-            out[index] = np.sum(self.tmp[np.where(distance_map <= subset_radius)])
+        distance_map = self.make_distance_map(center=(self.radius, self.radius))
 
+        # Iterate over aperture radii
+        for index, subset_radius in enumerate(rdata):
+            mask = np.ma.masked_greater(distance_map, subset_radius).mask
+            out[index] = np.sum(np.ma.masked_array(self.tmp, mask=mask))
+
+        # Save results to file
         if saveto is not None:
-            # Save power spectra to outfile
             caption = "radius_(pix) encircled_energy(data_unit)"
             data = np.concatenate(([rdata], [out]), axis=0).transpose()
             np.savetxt(saveto, data, header=caption)
+            logging.info("Saved encircled energy data to file {}".format(saveto))
 
+        # Clean up temporary file
         del self.tmp
         return rdata, out
