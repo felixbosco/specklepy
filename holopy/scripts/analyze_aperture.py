@@ -74,9 +74,8 @@ def main(options=None):
     if not start_with_Fourier_file:
 
         # Test of the heavy spot of the aperture
-        integrated_cube = np.sum(fits.getdata(args.file), axis=0)
-        aperture = Aperture(*args.index, args.radius, data=integrated_cube, subset_only=False)
-        max = np.unravel_index(np.argmax(aperture.data, axis=None), aperture.data.shape)
+        aperture = Aperture(*args.index, args.radius, data=args.file, subset_only=False)
+        max = aperture.get_aperture_peak()
         if args.visual:
             imshow(aperture.data, title="Aperture in the integrated cube")
         if max == args.index:
@@ -93,10 +92,9 @@ def main(options=None):
                         imshow(aperture.data, title="Updated aperture")
             else:
                 logging.info("Continuing with the central index {}...".format(args.index))
-        del aperture
 
-        # Redefine aperture with the updated index and remove margins
-        aperture = Aperture(*args.index, args.radius, data=args.file, mask=None, subset_only=True)
+        # Remove margins from aperture
+        aperture.remove_margins()
         logging.info("The aperture has shape {}.".format(aperture.data.shape))
         aperture.powerspec_to_file(args.file, args.Fourier_file)
         del aperture

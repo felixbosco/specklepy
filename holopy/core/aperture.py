@@ -65,7 +65,7 @@ class Aperture(object):
         if self.data.ndim == 2:
             return mask2D
         elif self.data.ndim == 3:
-            mask_3D = np.expand_dims(mask2D, axis=0)
+            mask3D = np.expand_dims(mask2D, axis=0)
             return np.repeat(mask3D, repeats=self.data.shape[0], axis=0)
 
 
@@ -79,12 +79,25 @@ class Aperture(object):
             return np.unravel_index(np.argmax(self.data, axis=None), self.data.shape)
 
 
-    def recenter_aperture(self):
+    # def recenter_aperture(self, peak=None):
+    #     if self.subset_only:
+    #         logging.warning("Recentering the aperture on the peak within the guess aperture is working only if subset_only is set to False.")
+    #     else:
+    #         if peak is None:
+    #             peak = self.get_aperture_peak()
+    #         self = self.__init__(*peak, self.radius, data=np.ma.getdata(self.data), mask=self.mask, subset_only=self.subset_only)
+    #         logging.info("Aperture was recentered to the peak {}.".format(self.index))
+
+
+    def remove_margins(self):
         if self.subset_only:
-            logging.warning("Recentering the aperture on the peak within the guess aperture is working only if subset_only is set to False.")
+            logging.info("Margins are removed already from aperture instance.")
         else:
-            peak = self.get_aperture_peak()
-            self = self.__init__(*peak, self.radius, data=self.data.getdata(), mask=self.mask, subset_only=self.subset_only)
+            if self.data.ndim == 2:
+                self.data = copy(self.data[self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
+            elif self.data.ndim == 3:
+                self.data = copy(self.data[:, self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
+            self.subset_only = True
 
 
     def initialize_Fourier_file(self, infile, Fourier_file):
