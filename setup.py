@@ -4,7 +4,7 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(name='HoloPy',
-      version='0.0.1.dev0',
+      version='0.0.1.dev1',
       description='',
       long_description=long_description,
       long_description_content_type="text/markdown",
