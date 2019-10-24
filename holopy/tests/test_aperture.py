@@ -17,6 +17,11 @@ class TestAperture(unittest.TestCase):
         Aperture(8, 8, radius=4, data=self.test_data)
 
 
+    def test_encircled_energy(self):
+        aperture = Aperture(8, 8, radius=4, data=self.test_data)
+        aperture.get_encircled_energy()
+
+
     def test_call(self):
         imshow(self.test_data)
         test_aperture = Aperture(8, 8, radius=4, data=self.test_data)
