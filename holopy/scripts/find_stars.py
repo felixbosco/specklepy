@@ -15,6 +15,7 @@ try:
     from holopy.io.paramhandler import ParamHandler
     from holopy.core.aperture import Aperture
     from holopy.utils.plot import imshow
+    from holopy.algorithms.sourceextraction import SourceExtraction
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -28,6 +29,7 @@ except ModuleNotFoundError:
     from holopy.io.paramhandler import ParamHandler
     from holopy.core.aperture import Aperture
     from holopy.utils.plot import imshow
+    from holopy.algorithms.sourceextraction import SourceExtraction
 
 
 def parser(options=None):
@@ -69,37 +71,14 @@ def main(options=None):
     if args.outfile is None:
         args.outfile = params.allStarsFile
 
-    # Prepare noise statistics
-    image = fits.getdata(args.file)
-    # noise_box = Aperture(params.noiseBoxX, params.noiseBoxY, params.noiseBoxHalfWidth, data=image, mask=None).data
-    # if plot:
-    #     imshow(noise_box)
-    mean, median, std = sigma_clipped_stats(image, sigma=3.0)
-    logging.info("Noise statistics:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(mean, median, std))
-
-    # Find stars
-    daofind = DAOStarFinder(fwhm=params.starfinderFwhm, threshold=params.noiseThreshold*std)
-    if background_subtraction:
-        logging.info("Subtracting background...")
-        image -= median
-    logging.info("Finding sources...")
-    sources = daofind(image)
-    sources.sort('flux', reverse=True)
-    sources.rename_column('xcentroid', 'x')
-    sources.rename_column('ycentroid', 'y')
-    sources.keep_columns(['x', 'y', 'flux'])
-    for col in sources.colnames:
-        sources[col].info.format = '%.8g'  # for consistent table output
-    logging.info("Found {} sources:\n{}".format(len(sources), sources))
-
-
-    # Write results to file
-    logging.info("Writing list of sources to file {}".format(args.outfile))
-    sources.write(args.outfile, format='ascii', overwrite=True)
+    finder = SourceExtraction()
+    finder.find_sources(file=args.file, starfinder_fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
+        background_subtraction=background_subtraction)
+    finder.writeto(args.outfile)
 
     # Plot results
     if plot:
-        positions = np.transpose((sources['xcentroid'], sources['ycentroid']))
+        positions = np.transpose((finder.sources['xcentroid'], finder.sources['ycentroid']))
         apertures = CircularAperture(positions, r=4.)
         norm = ImageNormalize(stretch=SqrtStretch())
         plt.imshow(image, cmap='Greys', origin='lower', norm=norm)
