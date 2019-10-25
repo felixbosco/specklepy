@@ -5,7 +5,7 @@ try:
     from holopy.io.outfile import Outfile
     from holopy.io.paramhandler import ParamHandler
     from holopy.logging import logging
-    from holopy.core.holography import HolographicReconstructor
+    from holopy.algorithms.holography import HolographicReconstructor
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     from holopy.io.outfile import Outfile
     from holopy.io.paramhandler import ParamHandler
     from holopy.logging import logging
-    from holopy.core.holography import HolographicReconstructor
+    from holopy.algorithms.holography import HolographicReconstructor
 
 
 

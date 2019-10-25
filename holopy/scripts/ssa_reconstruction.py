@@ -4,7 +4,7 @@ try:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.core.ssa import SSAReconstructor
+    from holopy.algorithms.ssa import SSAReconstructor
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -17,7 +17,7 @@ except ModuleNotFoundError:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.core.ssa import SSAReconstructor
+    from holopy.algorithms.ssa import SSAReconstructor
 
 
 
