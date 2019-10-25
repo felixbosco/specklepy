@@ -1,5 +1,5 @@
 import unittest
-from holopy.core.epsfextractor import EPSFExtractor
+from holopy.algorithms.epsfextractor import EPSFExtractor
 from holopy.io.paramhandler import ParamHandler
 
 
