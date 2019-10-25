@@ -26,6 +26,12 @@ class FileHandler(object):
         self.index += 1
         return result
 
+    def __getitem__(self, index):
+        return self.files[index]
+
+    def __setitem__(self, index, value):
+        self.files[index] = value
+
     def __str__(self):
         s = "<holopy.io.filehandler.FileHandler object>\n"
         s += "> List of files:\n"
