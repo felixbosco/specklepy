@@ -18,9 +18,15 @@ class TestPSFExtraction(unittest.TestCase):
     def test_init(self):
         PSFExtraction(self.params)
 
-    def test_extract(self):
+
+    def test_initialize_apertures(self):
         psf_extraction = PSFExtraction(self.params)
-        psf_extraction.extract()
+        print(psf_extraction.star_table)
+        psf_extraction.init_ref_apertures(self.params.inFiles[0])
+
+    # def test_extract(self):
+    #     psf_extraction = PSFExtraction(self.params)
+    #     psf_extraction.extract()
 
 
 if __name__ == "__main__":
