@@ -1,9 +1,9 @@
 import unittest
-from holopy.core.psfextractor import PSFExtractor
+from holopy.core.epsfextractor import EPSFExtractor
 from holopy.io.paramhandler import ParamHandler
 
 
-class TestPSFExtractor(unittest.TestCase):
+class TestEPSFExtractor(unittest.TestCase):
 
     def setUp(self):
         self.parameter_file = "data/test/test_parfile.ini"
@@ -16,11 +16,11 @@ class TestPSFExtractor(unittest.TestCase):
                         make_dirs=self.make_dirs)
 
     def test_init(self):
-        PSFExtractor(self.params)
+        EPSFExtractor(self.params)
 
     def test_extract(self):
-        psf_extractor = PSFExtractor(self.params)
-        psf_extractor.extract()
+        epsf_extractor = EPSFExtractor(self.params)
+        epsf_extractor.extract()
 
 
 if __name__ == "__main__":
