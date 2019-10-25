@@ -31,8 +31,9 @@ class PSFExtraction(object):
 
     def init_ref_apertures(self, filename):
         self.ref_apertures = []
-        for star in star_table:
-            self.ref_apertures.append(Aperture(star.x, star.y, self.radius, data=filename))
+        for star in self.star_table:
+            # print(star['x'], star['y'], self.radius, filename)
+            self.ref_apertures.append(Aperture(star['x'], star['y'], self.radius, data=filename, subset_only=True))
 
     # def extract(self):
     #
