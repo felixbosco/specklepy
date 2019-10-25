@@ -12,7 +12,7 @@ from holopy.io.psffile import PSFfile
 
 from holopy.utils.plot import imshow
 
-class PSFExtractor(object):
+class PSFExtraction(object):
 
     def __init__(self, params):
         if not isinstance(params, ParamHandler):
