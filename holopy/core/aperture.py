@@ -57,11 +57,9 @@ class Aperture(object):
     def width(self):
         return self.radius * 2 + 1
 
-
     @property
     def index(self):
         return (self.x0, self.y0)
-
 
     @property
     def offset(self):
@@ -70,6 +68,9 @@ class Aperture(object):
 
     def __call__(self):
         return self.data
+
+    def __getitem__(self, index):
+        return self.data[index]
 
 
     def make_distance_map(self, center=None):

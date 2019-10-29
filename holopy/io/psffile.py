@@ -63,9 +63,20 @@ class PSFfile(object):
         logging.info("Updating data in {}".format(self.filename))
 
 
+    def __getitem__(self, index):
+        return fits.getdata(self.filename)[index]
+
+
+    def __setitem__(self, index, data):
+        with fits.open(self.filename, mode='update') as hdulist:
+            hdulist[0].data[index] = data
+            hdulist[0].header.set('UPDATED', str(datetime.now()))
+            hdulist.flush()
+
+
     def update_frame(self, frame_index, data):
         with fits.open(self.filename, mode='update') as hdulist:
             hdulist[0].data[frame_index] = data
-            hdulist[0].header.set('DATE', str(datetime.now()))
+            hdulist[0].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
         # logging.info("Updating data in {}".format(self.filename))
