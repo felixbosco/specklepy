@@ -35,21 +35,19 @@ class PSFExtraction(object):
             # print(star['x'], star['y'], self.radius, filename)
             self.ref_apertures.append(Aperture(star['x'], star['y'], self.radius, data=filename, subset_only=True))
 
-    # def extract(self):
-    #
-    #
-    #     for file in self.params.inFiles:
-    #         logging.info("Extracting PSFs from file {}".format(file))
-    #         psf_file = PSFfile(file, self.params.tmpDir, frame_shape=(box_size, box_size))
-    #
-    #         with fits.open(file) as hdulist:
-    #             cube = hdulist[0].data
-    #
-    #             frame_number = hdulist[0].header['NAXIS3']
-    #             for frame_index, frame in enumerate(cube):
-    #                 print("\rExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
-    #                 with fits.open(file) as hdulist:
-    #
-    #
-    #                     psf_file.update_frame(frame_index, epsf)
-    #             print('\r')
+
+    def extract(self):
+        for file in self.params.inFiles:
+            logging.info("Extracting PSFs from file {}".format(file))
+            psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
+
+            frame_number = fits.getheader(file)['NAXIS3']
+            cube = fits.getdata(file)
+
+            for frame_index, frame in enumerate(cube):
+                print("\rExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
+                with fits.open(file) as hdulist:
+                    pass
+
+                    # psf_file.update_frame(frame_index, psf)
+            print('\r')
