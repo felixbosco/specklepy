@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from holopy.config import plotting
 from holopy.utils import transferfunctions as tf
 
 
 def imshow(image, title=None, norm=None):
+    if norm == 'log':
+        norm = LogNorm()
     plt.figure()
     plt.imshow(image, norm=norm)
     plt.title(title)
@@ -15,10 +18,10 @@ def imshow(image, title=None, norm=None):
 
 def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
     plt.figure()
-    if len(image.shape) is 2:
+    if image.ndim is 2:
         xdata, ydata = tf.powerspec1d(image, average=average, pixel_scale=pixel_scale)
         plt.plot(xdata, ydata, '-')
-    elif len(image.shape) is 3:
+    elif image.ndim is 3:
         for frame in image:
             xdata, ydata = tf.powerspec1d(frame, average=average, pixel_scale=pixel_scale)
             plt.plot(xdata, ydata, '-')
