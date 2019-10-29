@@ -9,10 +9,10 @@ from holopy.io.outfile import Outfile
 # from holopy.core.reconstructor import Reconstructor
 
 
-class SSAReconstructor(object):
+class SSAReconstruction(object):
 
     def __init__(self, **kwargs):
-        # super(SSAReconstructor, self).__init__(**kwargs)
+        # super(SSAReconstruction, self).__init__(**kwargs)
         for key in kwargs:
             self.__setattr__(key, kwargs[key])
 

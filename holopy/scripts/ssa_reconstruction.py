@@ -4,7 +4,7 @@ try:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.algorithms.ssa import SSAReconstructor
+    from holopy.algorithms.ssa import SSAReconstruction
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -17,7 +17,7 @@ except ModuleNotFoundError:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.algorithms.ssa import SSAReconstructor
+    from holopy.algorithms.ssa import SSAReconstruction
 
 
 
@@ -52,8 +52,8 @@ def main(options=None):
 
     # Execute reconstruction
     outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
-    ssa_reconstruction = SSAReconstructor()
-    ssa_reconstruction(filehandler, outfile=outfile)
+    algorithm = SSAReconstruction()
+    algorithm(filehandler, outfile=outfile)
 
 
 if __name__ == '__main__':
