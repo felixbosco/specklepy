@@ -65,6 +65,10 @@ class Aperture(object):
     def offset(self):
         return (self.xoffset, self.yoffset)
 
+    @properly
+    def shape(self):
+        return self.data.shape
+
 
     def __call__(self):
         return self.data
