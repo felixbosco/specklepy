@@ -10,9 +10,22 @@ from holopy.utils import transferfunctions as tf
 class Aperture(object):
 
     def __init__(self, x0, y0, radius, data, mask='circular', subset_only=True):
-        self.x0 = x0
-        self.y0 = y0
-        self.radius = radius
+        # Integer checks and handling non-integer input
+        if isinstance(x0, int) and isinstance(y0, int):
+            self.x0 = x0
+            self.y0 = y0
+            self.xoffset = 0
+            self.yoffset = 0
+        else:
+            if isinstance(x0, float) or isinstance(y0, float):
+                self.x0 = int(np.around(x0))
+                self.y0 = int(np.around(y0))
+                self.xoffset = x0 - self.x0
+                self.yoffset = y0 - self.y0
+        if isinstance(radius, int):
+            self.radius = radius
+        else:
+            raise ValueError('Aperture radius must be given as integer! (Was given as {})'.format(radius))
 
         # Handling data input
         if isinstance(data, str):
@@ -48,6 +61,11 @@ class Aperture(object):
     @property
     def index(self):
         return (self.x0, self.y0)
+
+
+    @property
+    def offset(self):
+        return (self.xoffset, self.yoffset)
 
 
     def __call__(self):

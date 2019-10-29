@@ -15,7 +15,11 @@ class TestAperture(unittest.TestCase):
 
     def test_init(self):
         Aperture(8, 8, radius=4, data=self.test_data)
-
+        # Non-integer indizes:
+        Aperture(8.2, 8.3, radius=4, data=self.test_data)
+        # Non-interger radius:
+        with self.assertRaises(ValueError):
+            Aperture(8.2, 8.3, radius=3.7, data=self.test_data)
 
     def test_remove_margins(self):
         aperture = Aperture(8, 8, radius=4, data=self.test_data, subset_only=True)
