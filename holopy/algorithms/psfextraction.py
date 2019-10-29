@@ -12,6 +12,7 @@ from holopy.io.psffile import PSFfile
 from holopy.core.aperture import Aperture
 from holopy.utils.plot import imshow
 
+
 class PSFExtraction(object):
 
     def __init__(self, params):
@@ -33,21 +34,26 @@ class PSFExtraction(object):
         self.ref_apertures = []
         for star in self.star_table:
             # print(star['x'], star['y'], self.radius, filename)
-            self.ref_apertures.append(Aperture(star['x'], star['y'], self.radius, data=filename, subset_only=True))
+            self.ref_apertures.append(Aperture(star['y'], star['x'], self.radius, data=filename, subset_only=True))
 
 
-    def extract(self):
+    def extract(self, mode='simple_median'):
         for file in self.params.inFiles:
+            # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
-
+            self.init_ref_apertures(file)
             frame_number = fits.getheader(file)['NAXIS3']
-            cube = fits.getdata(file)
 
-            for frame_index, frame in enumerate(cube):
+            # Extract the PSF by combining the aperture frames in the desired mode
+            for frame_index in range(frame_number):
                 print("\rExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
-                with fits.open(file) as hdulist:
+                psf = np.empty((len(self.ref_apertures), self.box_size, self.box_size))
+                for aperture_index, aperture in enumerate(self.ref_apertures):
+                    psf[aperture_index] = aperture[frame_index]
+                if mode == 'simple_median':
+                    psf = np.median(psf, axis=0)
+                elif mode == 'aligned_mean':
                     pass
-
-                    # psf_file.update_frame(frame_index, psf)
+                psf_file.update_frame(frame_index, psf)
             print('\r')
