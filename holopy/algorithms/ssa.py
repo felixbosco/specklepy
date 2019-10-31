@@ -18,7 +18,7 @@ class SSAReconstruction(object):
 
 
     def __call__(self, file_list, outfile=None):
-        logging.info("Starting reconstruction with {}...".format(self.__class__.__name__))
+        logging.info("Starting {}...".format(self.__class__.__name__))
         # file_list = glob.glob(self.input + self.cube_file)
 
         for index, file in enumerate(file_list):
