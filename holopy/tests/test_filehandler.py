@@ -14,5 +14,10 @@ class TestFileHandler(unittest.TestCase):
         fh = FileHandler(self.filename)
         print(fh)
 
+    def test_iter(self):
+        fh = FileHandler(self.filename)
+        for file in fh:
+            print(type(file), file)
+
 if __name__ == "__main__":
     unittest.main()

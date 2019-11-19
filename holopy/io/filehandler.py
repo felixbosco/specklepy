@@ -39,6 +39,9 @@ class FileHandler(object):
             s += "> {}\n".format(file)
         return s
 
+    def __len__(self):
+        return len(self.files)
+
 
     def _characterize_input(self, input):
         """

@@ -38,10 +38,12 @@ class PSFExtraction(object):
 
 
     def extract(self, mode='simple_median'):
+        self.params.psfFiles = []
         for file in self.params.inFiles:
             # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
+            self.params.psfFiles.append(psf_file.filename)
             self.init_ref_apertures(file)
             frame_number = fits.getheader(file)['NAXIS3']
 

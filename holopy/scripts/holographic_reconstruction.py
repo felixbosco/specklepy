@@ -61,7 +61,7 @@ def main(options=None):
 
     # Execute reconstruction
     algorithm = HolographicReconstruction(params)
-    algorithm.evaluate_object()
+    algorithm.execute()
 
 
 if __name__ == '__main__':

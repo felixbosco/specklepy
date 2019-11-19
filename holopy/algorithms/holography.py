@@ -7,6 +7,7 @@ from astropy.io import fits
 from holopy.logging import logging
 from holopy.io.outfile import Outfile
 from holopy.core.apodizer import Apodizer
+from holopy.algorithms.psfextraction import PSFExtraction
 
 
 class HolographicReconstruction(object):
@@ -16,22 +17,24 @@ class HolographicReconstruction(object):
         for key in kwargs:
             self.__setattr__(key, kwargs[key])
 
-
-    def __call__(self, file_list, outfile=None):
-        logging.info("Starting holographic reconstruction of...")
-        for file in self.params.inFiles:
-            print(file)
-
-        return 0
+    def __call__(self):
+        self.execute()
 
 
-        logging.info("Reconstruction finished...")
-
-        # Save the result to an Outfile
-        if outfile is not None:
-            outfile.data = reconstruction
-
-        return reconstruction
+    def execute(self):
+        """Execute the holographic image reconstruction following the algorithm
+        outlined in Schoedel et al (2013, Section 3).
+        """
+        logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
+        self.align_cubes()
+        self.find_stars()
+        self.select_reference_stars()
+        self.extract_psfs()
+        self.do_noise_thresholding()
+        self.subtract_secondary_sources()
+        self.evaluate_object()
+        self.apodize_object()
+        self.compute_image()
 
 
     def align_cubes(self):
@@ -48,15 +51,19 @@ class HolographicReconstruction(object):
         pass
 
 
-    def estimate_psfs(self):
+    def extract_psfs(self):
+        algorithm = PSFExtraction(self.params)
+        algorithm.extract()
+        logging.info("Saved the extracted PSFs to the following files:")
+        for file in self.params.psfFiles:
+            print(file)
+
+
+    def do_noise_thresholding(self):
         pass
 
 
-    def noise_thresholding(self):
-        pass
-
-
-    def secondary_source_subtraction(self):
+    def subtract_secondary_sources(self):
         pass
 
 
@@ -73,7 +80,7 @@ class HolographicReconstruction(object):
         self.Fobject = Fobj
 
 
-    def apodize(self):
+    def apodize_object(self):
         """Apodize the Fourier object with a apodization function of the users
         choice."""
         # Assert that self.Fobject is square shaped
@@ -86,7 +93,12 @@ class HolographicReconstruction(object):
         self.Fobject = self.apodizer.apodize(self.Fobject)
 
 
-    def compute_image(self):
+    def compute_image(self, autosave=True):
         """Compute the final image from the apodized object."""
         self.image = np.fft.ifft2(self.Fobject)
+        if autosave:
+            with fits.open(self.params.outFile, mode='update') as hdulist:
+                # IDEA implement that preceeding reconstructions are saved into the extensions
+                hdulist[0].data = self.images
+                hdulist.flush()
         return self.image
