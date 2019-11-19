@@ -6,6 +6,7 @@ from astropy.io import fits
 
 from holopy.logging import logging
 from holopy.io.outfile import Outfile
+from holopy.core.apodizer import Apodizer
 
 
 class HolographicReconstruction(object):
@@ -17,15 +18,12 @@ class HolographicReconstruction(object):
 
 
     def __call__(self, file_list, outfile=None):
-        logging.info("Starting {}...".format(self.__class__.__name__))
-        # file_list = glob.glob(self.input + self.cube_file)
+        logging.info("Starting holographic reconstruction of...")
+        for file in self.params.inFiles:
+            print(file)
 
-        for index, file in enumerate(file_list):
-            cube = fits.getdata(file)
-            if index == 0:
-                reconstruction = self._ssa(cube)
-            else:
-                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube))
+        return 0
+
 
         logging.info("Reconstruction finished...")
 
@@ -71,17 +69,24 @@ class HolographicReconstruction(object):
         Fimg = np.fft.fft2(images)
         Fpsf = np.fft.fft2(psfs)
 
-        Fobj = np.divide(np.mean(np.multiply(Fimg, np.conjugate(psfs), np.mean(..., axis=0)), axis=0))
+        Fobj = np.divide(np.mean(np.multiply(Fimg, np.conjugate(Fpsf)), axis=0), np.mean(np.abs(np.square(Fpsf)), axis=0))
         self.Fobject = Fobj
 
 
     def apodize(self):
         """Apodize the Fourier object with a apodization function of the users
         choice."""
-        pass
+        # Assert that self.Fobject is square shaped
+        try:
+            assert self.Fobject.shape[0] == self.Fobject.shape[1]
+        except AssertionError:
+            raise NotImplementedError("apodization of non-quadratic objects is not implemented yet.")
+
+        self.apodizer = Apodizer(params.apodizationType, size=self.Fobject.shape[0], radius=params.apodizationWidth)
+        self.Fobject = self.apodizer.apodize(self.Fobject)
 
 
     def compute_image(self):
         """Compute the final image from the apodized object."""
-        self.image = np.fft.fft2(self.Fobject)
+        self.image = np.fft.ifft2(self.Fobject)
         return self.image
