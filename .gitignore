@@ -5,6 +5,6 @@
 # Directories
 *.egg
 *.egg-info
-/data/test/*
+/data/test/*fits
 /data/example/*dat
 /holopy/deprecated/*

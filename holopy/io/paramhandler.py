@@ -19,7 +19,7 @@ class ParamHandler(object):
             raise FileNotFoundError("Defaults file {} not found!".format(self.defaults_file))
 
         # Read parameter_file
-        parser = ConfigParser()
+        parser = ConfigParser(inline_comment_prefixes="#")
         parser.optionxform = str  # make option names case sensitive
         logging.info("Reading parameter file {}".format(self.parameter_file))
         parser.read(self.parameter_file)
@@ -34,7 +34,7 @@ class ParamHandler(object):
 
 
         # Complete list of essential attributes from defaults file
-        defaults = ConfigParser()
+        defaults = ConfigParser(inline_comment_prefixes="#")
         defaults.optionxform = str  # make option names case sensitive
         logging.info("Reading defaults file {}".format(self.defaults_file))
         defaults.read(self.defaults_file)
