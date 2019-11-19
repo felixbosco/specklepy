@@ -35,8 +35,12 @@ class HolographicReconstruction(object):
 
         return reconstruction
 
+
     def evaluate_object(self, images, psfs, apodizer):
-        assert images.shape == psfs.shape
+        try:
+            assert images.shape == psfs.shape
+        except:
+            raise NotImplementedError('Padding of the PSF estimate for obtaining the proper shape is not implemented yet')
 
         Fimg = np.fft.fft2(images)
         Fpsf = np.fft.fft2(psfs)

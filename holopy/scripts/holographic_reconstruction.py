@@ -1,4 +1,6 @@
 import argparse
+import os
+import sys
 
 try:
     from holopy.io.filehandler import FileHandler
@@ -9,9 +11,8 @@ try:
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
-    PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_holopy'
+    PATH = os.getcwd()
     warnings.warn("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
-    import sys
     sys.path.insert(0, PATH)
 
     # Repeat import
@@ -59,7 +60,8 @@ def main(options=None):
     params.outFile = Outfile(file_list=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
-    holographic_reconstruction = HolographicReconstruction(params)
+    algorithm = HolographicReconstruction(params)
+    algorithm.evaluate_object()
 
 
 if __name__ == '__main__':
