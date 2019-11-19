@@ -8,6 +8,7 @@ from holopy.logging import logging
 from holopy.io.outfile import Outfile
 from holopy.core.apodizer import Apodizer
 from holopy.algorithms.psfextraction import PSFExtraction
+from holopy.utils.plot import imshow
 
 
 class HolographicReconstruction(object):
@@ -17,11 +18,12 @@ class HolographicReconstruction(object):
         for key in kwargs:
             self.__setattr__(key, kwargs[key])
 
+
     def __call__(self):
         self.execute()
 
 
-    def execute(self):
+    def execute(self, show=False):
         """Execute the holographic image reconstruction following the algorithm
         outlined in Schoedel et al (2013, Section 3).
         """
@@ -34,7 +36,10 @@ class HolographicReconstruction(object):
         self.subtract_secondary_sources()
         self.evaluate_object()
         self.apodize_object()
-        self.compute_image()
+        self.compute_image(autosave=True)
+
+        if show:
+            imshow(self.image)
 
 
     def align_cubes(self):
@@ -48,6 +53,7 @@ class HolographicReconstruction(object):
 
 
     def select_reference_stars(self):
+        """Interactive selection of reference stars"""
         pass
 
 
@@ -67,16 +73,21 @@ class HolographicReconstruction(object):
         pass
 
 
-    def evaluate_object(self, images, psfs, apodizer):
-        try:
-            assert images.shape == psfs.shape
-        except:
-            raise NotImplementedError('Padding of the PSF estimate for obtaining the proper shape is not implemented yet')
-
-        Fimg = np.fft.fft2(images)
-        Fpsf = np.fft.fft2(psfs)
-
-        Fobj = np.divide(np.mean(np.multiply(Fimg, np.conjugate(Fpsf)), axis=0), np.mean(np.abs(np.square(Fpsf)), axis=0))
+    def evaluate_object(self):
+        # images = None
+        # psfs = None
+        # try:
+        #     assert images.shape == psfs.shape
+        # except:
+        #     raise NotImplementedError('Padding of the PSF estimate for obtaining the proper shape is not implemented yet')
+        #
+        # Fimg = np.fft.fft2(images)
+        # Fpsf = np.fft.fft2(psfs)
+        #
+        # Fobj = np.divide(np.mean(np.multiply(Fimg, np.conjugate(Fpsf)), axis=0), np.mean(np.abs(np.square(Fpsf)), axis=0))
+        Fobj = np.zeros((256, 256))
+        Fobj[128, 128] = 100
+        Fobj[64, 192] = 20
         self.Fobject = Fobj
 
 
@@ -89,16 +100,14 @@ class HolographicReconstruction(object):
         except AssertionError:
             raise NotImplementedError("apodization of non-quadratic objects is not implemented yet.")
 
-        self.apodizer = Apodizer(params.apodizationType, size=self.Fobject.shape[0], radius=params.apodizationWidth)
+        self.apodizer = Apodizer(self.params.apodizationType, size=self.Fobject.shape[0], radius=self.params.apodizationWidth)
         self.Fobject = self.apodizer.apodize(self.Fobject)
 
 
     def compute_image(self, autosave=True):
         """Compute the final image from the apodized object."""
-        self.image = np.fft.ifft2(self.Fobject)
+        self.image = np.fft.fft2(self.Fobject)
+        self.image = np.abs(self.image)
         if autosave:
-            with fits.open(self.params.outFile, mode='update') as hdulist:
-                # IDEA implement that preceeding reconstructions are saved into the extensions
-                hdulist[0].data = self.images
-                hdulist.flush()
+            self.params.outFile.data = self.image
         return self.image
