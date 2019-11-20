@@ -55,7 +55,7 @@ class ParamHandler(object):
                     logging.warning("Essential parameter <{}> not found in parameter file or config file!".format(attr))
 
         self.makedirs(dir_list=make_dirs)
-        self.inFiles = FileHandler(self.inDir)
+        self.inFiles = FileHandler(self.inDir)()
 
 
     def makedirs(self, dir_list):
