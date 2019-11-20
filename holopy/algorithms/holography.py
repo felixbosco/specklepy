@@ -32,6 +32,8 @@ class HolographicReconstruction(object):
         """
         logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
         self.align_cubes()
+        if not hasattr(self, 'image'):
+            self.ssa_reconstruction()
         self.find_stars()
         self.select_reference_stars()
         self.extract_psfs()
@@ -60,6 +62,10 @@ class HolographicReconstruction(object):
                 integrated_cubes[index] = np.sum(fits.getdata(file), axis=0)
             # Implement now how to align the given integrated frames!
             raise NotImplementedError("Alignment of multiple cubes is not implemented yet!")
+
+
+    def ssa_reconstruction(self):
+        pass
 
 
 
@@ -150,7 +156,7 @@ class HolographicReconstruction(object):
         # Compute the object
         enumerator = np.mean(np.multiply(Fimg, np.conjugate(Fpsf)), axis=0)
         denominator = np.mean(np.abs(np.square(Fpsf)), axis=0)
-        denominator = np.ma.masked_values(denominator, 0.0)
+        # denominator = np.ma.masked_values(denominator, 0.0)
         self.Fobject  = np.divide(enumerator, denominator)
 
 
