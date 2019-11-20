@@ -1,4 +1,5 @@
 import argparse
+import os
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from photutils import DAOStarFinder
@@ -19,7 +20,7 @@ try:
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
-    PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_holopy'
+    PATH = os.getcwd()
     warnings.warn("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
     import sys
     sys.path.insert(0, PATH)
@@ -72,7 +73,7 @@ def main(options=None):
         args.outfile = params.allStarsFile
 
     finder = SourceExtraction()
-    finder.find_sources(file=args.file, starfinder_fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
+    finder.find_sources(image=args.file, starfinder_fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
         background_subtraction=background_subtraction)
     finder.writeto(args.outfile)
 

@@ -15,11 +15,13 @@ class SourceExtraction(object):
         self.find_sources(*args, **kwargs)
 
 
-    def find_sources(self, file, starfinder_fwhm, noise_threshold, background_subtraction=True):
+    def find_sources(self, image, starfinder_fwhm, noise_threshold, background_subtraction=True):
         # Prepare noise statistics
-        image = fits.getdata(file)
+        if isinstance(image, str):
+            logging.info("The argument image '{}' is interpreted as file name.".format(image))
+            image = fits.getdata(image)
         mean, median, std = sigma_clipped_stats(image, sigma=3.0)
-        logging.info("Noise statistics for {}:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(file, mean, median, std))
+        logging.info("Noise statistics for {}:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(image, mean, median, std))
 
         # Find stars
         daofind = DAOStarFinder(fwhm=starfinder_fwhm, threshold=noise_threshold*std)

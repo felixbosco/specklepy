@@ -10,6 +10,7 @@ from holopy.io.outfile import Outfile
 from holopy.core.aperture import Aperture
 from holopy.core.apodizer import Apodizer
 from holopy.algorithms.psfextraction import PSFExtraction
+from holopy.algorithms.sourceextraction import SourceExtraction
 from holopy.algorithms.ssa import SSAReconstruction
 from holopy.utils.plot import imshow
 from holopy.utils.transferfunctions import otf
@@ -73,15 +74,19 @@ class HolographicReconstruction(object):
         self.total_flux = np.sum(self.image)
 
 
-    def find_stars(self):
+    def find_stars(self, background_subtraction=True):
         """Find sources in the reference image, which may either be a SSA or
         ha preceding holographic reconstruction."""
-        pass
+        finder = SourceExtraction()
+        finder.find_sources(image=self.image, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
+            background_subtraction=background_subtraction)
+        finder.writeto(self.params.allStarsFile)
 
 
     def select_reference_stars(self):
         """Interactive selection of reference stars"""
-        pass
+        print("Please copy your desired reference stars into the reference star file!")
+        input("When you are done, just hit a key.")
 
 
     def extract_psfs(self):
