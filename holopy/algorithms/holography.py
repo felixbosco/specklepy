@@ -35,7 +35,7 @@ class HolographicReconstruction(object):
         self.find_stars()
         self.select_reference_stars()
         self.extract_psfs()
-        # self.do_noise_thresholding()
+        self.do_noise_thresholding()
         self.subtract_secondary_sources()
         self.evaluate_object()
         self.apodize_object()
@@ -124,7 +124,7 @@ class HolographicReconstruction(object):
             psf = fits.getdata(file)
             if index == 0:
                 # Pad the Fpsf cube to have the same xz-extent as Fimg
-                logging.info("Padding the PSFs")
+                print("\tPadding the PSFs")
                 print('\tImages', img.shape)
                 print('\tPSFs', psf.shape)
                 dx = img.shape[1] - psf.shape[1]
@@ -170,8 +170,9 @@ class HolographicReconstruction(object):
 
     def compute_image(self, autosave=True):
         """Compute the final image from the apodized object."""
-        self.image = ifft2(self.Fobject)
-        self.image = np.abs(self.Fobject)
+        self.image = fftshift(self.Fobject)
+        self.image = np.abs(self.image)
+        self.image = self.image[::-1, ::-1]
         if autosave:
             self.params.outFile.data = self.image
         return self.image
