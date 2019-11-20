@@ -10,6 +10,7 @@ from holopy.io.outfile import Outfile
 from holopy.core.aperture import Aperture
 from holopy.core.apodizer import Apodizer
 from holopy.algorithms.psfextraction import PSFExtraction
+from holopy.algorithms.ssa import SSAReconstruction
 from holopy.utils.plot import imshow
 from holopy.utils.transferfunctions import otf
 
@@ -46,6 +47,8 @@ class HolographicReconstruction(object):
         if show:
             imshow(self.image)
 
+        return self.image
+
 
     def align_cubes(self):
         self.numberFiles = len(self.params.inFiles)
@@ -65,8 +68,9 @@ class HolographicReconstruction(object):
 
 
     def ssa_reconstruction(self):
-        pass
-
+        algorithm = SSAReconstruction()
+        self.image = algorithm.execute(self.params.inFiles, outfile=self.params.outFile)
+        self.total_flux = np.sum(self.image)
 
 
     def find_stars(self):
@@ -179,6 +183,8 @@ class HolographicReconstruction(object):
         self.image = fftshift(self.Fobject)
         self.image = np.abs(self.image)
         self.image = self.image[::-1, ::-1]
+        image_scale = self.total_flux / np.sum(self.image)
+        self.image = np.multiply(self.image, image_scale) # assert flux conservation
         if autosave:
             self.params.outFile.data = self.image
         return self.image
