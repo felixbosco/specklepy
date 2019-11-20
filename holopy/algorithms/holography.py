@@ -36,17 +36,22 @@ class HolographicReconstruction(object):
         self.align_cubes()
         if not hasattr(self, 'image'):
             self.ssa_reconstruction()
-        self.find_stars()
-        self.select_reference_stars()
-        self.extract_psfs()
-        self.do_noise_thresholding()
-        self.subtract_secondary_sources()
-        self.evaluate_object()
-        self.apodize_object()
-        self.compute_image(autosave=True)
+        while True:
+            self.find_stars()
+            self.select_reference_stars()
+            self.extract_psfs()
+            self.do_noise_thresholding()
+            self.subtract_secondary_sources()
+            self.evaluate_object()
+            self.apodize_object()
+            self.compute_image(autosave=True)
 
-        if show:
-            imshow(self.image)
+            if show:
+                imshow(self.image)
+
+            answer = input("Do you want to continue with one more iteration? [yes/no]")
+            if answer.lower() == 'no':
+                break
 
         return self.image
 
@@ -79,13 +84,13 @@ class HolographicReconstruction(object):
         ha preceding holographic reconstruction."""
         finder = SourceExtraction()
         finder.find_sources(image=self.image, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
-            background_subtraction=background_subtraction)
+            background_subtraction=background_subtraction, verbose=False)
         finder.writeto(self.params.allStarsFile)
 
 
     def select_reference_stars(self):
         """Interactive selection of reference stars"""
-        print("Please copy your desired reference stars into the reference star file!")
+        print("Please copy your desired reference stars from the all stars file into the reference star file!")
         input("When you are done, just hit a key.")
 
 
