@@ -15,7 +15,7 @@ class SourceExtraction(object):
         self.find_sources(*args, **kwargs)
 
 
-    def find_sources(self, image, starfinder_fwhm, noise_threshold, background_subtraction=True):
+    def find_sources(self, image, starfinder_fwhm, noise_threshold, background_subtraction=True, verbose=True):
         # Prepare noise statistics
         if isinstance(image, str):
             logging.info("The argument image '{}' is interpreted as file name.".format(image))
@@ -36,7 +36,8 @@ class SourceExtraction(object):
         self.sources.keep_columns(['x', 'y', 'flux'])
         for col in self.sources.colnames:
             self.sources[col].info.format = '%.8g'  # for consistent table output
-        logging.info("Found {} sources:\n{}".format(len(self.sources), self.sources))
+        if verbose:
+            logging.info("Found {} sources:\n{}".format(len(self.sources), self.sources))
 
 
     def writeto(self, file):
