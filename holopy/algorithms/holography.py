@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.fft import fft2, ifft2, fftshift
 import os
 import glob
 from datetime import datetime
@@ -34,7 +35,7 @@ class HolographicReconstruction(object):
         self.find_stars()
         self.select_reference_stars()
         self.extract_psfs()
-        self.do_noise_thresholding()
+        # self.do_noise_thresholding()
         self.subtract_secondary_sources()
         self.evaluate_object()
         self.apodize_object()
@@ -114,9 +115,9 @@ class HolographicReconstruction(object):
         for index, file in enumerate(self.params.inFiles):
             img = fits.getdata(file)
             if index == 0:
-                Fimg = np.fft.fft2(img)
+                Fimg = fftshift(fft2(img))
             else:
-                Fimg = np.concatenate(Fimg, np.fft.fft2(img))
+                Fimg = np.concatenate(Fimg, fftshift(fft2(img)))
 
         logging.info("Fourier transforming the PSFs...")
         for index, file in enumerate(self.params.psfFiles):
@@ -138,9 +139,9 @@ class HolographicReconstruction(object):
                     raise ValueError("The Fourier transformed images and psfs have different shape, {} and {}. Something went wrong with the padding!".format(Fimg.shape, Fpsf.shape))
 
                 # Initialize Fpsf by the transforming the first cube
-                Fpsf = np.fft.fft2(psf)
+                Fpsf = fftshift(fft2(psf))
             else:
-                Fpsf = np.concatenate(Fpsf, np.fft.fft2(np.pad(psf, pad_vector)))
+                Fpsf = np.concatenate(Fpsf, fftshift(fft2(np.pad(psf, pad_vector))))
 
         # Clear memory
         del psf
@@ -150,7 +151,6 @@ class HolographicReconstruction(object):
         enumerator = np.mean(np.multiply(Fimg, np.conjugate(Fpsf)), axis=0)
         denominator = np.mean(np.abs(np.square(Fpsf)), axis=0)
         denominator = np.ma.masked_values(denominator, 0.0)
-        imshow(denominator)
         self.Fobject  = np.divide(enumerator, denominator)
 
 
@@ -170,8 +170,8 @@ class HolographicReconstruction(object):
 
     def compute_image(self, autosave=True):
         """Compute the final image from the apodized object."""
-        self.image = np.fft.ifft2(self.Fobject)
-        self.image = np.abs(self.image)
+        self.image = ifft2(self.Fobject)
+        self.image = np.abs(self.Fobject)
         if autosave:
             self.params.outFile.data = self.image
         return self.image

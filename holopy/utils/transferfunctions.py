@@ -1,8 +1,11 @@
 import numpy as np
 from numpy.fft import fft2, fftshift
 
-def otf(psf):
-    return fftshift(fft2(psf))
+def otf(psf, inverse=False):
+    if inverse:
+        return fftshift(ifft2(psf))
+    else:
+        return fftshift(fft2(psf))
 
 def mtf(psf):
     return np.abs(otf(psf))
