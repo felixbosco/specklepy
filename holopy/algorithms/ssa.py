@@ -17,7 +17,11 @@ class SSAReconstruction(object):
             self.__setattr__(key, kwargs[key])
 
 
-    def __call__(self, file_list, outfile=None):
+    def __call__(self, *args, **kwargs):
+        self.execute(*args, **kwargs)
+
+
+    def execute(self, file_list, outfile=None):
         logging.info("Starting {}...".format(self.__class__.__name__))
         # file_list = glob.glob(self.input + self.cube_file)
 

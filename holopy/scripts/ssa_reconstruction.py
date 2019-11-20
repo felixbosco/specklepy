@@ -54,7 +54,7 @@ def main(options=None):
     # Execute reconstruction
     outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
     algorithm = SSAReconstruction()
-    algorithm(filehandler, outfile=outfile)
+    algorithm.execute(filehandler, outfile=outfile)
 
 
 if __name__ == '__main__':
