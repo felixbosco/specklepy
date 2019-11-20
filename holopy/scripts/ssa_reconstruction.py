@@ -1,4 +1,6 @@
 import argparse
+import os
+import sys
 
 try:
     from holopy.io.filehandler import FileHandler
@@ -8,9 +10,8 @@ try:
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
-    PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_holopy'
+    PATH = os.getcwd()
     warnings.warn("Importing spampy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
-    import sys
     sys.path.insert(0, PATH)
 
     # Repeat import
