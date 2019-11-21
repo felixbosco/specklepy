@@ -1,3 +1,4 @@
+import os
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from photutils import DAOStarFinder
@@ -47,4 +48,8 @@ class SourceExtraction(object):
 
     def writeto(self, file):
         logging.info("Writing list of sources to file {}".format(file))
+        # try:
         self.sources.write(file, format='ascii', overwrite=True)
+        # except FileNotFoundError:
+        #     os.system('mk {}'.format(file))
+        #     self.sources.write(file, format='ascii', overwrite=True)

@@ -36,7 +36,7 @@ class PSFfile(object):
             hdu.header.set(header_prefix + key, cards[key])
 
         # Add name of parent file to header
-        hdu.header.set(header_prefix + "FILE NAME", inFile)
+        hdu.header.set(header_prefix + "FILE NAME", os.path.basename(inFile))
 
         # Add parameter of reference stars to header
 

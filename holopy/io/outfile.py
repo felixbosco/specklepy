@@ -1,4 +1,5 @@
 import numpy as np
+from os import path
 from astropy.io import fits
 from datetime import datetime
 
@@ -28,7 +29,7 @@ class Outfile(object):
 
         # Add list of files to header
         for index, file in enumerate(file_list):
-            hdu.header.set(header_prefix + "FILE {} NAME".format(index), file)
+            hdu.header.set(header_prefix + "FILE {} NAME".format(index), path.basename(file))
             hdu.header.set(header_prefix + "FILE {} FRAMENUMBER".format(index), fits.getheader(file)['NAXIS3'])
 
         # Initialize data

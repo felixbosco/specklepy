@@ -56,6 +56,8 @@ class FileHandler(object):
                 self.input_type = 'generic'
                 # find generic files with glob.glob()
                 self.files = glob.glob(input)
+                self.files.remove(input)
+                self.files.sort()
                 logging.info("Found {} files matching to the generic name {}.".format(len(self.files), input))
             else:
                 extension = input.split('.')[-1]

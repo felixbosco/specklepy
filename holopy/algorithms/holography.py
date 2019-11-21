@@ -79,7 +79,9 @@ class HolographicReconstruction(object):
                 finder = SourceExtraction()
                 finder.find_sources(image=integrated, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
                     background_subtraction=True, verbose=False)
-                finder.writeto(self.params.tmpDir + 'stars/' + file.replace('.fits', '_stars.dat'))
+                if not os.path.isdir(self.params.tmpDir + 'stars/'):
+                    os.system('mkdir {}stars/'.format(self.params.tmpDir))
+                finder.writeto(self.params.tmpDir + 'stars/' + os.path.basename(file).replace('.fits', '_stars.dat'))
 
 
 
