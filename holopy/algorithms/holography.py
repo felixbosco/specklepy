@@ -34,7 +34,7 @@ class HolographicReconstruction(object):
         outlined in Schoedel et al (2013, Section 3).
         """
         logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
-        self.align_cubes()
+        self.align_cubes(reference_file=self.params.alignmentReferenceFile)
         self.ssa_reconstruction()
         return self.image
         while True:
