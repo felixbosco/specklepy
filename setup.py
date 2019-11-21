@@ -21,6 +21,7 @@ setup(name='HoloPy',
       license='MIT',
       install_requires=[
           'astropy',
+          'photutils',
       ],
       package_data={},
       include_package_data=True,
