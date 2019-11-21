@@ -9,6 +9,7 @@ from holopy.logging import logging
 from holopy.io.outfile import Outfile
 from holopy.core.aperture import Aperture
 from holopy.core.apodizer import Apodizer
+from holopy.algorithms.matchstarlist import MatchStarList
 from holopy.algorithms.psfextraction import PSFExtraction
 from holopy.algorithms.sourceextraction import SourceExtraction
 from holopy.algorithms.ssa import SSAReconstruction
@@ -84,21 +85,8 @@ class HolographicReconstruction(object):
                 if not os.path.isdir(self.params.tmpDir + 'stars/'):
                     os.system('mkdir {}stars/'.format(self.params.tmpDir))
                 finder.writeto(self.params.tmpDir + 'stars/' + os.path.basename(file).replace('.fits', '_stars.dat'))
-            self._match_stars()
-
-    def _match_stars(self, number_stars=10):
-        import matplotlib.pyplot as plt
-
-        for index, star_list in enumerate(glob.glob(self.params.tmpDir + 'stars/*dat')):
-            if index == 0:
-                fluxes0 = np.loadtxt(star_list, skiprows=1)[:number_stars].transpose()
-            else:
-                fluxes = np.loadtxt(star_list, skiprows=1)[:number_stars].transpose()
-                plt.plot(fluxes[0] - fluxes0[0])
-                plt.plot(fluxes[1] - fluxes0[1], ':')
-                plt.plot(fluxes[2] - fluxes0[2], '--')
-        plt.show()
-        plt.close()
+            algorithm = MatchStarList()
+            # Continue implementing this after developing the aglgorithm
 
 
     def ssa_reconstruction(self):
