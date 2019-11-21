@@ -57,21 +57,31 @@ class HolographicReconstruction(object):
         return self.image
 
 
-    def align_cubes(self):
+    def align_cubes(self, reference_file_index=0, reference_file=None):
         if len(self.params.inFiles) == 1:
             logging.info("Only one data cube is provided, nothing to align.")
         else:
-            for file in self.params.inFiles:
-                integrated = np.sum(fits.getdata(file), axis=0)
-                # imshow(integrated)
-                finder = SourceExtraction()
-                finder.find_sources(image=integrated, starfinder_fwhm=self.params.starfinderFwhmForAlignment, noise_threshold=self.params.noiseThresholdForAlignment,
-                    background_subtraction=True, verbose=False)
-                if not os.path.isdir(self.params.tmpDir + 'stars/'):
-                    os.system('mkdir {}stars/'.format(self.params.tmpDir))
-                finder.writeto(self.params.tmpDir + 'stars/' + os.path.basename(file).replace('.fits', '_stars.dat'))
-            algorithm = MatchStarList()
-            # Continue implementing this after developing the aglgorithm
+            self.shifts = []
+
+            # Identify reference file and Fourier transform the integrated image
+            if reference_file is None:
+                reference_file = self.params.inFiles[reference_file_index]
+            logging.info("Computing relative shifts between data cubes. Reference file is {}".format(reference_file))
+            reference_image = np.sum(fits.getdata(reference_file), axis=0)
+            Freference_image = np.fft.fft2(reference_image)
+            del reference_image
+
+            # Iterate over inFiles and estimate shift via 2D correlation of the integrated cubes
+            for index, file in enumerate(self.params.inFiles):
+                if index == reference_file_index:
+                    shift = (0, 0)
+                else:
+                    image = np.sum(fits.getdata(file), axis=0)
+                    Fimage = np.conjugate(np.fft.fft2(image))
+                    correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
+                    shift = np.unravel_index(np.argmax(correlation), correlation.shape)
+                self.shifts.append(shift)
+            logging.info("Identified the following shifts:\n\t{}".format(self.shifts))
 
 
     def ssa_reconstruction(self):
