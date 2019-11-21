@@ -35,7 +35,6 @@ class HolographicReconstruction(object):
         """
         logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
         self.align_cubes()
-        # if not hasattr(self, 'image'):
         self.ssa_reconstruction()
         return self.image
         while True:
@@ -59,28 +58,14 @@ class HolographicReconstruction(object):
 
 
     def align_cubes(self):
-        # self.numberFiles = len(self.params.inFiles)
-        # # There is nothing to align, if only one cube is provided.
-        # if self.numberFiles == 1:
-        #     self.numberFrames = fits.getheader(self.params.inFiles[0])['NAXIS3']
-        # else:
-        #     self.numberFrames = 0
-        #     hdr = fits.getheader(self.params.inFiles[0])
-        #     shape = (len(self.params.inFiles), hdr['NAXIS1'], hdr['NAXIS2'])
-        #     integrated_cubes = np.zeros(shape)
-        #     for index, file in enumerate(self.params.inFiles):
-        #         self.numberFrames += fits.getheader(file)['NAXIS3']
-        #         integrated_cubes[index] = np.sum(fits.getdata(file), axis=0)
-        #     # Implement now how to align the given integrated frames!
-        #     raise NotImplementedError("Alignment of multiple cubes is not implemented yet!")
         if len(self.params.inFiles) == 1:
-            logging.info("There is nothing to align if only one data cube is provided.")
+            logging.info("Only one data cube is provided, nothing to align.")
         else:
             for file in self.params.inFiles:
                 integrated = np.sum(fits.getdata(file), axis=0)
                 # imshow(integrated)
                 finder = SourceExtraction()
-                finder.find_sources(image=integrated, starfinder_fwhm=self.params.starfinderFwhm*3, noise_threshold=self.params.noiseThreshold*4,
+                finder.find_sources(image=integrated, starfinder_fwhm=self.params.starfinderFwhmForAlignment, noise_threshold=self.params.noiseThresholdForAlignment,
                     background_subtraction=True, verbose=False)
                 if not os.path.isdir(self.params.tmpDir + 'stars/'):
                     os.system('mkdir {}stars/'.format(self.params.tmpDir))
