@@ -28,6 +28,7 @@ class TestPSFExtraction(unittest.TestCase):
     def test_extract(self):
         algorithm = PSFExtraction(self.params)
         algorithm.extract()
+        algorithm.extract(mode='align_median')
 
 
 if __name__ == "__main__":

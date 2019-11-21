@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.ndimage import shift
 from os import path
 from astropy.io import fits
 from astropy.table import Table
@@ -26,6 +27,10 @@ class PSFExtraction(object):
         self.star_table = Table.read(params.refSourceFile, format='ascii')
 
 
+    def __call__(self, **kwargs):
+        return self.extract(**kwargs)
+
+
     @property
     def box_size(self):
         return self.radius * 2 + 1
@@ -35,10 +40,17 @@ class PSFExtraction(object):
         self.ref_apertures = []
         for star in self.star_table:
             # print(star['x'], star['y'], self.radius, filename)
-            self.ref_apertures.append(Aperture(star['y'], star['x'], self.radius, data=filename, subset_only=True))
+            self.ref_apertures.append(Aperture(star['y'], star['x'], self.radius, data=filename, subset_only=True, verbose=False))
 
 
-    def extract(self, mode='simple_median'):
+    def extract(self, mode='align_median'):
+        if 'median' in mode:
+            combine = np.median
+        elif 'mean' in mode:
+            combine = np.mean
+        else:
+            raise ValueError('PSFExtraction received unknown mode for extract method ({}).'.format(mode))
+
         self.params.psfFiles = []
         for file in self.params.inFiles:
             # Initialize file by file
@@ -54,13 +66,15 @@ class PSFExtraction(object):
                 psf = np.empty((len(self.ref_apertures), self.box_size, self.box_size))
                 for aperture_index, aperture in enumerate(self.ref_apertures):
                     # Copy aperture into psf
-                    psf[aperture_index] = aperture[frame_index]
+                    if 'align' in mode:
+                        psf[aperture_index] = shift(aperture[frame_index], shift=(aperture.xoffset, aperture.yoffset))
+                    elif 'resample' in mode:
+                        pass
+                    else:
+                        psf[aperture_index] = aperture[frame_index]
                     # Normalization of each psf to make median estimate sensible
                     psf[aperture_index] /= np.sum(psf[aperture_index])
 
-                if mode == 'simple_median':
-                    psf = np.median(psf, axis=0)
-                elif mode == 'aligned_mean':
-                    pass
+                psf = combine(psf, axis=0)
                 psf_file.update_frame(frame_index, psf)
             print('\r')

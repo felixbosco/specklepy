@@ -9,7 +9,7 @@ from holopy.utils import transferfunctions as tf
 
 class Aperture(object):
 
-    def __init__(self, x0, y0, radius, data, mask='circular', subset_only=True):
+    def __init__(self, x0, y0, radius, data, mask='circular', subset_only=True, verbose=True):
         # Integer checks and handling non-integer input
         if isinstance(x0, int) and isinstance(y0, int):
             self.x0 = x0
@@ -29,7 +29,8 @@ class Aperture(object):
 
         # Handling data input
         if isinstance(data, str):
-            logging.info("Aperture argument data '{}' is interpreted as file name.".format(data))
+            if verbose:
+                logging.info("Aperture argument data '{}' is interpreted as file name.".format(data))
             data = fits.getdata(data)
         if not (data.ndim == 2 or data.ndim == 3):
             raise ValueError("Data input of Aperture class must be of dimension 2 or 3, but was provided as data.ndim={}.".format(data.ndim))
