@@ -49,7 +49,7 @@ class HolographicReconstruction(object):
             if show:
                 imshow(self.image)
 
-            answer = input("Do you want to continue with one more iteration? [yes/no]")
+            answer = input("\tDo you want to continue with one more iteration? [yes/no]")
             if answer.lower() == 'no':
                 break
 
@@ -90,8 +90,8 @@ class HolographicReconstruction(object):
 
     def select_reference_stars(self):
         """Interactive selection of reference stars"""
-        print("Please copy your desired reference stars from the all stars file into the reference star file!")
-        input("When you are done, just hit a key.")
+        print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
+        input("\tWhen you are done, just hit a key.")
 
 
     def extract_psfs(self):
@@ -99,7 +99,7 @@ class HolographicReconstruction(object):
         algorithm.extract()
         logging.info("Saved the extracted PSFs to the following files:")
         for index, file in enumerate(self.params.psfFiles):
-            print(index, file)
+            print('\t', file)
 
 
     def do_noise_thresholding(self):

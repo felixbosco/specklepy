@@ -50,7 +50,7 @@ class PSFExtraction(object):
 
             # Extract the PSF by combining the aperture frames in the desired mode
             for frame_index in range(frame_number):
-                print("\rExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
+                print("\r\tExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
                 psf = np.empty((len(self.ref_apertures), self.box_size, self.box_size))
                 for aperture_index, aperture in enumerate(self.ref_apertures):
                     psf[aperture_index] = aperture[frame_index]
