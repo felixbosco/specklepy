@@ -53,7 +53,11 @@ class PSFExtraction(object):
                 print("\r\tExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
                 psf = np.empty((len(self.ref_apertures), self.box_size, self.box_size))
                 for aperture_index, aperture in enumerate(self.ref_apertures):
+                    # Copy aperture into psf
                     psf[aperture_index] = aperture[frame_index]
+                    # Normalization of each psf to make median estimate sensible
+                    psf[aperture_index] /= np.sum(psf[aperture_index])
+
                 if mode == 'simple_median':
                     psf = np.median(psf, axis=0)
                 elif mode == 'aligned_mean':
