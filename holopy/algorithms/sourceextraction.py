@@ -19,9 +19,12 @@ class SourceExtraction(object):
         # Prepare noise statistics
         if isinstance(image, str):
             logging.info("The argument image '{}' is interpreted as file name.".format(image))
-            image = fits.getdata(image)
+            filename = image
+            image = fits.getdata(filename)
+        else:
+            filename = 'current cube'
         mean, median, std = sigma_clipped_stats(image, sigma=3.0)
-        logging.info("Noise statistics for {}:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(image, mean, median, std))
+        logging.info("Noise statistics for {}:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(filename, mean, median, std))
 
         # Find stars
         daofind = DAOStarFinder(fwhm=starfinder_fwhm, threshold=noise_threshold*std)
@@ -38,6 +41,8 @@ class SourceExtraction(object):
             self.sources[col].info.format = '%.8g'  # for consistent table output
         if verbose:
             logging.info("Found {} sources:\n{}".format(len(self.sources), self.sources))
+        else:
+            logging.info("Found {} sources".format(len(self.sources)))
 
 
     def writeto(self, file):
