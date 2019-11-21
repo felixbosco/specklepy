@@ -86,7 +86,7 @@ class HolographicReconstruction(object):
 
     def ssa_reconstruction(self):
         algorithm = SSAReconstruction()
-        self.image = algorithm.execute(self.params.inFiles, outfile=self.params.outFile)
+        self.image = algorithm.execute(self.params.inFiles, outfile=self.params.outFile, file_shifts=self.shifts)
         self.total_flux = np.sum(self.image)
 
 

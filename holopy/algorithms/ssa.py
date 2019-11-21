@@ -21,7 +21,7 @@ class SSAReconstruction(object):
         self.execute(*args, **kwargs)
 
 
-    def execute(self, file_list, outfile=None):
+    def execute(self, file_list, outfile=None, file_shifts=None):
         logging.info("Starting {}...".format(self.__class__.__name__))
         # file_list = glob.glob(self.input + self.cube_file)
 
@@ -30,7 +30,7 @@ class SSAReconstruction(object):
             if index == 0:
                 reconstruction = self._ssa(cube)
             else:
-                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube))
+                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube), shift=file_shifts[index])
 
         logging.info("Reconstruction finished...")
 
@@ -94,8 +94,9 @@ class SSAReconstruction(object):
         return np.pad(pad_array, pad_vector, mode='constant')
 
 
-    def _align_reconstructions(self, previous, current):
-        previous_x0, previous_y0 = np.unravel_index(np.argmax(previous, axis=None), previous.shape)
-        current_x0, current_y0 = np.unravel_index(np.argmax(current, axis=None), current.shape)
-        shift = (current_x0 - previous_x0, current_y0 - previous_y0)
+    def _align_reconstructions(self, previous, current, shift=None):
+        if shift is None:
+            previous_x0, previous_y0 = np.unravel_index(np.argmax(previous, axis=None), previous.shape)
+            current_x0, current_y0 = np.unravel_index(np.argmax(current, axis=None), current.shape)
+            shift = (current_x0 - previous_x0, current_y0 - previous_y0)
         return previous + self._shift_array(current, shift)
