@@ -36,6 +36,7 @@ class HolographicReconstruction(object):
         self.align_cubes()
         # if not hasattr(self, 'image'):
         self.ssa_reconstruction()
+        return self.image
         while True:
             self.find_stars()
             self.select_reference_stars()
@@ -76,13 +77,28 @@ class HolographicReconstruction(object):
         else:
             for file in self.params.inFiles:
                 integrated = np.sum(fits.getdata(file), axis=0)
+                # imshow(integrated)
                 finder = SourceExtraction()
-                finder.find_sources(image=integrated, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
+                finder.find_sources(image=integrated, starfinder_fwhm=self.params.starfinderFwhm*3, noise_threshold=self.params.noiseThreshold*4,
                     background_subtraction=True, verbose=False)
                 if not os.path.isdir(self.params.tmpDir + 'stars/'):
                     os.system('mkdir {}stars/'.format(self.params.tmpDir))
                 finder.writeto(self.params.tmpDir + 'stars/' + os.path.basename(file).replace('.fits', '_stars.dat'))
+            self._match_stars()
 
+    def _match_stars(self, number_stars=10):
+        import matplotlib.pyplot as plt
+
+        for index, star_list in enumerate(glob.glob(self.params.tmpDir + 'stars/*dat')):
+            if index == 0:
+                fluxes0 = np.loadtxt(star_list, skiprows=1)[:number_stars].transpose()
+            else:
+                fluxes = np.loadtxt(star_list, skiprows=1)[:number_stars].transpose()
+                plt.plot(fluxes[0] - fluxes0[0])
+                plt.plot(fluxes[1] - fluxes0[1], ':')
+                plt.plot(fluxes[2] - fluxes0[2], '--')
+        plt.show()
+        plt.close()
 
 
     def ssa_reconstruction(self):
@@ -127,6 +143,8 @@ class HolographicReconstruction(object):
                     background = np.mean(reference)
                     noise = np.std(reference)
                     update = np.maximum(hdulist[0].data[index] - background - self.params.noiseThreshold * noise, 0.0)
+                    if np.sum(update) == 0.0:
+                        raise ValueError("After background subtraction and noise thresholding, no signal is leftover. Please reduce the noiseThreshold!")
                     update = update / np.sum(update) # Flux sum of order unity
                     hdulist[0].data[index] = update
                     hdulist.flush()
@@ -150,7 +168,11 @@ class HolographicReconstruction(object):
             if index == 0:
                 Fimg = fftshift(fft2(img))
             else:
-                Fimg = np.concatenate(Fimg, fftshift(fft2(img)))
+                Fimg = np.concatenate((Fimg, fftshift(fft2(img))))
+
+        # Clear memory
+        img_shape = img.shape
+        del img
 
         logging.info("Fourier transforming the PSFs...")
         for index, file in enumerate(self.params.psfFiles):
@@ -158,27 +180,26 @@ class HolographicReconstruction(object):
             if index == 0:
                 # Pad the Fpsf cube to have the same xz-extent as Fimg
                 print("\tPadding the PSFs")
-                print('\tImages', img.shape)
+                print('\tImages', img_shape)
                 print('\tPSFs', psf.shape)
-                dx = img.shape[1] - psf.shape[1]
-                dy = img.shape[2] - psf.shape[2]
+                dx = img_shape[1] - psf.shape[1]
+                dy = img_shape[2] - psf.shape[2]
 
                 pad_vector = ((0, 0), (int(np.floor(dx/2)), int(np.ceil(dx/2))), (int(np.floor(dy/2)), int(np.ceil(dy/2))))
                 print('\tPad_width', pad_vector)
                 psf = np.pad(psf, pad_vector)
                 try:
-                    assert img.shape == psf.shape
+                    assert img_shape == psf.shape
                 except:
-                    raise ValueError("The Fourier transformed images and psfs have different shape, {} and {}. Something went wrong with the padding!".format(Fimg.shape, Fpsf.shape))
+                    raise ValueError("The Fourier transformed images and psfs have different shape, {} and {}. Something went wrong with the padding!".format(Fimg_shape, Fpsf.shape))
 
                 # Initialize Fpsf by the transforming the first cube
                 Fpsf = fftshift(fft2(psf))
             else:
-                Fpsf = np.concatenate(Fpsf, fftshift(fft2(np.pad(psf, pad_vector))))
+                Fpsf = np.concatenate((Fpsf, fftshift(fft2(np.pad(psf, pad_vector)))))
 
         # Clear memory
         del psf
-        del img
 
         # Compute the object
         enumerator = np.mean(np.multiply(Fimg, np.conjugate(Fpsf)), axis=0)
