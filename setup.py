@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+
 from setuptools import setup
+from glob import glob
 
 with open("README.md", "r") as f:
     long_description = f.read()
 
-setup(name='HoloPy',
+def get_scripts(generic):
+    return glob(generic)
+
+setup(name='holopy',
       version='0.0.3',
       description='',
       long_description=long_description,
@@ -23,6 +29,7 @@ setup(name='HoloPy',
           'astropy',
           'photutils',
       ],
+      scripts=get_scripts('holopy/scripts/*py'),
       package_data={},
       include_package_data=True,
       zip_safe=False)
