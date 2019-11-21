@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 
 from setuptools import setup
-from glob import glob
+import glob
+import os
+
 
 with open("README.md", "r") as f:
     long_description = f.read()
 
 def get_scripts(generic):
-    return glob(generic)
+    """ Grab all the scripts in the bin directory.  """
+    scripts = []
+    if os.path.isdir('bin'):
+        scripts = [ fname for fname in glob.glob(os.path.join('bin', '*')) ]
+    return scripts
 
 setup(name='holopy',
       version='0.0.3',
