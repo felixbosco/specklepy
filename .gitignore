@@ -1,6 +1,7 @@
 # Extensions
 *.pyc
 *.fits
+*.fits.gz
 
 # Directories
 *.egg

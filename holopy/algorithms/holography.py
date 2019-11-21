@@ -34,8 +34,8 @@ class HolographicReconstruction(object):
         """
         logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
         self.align_cubes()
-        if not hasattr(self, 'image'):
-            self.ssa_reconstruction()
+        # if not hasattr(self, 'image'):
+        self.ssa_reconstruction()
         while True:
             self.find_stars()
             self.select_reference_stars()
@@ -57,20 +57,30 @@ class HolographicReconstruction(object):
 
 
     def align_cubes(self):
-        self.numberFiles = len(self.params.inFiles)
-        # There is nothing to align, if only one cube is provided.
-        if self.numberFiles == 1:
-            self.numberFrames = fits.getheader(self.params.inFiles[0])['NAXIS3']
+        # self.numberFiles = len(self.params.inFiles)
+        # # There is nothing to align, if only one cube is provided.
+        # if self.numberFiles == 1:
+        #     self.numberFrames = fits.getheader(self.params.inFiles[0])['NAXIS3']
+        # else:
+        #     self.numberFrames = 0
+        #     hdr = fits.getheader(self.params.inFiles[0])
+        #     shape = (len(self.params.inFiles), hdr['NAXIS1'], hdr['NAXIS2'])
+        #     integrated_cubes = np.zeros(shape)
+        #     for index, file in enumerate(self.params.inFiles):
+        #         self.numberFrames += fits.getheader(file)['NAXIS3']
+        #         integrated_cubes[index] = np.sum(fits.getdata(file), axis=0)
+        #     # Implement now how to align the given integrated frames!
+        #     raise NotImplementedError("Alignment of multiple cubes is not implemented yet!")
+        if len(self.params.inFiles) == 1:
+            logging.info("There is nothing to align if only one data cube is provided.")
         else:
-            self.numberFrames = 0
-            hdr = fits.getheader(self.params.inFiles[0])
-            shape = (len(self.params.inFiles), hdr['NAXIS1'], hdr['NAXIS2'])
-            integrated_cubes = np.zeros(shape)
-            for index, file in enumerate(self.params.inFiles):
-                self.numberFrames += fits.getheader(file)['NAXIS3']
-                integrated_cubes[index] = np.sum(fits.getdata(file), axis=0)
-            # Implement now how to align the given integrated frames!
-            raise NotImplementedError("Alignment of multiple cubes is not implemented yet!")
+            for file in self.params.inFiles:
+                integrated = np.sum(fits.getdata(file), axis=0)
+                finder = SourceExtraction()
+                finder.find_sources(image=integrated, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
+                    background_subtraction=True, verbose=False)
+                finder.writeto(self.params.tmpDir + 'stars/' + file.replace('.fits', '_stars.dat'))
+
 
 
     def ssa_reconstruction(self):
