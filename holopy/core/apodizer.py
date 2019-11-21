@@ -33,5 +33,6 @@ class Apodizer(object):
         y, x = np.mgrid[0:self.size, 0:self.size]
         apodization_psf = self.model(x, y)
         apodization_otf = otf(apodization_psf)
-        tmp = np.multiply(object, apodization_otf)
-        return otf(tmp)
+        return np.multiply(object, apodization_otf)
+        # tmp = np.multiply(object, apodization_otf)
+        # return otf(tmp, inverse=True)

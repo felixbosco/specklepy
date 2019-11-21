@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.fft import fft2, fftshift
+from numpy.fft import fft2, ifft2, fftshift
 
 def otf(psf, inverse=False):
     if inverse:

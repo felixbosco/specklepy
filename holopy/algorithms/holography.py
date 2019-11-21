@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.fft import fft2, ifft2, fftshift
+from numpy.fft import fft2, ifft2, fftshift, ifftshift
 import os
 import glob
 from datetime import datetime
@@ -50,7 +50,7 @@ class HolographicReconstruction(object):
                 imshow(self.image)
 
             answer = input("\tDo you want to continue with one more iteration? [yes/no]")
-            if answer.lower() == 'no':
+            if answer.lower() in ['n', 'no']:
                 break
 
         return self.image
@@ -115,6 +115,7 @@ class HolographicReconstruction(object):
                     background = np.mean(reference)
                     noise = np.std(reference)
                     update = np.maximum(hdulist[0].data[index] - background - self.params.noiseThreshold * noise, 0.0)
+                    update = update / np.sum(update) # Flux sum of order unity
                     hdulist[0].data[index] = update
                     hdulist.flush()
 
@@ -190,9 +191,8 @@ class HolographicReconstruction(object):
 
     def compute_image(self, autosave=True):
         """Compute the final image from the apodized object."""
-        self.image = fftshift(self.Fobject)
+        self.image = ifft2(self.Fobject)
         self.image = np.abs(self.image)
-        self.image = self.image[::-1, ::-1]
         image_scale = self.total_flux / np.sum(self.image)
         self.image = np.multiply(self.image, image_scale) # assert flux conservation
         if autosave:
