@@ -64,6 +64,7 @@ class ParamHandler(object):
         """
         for key in dir_list:
             path = getattr(self, key)
+            path = os.path.dirname(path) + '/' # Cosmetics to allow for generic input for inDir            
             if not os.path.exists(path):
                 logging.info('Creating {} directory {}'.format(key, path))
                 os.makedirs(path)
