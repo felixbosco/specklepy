@@ -66,8 +66,13 @@ class HolographicReconstruction(object):
             # Identify reference file and Fourier transform the integrated image
             if reference_file is None:
                 reference_file = self.params.inFiles[reference_file_index]
+            else:
+                reference_file_index = None
             logging.info("Computing relative shifts between data cubes. Reference file is {}".format(reference_file))
-            reference_image = np.sum(fits.getdata(reference_file), axis=0)
+            reference_image = fits.getdata(reference_file)
+            if reference_image.ndim == 3:
+                # Integrating over time axis if reference image is a cube
+                reference_image = np.sum(reference_image, axis=0)
             Freference_image = np.fft.fft2(reference_image)
             del reference_image
 
@@ -80,6 +85,7 @@ class HolographicReconstruction(object):
                     Fimage = np.conjugate(np.fft.fft2(image))
                     correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
                     shift = np.unravel_index(np.argmax(correlation), correlation.shape)
+                    shift = tuple(-1 * i for i in shift)
                 self.shifts.append(shift)
             logging.info("Identified the following shifts:\n\t{}".format(self.shifts))
 

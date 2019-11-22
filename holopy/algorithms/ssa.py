@@ -30,7 +30,10 @@ class SSAReconstruction(object):
             if index == 0:
                 reconstruction = self._ssa(cube)
             else:
-                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube), shift=file_shifts[index])
+                if file_shifts is not None:
+                    reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube), shift=file_shifts[index])
+                else:
+                    reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube))
 
         logging.info("Reconstruction finished...")
 
