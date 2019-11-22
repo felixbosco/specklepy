@@ -36,7 +36,7 @@ class HolographicReconstruction(object):
         logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
         self.align_cubes(reference_file=self.params.alignmentReferenceFile)
         self.ssa_reconstruction()
-        return self.image
+        # return self.image
         while True:
             self.find_stars()
             self.select_reference_stars()
@@ -58,11 +58,11 @@ class HolographicReconstruction(object):
 
 
     def align_cubes(self, reference_file_index=0, reference_file=None):
+        self.shifts = []
         if len(self.params.inFiles) == 1:
             logging.info("Only one data cube is provided, nothing to align.")
+            self.shifts = [(0, 0)]
         else:
-            self.shifts = []
-
             # Identify reference file and Fourier transform the integrated image
             if reference_file is None:
                 reference_file = self.params.inFiles[reference_file_index]
@@ -113,10 +113,10 @@ class HolographicReconstruction(object):
 
     def extract_psfs(self):
         algorithm = PSFExtraction(self.params)
-        algorithm.extract()
-        logging.info("Saved the extracted PSFs to the following files:")
-        for index, file in enumerate(self.params.psfFiles):
-            print('\t', file)
+        algorithm.extract(file_shifts=self.shifts, inspect_aperture=True)
+        logging.info("Saved the extracted PSFs...")
+        # for index, file in enumerate(self.params.psfFiles):
+        #     print('\t', file)
 
 
     def do_noise_thresholding(self):

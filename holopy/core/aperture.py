@@ -105,6 +105,13 @@ class Aperture(object):
             return np.unravel_index(np.argmax(self.data, axis=None), self.data.shape)
 
 
+    def get_integrated(self):
+        if self.data.ndim == 3:
+            return np.sum(self.data, axis=0)
+        else:
+            return self.data
+
+
     # def recenter_aperture(self, peak=None):
     #     if self.subset_only:
     #         logging.warning("Recentering the aperture on the peak within the guess aperture is working only if subset_only is set to False.")

@@ -36,14 +36,14 @@ class PSFExtraction(object):
         return self.radius * 2 + 1
 
 
-    def init_ref_apertures(self, filename):
+    def init_ref_apertures(self, filename, shift=(0, 0)):
         self.ref_apertures = []
         for star in self.star_table:
             # print(star['x'], star['y'], self.radius, filename)
-            self.ref_apertures.append(Aperture(star['y'], star['x'], self.radius, data=filename, subset_only=True, verbose=False))
+            self.ref_apertures.append(Aperture(star['y'] + shift[0], star['x'] + shift[1], self.radius, data=filename, subset_only=True, verbose=False))
 
 
-    def extract(self, mode='align_median'):
+    def extract(self, mode='align_median', file_shifts=None, inspect_aperture=False):
         if 'median' in mode:
             combine = np.median
         elif 'mean' in mode:
@@ -52,13 +52,22 @@ class PSFExtraction(object):
             raise ValueError('PSFExtraction received unknown mode for extract method ({}).'.format(mode))
 
         self.params.psfFiles = []
-        for file in self.params.inFiles:
+        for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
             self.params.psfFiles.append(psf_file.filename)
-            self.init_ref_apertures(file)
+            if file_shifts is None:
+                file_shift = (0, 0)
+            else:
+                file_shift = file_shifts[file_index]
+            self.init_ref_apertures(file, shift=file_shift)
             frame_number = fits.getheader(file)['NAXIS3']
+
+            # Check apertures visually
+            if inspect_aperture:
+                for index, aperture in enumerate(self.ref_apertures):
+                    imshow(aperture.get_integrated(), title="Inspect reference aperture {}".format(index + 1))
 
             # Extract the PSF by combining the aperture frames in the desired mode
             for frame_index in range(frame_number):
