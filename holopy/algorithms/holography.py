@@ -36,11 +36,12 @@ class HolographicReconstruction(object):
         logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
         self.align_cubes(reference_file=self.params.alignmentReferenceFile)
         self.ssa_reconstruction()
-        # return self.image
+        # break
         while True:
             self.find_stars()
             self.select_reference_stars()
             self.extract_psfs()
+            # break
             self.do_noise_thresholding()
             self.subtract_secondary_sources()
             self.evaluate_object()
@@ -57,7 +58,7 @@ class HolographicReconstruction(object):
         return self.image
 
 
-    def align_cubes(self, reference_file_index=0, reference_file=None):
+    def align_cubes(self, reference_file_index=0, reference_file=None, inspect_correlation=False):
         self.shifts = []
         if len(self.params.inFiles) == 1:
             logging.info("Only one data cube is provided, nothing to align.")
@@ -84,7 +85,11 @@ class HolographicReconstruction(object):
                     image = np.sum(fits.getdata(file), axis=0)
                     Fimage = np.conjugate(np.fft.fft2(image))
                     correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
+                    correlation = np.fft.fftshift(correlation)
+                    if inspect_correlation:
+                        imshow(np.abs(correlation), title='FFT shifted correlation of file {}'.format(index))
                     shift = np.unravel_index(np.argmax(correlation), correlation.shape)
+                    shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
                     shift = tuple(-1 * i for i in shift)
                 self.shifts.append(shift)
             logging.info("Identified the following shifts:\n\t{}".format(self.shifts))
@@ -154,6 +159,13 @@ class HolographicReconstruction(object):
         logging.info("Fourier transforming the images...")
         for index, file in enumerate(self.params.inFiles):
             img = fits.getdata(file)
+            logging.warning("Images are not expanded to the fill field of view.")
+            #
+            #
+            
+            #
+            #
+
             if index == 0:
                 Fimg = fftshift(fft2(img))
             else:
