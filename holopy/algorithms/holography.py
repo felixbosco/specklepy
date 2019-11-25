@@ -9,7 +9,7 @@ from holopy.logging import logging
 from holopy.io.outfile import Outfile
 from holopy.core.aperture import Aperture
 from holopy.core.apodizer import Apodizer
-from holopy.algorithms.matchstarlist import MatchStarList
+# from holopy.algorithms.matchstarlist import MatchStarList
 from holopy.algorithms.psfextraction import PSFExtraction
 from holopy.algorithms.sourceextraction import SourceExtraction
 from holopy.algorithms.ssa import SSAReconstruction
@@ -36,7 +36,7 @@ class HolographicReconstruction(object):
         logging.info("Starting holographic reconstruction of {} files...".format(len(self.params.inFiles)))
         self.align_cubes(reference_file=self.params.alignmentReferenceFile)
         self.ssa_reconstruction()
-        # break
+        # return
         while True:
             self.find_stars()
             self.select_reference_stars()
@@ -58,11 +58,33 @@ class HolographicReconstruction(object):
         return self.image
 
 
-    def align_cubes(self, reference_file_index=0, reference_file=None, inspect_correlation=False):
+    def align_cubes(self, mode='full', reference_file=None, reference_file_index=0, inspect_correlation=False):
+        """Align the data cubes relative to a reference image.
+
+        Long description...
+
+        Args:
+            mode (str, optional): Define the size of the output image as 'same'
+                to the reference image or expanding to include the 'full'
+                covered field.
+            reference_file (str, optional):
+            reference_file_index (str, optional):
+            inspect_correlation (bool, optional):
+
+        Returns:
+            outfile_shape (tuple):
+            pad_vectors (sequence):
+        """
+
         self.shifts = []
+
+        # Skip computations if only one data cube is provided
         if len(self.params.inFiles) == 1:
             logging.info("Only one data cube is provided, nothing to align.")
             self.shifts = [(0, 0)]
+            self.pad_vectors = [(0, 0)]
+
+        # Otherwise estimate shifts and compute pad vectors
         else:
             # Identify reference file and Fourier transform the integrated image
             if reference_file is None:
@@ -94,6 +116,24 @@ class HolographicReconstruction(object):
                 self.shifts.append(shift)
             logging.info("Identified the following shifts:\n\t{}".format(self.shifts))
 
+            # Turn shifts into pad vectors
+            if mode == 'same' or mode == 'full':
+            #     self.pad_vectors = [len(self.params.inFiles) * (0, 0)]
+            # elif mode == 'full':
+                xmax, ymax = np.max(np.array(self.shifts), axis=0)
+                xmin, ymin = np.min(np.array(self.shifts), axis=0)
+                self.shift_limits = {'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax}
+                # print('>>>>>>>>>', self.shift_limits)
+                self.pad_vectors = []
+                for shift in self.shifts:
+                    padding_x = (shift[0] - self.shift_limits['xmin'], self.shift_limits['xmax'] - shift[0])
+                    padding_y = (shift[1] - self.shift_limits['ymin'], self.shift_limits['ymax'] - shift[1])
+                    self.pad_vectors.append(((0, 0), padding_x, padding_y))
+                for pad_vector in self.pad_vectors:
+                    print('>>>>>>>>>>>', pad_vector)
+            else:
+                raise ValueError("Mode '{}' not defined for {}.align_cubes()".format(mode))
+
 
     def ssa_reconstruction(self):
         algorithm = SSAReconstruction()
@@ -118,7 +158,7 @@ class HolographicReconstruction(object):
 
     def extract_psfs(self):
         algorithm = PSFExtraction(self.params)
-        algorithm.extract(file_shifts=self.shifts, inspect_aperture=True)
+        algorithm.extract(file_shifts=self.shifts, inspect_aperture=False)
         logging.info("Saved the extracted PSFs...")
         # for index, file in enumerate(self.params.psfFiles):
         #     print('\t', file)
@@ -155,21 +195,23 @@ class HolographicReconstruction(object):
         pass
 
 
-    def evaluate_object(self):
+    def evaluate_object(self, mode='same'):
         logging.info("Fourier transforming the images...")
         for index, file in enumerate(self.params.inFiles):
             img = fits.getdata(file)
-            logging.warning("Images are not expanded to the fill field of view.")
-            #
-            #
-            
-            #
-            #
+            # logging.warning("Images are not expanded to the fill field of view.")
+            pad_vector = self.pad_vectors[index]
+            img = np.pad(img, pad_vector)
+            if mode == 'same':
+                # Only in same mode, remove the margin outside the field of view
+                # of the reference image, see align_cubes() method.
+                img = img[:, pad_vector[1][0] : - pad_vector[1][1] -1, pad_vector[2][0]: - pad_vector[2][1] - 1]
 
             if index == 0:
                 Fimg = fftshift(fft2(img))
             else:
                 Fimg = np.concatenate((Fimg, fftshift(fft2(img))))
+
 
         # Clear memory
         img_shape = img.shape
@@ -212,14 +254,14 @@ class HolographicReconstruction(object):
     def apodize_object(self):
         """Apodize the Fourier object with a apodization function of the users
         choice."""
-        # Assert that self.Fobject is square shaped
-        try:
-            assert self.Fobject.shape[0] == self.Fobject.shape[1]
-        except AssertionError:
-            raise NotImplementedError("apodization of non-quadratic objects is not implemented yet.")
+        # # Assert that self.Fobject is square shaped
+        # try:
+        #     assert self.Fobject.shape[0] == self.Fobject.shape[1]
+        # except AssertionError:
+        #     raise NotImplementedError("apodization of non-quadratic objects is not implemented yet.")
 
         logging.info("Apodizing the object...")
-        self.apodizer = Apodizer(self.params.apodizationType, size=self.Fobject.shape[0], radius=self.params.apodizationWidth)
+        self.apodizer = Apodizer(self.params.apodizationType, shape=self.Fobject.shape, radius=self.params.apodizationWidth)
         self.Fobject = self.apodizer.apodize(self.Fobject)
 
 
