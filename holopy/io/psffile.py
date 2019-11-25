@@ -11,7 +11,7 @@ class PSFfile(object):
     def __init__(self, inFile, outDir, frame_shape, cards={}, header_prefix="HIERARCH HOLOPY "):
 
         # Create PSF directory, if not existing yet
-        outDir += 'psf/'
+        # outDir += 'psf/'
         if not os.path.exists(outDir):
             logging.info('Creating PSF directory {}'.format(outDir))
             os.makedirs(outDir)
