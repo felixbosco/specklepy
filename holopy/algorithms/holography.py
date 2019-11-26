@@ -120,8 +120,8 @@ class HolographicReconstruction(object):
             if mode == 'same' or mode == 'full':
             #     self.pad_vectors = [len(self.params.inFiles) * (0, 0)]
             # elif mode == 'full':
-                xmax, ymax = np.max(np.array(self.shifts), axis=0)
-                xmin, ymin = np.min(np.array(self.shifts), axis=0)
+                xmax, ymax = np.max(-1 * np.array(self.shifts), axis=0)
+                xmin, ymin = np.min(-1 * np.array(self.shifts), axis=0)
                 self.shift_limits = {'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax}
                 # print('>>>>>>>>>', self.shift_limits)
                 self.pad_vectors = []
