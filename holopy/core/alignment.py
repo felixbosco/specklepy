@@ -1,4 +1,8 @@
+import numpy as np
+from astropy.io import fits
+
 from holopy.logging import logging
+
 
 def compute_shifts(files, reference_file=None, reference_file_index=0, debug=False):
     """Align the data cubes relative to a reference image.
@@ -16,6 +20,7 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, debug=Fal
         pad_vectors (sequence):
     """
 
+    files = np.atleast_1d(files)
     shifts = []
 
     # Skip computations if only one data cube is provided
@@ -92,4 +97,3 @@ def compute_pad_vectors(shifts, mode='same'):
             print('>>>>>>>>>>>', pad_vector)
     else:
         raise ValueError("Mode '{}' not defined for {}.align_cubes()".format(mode))
-
