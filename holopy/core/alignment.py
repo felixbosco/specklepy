@@ -2,29 +2,36 @@ import numpy as np
 from astropy.io import fits
 
 from holopy.logging import logging
+from holopy.utils.plot import imshow
 
 
-def compute_shifts(files, reference_file=None, reference_file_index=0, debug=False):
-    """Align the data cubes relative to a reference image.
+def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=True, debug=False):
+    """Computes the the relative shift of data cubes relative to a reference
+    image.
 
     Long description...
 
     Args:
-        files (list):
-        reference_file (str, optional):
-        reference_file_index (str, optional):
-        debug (bool, optional):
+        files (list): List of files to align.
+        reference_file (str, optional): Path to a reference file, relative to
+            which the shifts are computed. If not provided, the reference file
+            index is used.
+        reference_file_index (str, optional): Index of the file in the file
+            list, relative to which the shifts are cpmputed. Default is 0.
+        lazy_mode (bool, optional): If set to True and  Default is True.
+        debug (bool, optional): If set to True, it shows the 2D correlation.
 
     Returns:
-        outfile_shape (tuple):
-        pad_vectors (sequence):
+        shifts (tuple): List of shifts for each file relative to the reference
+            file.
     """
 
-    files = np.atleast_1d(files)
+    if not isinstance(files, list):
+        files = [files]
     shifts = []
 
     # Skip computations if only one data cube is provided
-    if len(files) == 1:
+    if lazy_mode and len(files) == 1:
         logging.info("Only one data cube is provided, nothing to align.")
         shifts = [(0, 0)]
         pad_vectors = [(0, 0)]
@@ -64,11 +71,13 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, debug=Fal
 
 
 def compute_pad_vectors(shifts, mode='same'):
-    """Align the data cubes relative to a reference image.
+    """Computes padding vectors from the relative shifts between files.
 
     Long description...
 
     Args:
+        shifts (list): Shifts between files, relative to a reference image. See
+            holopy.alignment.compute_shifts for details.
         mode (str, optional): Define the size of the output image as 'same'
             to the reference image or expanding to include the 'full'
             covered field.
@@ -77,9 +86,9 @@ def compute_pad_vectors(shifts, mode='same'):
         debug (bool, optional):
 
     Returns:
-        outfile_shape (tuple):
-        pad_vectors (sequence):
+        pad_vectors (list):
     """
+
     # Turn shifts into pad vectors
     if mode == 'same' or mode == 'full':
     #     pad_vectors = [len(files) * (0, 0)]

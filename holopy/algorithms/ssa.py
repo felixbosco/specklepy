@@ -6,7 +6,7 @@ from astropy.io import fits
 
 from holopy.logging import logging
 from holopy.io.outfile import Outfile
-# from holopy.core.reconstructor import Reconstructor
+from holopy.core.alignment import compute_shifts
 
 
 class SSAReconstruction(object):
@@ -21,19 +21,34 @@ class SSAReconstruction(object):
         self.execute(*args, **kwargs)
 
 
-    def execute(self, file_list, outfile=None, file_shifts=None):
+    def execute(self, file_list, mode='same', reference_file=None, reference_file_index=0, outfile=None, **kwargs):
+        """Compute the SSA reconstruction of a list of files.
+
+        Long description...
+
+        Args:
+            file_list (list):
+            mode (str):
+            reference_file (str, optional): Path to a reference file, relative to
+                which the shifts are computed. If not provided, the reference file
+                index is used. See holopy.core.aligment.compute_shifts for details.
+            reference_file_index (str, optional): Index of the file in the file
+                list, relative to which the shifts are cpmputed. See
+                holopy.core.aligment.compute_shifts for details. Default is 0.
+            outfile (holopy.io.outfile, optional): Object to write the result to,
+                if provided.
+        """
         logging.info("Starting {}...".format(self.__class__.__name__))
-        # file_list = glob.glob(self.input + self.cube_file)
+
+        file_shifts = compute_shifts(file_list, reference_file=reference_file, reference_file_index=reference_file_index, lazy_mode=True)
 
         for index, file in enumerate(file_list):
             cube = fits.getdata(file)
+
             if index == 0:
                 reconstruction = self._ssa(cube)
             else:
-                if file_shifts is not None:
-                    reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube), shift=file_shifts[index])
-                else:
-                    reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube))
+                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube), shift=file_shifts[index])
 
         logging.info("Reconstruction finished...")
 

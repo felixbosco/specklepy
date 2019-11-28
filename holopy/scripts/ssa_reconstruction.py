@@ -8,7 +8,7 @@ try:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.algorithms.ssa import SSAReconstruction
+    # from holopy.algorithms.ssa import SSAReconstruction
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -20,7 +20,8 @@ except ModuleNotFoundError:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
-    from holopy.algorithms.ssa import SSAReconstruction
+    # from holopy.algorithms.ssa import SSAReconstruction
+    from holopy.core.ssa import ssa
 
 
 
@@ -45,7 +46,7 @@ def main(options=None):
     args = parser(options=options)
 
     if args.file is not None:
-        filehandler = FileHandler(args.file)
+        files = FileHandler(args.file)()
     else:
         logging.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
@@ -54,9 +55,10 @@ def main(options=None):
         logging.warning("No parameter file was provided! Reconstruction is executed with default values.")
 
     # Execute reconstruction
-    outfile = Outfile(file_list=filehandler.files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
-    algorithm = SSAReconstruction()
-    algorithm.execute(filehandler, outfile=outfile)
+    outfile = Outfile(file_list=files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
+    # algorithm = SSAReconstruction()
+    # algorithm.execute(files, outfile=outfile)
+    ssa(files, outfile=outfile)
 
 
 if __name__ == '__main__':
