@@ -30,6 +30,12 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
     logging.info("Starting SSA reconstruction...")
     if not isinstance(files, list):
         files = [files]
+    if outfile is not None and not isinstance(outfile, Outfile):
+        if isinstance(outfile, str):
+            outfile = Outfile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
+        else:
+            raise TypeError("holopy.core.ssa.ssa received outfile argument of wrong type <{}>!".format(type(outfile)))
+
 
     # Do not align just a single file
     if lazy_mode and len(files) == 1:
