@@ -1,3 +1,5 @@
+from holopy.logging import logging
+
 def align_cubes(inFiles, mode='full', reference_file=None, reference_file_index=0, inspect_correlation=False):
     """Align the data cubes relative to a reference image.
 
