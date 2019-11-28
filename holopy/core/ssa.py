@@ -53,8 +53,8 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
         file_shifts, image_shape = compute_shifts(tmp_files, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
         reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
-            cube = fits.getdata(file)
-            reconstruction = reconstruction + shift_array(coadd_frames(cube), shift=file_shifts[index])
+            tmp_image = fits.getdata(file)
+            reconstruction = reconstruction + shift_array(tmp_image, shift=file_shifts[index])
 
     logging.info("Reconstruction finished...")
 
