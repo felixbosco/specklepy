@@ -31,7 +31,7 @@ def parser(options=None):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-f', '--file', type=str, default=None, help='Fits file or generic file name to consider for the SSA reconstruction.')
-    parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
+    parser.add_argument('-t', '--tmp_dir', type=str, default=None, help='Path to save temporary files to.')
     parser.add_argument('-o', '--output', type=str, default=None, help='Name of the output file.')
 
     if options is None:
@@ -51,14 +51,14 @@ def main(options=None):
         logging.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
 
-    if args.parameter_file is None:
-        logging.warning("No parameter file was provided! Reconstruction is executed with default values.")
+    if args.tmp_dir is not None and not os.path.isdir(args.tmp_dir):
+        os.system('mkdir {}'.format(args.tmp_dir))
 
     # Execute reconstruction
     outfile = Outfile(file_list=files, filename=args.output, cards={"RECONSTRUCTION": "SSA"})
     # algorithm = SSAReconstruction()
     # algorithm.execute(files, outfile=outfile)
-    ssa(files, outfile=outfile)
+    ssa(files, tmp_dir=args.tmp_dir, outfile=outfile)
 
 
 if __name__ == '__main__':

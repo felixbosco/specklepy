@@ -2,6 +2,7 @@
 *.pyc
 *.fits
 *.fits.gz
+*.fits.bak
 
 # Directories
 *.egg

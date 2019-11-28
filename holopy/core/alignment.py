@@ -59,7 +59,9 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode
             if index == reference_file_index:
                 shift = (0, 0)
             else:
-                image = np.sum(fits.getdata(file), axis=0)
+                image = fits.getdata(file)
+                if image.ndim == 3:
+                    image = np.sum(image, axis=0)
                 shift = estimate_shift(image, Freference_image=Freference_image, mode='correlation', debug=debug)
             shifts.append(shift)
         logging.info("Identified the following shifts:\n\t{}".format(shifts))
@@ -152,3 +154,11 @@ def compute_pad_vectors(shifts, mode='same'):
             print('>>>>>>>>>>>', pad_vector)
     else:
         raise ValueError("Mode '{}' not defined for {}.align_cubes()".format(mode))
+
+
+
+def pad_files(files, shifts, mode='same', sum=False):
+    """
+
+    """
+    pass

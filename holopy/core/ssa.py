@@ -9,13 +9,13 @@ from holopy.io.outfile import Outfile
 from holopy.core.alignment import compute_shifts
 
 
-def ssa(file_list, mode='same', reference_file=None, reference_file_index=0, outfile=None, **kwargs):
+def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile=None, tmp_dir=None, lazy_mode=True, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     Long description...
 
     Args:
-        file_list (list):
+        files (list):
         mode (str):
         reference_file (str, optional): Path to a reference file, relative to
             which the shifts are computed. If not provided, the reference file
@@ -26,14 +26,35 @@ def ssa(file_list, mode='same', reference_file=None, reference_file_index=0, out
         outfile (holopy.io.outfile, optional): Object to write the result to,
             if provided.
     """
+
     logging.info("Starting SSA reconstruction...")
+    if not isinstance(files, list):
+        files = [files]
 
-    file_shifts, image_shape = compute_shifts(file_list, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
-    reconstruction = np.zeros(image_shape)
+    # Do not align just a single file
+    if lazy_mode and len(files) == 1:
+        cube = fits.getdata(files[0])
+        reconstruction = coadd_frames(cube)
 
-    for index, file in enumerate(file_list):
-        cube = fits.getdata(file)
-        reconstruction = reconstruction + shift_array(coadd_frames(cube), shift=file_shifts[index])
+    # Align reconstructions if multiple files are given
+    else:
+        # Compute temporary reconstructions of the individual cubes
+        tmp_files = []
+        for index, file in enumerate(files):
+            cube = fits.getdata(file)
+            tmp = coadd_frames(cube)
+            tmp_file = os.path.basename(file).replace(".fits", "_ssa.fits")
+            tmp_file = os.path.join(tmp_dir, tmp_file)
+            logging.info("Saving interim SSA reconstruction of cube to {}".format(tmp_file))
+            fits.writeto(tmp_file, tmp, overwrite=True)
+            tmp_files.append(tmp_file)
+
+        # Align tmp reconstructions and add up
+        file_shifts, image_shape = compute_shifts(tmp_files, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
+        reconstruction = np.zeros(image_shape)
+        for index, file in enumerate(tmp_files):
+            cube = fits.getdata(file)
+            reconstruction = reconstruction + shift_array(coadd_frames(cube), shift=file_shifts[index])
 
     logging.info("Reconstruction finished...")
 
@@ -42,6 +63,7 @@ def ssa(file_list, mode='same', reference_file=None, reference_file_index=0, out
         outfile.data = reconstruction
 
     return reconstruction
+
 
 
 def coadd_frames(cube, mode='same'):
@@ -54,8 +76,15 @@ def coadd_frames(cube, mode='same'):
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
         peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
-    shifts = compute_shifts_from_indizes(peak_indizes)
+    # shifts = compute_shifts_from_indizes(peak_indizes)
 
+    # Compute shifts from indizes
+    peak_indizes = peak_indizes.transpose()
+    xmean, ymean = np.mean(np.array(peak_indizes), axis=1)
+    xmean = int(xmean)
+    ymean = int(ymean)
+    shifts = np.array([peak_indizes[0] - xmean, peak_indizes[1] - ymean])
+    shifts =  shifts.transpose()
 
     # Shift frames and add to out
     out = np.zeros(cube[0].shape)
@@ -63,16 +92,6 @@ def coadd_frames(cube, mode='same'):
         out += shift_array(frame, shifts[index])
 
     return out
-
-
-
-def compute_shifts_from_indizes(indizes):
-    indizes = indizes.transpose()
-    xmean, ymean = np.mean(np.array(indizes), axis=1)
-    xmean = int(xmean)
-    ymean = int(ymean)
-    shifts = np.array([indizes[0] - xmean, indizes[1] - ymean])
-    return shifts.transpose()
 
 
 
