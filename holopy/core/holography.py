@@ -38,119 +38,91 @@ def holography(params, show=False, debug=False):
 
     # (iii) Compute SSA reconstruction
     image = ssa(params.inFiles, outfile=params.outFile, tmp_dir=params.tmpDir)
-    total_flux = np.sum(image)
+    total_flux = np.sum(image) # Stored for flux conservation
 
 
-    # Start iteration between steps (iv) and (...)
+    # Start iteration from steps (iv) thorugh (xi)
     while True:
-        find_stars()
-        select_reference_stars()
-        extract_psfs()
-        do_noise_thresholding()
-        subtract_secondary_sources()
-        evaluate_object()
-        apodize_object()
-        compute_image(autosave=True)
+        # (iv) Astrometry and photometry, i.e. StarFinder
+        finder = SourceExtraction()
+        finder.find_sources(image=image, starfinder_fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
+            background_subtraction=True, verbose=False)
+        finder.writeto(params.allStarsFile)
 
-        if show:
+        # (v) Select reference stars
+        print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
+        input("\tWhen you are done, just hit a key.")
+
+        # (vi) PSF extraction
+        algorithm = PSFExtraction(params)
+        algorithm.extract(file_shifts=shifts, inspect_aperture=False)
+        logging.info("Saved the extracted PSFs...")
+
+        # (vii) Noise thresholding
+        for file in params.psfFiles:
+            with fits.open(file, mode='update') as hdulist:
+                numberFrames = hdulist[0].header['NAXIS3']
+                if not hasattr(params, 'psfNoiseMask'):
+                    params.psfNoiseMask = _generate_noise_mask(hdulist[0].data[0], noise_reference_margin=params.noiseReferenceMargin)
+                for index in range(numberFrames):
+                    reference = np.ma.masked_array(hdulist[0].data[index], mask=params.psfNoiseMask)
+                    background = np.mean(reference)
+                    noise = np.std(reference)
+                    update = np.maximum(hdulist[0].data[index] - background - params.noiseThreshold * noise, 0.0)
+                    if np.sum(update) == 0.0:
+                        raise ValueError("After background subtraction and noise thresholding, no signal is leftover. Please reduce the noiseThreshold!")
+                    update = update / np.sum(update) # Flux sum of order unity
+                    hdulist[0].data[index] = update
+                    hdulist.flush()
+
+        # (viii) Subtraction of secondary sources within the reference apertures
+        pass
+
+        # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
+        Fobject = evaluate_object(params, pad_vectors=pad_vectors)
+
+        # (x) Apodization
+        logging.info("Apodizing the object...")
+        Fobject = apodize(Fobject, params.apodizationType, radius=params.apodizationWidth)
+
+        # (xi) Inverse Fourier transform to retain the reconstructed image
+        image = ifft2(Fobject)
+        image = np.abs(image)
+        image_scale = total_flux / np.sum(image)
+        image = np.multiply(image, image_scale) # assert flux conservation
+
+
+        # Inspect the latest reconstrction
+        if debug:
             imshow(image)
 
+        # Save the latest reconstruction image to outfile
+        params.outFile.data = image
+
+        # Ask the user whether the iteration shall be continued or not
         answer = input("\tDo you want to continue with one more iteration? [yes/no]")
         if answer.lower() in ['n', 'no']:
             break
 
+    # Finally return the image
     return image
 
 
-def align_cubes(self, mode='full', reference_file=None, reference_file_index=0, inspect_correlation=False):
-    """Align the data cubes relative to a reference image.
-
-    Long description...
-
-    Args:
-        mode (str, optional): Define the size of the output image as 'same'
-            to the reference image or expanding to include the 'full'
-            covered field.
-        reference_file (str, optional):
-        reference_file_index (str, optional):
-        inspect_correlation (bool, optional):
-
-    Returns:
-        outfile_shape (tuple):
-        pad_vectors (sequence):
-    """
-
-    shifts = compute_shifts(files=params.inFiles,
-                                    reference_file=reference_file,
-                                    reference_file_index=reference_file_index,
-                                    lazy_mode=True,
-                                    return_image_shape=False,
-                                    debug=inspect_correlation)
-    pad_vectors = len(params.inFiles) * [((0, 0), (0, 0), (0, 0))]
 
 
-def ssa_reconstruction(self):
-    # algorithm = SSAReconstruction()
-    # image = algorithm.execute(params.inFiles, outfile=params.outFile, file_shifts=shifts)
-    image = ssa(params.inFiles, outfile=params.outFile, tmp_dir=params.tmpDir)
-    total_flux = np.sum(image)
 
-
-def find_stars(self, background_subtraction=True):
-    """Find sources in the reference image, which may either be a SSA or
-    ha preceding holographic reconstruction."""
-    finder = SourceExtraction()
-    finder.find_sources(image=image, starfinder_fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
-        background_subtraction=background_subtraction, verbose=False)
-    finder.writeto(params.allStarsFile)
-
-
-def select_reference_stars(self):
-    """Interactive selection of reference stars"""
-    print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
-    input("\tWhen you are done, just hit a key.")
-
-
-def extract_psfs(self):
-    algorithm = PSFExtraction(params)
-    algorithm.extract(file_shifts=shifts, inspect_aperture=False)
-    logging.info("Saved the extracted PSFs...")
-    # for index, file in enumerate(params.psfFiles):
-    #     print('\t', file)
-
-
-def do_noise_thresholding(self):
+def _generate_noise_mask(frame, noise_reference_margin):
     """Estimate background (np.mean) and noise level (np.std) for every psf
     in a given outer annulus."""
-    for file in params.psfFiles:
-        with fits.open(file, mode='update') as hdulist:
-            numberFrames = hdulist[0].header['NAXIS3']
-            if not hasattr(params, 'psfNoiseMask'):
-                _generate_noise_mask(hdulist[0].data[0])
-            for index in range(numberFrames):
-                reference = np.ma.masked_array(hdulist[0].data[index], mask=params.psfNoiseMask)
-                background = np.mean(reference)
-                noise = np.std(reference)
-                update = np.maximum(hdulist[0].data[index] - background - params.noiseThreshold * noise, 0.0)
-                if np.sum(update) == 0.0:
-                    raise ValueError("After background subtraction and noise thresholding, no signal is leftover. Please reduce the noiseThreshold!")
-                update = update / np.sum(update) # Flux sum of order unity
-                hdulist[0].data[index] = update
-                hdulist.flush()
-
-
-def _generate_noise_mask(self, frame):
     center = int((frame.shape[0] - 1) / 2)
-    radius = center - params.noiseReferenceMargin
+    radius = center - noise_reference_margin
     tmp = Aperture(center, center, radius, frame, subset_only=False)
-    params.psfNoiseMask = np.logical_not(tmp.data.mask)
+    return np.logical_not(tmp.data.mask)
 
 
-def subtract_secondary_sources(self):
-    pass
 
 
-def evaluate_object(self, mode='same'):
+def evaluate_object(params, pad_vectors, mode='same'):
     logging.info("Fourier transforming the images...")
     for index, file in enumerate(params.inFiles):
         img = fits.getdata(file)
@@ -206,27 +178,4 @@ def evaluate_object(self, mode='same'):
     # denominator = np.ma.masked_values(denominator, 0.0)
     Fobject  = np.divide(enumerator, denominator)
 
-
-def apodize_object(self):
-    """Apodize the Fourier object with a apodization function of the users
-    choice."""
-    # # Assert that Fobject is square shaped
-    # try:
-    #     assert Fobject.shape[0] == Fobject.shape[1]
-    # except AssertionError:
-    #     raise NotImplementedError("apodization of non-quadratic objects is not implemented yet.")
-
-    logging.info("Apodizing the object...")
-    # apodizer = Apodizer()
-    Fobject = apodize(Fobject, params.apodizationType, radius=params.apodizationWidth)
-
-
-def compute_image(self, autosave=True):
-    """Compute the final image from the apodized object."""
-    image = ifft2(Fobject)
-    image = np.abs(image)
-    image_scale = total_flux / np.sum(image)
-    image = np.multiply(image, image_scale) # assert flux conservation
-    if autosave:
-        params.outFile.data = image
-    return image
+    return Fobject
