@@ -54,7 +54,7 @@ def main(options=None):
         os.system('mkdir {}'.format(args.tmpdir))
 
     # Execute reconstruction
-    outfile = Outfile(file_list=files, filename=args.outfile, cards={"RECONSTRUCTION": "SSA"})
+    outfile = Outfile(files=files, filename=args.outfile, cards={"RECONSTRUCTION": "SSA"})
     ssa(files, tmp_dir=args.tmpdir, outfile=outfile)
 
 

@@ -10,7 +10,7 @@ class TestOutfile(unittest.TestCase):
         self.FileManager = FileManager("data/test/example_cube.fits")
 
     def test_init(self):
-        Outfile(file_list=self.FileManager.files, filename="data/test/test_outfile.fits", cards={"RECONSTRUCTION": "Test"})
+        Outfile(files=self.FileManager.files, filename="data/test/test_outfile.fits", cards={"RECONSTRUCTION": "Test"})
 
     def test_set_data(self):
         pass

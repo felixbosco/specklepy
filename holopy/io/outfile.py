@@ -8,7 +8,7 @@ from holopy.logging import logging
 
 class Outfile(object):
 
-    def __init__(self, file_list, filename=None, cards={}, header_prefix="HIERARCH HOLOPY "):
+    def __init__(self, files, filename=None, cards={}, header_prefix="HIERARCH HOLOPY "):
         if filename is None:
             self.filename = self._make_time_stamp() + ".fits"
         else:
@@ -18,7 +18,7 @@ class Outfile(object):
         hdu = fits.PrimaryHDU()
 
         # Initialize header
-        hdr_input = fits.getheader(file_list[0])
+        hdr_input = fits.getheader(files[0])
         # hdu.header.set('NAXIS', 2)
         # hdu.header.set('NAXIS1', hdr_input['NAXIS1'])
         # hdu.header.set('NAXIS2', hdr_input['NAXIS2'])
@@ -28,7 +28,7 @@ class Outfile(object):
             hdu.header.set(header_prefix + key, cards[key])
 
         # Add list of files to header
-        for index, file in enumerate(file_list):
+        for index, file in enumerate(files):
             hdu.header.set(header_prefix + "FILE {} NAME".format(index), path.basename(file))
             hdu.header.set(header_prefix + "FILE {} FRAMENUMBER".format(index), fits.getheader(file)['NAXIS3'])
 

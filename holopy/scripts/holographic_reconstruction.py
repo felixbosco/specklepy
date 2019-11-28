@@ -59,7 +59,7 @@ def main(options=None):
                         make_dirs=make_dirs)
 
     # Instantiate handler classes
-    params.outFile = Outfile(file_list=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
+    params.outFile = Outfile(files=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
     holography(params)
