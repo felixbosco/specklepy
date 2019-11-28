@@ -25,6 +25,11 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
             holopy.core.aligment.compute_shifts for details. Default is 0.
         outfile (holopy.io.outfile, optional): Object to write the result to,
             if provided.
+        debug (bool, optional): Set to True to inspect intermediate results.
+            Default is False.
+
+    Returns:
+        reconstruction (np.ndarray): The image reconstruction.
     """
 
     logging.info("Starting SSA reconstruction...")
