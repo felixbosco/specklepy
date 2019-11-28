@@ -28,15 +28,12 @@ def ssa(file_list, mode='same', reference_file=None, reference_file_index=0, out
     """
     logging.info("Starting SSA reconstruction...")
 
-    file_shifts = compute_shifts(file_list, reference_file=reference_file, reference_file_index=reference_file_index, lazy_mode=True)
+    file_shifts, image_shape = compute_shifts(file_list, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
+    reconstruction = np.zeros(image_shape)
 
     for index, file in enumerate(file_list):
         cube = fits.getdata(file)
-
-        if index == 0:
-            reconstruction = _ssa(cube)
-        else:
-            reconstruction = _align_reconstructions(reconstruction, _ssa(cube), shift=file_shifts[index])
+        reconstruction = reconstruction + shift_array(coadd_frames(cube), shift=file_shifts[index])
 
     logging.info("Reconstruction finished...")
 
@@ -47,62 +44,53 @@ def ssa(file_list, mode='same', reference_file=None, reference_file_index=0, out
     return reconstruction
 
 
-def _ssa(cube):
+def coadd_frames(cube, mode='same'):
     """
     Compute the simple shift-and-add (SSA) reconstruction via the SSA algorithm
-    of a fits cube and return or write the result to a file.
+    of a fits cube and return the result.
     """
 
-    # Initialize
-    indizes = []
-    out = np.zeros(cube[0].shape)
-
     # Compute shifts
+    peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
-        print('Estimating the shift in frame {:4}...'.format(index + 1), end='\r')
-        indizes.append(np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape)))
-    shifts = _compute_shifts(indizes)
-    print('Estimated all shifts                           ', end='\r')
+        peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
+    shifts = compute_shifts_from_indizes(peak_indizes)
+
 
     # Shift frames and add to out
+    out = np.zeros(cube[0].shape)
     for index, frame in enumerate(cube):
-        print('Adding the frame {:4}...'.format(index + 1), end='\r')
-        out += _shift_array(frame, shifts[index])
+        out += shift_array(frame, shifts[index])
 
     return out
 
 
-def _compute_shifts(indizes):
-    xmean, ymean = np.mean(np.array(indizes), axis=0)
+
+def compute_shifts_from_indizes(indizes):
+    indizes = indizes.transpose()
+    xmean, ymean = np.mean(np.array(indizes), axis=1)
     xmean = int(xmean)
     ymean = int(ymean)
-    shifts = []
-    for i in indizes:
-        shifts.append((i[0]-xmean, i[1]-ymean))
-    return shifts
+    shifts = np.array([indizes[0] - xmean, indizes[1] - ymean])
+    return shifts.transpose()
 
 
-def _create_pad_vector_entry(shift_entry):
+
+def create_pad_vector_entry(shift_entry):
     if shift_entry <= 0 :
         return (np.abs(shift_entry), 0)
     else:
         return (0, shift_entry)
 
 
-def _create_pad_vector(shift):
-    return (_create_pad_vector_entry(shift[0]), _create_pad_vector_entry(shift[1]))
+
+def create_pad_vector(shift):
+    return (create_pad_vector_entry(shift[0]), create_pad_vector_entry(shift[1]))
 
 
-def _shift_array(array, shift):
+
+def shift_array(array, shift):
     shape = array.shape
     pad_array = array[max(0, shift[0]) : shape[0]+min(0, shift[0]) , max(0, shift[1]) : shape[1]+min(0, shift[1])]
-    pad_vector = _create_pad_vector(shift)
+    pad_vector = create_pad_vector(shift)
     return np.pad(pad_array, pad_vector, mode='constant')
-
-
-def _align_reconstructions(previous, current, shift=None):
-    if shift is None:
-        previous_x0, previous_y0 = np.unravel_index(np.argmax(previous, axis=None), previous.shape)
-        current_x0, current_y0 = np.unravel_index(np.argmax(current, axis=None), current.shape)
-        shift = (current_x0 - previous_x0, current_y0 - previous_y0)
-    return previous + _shift_array(current, shift)

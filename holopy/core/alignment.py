@@ -5,7 +5,8 @@ from holopy.logging import logging
 from holopy.utils.plot import imshow
 
 
-def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=True, debug=False):
+
+def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=True, return_image_shape=False, debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -34,7 +35,8 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode
     if lazy_mode and len(files) == 1:
         logging.info("Only one data cube is provided, nothing to align.")
         shifts = [(0, 0)]
-        pad_vectors = [(0, 0)]
+        image_shape = fits.getdata(files[0]).shape
+        image_shape = (image_shape[-2], image_shape[-1])
 
     # Otherwise estimate shifts and compute pad vectors
     else:
@@ -49,6 +51,7 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode
             # Integrating over time axis if reference image is a cube
             reference_image = np.sum(reference_image, axis=0)
         Freference_image = np.fft.fft2(reference_image)
+        image_shape = reference_image.shape
         del reference_image
 
         # Iterate over inFiles and estimate shift via 2D correlation of the integrated cubes
@@ -57,17 +60,60 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode
                 shift = (0, 0)
             else:
                 image = np.sum(fits.getdata(file), axis=0)
-                Fimage = np.conjugate(np.fft.fft2(image))
-                correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
-                correlation = np.fft.fftshift(correlation)
-                if debug:
-                    imshow(np.abs(correlation), title='FFT shifted correlation of file {}'.format(index))
-                shift = np.unravel_index(np.argmax(correlation), correlation.shape)
-                shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
-                shift = tuple(-1 * i for i in shift)
+                shift = estimate_shift(image, Freference_image=Freference_image, mode='correlation', debug=debug)
             shifts.append(shift)
         logging.info("Identified the following shifts:\n\t{}".format(shifts))
-    return shifts
+
+    if return_image_shape:
+        return shifts, image_shape
+    else:
+        return shifts
+
+
+
+def estimate_shift(image, reference_image=None, Freference_image=None, mode='maximum', debug=False):
+    """Estimate the shift between an image and a refernce image.
+
+    Long description ...
+
+    Args:
+        image (np.ndarray):
+        reference_image (np.ndarray):
+        Freference_image (np.ndarray):
+        mode (str, optional):
+        debug (bool):
+
+    Returns:
+        shift (tuple):
+    """
+
+    # Simple comparison of the peaks in the images
+    if mode == 'maximum' or mode == 'peak':
+        peak_image = np.unravel_index(np.argmax(image, axis=None), image.shape)
+        peak_ref_image = np.unravel_index(np.argmax(ref_image, axis=None), ref_image.shape)
+        return (peak_image[0] - peak_ref_image[0], peak_image[1] - peak_ref_image[1])
+
+    # Using correlation of the two images
+    elif mode == 'correlation':
+        if reference_image is not None and Freference_image is None:
+            Freference_image = np.fft.fft2(reference_image)
+        elif Freference_image is not None and reference_image is None:
+            pass
+        else:
+            raise ValueError("Exactly one of reference_image or Freference_image needs be provided to estimate_shift!")
+        Fimage = np.conjugate(np.fft.fft2(image))
+        correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
+        correlation = np.fft.fftshift(correlation)
+        if debug:
+            imshow(np.abs(correlation), title='FFT shifted correlation of file {}'.format(index))
+        shift = np.unravel_index(np.argmax(correlation), correlation.shape)
+        shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
+        shift = tuple(-1 * i for i in shift)
+        return shift
+
+    else:
+        raise ValueError("estimate_shift received unknown mode {}".format(mode))
+
 
 
 def compute_pad_vectors(shifts, mode='same'):

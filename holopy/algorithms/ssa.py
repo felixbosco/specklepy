@@ -21,7 +21,7 @@ class SSAReconstruction(object):
         self.execute(*args, **kwargs)
 
 
-    def execute(self, file_list, mode='same', reference_file=None, reference_file_index=0, outfile=None, **kwargs):
+    def execute(self, file_list, outfile=None, **kwargs):
         """Compute the SSA reconstruction of a list of files.
 
         Long description...
@@ -40,15 +40,13 @@ class SSAReconstruction(object):
         """
         logging.info("Starting {}...".format(self.__class__.__name__))
 
-        file_shifts = compute_shifts(file_list, reference_file=reference_file, reference_file_index=reference_file_index, lazy_mode=True)
-
         for index, file in enumerate(file_list):
             cube = fits.getdata(file)
 
             if index == 0:
                 reconstruction = self._ssa(cube)
             else:
-                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube), shift=file_shifts[index])
+                reconstruction = self._align_reconstructions(reconstruction, self._ssa(cube), shift=None)#file_shifts[index])
 
         logging.info("Reconstruction finished...")
 
