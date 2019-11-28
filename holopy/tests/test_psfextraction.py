@@ -1,6 +1,6 @@
 import unittest
 from holopy.algorithms.psfextraction import PSFExtraction
-from holopy.io.paramhandler import ParamHandler
+from holopy.io.parameterset import ParameterSet
 
 
 class TestPSFExtraction(unittest.TestCase):
@@ -10,7 +10,7 @@ class TestPSFExtraction(unittest.TestCase):
         self.defaults_file = "holopy/config/holography_defaults.cfg"
         self.essential_attributes = ['inDir', 'tmpDir', 'refSourceFile', 'psfRadius']
         self.make_dirs = ['tmpDir']
-        self.params = ParamHandler(parameter_file=self.parameter_file,
+        self.params = ParameterSet(parameter_file=self.parameter_file,
                         defaults_file=self.defaults_file,
                         essential_attributes=self.essential_attributes,
                         make_dirs=self.make_dirs)
