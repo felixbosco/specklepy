@@ -5,7 +5,7 @@ from holopy.logging import logging
 from holopy.io.outfile import Outfile
 
 
-class FileHandler(object):
+class FileManager(object):
 
     """
     This class is handling the input files and is iterable.
