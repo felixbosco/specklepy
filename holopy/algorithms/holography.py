@@ -9,12 +9,12 @@ from holopy.logging import logging
 from holopy.io.outfile import Outfile
 from holopy.core.alignment import compute_shifts
 from holopy.core.aperture import Aperture
-from holopy.core.apodizer import Apodizer
+from holopy.core.apodization import apodize
 from holopy.core.ssa import ssa
 # from holopy.algorithms.matchstarlist import MatchStarList
 from holopy.algorithms.psfextraction import PSFExtraction
 from holopy.algorithms.sourceextraction import SourceExtraction
-from holopy.algorithms.ssa import SSAReconstruction
+# from holopy.algorithms.ssa import SSAReconstruction
 from holopy.utils.plot import imshow
 from holopy.utils.transferfunctions import otf
 
@@ -213,8 +213,8 @@ class HolographicReconstruction(object):
         #     raise NotImplementedError("apodization of non-quadratic objects is not implemented yet.")
 
         logging.info("Apodizing the object...")
-        self.apodizer = Apodizer(self.params.apodizationType, shape=self.Fobject.shape, radius=self.params.apodizationWidth)
-        self.Fobject = self.apodizer.apodize(self.Fobject)
+        # self.apodizer = Apodizer()
+        self.Fobject = apodize(self.Fobject, self.params.apodizationType, radius=self.params.apodizationWidth)
 
 
     def compute_image(self, autosave=True):

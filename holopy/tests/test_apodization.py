@@ -13,7 +13,7 @@ class TestApodization(unittest.TestCase):
     def test_call(self):
         apodize(self.object, 'Gaussian', radius=16)
         apodize(self.object, 'Airy', radius=16)
-        imshow(np.abs(apodize(self.object, 'Gaussian', radius=20)), norm='log')
+        imshow(np.abs(apodize(self.object, 'Gaussian', radius=20)))
 
     def test_errors(self):
 
