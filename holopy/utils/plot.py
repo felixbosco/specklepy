@@ -1,8 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from holopy.config import plotting
+# from holopy.config import plotting
 from holopy.utils import transferfunctions as tf
+
+from matplotlib.pyplot import rc
+
+font = {
+    'family' : 'serif',
+    #'weight' : 'bold',
+    #'size'   : 'larger'
+    }
+
+rc('font', **font)  # pass in the font dict as kwargs
 
 
 def imshow(image, title=None, norm=None):
