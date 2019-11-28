@@ -5,7 +5,7 @@ import os
 import sys
 
 try:
-    from holopy.io.filehandler import FileHandler
+    from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
     from holopy.io.parameterset import ParameterSet
     from holopy.logging import logging
@@ -18,7 +18,7 @@ except ModuleNotFoundError:
     sys.path.insert(0, PATH)
 
     # Repeat import
-    from holopy.io.filehandler import FileHandler
+    from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
     from holopy.io.parameterset import ParameterSet
     from holopy.logging import logging

@@ -9,7 +9,7 @@ from astropy.table import Table
 
 from holopy.logging import logging
 from holopy.io.parameterset import ParameterSet
-from holopy.io.filehandler import FileHandler
+from holopy.io.filemanager import FileManager
 from holopy.io.psffile import PSFfile
 from holopy.core.aperture import Aperture
 from holopy.utils.plot import imshow

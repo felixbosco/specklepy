@@ -1,21 +1,21 @@
 import unittest
-from holopy.io.filehandler import FileHandler
+from holopy.io.filemanager import FileManager
 
 
-class TestFileHandler(unittest.TestCase):
+class TestFileManager(unittest.TestCase):
 
     def setUp(self):
         self.filename = "data/test/example_cube.fits"
 
     def test_init(self):
-        FileHandler(self.filename)
+        FileManager(self.filename)
 
     def test_str(self):
-        fh = FileHandler(self.filename)
+        fh = FileManager(self.filename)
         print(fh)
 
     def test_iter(self):
-        fh = FileHandler(self.filename)
+        fh = FileManager(self.filename)
         for file in fh:
             print(type(file), file)
 

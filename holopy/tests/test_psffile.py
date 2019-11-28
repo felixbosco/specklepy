@@ -1,6 +1,6 @@
 import unittest
 from numpy.random import rand
-from holopy.io.filehandler import FileHandler
+from holopy.io.filemanager import FileManager
 from holopy.io.psffile import PSFfile
 
 

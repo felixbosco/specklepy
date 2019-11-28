@@ -2,7 +2,7 @@ import os
 from configparser import ConfigParser
 
 from holopy.logging import logging
-from holopy.io.filehandler import FileHandler
+from holopy.io.filemanager import FileManager
 
 
 class ParameterSet(object):
@@ -55,7 +55,7 @@ class ParameterSet(object):
                     logging.warning("Essential parameter <{}> not found in parameter file or config file!".format(attr))
 
         self.makedirs(dir_list=make_dirs)
-        self.inFiles = FileHandler(self.inDir)()
+        self.inFiles = FileManager(self.inDir)()
 
 
     def makedirs(self, dir_list):

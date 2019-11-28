@@ -1,16 +1,16 @@
 import unittest
 import numpy as np
-from holopy.io.filehandler import FileHandler
+from holopy.io.filemanager import FileManager
 from holopy.io.outfile import Outfile
 
 
 class TestOutfile(unittest.TestCase):
 
     def setUp(self):
-        self.FileHandler = FileHandler("data/test/example_cube.fits")
+        self.FileManager = FileManager("data/test/example_cube.fits")
 
     def test_init(self):
-        Outfile(file_list=self.FileHandler.files, filename="data/test/test_outfile.fits", cards={"RECONSTRUCTION": "Test"})
+        Outfile(file_list=self.FileManager.files, filename="data/test/test_outfile.fits", cards={"RECONSTRUCTION": "Test"})
 
     def test_set_data(self):
         pass

@@ -5,7 +5,7 @@ import os
 import sys
 
 try:
-    from holopy.io.filehandler import FileHandler
+    from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
     # from holopy.algorithms.ssa import SSAReconstruction
@@ -17,7 +17,7 @@ except ModuleNotFoundError:
     sys.path.insert(0, PATH)
 
     # Repeat import
-    from holopy.io.filehandler import FileHandler
+    from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
     from holopy.logging import logging
     # from holopy.algorithms.ssa import SSAReconstruction
@@ -46,7 +46,7 @@ def main(options=None):
     args = parser(options=options)
 
     if args.file is not None:
-        files = FileHandler(args.file)()
+        files = FileManager(args.file)()
     else:
         logging.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
