@@ -15,7 +15,7 @@ from photutils import CircularAperture
 
 try:
     from holopy.logging import logging
-    from holopy.io.paramhandler import ParamHandler
+    from holopy.io.parameterset import ParameterSet
     from holopy.core.aperture import Aperture
     from holopy.utils.plot import imshow
     from holopy.algorithms.sourceextraction import SourceExtraction
@@ -29,7 +29,7 @@ except ModuleNotFoundError:
 
     # Repeat import
     from holopy.logging import logging
-    from holopy.io.paramhandler import ParamHandler
+    from holopy.io.parameterset import ParameterSet
     from holopy.core.aperture import Aperture
     from holopy.utils.plot import imshow
     from holopy.algorithms.sourceextraction import SourceExtraction
@@ -69,7 +69,7 @@ def main(options=None):
     if args.parameter_file is None:
         raise RuntimeError("No parameter file was provided! Use --help for instructions.")
     else:
-        params = ParamHandler(parameter_file=args.parameter_file, defaults_file=defaults_file, essential_attributes=essential_attributes)
+        params = ParameterSet(parameter_file=args.parameter_file, defaults_file=defaults_file, essential_attributes=essential_attributes)
 
     if args.outfile is None:
         args.outfile = params.allStarsFile

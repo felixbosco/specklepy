@@ -7,7 +7,7 @@ from photutils.psf import extract_stars
 from photutils.psf import EPSFBuilder
 
 from holopy.logging import logging
-from holopy.io.paramhandler import ParamHandler
+from holopy.io.parameterset import ParameterSet
 from holopy.io.psffile import PSFfile
 
 from holopy.utils.plot import imshow
@@ -15,8 +15,8 @@ from holopy.utils.plot import imshow
 class EPSFExtraction(object):
 
     def __init__(self, params):
-        if not isinstance(params, ParamHandler):
-            raise TypeError("params argument of the PSFExtractor class must be instance of holopy.io.paramhandler.ParamHandler!")
+        if not isinstance(params, ParameterSet):
+            raise TypeError("params argument of the PSFExtractor class must be instance of holopy.io.parameterset.ParameterSet!")
         self.params = params
         self.radius = params.psfRadius
 

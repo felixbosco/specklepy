@@ -8,7 +8,7 @@ from astropy.table import Table
 # from photutils.psf import EPSFBuilder
 
 from holopy.logging import logging
-from holopy.io.paramhandler import ParamHandler
+from holopy.io.parameterset import ParameterSet
 from holopy.io.filehandler import FileHandler
 from holopy.io.psffile import PSFfile
 from holopy.core.aperture import Aperture
@@ -18,8 +18,8 @@ from holopy.utils.plot import imshow
 class PSFExtraction(object):
 
     def __init__(self, params):
-        if not isinstance(params, ParamHandler):
-            raise TypeError("params argument of the PSFExtractor class must be instance of holopy.io.paramhandler.ParamHandler!")
+        if not isinstance(params, ParameterSet):
+            raise TypeError("params argument of the PSFExtractor class must be instance of holopy.io.parameterset.ParameterSet!")
         self.params = params
         self.radius = params.psfRadius
 

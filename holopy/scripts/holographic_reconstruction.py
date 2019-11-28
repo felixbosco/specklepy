@@ -7,7 +7,7 @@ import sys
 try:
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
-    from holopy.io.paramhandler import ParamHandler
+    from holopy.io.parameterset import ParameterSet
     from holopy.logging import logging
     from holopy.algorithms.holography import HolographicReconstruction
 except ModuleNotFoundError:
@@ -20,7 +20,7 @@ except ModuleNotFoundError:
     # Repeat import
     from holopy.io.filehandler import FileHandler
     from holopy.io.outfile import Outfile
-    from holopy.io.paramhandler import ParamHandler
+    from holopy.io.parameterset import ParameterSet
     from holopy.logging import logging
     from holopy.algorithms.holography import HolographicReconstruction
 
@@ -53,7 +53,7 @@ def main(options=None):
     if args.parameter_file is None:
         raise RuntimeError("No parameter file was provided! Use --help for instructions.")
     else:
-        params = ParamHandler(parameter_file=args.parameter_file,
+        params = ParameterSet(parameter_file=args.parameter_file,
                         defaults_file=defaults_file,
                         essential_attributes=essential_attributes,
                         make_dirs=make_dirs)
