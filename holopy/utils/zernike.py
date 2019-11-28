@@ -2,7 +2,6 @@ import numpy as np
 from math import factorial
 import warnings
 
-from plot import imshow
 
 class Zernike(object):
 
