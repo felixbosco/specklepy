@@ -6,33 +6,48 @@ from datetime import datetime
 from astropy.io import fits
 
 from holopy.logging import logging
+from holopy.io.parameterset import ParameterSet
 from holopy.io.outfile import Outfile
 from holopy.core.alignment import compute_shifts
 from holopy.core.aperture import Aperture
 from holopy.core.apodization import apodize
 from holopy.core.ssa import ssa
-# from holopy.algorithms.matchstarlist import MatchStarList
 from holopy.algorithms.psfextraction import PSFExtraction
 from holopy.algorithms.sourceextraction import SourceExtraction
-# from holopy.algorithms.ssa import SSAReconstruction
 from holopy.utils.plot import imshow
 from holopy.utils.transferfunctions import otf
 
 
 
-def holography(params, show=False, debug=False):
+def holography(params, debug=False):
     """Execute the holographic image reconstruction following the algorithm
     outlined in Schoedel et al (2013, Section 3).
+
+    Long description ...
+
+    Args:
+        params (holopy.io.parameterset.ParameterSet):
+        debug (bool, optional): Set to True to inspect intermediate results.
+            Default is False.
+
+    Returns:
+        image (np.ndarray): The image reconstruction.
     """
+
     logging.info("Starting holographic reconstruction of {} files...".format(len(params.inFiles)))
+    if not isinstance(params, ParameterSet):
+        logging.warn("holopy.core.holography.holography received params argument \
+                        of type <{}> instead of the expected type \
+                        holopy.io.parameterset.ParameterSet. This may cause \
+                        unforeseen errors.".format(type(params)))
 
     # (i-ii) Align cubes
     shifts = compute_shifts(files=params.inFiles,
-                                    reference_file=params.alignmentReferenceFile,
-                                    reference_file_index=0,
-                                    lazy_mode=True,
-                                    return_image_shape=False,
-                                    debug=debug)
+                            reference_file=params.alignmentReferenceFile,
+                            reference_file_index=0,
+                            lazy_mode=True,
+                            return_image_shape=False,
+                            debug=debug)
     pad_vectors = len(params.inFiles) * [((0, 0), (0, 0), (0, 0))]
 
 

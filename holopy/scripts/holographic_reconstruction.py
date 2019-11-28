@@ -5,25 +5,23 @@ import os
 import sys
 
 try:
+    from holopy.logging import logging
+    from holopy.io.parameterset import ParameterSet
     from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
-    from holopy.io.parameterset import ParameterSet
-    from holopy.logging import logging
-    # from holopy.algorithms.holography import HolographicReconstruction
     from holopy.core.holography import holography
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
     PATH = os.getcwd()
-    warnings.warn("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
+    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
     sys.path.insert(0, PATH)
 
     # Repeat import
+    from holopy.logging import logging
+    from holopy.io.parameterset import ParameterSet
     from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
-    from holopy.io.parameterset import ParameterSet
-    from holopy.logging import logging
-    # from holopy.algorithms.holography import HolographicReconstruction
     from holopy.core.holography import holography
 
 
@@ -65,8 +63,6 @@ def main(options=None):
 
     # Execute reconstruction
     holography(params)
-    # algorithm = HolographicReconstruction(params)
-    # algorithm.execute()
 
 
 if __name__ == '__main__':

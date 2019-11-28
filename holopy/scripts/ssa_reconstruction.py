@@ -5,22 +5,21 @@ import os
 import sys
 
 try:
+    from holopy.logging import logging
     from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
-    from holopy.logging import logging
-    # from holopy.algorithms.ssa import SSAReconstruction
+    from holopy.core.ssa import ssa
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
     PATH = os.getcwd()
-    warnings.warn("Importing spampy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
+    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
     sys.path.insert(0, PATH)
 
     # Repeat import
+    from holopy.logging import logging
     from holopy.io.filemanager import FileManager
     from holopy.io.outfile import Outfile
-    from holopy.logging import logging
-    # from holopy.algorithms.ssa import SSAReconstruction
     from holopy.core.ssa import ssa
 
 
@@ -56,8 +55,6 @@ def main(options=None):
 
     # Execute reconstruction
     outfile = Outfile(file_list=files, filename=args.outfile, cards={"RECONSTRUCTION": "SSA"})
-    # algorithm = SSAReconstruction()
-    # algorithm.execute(files, outfile=outfile)
     ssa(files, tmp_dir=args.tmpdir, outfile=outfile)
 
 
