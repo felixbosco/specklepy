@@ -9,7 +9,8 @@ try:
     from holopy.io.outfile import Outfile
     from holopy.io.parameterset import ParameterSet
     from holopy.logging import logging
-    from holopy.algorithms.holography import HolographicReconstruction
+    # from holopy.algorithms.holography import HolographicReconstruction
+    from holopy.core.holography import holography
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -22,7 +23,8 @@ except ModuleNotFoundError:
     from holopy.io.outfile import Outfile
     from holopy.io.parameterset import ParameterSet
     from holopy.logging import logging
-    from holopy.algorithms.holography import HolographicReconstruction
+    # from holopy.algorithms.holography import HolographicReconstruction
+    from holopy.core.holography import holography
 
 
 
@@ -62,8 +64,9 @@ def main(options=None):
     params.outFile = Outfile(file_list=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
-    algorithm = HolographicReconstruction(params)
-    algorithm.execute()
+    holography(params)
+    # algorithm = HolographicReconstruction(params)
+    # algorithm.execute()
 
 
 if __name__ == '__main__':
