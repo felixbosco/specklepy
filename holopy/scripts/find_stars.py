@@ -43,6 +43,7 @@ def parser(options=None):
     parser.add_argument('-f', '--file', type=str, default=None, help='Fits file to search for stars.')
     parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
     parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the output file.')
+    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()
@@ -56,7 +57,6 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
-    plot = False
     background_subtraction = True
     defaults_file = "holopy/config/holography_defaults.cfg"
     essential_attributes = ['allStarsFile', 'noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth', 'noiseThreshold', 'starfinderFwhm']
@@ -80,7 +80,7 @@ def main(options=None):
     finder.writeto(args.outfile)
 
     # Plot results
-    if plot:
+    if args.debug:
         positions = np.transpose((finder.sources['xcentroid'], finder.sources['ycentroid']))
         apertures = CircularAperture(positions, r=4.)
         norm = ImageNormalize(stretch=SqrtStretch())

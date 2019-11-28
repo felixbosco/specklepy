@@ -38,7 +38,8 @@ def parser(options=None):
     parser.add_argument('-r', '--radius', type=int, default=10, help='Radius of the aperture to analyse in pix.')
     parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the file to write the results to. Default is to just repace .fits by .dat.')
     parser.add_argument('-p', '--pixel_scale', type=float, default=None, help='Pixel scale in arcsec for computing the spatial frequencies.')
-    parser.add_argument('-v', '--visual', action='store_const', const=True, default=False, help='Show the plots?')
+    # parser.add_argument('-v', '--visual', action='store_const', const=True, default=False, help='Show the plots?')
+    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()
@@ -78,7 +79,7 @@ def main(options=None):
         # Test of the heavy spot of the aperture
         aperture = Aperture(*args.index, args.radius, data=args.file, subset_only=False)
         max = aperture.get_aperture_peak()
-        if args.visual:
+        if args.debug:
             imshow(aperture.data, title="Aperture in the integrated cube")
         if max == args.index:
             logging.info("Index {} is identical with the maximum of the integrated cube image {}.".format(args.index, max))
@@ -90,7 +91,7 @@ def main(options=None):
                 args.index = max
                 aperture = Aperture(*args.index, args.radius, data=integrated_cube, mask=None, subset_only=True)
                 if answer and (answer.lower() == "yes" or answer == ''):
-                    if args.visual:
+                    if args.debug:
                         imshow(aperture.data, title="Updated aperture")
             else:
                 logging.info("Continuing with the central index {}...".format(args.index))
@@ -106,7 +107,7 @@ def main(options=None):
     Fourier_cube = fits.getdata(args.Fourier_file)
     Fourier_mean = np.mean(Fourier_cube, axis=0)
     Fourier_var = np.var(Fourier_cube, axis=0)  # Compute variance to average linearly in the following
-    if args.visual:
+    if args.debug:
         imshow(Fourier_mean, title="Mean of the Fourier transformed cube along the time axis", norm=LogNorm())
         imshow(np.sqrt(Fourier_var), title="Standard deviation in the Fourier transformed cube along the time axis", norm=LogNorm())
 
@@ -136,7 +137,7 @@ def main(options=None):
     if args.pixel_scale is not None:
         logging.warn("Handling the pixel scale is not implemented yet!")
 
-    if args.visual:
+    if args.debug:
         plot_simple(xdata, ydata,
                     title="{}\nCenter={} Radius={}".format(args.Fourier_file, args.index, args.radius),
                     xlabel="Fourier radius")

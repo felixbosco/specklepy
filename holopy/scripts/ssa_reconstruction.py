@@ -32,6 +32,7 @@ def parser(options=None):
     parser.add_argument('-f', '--file', type=str, default=None, help='Fits file or generic file name to consider for the SSA reconstruction.')
     parser.add_argument('-t', '--tmpdir', type=str, default=None, help='Path to save temporary files to.')
     parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the outfile file.')
+    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()
@@ -55,7 +56,7 @@ def main(options=None):
 
     # Execute reconstruction
     outfile = Outfile(files=files, filename=args.outfile, cards={"RECONSTRUCTION": "SSA"})
-    ssa(files, tmp_dir=args.tmpdir, outfile=outfile)
+    ssa(files, tmp_dir=args.tmpdir, outfile=outfile, debug=args.debug)
 
 
 if __name__ == '__main__':

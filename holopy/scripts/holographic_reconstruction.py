@@ -32,6 +32,7 @@ def parser(options=None):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
+    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()
@@ -62,7 +63,7 @@ def main(options=None):
     params.outFile = Outfile(files=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
-    holography(params)
+    holography(params, debug=args.debug)
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ from holopy.io.outfile import Outfile
 from holopy.core.alignment import compute_shifts
 
 
-def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile=None, tmp_dir=None, lazy_mode=True, **kwargs):
+def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     Long description...
