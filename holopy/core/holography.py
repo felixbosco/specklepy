@@ -48,13 +48,10 @@ def holography(params, debug=False):
                             lazy_mode=True,
                             return_image_shape=False,
                             debug=debug)
-    pad_vectors = len(params.inFiles) * [((0, 0), (0, 0), (0, 0))]
-
 
     # (iii) Compute SSA reconstruction
     image = ssa(params.inFiles, outfile=params.outFile, tmp_dir=params.tmpDir)
     total_flux = np.sum(image) # Stored for flux conservation
-
 
     # Start iteration from steps (iv) thorugh (xi)
     while True:
@@ -78,7 +75,7 @@ def holography(params, debug=False):
             with fits.open(file, mode='update') as hdulist:
                 numberFrames = hdulist[0].header['NAXIS3']
                 if not hasattr(params, 'psfNoiseMask'):
-                    params.psfNoiseMask = _generate_noise_mask(hdulist[0].data[0], noise_reference_margin=params.noiseReferenceMargin)
+                    params.psfNoiseMask = generate_noise_mask(hdulist[0].data[0], noise_reference_margin=params.noiseReferenceMargin)
                 for index in range(numberFrames):
                     reference = np.ma.masked_array(hdulist[0].data[index], mask=params.psfNoiseMask)
                     background = np.mean(reference)
@@ -91,6 +88,7 @@ def holography(params, debug=False):
                     hdulist.flush()
 
         # (viii) Subtraction of secondary sources within the reference apertures
+        # THIS IS NOT IMPLEMENTED YET!
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
@@ -126,29 +124,67 @@ def holography(params, debug=False):
 
 
 
-def _generate_noise_mask(frame, noise_reference_margin):
-    """Estimate background (np.mean) and noise level (np.std) for every psf
-    in a given outer annulus."""
+def generate_noise_mask(frame, noise_reference_margin):
+    """Create an annulus-like mask within a given aperture for measuring noise
+    and (sky) background.
+
+    Args:
+        frame ():
+        noise_reference_margin (int): Width of the reference annulus:
+
+    Returns:
+        annulus_mask (np.ndarray, dtype=bool):
+    """
     center = int((frame.shape[0] - 1) / 2)
     radius = center - noise_reference_margin
     tmp = Aperture(center, center, radius, frame, subset_only=False)
-    return np.logical_not(tmp.data.mask)
+    annulus_mask = np.logical_not(tmp.data.mask)
+    return annulus_mask
 
 
 
 
-def evaluate_object(params, pad_vectors, mode='same'):
+def evaluate_object(params, shifts, mode='same'):
+    """Reconstruction of the Fourier transformed object with Eq. 1 (Schoedel
+    et al., 2013).
+
+    Long description...
+
+    Args:
+        params (ParameterSet):
+        shifts (list):
+        mode (str, optional): Default is 'same'.
+
+    Returns:
+        Fobject (np.ndarray, dtype=complex128): Fourier transformed object as a
+            complex128 np.ndarray.
+    """
+
+    if not isinstance(params, ParameterSet):
+        logging.warn("holopy.core.holography.evaluate_object received params argument \
+                        of type <{}> instead of the expected type \
+                        holopy.io.parameterset.ParameterSet. This may cause \
+                        unforeseen errors.".format(type(params)))
+    if mode not in ['same', 'full', 'valid']:
+        raise ValueError("holopy.core.holography.evaluate_object received mode \
+                            argument '{}', but must be either 'same', 'full', \
+                            or 'valid'.".format(mode))
+
+    pad_vectors = len(params.inFiles) * [((0, 0), (0, 0), (0, 0))]
+
     logging.info("Fourier transforming the images...")
     for index, file in enumerate(params.inFiles):
         img = fits.getdata(file)
         # logging.warning("Images are not expanded to the fill field of view.")
-        print(pad_vectors)
+        print('\t', pad_vectors)
         pad_vector = pad_vectors[index]
         img = np.pad(img, pad_vector)
         if mode == 'same':
             # Only in same mode, remove the margin outside the field of view
             # of the reference image, see align_cubes() method.
-            img = img[:, pad_vector[1][0] : - pad_vector[1][1] -1, pad_vector[2][0]: - pad_vector[2][1] - 1]
+            print('\t', img.shape)
+            img = img[: , pad_vector[1][0] : -1-pad_vector[1][1] , pad_vector[2][0] : -1-pad_vector[2][1]]
+            print('\t', img.shape)
 
         if index == 0:
             Fimg = fftshift(fft2(img))

@@ -77,11 +77,24 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
 
 
 
-def coadd_frames(cube, mode='same'):
+def coadd_frames(cube):
     """
-    Compute the simple shift-and-add (SSA) reconstruction via the SSA algorithm
-    of a fits cube and return the result.
+    Compute the simple shift-and-add (SSA) reconstruction of a data cube via
+    the SSA algorithm and return the result.
+
+    Args:
+        cube (np.ndarray, ndim=3):
+
+    Returns:
+        coadded (np.ndarray, ndim=2): SSA-integrated frames of the input cube.
     """
+
+    if not isinstance(cube, np.ndarray):
+        raise TypeError("holopy.core.ssa.coadd_frames received cube argument of \
+                            type {}, but must be np.ndarray".format(type(cube)))
+    if cube.ndim is not 3:
+        raise ValueError("holopy.core.ssa.coadd_frames received cube argument of \
+                            dimension {}, but must be 3".format(cube.ndim))
 
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
@@ -97,12 +110,12 @@ def coadd_frames(cube, mode='same'):
     shifts = np.array([peak_indizes[0] - xmean, peak_indizes[1] - ymean])
     shifts =  shifts.transpose()
 
-    # Shift frames and add to out
-    out = np.zeros(cube[0].shape)
+    # Shift frames and add to coadded
+    coadded = np.zeros(cube[0].shape)
     for index, frame in enumerate(cube):
-        out += shift_array(frame, shifts[index])
+        coadded += shift_array(frame, shifts[index])
 
-    return out
+    return coadded
 
 
 
