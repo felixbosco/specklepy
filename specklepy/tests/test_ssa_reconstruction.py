@@ -2,7 +2,7 @@ import unittest
 import os
 
 
-class TestScriptSSAReconstrution(unittest.TestCase):
+class TestSSAReconstrution(unittest.TestCase):
 
     def test_one_cube(self):
         os.system('python specklepy/scripts/ssa_reconstruction.py \
