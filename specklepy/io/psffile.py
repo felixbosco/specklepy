@@ -45,9 +45,8 @@ class PSFfile(object):
         hdu.header.set('DATE', str(datetime.now()))
 
         # Write to files
-        logging.info("Saving PSFs to file {}".format(self.filename))
+        logging.info("Initializing PSF file {}".format(self.filename))
         hdu.writeto(self.filename, overwrite=True)
-        logging.info("File initialized!")
 
 
     @property
