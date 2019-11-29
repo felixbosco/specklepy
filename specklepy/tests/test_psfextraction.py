@@ -1,9 +1,9 @@
 import unittest
-from specklepy.algorithms.psfextraction import PSFExtraction
+from specklepy.core.psfextraction import ReferenceStars
 from specklepy.io.parameterset import ParameterSet
 
 
-class TestPSFExtraction(unittest.TestCase):
+class TestPSFextraction(unittest.TestCase):
 
     def setUp(self):
         self.parameter_file = "data/test/test_parfile.ini"
@@ -16,19 +16,19 @@ class TestPSFExtraction(unittest.TestCase):
                         make_dirs=self.make_dirs)
 
     def test_init(self):
-        PSFExtraction(self.params)
+        ReferenceStars(self.params)
 
 
     def test_initialize_apertures(self):
-        algorithm = PSFExtraction(self.params)
-        print(algorithm.star_table)
-        algorithm.init_ref_apertures(self.params.inFiles[0])
+        refStars = ReferenceStars(self.params)
+        print(refStars.star_table)
+        refStars.init_apertures(self.params.inFiles[0])
 
 
-    def test_extract(self):
-        algorithm = PSFExtraction(self.params)
-        algorithm.extract()
-        algorithm.extract(mode='align_median')
+    def test_extract_psfs(self):
+        refStars = ReferenceStars(self.params)
+        refStars.extract_psfs()
+        refStars.extract_psfs(mode='align_median')
 
 
 if __name__ == "__main__":

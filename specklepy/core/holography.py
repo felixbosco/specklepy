@@ -12,7 +12,7 @@ from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
 from specklepy.core.apodization import apodize
 from specklepy.core.ssa import ssa
-from specklepy.algorithms.psfextraction import PSFExtraction
+from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.sourceextraction import find_sources
 from specklepy.utils.plot import imshow
 from specklepy.utils.transferfunctions import otf
@@ -74,8 +74,8 @@ def holography(params, mode='same', debug=False):
         input("\tWhen you are done, just hit a key.")
 
         # (vi) PSF extraction
-        algorithm = PSFExtraction(params)
-        algorithm.extract(file_shifts=shifts, inspect_aperture=False)
+        refStars = ReferenceStars(params)
+        refStars.extract_psfs(file_shifts=shifts, inspect_aperture=False)
         logging.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding

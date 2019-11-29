@@ -15,9 +15,20 @@ from specklepy.core.aperture import Aperture
 from specklepy.utils.plot import imshow
 
 
-class PSFExtraction(object):
+class ReferenceStars(object):
+
+    """Class that holds a list of reference stars and can extract the PSFs of
+    these.
+
+    Long description...
+    """
 
     def __init__(self, params):
+        """
+        Args:
+            params (speckly.io.parameterset.ParameterSet)
+        """
+
         if not isinstance(params, ParameterSet):
             raise TypeError("params argument of the PSFExtractor class must be instance of specklepy.io.parameterset.ParameterSet!")
         self.params = params
@@ -27,29 +38,24 @@ class PSFExtraction(object):
         self.star_table = Table.read(params.refSourceFile, format='ascii')
 
 
-    def __call__(self, **kwargs):
-        return self.extract(**kwargs)
-
-
     @property
     def box_size(self):
         return self.radius * 2 + 1
 
 
-    def init_ref_apertures(self, filename, shift=(0, 0)):
-        self.ref_apertures = []
+    def init_apertures(self, filename, shift=(0, 0)):
+        self.apertures = []
         for star in self.star_table:
-            # print(star['x'], star['y'], self.radius, filename)
-            self.ref_apertures.append(Aperture(star['y'] + shift[0], star['x'] + shift[1], self.radius, data=filename, subset_only=True, verbose=False))
+            self.apertures.append(Aperture(star['y'] + shift[0], star['x'] + shift[1], self.radius, data=filename, subset_only=True, verbose=False))
 
 
-    def extract(self, mode='align_median', file_shifts=None, inspect_aperture=False):
+    def extract_psfs(self, mode='align_median', file_shifts=None, inspect_aperture=False):
         if 'median' in mode:
             combine = np.median
         elif 'mean' in mode:
             combine = np.mean
         else:
-            raise ValueError('PSFExtraction received unknown mode for extract method ({}).'.format(mode))
+            raise ValueError('ReferenceStars received unknown mode for extract method ({}).'.format(mode))
 
         self.params.psfFiles = []
         for file_index, file in enumerate(self.params.inFiles):
@@ -61,19 +67,19 @@ class PSFExtraction(object):
                 file_shift = (0, 0)
             else:
                 file_shift = file_shifts[file_index]
-            self.init_ref_apertures(file, shift=file_shift)
+            self.init_apertures(file, shift=file_shift)
             frame_number = fits.getheader(file)['NAXIS3']
 
             # Check apertures visually
             if inspect_aperture:
-                for index, aperture in enumerate(self.ref_apertures):
+                for index, aperture in enumerate(self.apertures):
                     imshow(aperture.get_integrated(), title="Inspect reference aperture {}".format(index + 1))
 
             # Extract the PSF by combining the aperture frames in the desired mode
             for frame_index in range(frame_number):
                 print("\r\tExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
-                psf = np.empty((len(self.ref_apertures), self.box_size, self.box_size))
-                for aperture_index, aperture in enumerate(self.ref_apertures):
+                psf = np.empty((len(self.apertures), self.box_size, self.box_size))
+                for aperture_index, aperture in enumerate(self.apertures):
                     # Copy aperture into psf
                     if 'align' in mode:
                         psf[aperture_index] = shift(aperture[frame_index], shift=(aperture.xoffset, aperture.yoffset))
