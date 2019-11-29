@@ -1,11 +1,7 @@
 import numpy as np
-from scipy.ndimage import shift
-from os import path
+from scipy import ndimage
 from astropy.io import fits
 from astropy.table import Table
-# from astropy.nddata import NDData
-# from photutils.psf import extract_stars
-# from photutils.psf import EPSFBuilder
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
@@ -50,6 +46,17 @@ class ReferenceStars(object):
 
 
     def extract_psfs(self, mode='align_median', file_shifts=None, inspect_aperture=False):
+        """Extract the PSF of the list of ReferenceStars frame by frame.
+
+        Long description...
+
+        Args:
+            mode (str, optional):
+            file_shifts (list, optional):
+            inspect_aperture (bool, optional):
+        """
+
+        # Input parameters
         if 'median' in mode:
             combine = np.median
         elif 'mean' in mode:
@@ -57,12 +64,18 @@ class ReferenceStars(object):
         else:
             raise ValueError('ReferenceStars received unknown mode for extract method ({}).'.format(mode))
 
+        # Create a list of psf files and store it to params
         self.params.psfFiles = []
+
+        # Iterate over params.inFiless
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
             self.params.psfFiles.append(psf_file.filename)
+
+            # Consider alignment of cubes when initializing the apertures, i.e.
+            # the position of the aperture in the shifted cube
             if file_shifts is None:
                 file_shift = (0, 0)
             else:
@@ -82,9 +95,9 @@ class ReferenceStars(object):
                 for aperture_index, aperture in enumerate(self.apertures):
                     # Copy aperture into psf
                     if 'align' in mode:
-                        psf[aperture_index] = shift(aperture[frame_index], shift=(aperture.xoffset, aperture.yoffset))
+                        psf[aperture_index] = ndimage.shift(aperture[frame_index], shift=(aperture.xoffset, aperture.yoffset))
                     elif 'resample' in mode:
-                        pass
+                        raise NotImplementedError('Resample mode is not implemented yet!')
                     else:
                         psf[aperture_index] = aperture[frame_index]
                     # Normalization of each psf to make median estimate sensible
