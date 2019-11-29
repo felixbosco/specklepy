@@ -58,7 +58,7 @@ def main(options=None):
 
     # Default values
     background_subtraction = True
-    defaults_file = "specklepy/config/holography_defaults.cfg"
+    defaults_file = "specklepy/config/holography.cfg"
     essential_attributes = ['allStarsFile', 'noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth', 'noiseThreshold', 'starfinderFwhm']
 
     if args.file is None:

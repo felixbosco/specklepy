@@ -7,7 +7,7 @@ class TestPSFExtraction(unittest.TestCase):
 
     def setUp(self):
         self.parameter_file = "data/test/test_parfile.ini"
-        self.defaults_file = "specklepy/config/holography_defaults.cfg"
+        self.defaults_file = "specklepy/config/holography.cfg"
         self.essential_attributes = ['inDir', 'tmpDir', 'refSourceFile', 'psfRadius']
         self.make_dirs = ['tmpDir']
         self.params = ParameterSet(parameter_file=self.parameter_file,
