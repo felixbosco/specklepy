@@ -6,7 +6,7 @@ from astropy.io import fits
 
 from specklepy.logging import logging
 from specklepy.io.outfile import Outfile
-from specklepy.core.alignment import get_shifts
+from specklepy.core import alignment
 
 
 def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
@@ -61,11 +61,12 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
             tmp_files.append(tmp_file)
 
         # Align tmp reconstructions and add up
-        file_shifts, image_shape = get_shifts(tmp_files, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
+        file_shifts, image_shape = alignment.get_shifts(tmp_files, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
+        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, image_shape, image_shape, mode='same')
         reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
             tmp_image = fits.getdata(file)
-            reconstruction = reconstruction + shift_array(tmp_image, shift=file_shifts[index])
+            reconstruction += alignment.pad_array(tmp_image, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
 
     logging.info("Reconstruction finished...")
 
@@ -100,20 +101,21 @@ def coadd_frames(cube):
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
         peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
-    # shifts = get_shifts_from_indizes(peak_indizes)
+    # shifts = alignment_from_indizes(peak_indizes)
 
     # Compute shifts from indizes
     peak_indizes = peak_indizes.transpose()
     xmean, ymean = np.mean(np.array(peak_indizes), axis=1)
     xmean = int(xmean)
     ymean = int(ymean)
-    shifts = np.array([peak_indizes[0] - xmean, peak_indizes[1] - ymean])
+    shifts = np.array([xmean - peak_indizes[0], ymean - peak_indizes[1]])
     shifts =  shifts.transpose()
 
     # Shift frames and add to coadded
     coadded = np.zeros(cube[0].shape)
+    pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube[0].shape, cube[0].shape)
     for index, frame in enumerate(cube):
-        coadded += shift_array(frame, shifts[index])
+        coadded += alignment.pad_array(frame, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
 
     return coadded
 

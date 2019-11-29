@@ -113,7 +113,6 @@ def get_shift(image, reference_image=None, Freference_image=None, mode='correlat
             imshow(np.abs(correlation), title='FFT shifted correlation of file {}'.format(index))
         shift = np.unravel_index(np.argmax(correlation), correlation.shape)
         shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
-        shift = tuple(-1 * i for i in shift)
         return shift
 
     else:
@@ -158,11 +157,8 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
     pad_vectors = []
 
     # Get extreme points for 'full' padding
-    shifts = [(-1 * shift[0], -1 * shift[1]) for shift in shifts]
     xmax, ymax = np.max(np.array(shifts), axis=0)
     xmin, ymin = np.min(np.array(shifts), axis=0)
-
-    # print('x', xmin, xmax, 'y', ymin, ymax)
 
     # Iterate over Shifts
     for shift in shifts:
@@ -176,8 +172,6 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
         pad_vector.append( (shift[1] - ymin, ymax - shift[1]) )
 
         pad_vectors.append(pad_vector)
-
-    # print(pad_vectors)
 
     if mode is 'same':
         # In 'same' mode, pad_array needs also the pad vector of the reference image
