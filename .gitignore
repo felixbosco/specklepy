@@ -11,5 +11,4 @@
 /data/test/*fits
 /data/example/*dat
 /specklepy/deprecated/*
-/specklepy/synthetic/*
-specklepy/reduction/*
+/specklepy/reduction/*
