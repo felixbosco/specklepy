@@ -8,7 +8,7 @@ from astropy.io import fits
 from holopy.logging import logging
 from holopy.io.parameterset import ParameterSet
 from holopy.io.outfile import Outfile
-from holopy.core.alignment import get_shifts
+from holopy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from holopy.core.aperture import Aperture
 from holopy.core.apodization import apodize
 from holopy.core.ssa import ssa
@@ -19,7 +19,7 @@ from holopy.utils.transferfunctions import otf
 
 
 
-def holography(params, debug=False):
+def holography(params, mode='same', debug=False):
     """Execute the holographic image reconstruction following the algorithm
     outlined in Schoedel et al (2013, Section 3).
 
@@ -92,7 +92,7 @@ def holography(params, debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        Fobject = evaluate_object(params, pad_vectors=pad_vectors)
+        Fobject = evaluate_object(params, shifts=shifts, mode=mode)
 
         # (x) Apodization
         logging.info("Apodizing the object...")
@@ -113,7 +113,7 @@ def holography(params, debug=False):
         params.outFile.data = image
 
         # Ask the user whether the iteration shall be continued or not
-        answer = input("\tDo you want to continue with one more iteration? [yes/no]")
+        answer = input("\tDo you want to continue with one more iteration? [yes/no]\n\t")
         if answer.lower() in ['n', 'no']:
             break
 
@@ -170,21 +170,29 @@ def evaluate_object(params, shifts, mode='same'):
                             argument '{}', but must be either 'same', 'full', \
                             or 'valid'.".format(mode))
 
-    pad_vectors = len(params.inFiles) * [((0, 0), (0, 0), (0, 0))]
+    pad_vectors, reference_image_pad_vector = get_pad_vectors(shifts=shifts,
+                                    array_shape=fits.getdata(params.inFiles[0]).shape,
+                                    reference_image_shape=(1024, 1024),
+                                    mode='same')
 
     logging.info("Fourier transforming the images...")
     for index, file in enumerate(params.inFiles):
         img = fits.getdata(file)
-        # logging.warning("Images are not expanded to the fill field of view.")
-        print('\t', pad_vectors)
-        pad_vector = pad_vectors[index]
-        img = np.pad(img, pad_vector)
-        if mode == 'same':
-            # Only in same mode, remove the margin outside the field of view
-            # of the reference image, see align_cubes() method.
-            print('\t', img.shape)
-            img = img[: , pad_vector[1][0] : -1-pad_vector[1][1] , pad_vector[2][0] : -1-pad_vector[2][1]]
-            print('\t', img.shape)
+        img = pad_array(array=img,
+                        pad_vector=pad_vectors[index],
+                        mode=mode,
+                        reference_image_pad_vector=reference_image_pad_vector)
+
+        # # logging.warning("Images are not expanded to the fill field of view.")
+        # print('\t', pad_vectors)
+        # pad_vector = pad_vectors[index]
+        # img = np.pad(img, pad_vector)
+        # if mode == 'same':
+        #     # Only in same mode, remove the margin outside the field of view
+        #     # of the reference image, see align_cubes() method.
+        #     print('\t', img.shape)
+        #     img = img[: , pad_vector[1][0] : -1-pad_vector[1][1] , pad_vector[2][0] : -1-pad_vector[2][1]]
+        #     print('\t', img.shape)
 
         if index == 0:
             Fimg = fftshift(fft2(img))

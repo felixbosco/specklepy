@@ -13,7 +13,6 @@ class Testalignment(unittest.TestCase):
         self.image_shape = (1024, 1024)
         self.cube_shape = (100, 1024, 1024)
 
-
     def test_get_shifts(self):
         alignment.get_shifts(self.files)
 
@@ -32,7 +31,9 @@ class Testalignment(unittest.TestCase):
         padded = alignment.pad_array(np.ones(self.image_shape), pad_vectors[1], mode='same', reference_image_pad_vector=ref_pad_vector)
         imshow(padded)
         pad_vectors, ref_pad_vector = alignment.get_pad_vectors(self.shifts, self.cube_shape, self.image_shape, mode='same')
-        padded = alignment.pad_array(np.ones(self.cube_shape), pad_vectors[1], mode='same', reference_image_pad_vector=ref_pad_vector)
+        for pad_vector in pad_vectors:
+            padded = alignment.pad_array(np.ones(self.cube_shape), pad_vector=pad_vector, mode='same', reference_image_pad_vector=ref_pad_vector)
+            print('>>>', padded.shape)
 
 
 

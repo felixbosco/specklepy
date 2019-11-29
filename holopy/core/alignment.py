@@ -156,6 +156,7 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
     pad_vectors = []
 
     # Get extreme points for 'full' padding
+    shifts = [(-1 * shift[0], -1 * shift[1]) for shift in shifts]
     xmax, ymax = np.max(np.array(shifts), axis=0)
     xmin, ymin = np.min(np.array(shifts), axis=0)
 
@@ -214,23 +215,34 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     if mode is 'same':
         # Take reference pad vector and adapt to correctly limit the image
         _r = reference_image_pad_vector
-        for index, tuple in enumerate(_r):
-            if tuple[1] == 0:
-                _r[index] = (tuple[0], None)
-            else:
-                _r[index] = (tuple[0], -tuple[1])
+        # print('_r', _r)
+        # for index, tuple in enumerate(_r):
+        #     print('tuple', tuple)
+        #     if tuple[1] == 0:
+        #         _r[index] = (tuple[0], None)
+        #     elif tuple[1] is None:
+        #         pass
+        #     else:
+        #         _r[index] = (tuple[0], -tuple[1])
 
         # Pick only those pixels, covered by the reference image
         if array.ndim == 2:
-            padded = padded[_r[0][0] : _r[0][1] , _r[1][0] : _r[1][1]]
+            padded = padded[_r[0][0] : _adapt_max_coordinate(_r[0][1]) , _r[1][0] : _adapt_max_coordinate(_r[1][1])]
         else:
-            padded = padded[: , _r[0][0] : _r[0][1] , _r[1][0] : _r[1][1]]
+            padded = padded[: , _r[0][0] : _adapt_max_coordinate(_r[0][1]) , _r[1][0] : _adapt_max_coordinate(_r[1][1])]
 
     elif mode is 'full':
         # There is nothing to crop in 'full' mode
         pass
-        
+
     elif mode is 'valid':
         raise NotImplementedError("holopy.core.alignment.pad_array does not support the 'valid' mode yet!")
 
     return padded
+
+
+def _adapt_max_coordinate(value):
+    if value == 0:
+        return None
+    else:
+        return - value
