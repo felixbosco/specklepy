@@ -8,7 +8,7 @@ from astropy.io import fits
 from holopy.logging import logging
 from holopy.io.parameterset import ParameterSet
 from holopy.io.outfile import Outfile
-from holopy.core.alignment import compute_shifts
+from holopy.core.alignment import get_shifts
 from holopy.core.aperture import Aperture
 from holopy.core.apodization import apodize
 from holopy.core.ssa import ssa
@@ -42,7 +42,7 @@ def holography(params, debug=False):
                         unforeseen errors.".format(type(params)))
 
     # (i-ii) Align cubes
-    shifts = compute_shifts(files=params.inFiles,
+    shifts = get_shifts(files=params.inFiles,
                             reference_file=params.alignmentReferenceFile,
                             reference_file_index=0,
                             lazy_mode=True,

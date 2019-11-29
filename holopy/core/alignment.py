@@ -6,7 +6,7 @@ from holopy.utils.plot import imshow
 
 
 
-def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=True, return_image_shape=False, debug=False):
+def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=True, return_image_shape=False, debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -16,35 +16,37 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode
         files (list): List of files to align.
         reference_file (str, optional): Path to a reference file, relative to
             which the shifts are computed. If not provided, the reference file
-            index is used.
+            index is used, see below. Default is None.
         reference_file_index (str, optional): Index of the file in the file
             list, relative to which the shifts are cpmputed. Default is 0.
         lazy_mode (bool, optional): If set to True and  Default is True.
         debug (bool, optional): If set to True, it shows the 2D correlation.
 
     Returns:
-        shifts (tuple): List of shifts for each file relative to the reference
+        shifts (list): List of shifts for each file relative to the reference
             file.
     """
 
     if not isinstance(files, list):
         files = [files]
-    shifts = []
 
-    # Skip computations if only one data cube is provided
+    # Skip computations if only one file is provided
     if lazy_mode and len(files) == 1:
         logging.info("Only one data cube is provided, nothing to align.")
         shifts = [(0, 0)]
         image_shape = fits.getdata(files[0]).shape
         image_shape = (image_shape[-2], image_shape[-1])
 
-    # Otherwise estimate shifts and compute pad vectors
+    # Otherwise estimate shifts
     else:
+        shifts = []
+
         # Identify reference file and Fourier transform the integrated image
         if reference_file is None:
             reference_file = files[reference_file_index]
         else:
             reference_file_index = None
+
         logging.info("Computing relative shifts between data cubes. Reference file is {}".format(reference_file))
         reference_image = fits.getdata(reference_file)
         if reference_image.ndim == 3:
@@ -54,7 +56,7 @@ def compute_shifts(files, reference_file=None, reference_file_index=0, lazy_mode
         image_shape = reference_image.shape
         del reference_image
 
-        # Iterate over inFiles and estimate shift via 2D correlation of the integrated cubes
+        # Iterate over files and estimate shift via 2D correlation of the integrated cubes
         for index, file in enumerate(files):
             if index == reference_file_index:
                 shift = (0, 0)
@@ -86,7 +88,7 @@ def estimate_shift(image, reference_image=None, Freference_image=None, mode='max
         debug (bool):
 
     Returns:
-        shift (tuple):
+        shift (tuple): Tuple of shift indizes for each axis.
     """
 
     # Simple comparison of the peaks in the images
@@ -118,14 +120,14 @@ def estimate_shift(image, reference_image=None, Freference_image=None, mode='max
 
 
 
-def compute_pad_vectors(shifts, mode='same'):
+def get_pad_vectors(shifts, image_shape, reference_image_shape, mode='same'):
     """Computes padding vectors from the relative shifts between files.
 
     Long description...
 
     Args:
         shifts (list): Shifts between files, relative to a reference image. See
-            holopy.alignment.compute_shifts for details.
+            holopy.alignment.get_shifts for details.
         mode (str, optional): Define the size of the output image as 'same'
             to the reference image or expanding to include the 'full'
             covered field.

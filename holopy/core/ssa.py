@@ -6,7 +6,7 @@ from astropy.io import fits
 
 from holopy.logging import logging
 from holopy.io.outfile import Outfile
-from holopy.core.alignment import compute_shifts
+from holopy.core.alignment import get_shifts
 
 
 def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
@@ -19,10 +19,10 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
         mode (str):
         reference_file (str, optional): Path to a reference file, relative to
             which the shifts are computed. If not provided, the reference file
-            index is used. See holopy.core.aligment.compute_shifts for details.
+            index is used. See holopy.core.aligment.get_shifts for details.
         reference_file_index (str, optional): Index of the file in the file
             list, relative to which the shifts are cpmputed. See
-            holopy.core.aligment.compute_shifts for details. Default is 0.
+            holopy.core.aligment.get_shifts for details. Default is 0.
         outfile (holopy.io.outfile, optional): Object to write the result to,
             if provided.
         debug (bool, optional): Set to True to inspect intermediate results.
@@ -61,7 +61,7 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
             tmp_files.append(tmp_file)
 
         # Align tmp reconstructions and add up
-        file_shifts, image_shape = compute_shifts(tmp_files, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
+        file_shifts, image_shape = get_shifts(tmp_files, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
         reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
             tmp_image = fits.getdata(file)
@@ -100,7 +100,7 @@ def coadd_frames(cube):
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
         peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
-    # shifts = compute_shifts_from_indizes(peak_indizes)
+    # shifts = get_shifts_from_indizes(peak_indizes)
 
     # Compute shifts from indizes
     peak_indizes = peak_indizes.transpose()
