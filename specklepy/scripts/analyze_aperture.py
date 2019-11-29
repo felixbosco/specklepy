@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
-import numpy as np
 import argparse
+import os
+import sys
+import warnings
+import numpy as np
 from astropy.io import fits
 from datetime import datetime
 from matplotlib.colors import LogNorm
@@ -13,11 +16,9 @@ try:
     from specklepy.utils.plot import imshow
     from specklepy.utils import transferfunctions as tf
 except ModuleNotFoundError:
-    # Prepare import with hardcoded path
-    import warnings
-    PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_specklepy'
-    warnings.warn("Importing specklepy from hardcoded path {}. Apparently specklepy is not installed properly on your machine!".format(PATH), ImportWarning)
-    import sys
+    # Prepare import from current path
+    PATH = os.getcwd()
+    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
     sys.path.insert(0, PATH)
 
     # Repeat import

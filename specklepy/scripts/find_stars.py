@@ -2,14 +2,15 @@
 
 import argparse
 import os
-from astropy.io import fits
-from astropy.stats import sigma_clipped_stats
-from photutils import DAOStarFinder
-
+import sys
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
 from astropy.visualization import SqrtStretch
 from astropy.visualization.mpl_normalize import ImageNormalize
+from photutils import DAOStarFinder
 from photutils import CircularAperture
 
 
@@ -20,11 +21,9 @@ try:
     from specklepy.utils.plot import imshow
     from specklepy.algorithms.sourceextraction import SourceExtraction
 except ModuleNotFoundError:
-    # Prepare import with hardcoded path
-    import warnings
+    # Prepare import from current path
     PATH = os.getcwd()
-    warnings.warn("Importing specklepy from hardcoded path {}. Apparently specklepy is not installed properly on your machine!".format(PATH), ImportWarning)
-    import sys
+    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
     sys.path.insert(0, PATH)
 
     # Repeat import

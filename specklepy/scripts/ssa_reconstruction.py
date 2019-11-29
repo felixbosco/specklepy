@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+import warnings
 
 try:
     from specklepy.logging import logging
@@ -10,8 +11,7 @@ try:
     from specklepy.io.outfile import Outfile
     from specklepy.core.ssa import ssa
 except ModuleNotFoundError:
-    # Prepare import with hardcoded path
-    import warnings
+    # Prepare import from current path
     PATH = os.getcwd()
     warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
     sys.path.insert(0, PATH)
