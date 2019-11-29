@@ -64,7 +64,7 @@ def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=Tru
                 image = fits.getdata(file)
                 if image.ndim == 3:
                     image = np.sum(image, axis=0)
-                shift = estimate_shift(image, Freference_image=Freference_image, mode='correlation', debug=debug)
+                shift = get_shift(image, Freference_image=Freference_image, mode='correlation', debug=debug)
             shifts.append(shift)
         logging.info("Identified the following shifts:\n\t{}".format(shifts))
 
@@ -75,7 +75,7 @@ def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=Tru
 
 
 
-def estimate_shift(image, reference_image=None, Freference_image=None, mode='maximum', debug=False):
+def get_shift(image, reference_image=None, Freference_image=None, mode='maximum', debug=False):
     """Estimate the shift between an image and a refernce image.
 
     Long description ...
@@ -104,7 +104,7 @@ def estimate_shift(image, reference_image=None, Freference_image=None, mode='max
         elif Freference_image is not None and reference_image is None:
             pass
         else:
-            raise ValueError("Exactly one of reference_image or Freference_image needs be provided to estimate_shift!")
+            raise ValueError("Exactly one of reference_image or Freference_image needs be provided to get_shift!")
         Fimage = np.conjugate(np.fft.fft2(image))
         correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
         correlation = np.fft.fftshift(correlation)
@@ -116,11 +116,11 @@ def estimate_shift(image, reference_image=None, Freference_image=None, mode='max
         return shift
 
     else:
-        raise ValueError("estimate_shift received unknown mode {}".format(mode))
+        raise ValueError("get_shift received unknown mode {}".format(mode))
 
 
 
-def get_pad_vectors(shifts, image_shape, reference_image_shape, mode='same'):
+def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
     """Computes padding vectors from the relative shifts between files.
 
     Long description...
@@ -128,39 +128,109 @@ def get_pad_vectors(shifts, image_shape, reference_image_shape, mode='same'):
     Args:
         shifts (list): Shifts between files, relative to a reference image. See
             holopy.alignment.get_shifts for details.
+        array_shape (tuple):
+        reference_image_shape (tuple):
         mode (str, optional): Define the size of the output image as 'same'
             to the reference image or expanding to include the 'full'
             covered field.
-        reference_file (str, optional):
-        reference_file_index (str, optional):
-        debug (bool, optional):
+        return_reference_padding (bool, optional):
 
     Returns:
         pad_vectors (list):
+        reference_image_pad_vector (list, optional):
     """
 
-    # Turn shifts into pad vectors
-    if mode == 'same' or mode == 'full':
-    #     pad_vectors = [len(files) * (0, 0)]
-    # elif mode == 'full':
-        xmax, ymax = np.max(-1 * np.array(shifts), axis=0)
-        xmin, ymin = np.min(-1 * np.array(shifts), axis=0)
-        shift_limits = {'xmin': xmin, 'xmax': xmax, 'ymin': ymin, 'ymax': ymax}
-        # print('>>>>>>>>>', shift_limits)
-        pad_vectors = []
-        for shift in shifts:
-            padding_x = (shift[0] - shift_limits['xmin'], shift_limits['xmax'] - shift[0])
-            padding_y = (shift[1] - shift_limits['ymin'], shift_limits['ymax'] - shift[1])
-            pad_vectors.append(((0, 0), padding_x, padding_y))
-        for pad_vector in pad_vectors:
-            print('>>>>>>>>>>>', pad_vector)
+    # Check input types
+    if mode not in ['same', 'full', 'valid']:
+        raise ValueError("holopy.core.alignment.get_pad_vectors received mode \
+                            argument '{}', but must be either 'same', 'full', \
+                            or 'valid'.".format(mode))
+
+    # If image is a cube, the estimated pad vectors will be adjusted in the end
+    if len(array_shape) == 3:
+        cube_mode = True
     else:
-        raise ValueError("Mode '{}' not defined for {}.align_cubes()".format(mode))
+        cube_mode = False
+
+    # Initialize list
+    pad_vectors = []
+
+    # Get extreme points for 'full' padding
+    xmax, ymax = np.max(np.array(shifts), axis=0)
+    xmin, ymin = np.min(np.array(shifts), axis=0)
+
+    # print('x', xmin, xmax, 'y', ymin, ymax)
+
+    # Iterate over Shifts
+    for shift in shifts:
+
+        if cube_mode:
+            pad_vector = [(0, 0)]
+        else:
+            pad_vector = []
+
+        pad_vector.append( (shift[0] - xmin, xmax - shift[0]) )
+        pad_vector.append( (shift[1] - ymin, ymax - shift[1]) )
+
+        pad_vectors.append(pad_vector)
+
+    # print(pad_vectors)
+
+    if mode is 'same':
+        # In 'same' mode, pad_array needs also the pad vector of the reference image
+        reference_image_pad_vector = [(np.abs(xmin), np.abs(xmax)), (np.abs(ymin), np.abs(ymax))]
+        return pad_vectors, reference_image_pad_vector
+    else:
+        return pad_vectors
 
 
+def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
+    """Pads an array acoording to the pad_vector and crops the image given the
+    mode.
 
-def pad_files(files, shifts, mode='same', sum=False):
+    Long description...
+
+    Args:
+        array (np.ndarray):
+        pad_vector (list):
+        mode (str, optional): Define the size of the output image as 'same'
+            to the reference image or expanding to include the 'full'
+            covered field.
+
+    Returns:
+        padded (np.ndarray):
     """
 
-    """
-    pass
+    if not isinstance(array, np.ndarray):
+        raise TypeError("holopy.core.alignment.pad_array received array argument \
+                            of type {}, but must be np.ndarray.".format(type(array)))
+    if array.ndim not in [2, 3]:
+        raise ValueError("holopy.core.alignment.pad_array received array argument \
+                            of dimension {}, but must be 2 or 3.".format(type(array)))
+
+    padded = np.pad(array, pad_vector)
+
+    # Crop the image according to the desired mode
+    if mode is 'same':
+        # Take reference pad vector and adapt to correctly limit the image
+        _r = reference_image_pad_vector
+        for index, tuple in enumerate(_r):
+            if tuple[1] == 0:
+                _r[index] = (tuple[0], None)
+            else:
+                _r[index] = (tuple[0], -tuple[1])
+
+        # Pick only those pixels, covered by the reference image
+        if array.ndim == 2:
+            padded = padded[_r[0][0] : _r[0][1] , _r[1][0] : _r[1][1]]
+        else:
+            padded = padded[: , _r[0][0] : _r[0][1] , _r[1][0] : _r[1][1]]
+
+    elif mode is 'full':
+        # There is nothing to crop in 'full' mode
+        pass
+        
+    elif mode is 'valid':
+        raise NotImplementedError("holopy.core.alignment.pad_array does not support the 'valid' mode yet!")
+
+    return padded
