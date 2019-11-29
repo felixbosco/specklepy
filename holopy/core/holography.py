@@ -188,7 +188,7 @@ def get_object(params, shifts, mode='same'):
     logging.info("Padding and Fourier transforming the images...")
     for index, file in enumerate(params.inFiles):
         img = fits.getdata(file)
-        print("\tPadding data form {}".format(file))
+        print("\tPadding data from {}".format(file))
         img = pad_array(array=img,
                         pad_vector=pad_vectors[index],
                         mode=mode,
@@ -211,7 +211,7 @@ def get_object(params, shifts, mode='same'):
         psf = fits.getdata(file)
         if index == 0:
             # Pad the Fpsf cube to have the same xz-extent as Fimg
-            print("\tPadding data form {}".format(file))
+            print("\tPadding data from {}".format(file))
             print('\tImage shape:', img_shape)
             print('\tPSF shape:', psf.shape)
             dx = img_shape[1] - psf.shape[1]
