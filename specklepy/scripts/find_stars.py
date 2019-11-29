@@ -14,25 +14,25 @@ from photutils import CircularAperture
 
 
 try:
-    from holopy.logging import logging
-    from holopy.io.parameterset import ParameterSet
-    from holopy.core.aperture import Aperture
-    from holopy.utils.plot import imshow
-    from holopy.algorithms.sourceextraction import SourceExtraction
+    from specklepy.logging import logging
+    from specklepy.io.parameterset import ParameterSet
+    from specklepy.core.aperture import Aperture
+    from specklepy.utils.plot import imshow
+    from specklepy.algorithms.sourceextraction import SourceExtraction
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
     PATH = os.getcwd()
-    warnings.warn("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
+    warnings.warn("Importing specklepy from hardcoded path {}. Apparently specklepy is not installed properly on your machine!".format(PATH), ImportWarning)
     import sys
     sys.path.insert(0, PATH)
 
     # Repeat import
-    from holopy.logging import logging
-    from holopy.io.parameterset import ParameterSet
-    from holopy.core.aperture import Aperture
-    from holopy.utils.plot import imshow
-    from holopy.algorithms.sourceextraction import SourceExtraction
+    from specklepy.logging import logging
+    from specklepy.io.parameterset import ParameterSet
+    from specklepy.core.aperture import Aperture
+    from specklepy.utils.plot import imshow
+    from specklepy.algorithms.sourceextraction import SourceExtraction
 
 
 def parser(options=None):
@@ -58,7 +58,7 @@ def main(options=None):
 
     # Default values
     background_subtraction = True
-    defaults_file = "holopy/config/holography_defaults.cfg"
+    defaults_file = "specklepy/config/holography_defaults.cfg"
     essential_attributes = ['allStarsFile', 'noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth', 'noiseThreshold', 'starfinderFwhm']
 
     if args.file is None:

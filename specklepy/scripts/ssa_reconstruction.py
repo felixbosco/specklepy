@@ -5,10 +5,10 @@ import os
 import sys
 
 try:
-    from holopy.logging import logging
-    from holopy.io.filemanager import FileManager
-    from holopy.io.outfile import Outfile
-    from holopy.core.ssa import ssa
+    from specklepy.logging import logging
+    from specklepy.io.filemanager import FileManager
+    from specklepy.io.outfile import Outfile
+    from specklepy.core.ssa import ssa
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -17,10 +17,10 @@ except ModuleNotFoundError:
     sys.path.insert(0, PATH)
 
     # Repeat import
-    from holopy.logging import logging
-    from holopy.io.filemanager import FileManager
-    from holopy.io.outfile import Outfile
-    from holopy.core.ssa import ssa
+    from specklepy.logging import logging
+    from specklepy.io.filemanager import FileManager
+    from specklepy.io.outfile import Outfile
+    from specklepy.core.ssa import ssa
 
 
 

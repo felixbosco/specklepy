@@ -1,8 +1,8 @@
 import os
 from configparser import ConfigParser
 
-from holopy.logging import logging
-from holopy.io.filemanager import FileManager
+from specklepy.logging import logging
+from specklepy.io.filemanager import FileManager
 
 
 class ParameterSet(object):

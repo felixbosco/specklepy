@@ -3,12 +3,12 @@ from os import path
 from astropy.io import fits
 from datetime import datetime
 
-from holopy.logging import logging
+from specklepy.logging import logging
 
 
 class Outfile(object):
 
-    def __init__(self, files, filename=None, cards={}, header_prefix="HIERARCH HOLOPY "):
+    def __init__(self, files, filename=None, cards={}, header_prefix="HIERARCH specklepy "):
         if filename is None:
             self.filename = self._make_time_stamp() + ".fits"
         else:

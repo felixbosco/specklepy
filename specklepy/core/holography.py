@@ -5,17 +5,17 @@ import glob
 from datetime import datetime
 from astropy.io import fits
 
-from holopy.logging import logging
-from holopy.io.parameterset import ParameterSet
-from holopy.io.outfile import Outfile
-from holopy.core.alignment import get_shifts, get_pad_vectors, pad_array
-from holopy.core.aperture import Aperture
-from holopy.core.apodization import apodize
-from holopy.core.ssa import ssa
-from holopy.algorithms.psfextraction import PSFExtraction
-from holopy.algorithms.sourceextraction import SourceExtraction
-from holopy.utils.plot import imshow
-from holopy.utils.transferfunctions import otf
+from specklepy.logging import logging
+from specklepy.io.parameterset import ParameterSet
+from specklepy.io.outfile import Outfile
+from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
+from specklepy.core.aperture import Aperture
+from specklepy.core.apodization import apodize
+from specklepy.core.ssa import ssa
+from specklepy.algorithms.psfextraction import PSFExtraction
+from specklepy.algorithms.sourceextraction import SourceExtraction
+from specklepy.utils.plot import imshow
+from specklepy.utils.transferfunctions import otf
 
 
 
@@ -26,7 +26,7 @@ def holography(params, mode='same', debug=False):
     Long description ...
 
     Args:
-        params (holopy.io.parameterset.ParameterSet):
+        params (specklepy.io.parameterset.ParameterSet):
         mode (str, optional): Define the size of the output image as 'same'
             to the reference image or expanding to include the 'full'
             covered field. Default is 'same'.
@@ -39,12 +39,12 @@ def holography(params, mode='same', debug=False):
 
     logging.info("Starting holographic reconstruction of {} files...".format(len(params.inFiles)))
     if not isinstance(params, ParameterSet):
-        logging.warn("holopy.core.holography.holography received params argument \
+        logging.warn("specklepy.core.holography.holography received params argument \
                         of type <{}> instead of the expected type \
-                        holopy.io.parameterset.ParameterSet. This may cause \
+                        specklepy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
     if mode not in ['same', 'full', 'valid']:
-        raise ValueError("holopy.core.holography.holography received mode \
+        raise ValueError("specklepy.core.holography.holography received mode \
                             argument '{}', but must be either 'same', 'full', \
                             or 'valid'.".format(mode))
 
@@ -170,12 +170,12 @@ def get_object(params, shifts, mode='same'):
     """
 
     if not isinstance(params, ParameterSet):
-        logging.warn("holopy.core.holography.get_object received params argument \
+        logging.warn("specklepy.core.holography.get_object received params argument \
                         of type <{}> instead of the expected type \
-                        holopy.io.parameterset.ParameterSet. This may cause \
+                        specklepy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
     if mode not in ['same', 'full', 'valid']:
-        raise ValueError("holopy.core.holography.get_object received mode \
+        raise ValueError("specklepy.core.holography.get_object received mode \
                             argument '{}', but must be either 'same', 'full', \
                             or 'valid'.".format(mode))
 

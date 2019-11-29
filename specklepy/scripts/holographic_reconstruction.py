@@ -5,11 +5,11 @@ import os
 import sys
 
 try:
-    from holopy.logging import logging
-    from holopy.io.parameterset import ParameterSet
-    from holopy.io.filemanager import FileManager
-    from holopy.io.outfile import Outfile
-    from holopy.core.holography import holography
+    from specklepy.logging import logging
+    from specklepy.io.parameterset import ParameterSet
+    from specklepy.io.filemanager import FileManager
+    from specklepy.io.outfile import Outfile
+    from specklepy.core.holography import holography
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
@@ -18,11 +18,11 @@ except ModuleNotFoundError:
     sys.path.insert(0, PATH)
 
     # Repeat import
-    from holopy.logging import logging
-    from holopy.io.parameterset import ParameterSet
-    from holopy.io.filemanager import FileManager
-    from holopy.io.outfile import Outfile
-    from holopy.core.holography import holography
+    from specklepy.logging import logging
+    from specklepy.io.parameterset import ParameterSet
+    from specklepy.io.filemanager import FileManager
+    from specklepy.io.outfile import Outfile
+    from specklepy.core.holography import holography
 
 
 
@@ -46,7 +46,7 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
-    defaults_file = "holopy/config/holography.cfg"
+    defaults_file = "specklepy/config/holography.cfg"
     essential_attributes = ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile', 'psfRadius', 'noiseThreshold', 'apodizationWidth', 'apodizationType']
     make_dirs = ['inDir', 'tmpDir']
 

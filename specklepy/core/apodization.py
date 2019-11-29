@@ -2,8 +2,8 @@ import numpy as np
 from astropy.modeling.models import Gaussian2D
 from astropy.modeling.models import AiryDisk2D
 
-from holopy.utils.transferfunctions import otf
-from holopy.logging import logging
+from specklepy.utils.transferfunctions import otf
+from specklepy.logging import logging
 
 
 
@@ -25,7 +25,7 @@ def apodize(object, function='gaussian', **kwargs):
     if not isinstance(object, np.ndarray) and object.ndim != 2:
         raise ValueError("object must be a 2-dimensional np.ndarray!")
     if object.shape[0] != object.shape[1]:
-        logging.warn("holopy.core.apodization.apodize received a non quadratic input image. This may cause some unpredictable results!")
+        logging.warn("specklepy.core.apodization.apodize received a non quadratic input image. This may cause some unpredictable results!")
 
 
 
@@ -45,7 +45,7 @@ def apodize(object, function='gaussian', **kwargs):
         model = AiryDisk2D(x_0=center[0], y_0=center[1], **kwargs)
 
     else:
-        raise ValueError("holopy.core.apodization.apodize received unknown value for function '{}'!".format(function))
+        raise ValueError("specklepy.core.apodization.apodize received unknown value for function '{}'!".format(function))
 
 
     # Evaluate apodization function on object image grid and multiply on object

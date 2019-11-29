@@ -1,5 +1,5 @@
 import unittest
-from holopy.io.filemanager import FileManager
+from specklepy.io.filemanager import FileManager
 
 
 class TestFileManager(unittest.TestCase):

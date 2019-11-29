@@ -1,8 +1,8 @@
 import numpy as np
 from astropy.io import fits
 
-from holopy.logging import logging
-from holopy.utils.plot import imshow
+from specklepy.logging import logging
+from specklepy.utils.plot import imshow
 
 
 
@@ -128,7 +128,7 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
 
     Args:
         shifts (list): Shifts between files, relative to a reference image. See
-            holopy.alignment.get_shifts for details.
+            specklepy.alignment.get_shifts for details.
         array_shape (tuple):
         reference_image_shape (tuple):
         mode (str, optional): Define the size of the output image as 'same'
@@ -144,7 +144,7 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
 
     # Check input types
     if mode not in ['same', 'full', 'valid']:
-        raise ValueError("holopy.core.alignment.get_pad_vectors received mode \
+        raise ValueError("specklepy.core.alignment.get_pad_vectors received mode \
                             argument '{}', but must be either 'same', 'full', \
                             or 'valid'.".format(mode))
 
@@ -205,10 +205,10 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     """
 
     if not isinstance(array, np.ndarray):
-        raise TypeError("holopy.core.alignment.pad_array received array argument \
+        raise TypeError("specklepy.core.alignment.pad_array received array argument \
                             of type {}, but must be np.ndarray.".format(type(array)))
     if array.ndim not in [2, 3]:
-        raise ValueError("holopy.core.alignment.pad_array received array argument \
+        raise ValueError("specklepy.core.alignment.pad_array received array argument \
                             of dimension {}, but must be 2 or 3.".format(type(array)))
 
     padded = np.pad(array, pad_vector)
@@ -228,7 +228,7 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
         pass
 
     elif mode is 'valid':
-        raise NotImplementedError("holopy.core.alignment.pad_array does not support the 'valid' mode yet!")
+        raise NotImplementedError("specklepy.core.alignment.pad_array does not support the 'valid' mode yet!")
 
     return padded
 

@@ -1,8 +1,8 @@
 import glob
 from astropy.io import fits
 
-from holopy.logging import logging
-from holopy.io.outfile import Outfile
+from specklepy.logging import logging
+from specklepy.io.outfile import Outfile
 
 
 class FileManager(object):
@@ -33,7 +33,7 @@ class FileManager(object):
         self.files[index] = value
 
     def __str__(self):
-        s = "<holopy.io.filehandler.FileHandler object>\n"
+        s = "<specklepy.io.filehandler.FileHandler object>\n"
         s += "> List of files:\n"
         for file in self.files:
             s += "> {}\n".format(file)

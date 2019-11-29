@@ -3,8 +3,8 @@ from copy import copy
 from astropy.io import fits
 from datetime import datetime
 
-from holopy.logging import logging
-from holopy.utils import transferfunctions as tf
+from specklepy.logging import logging
+from specklepy.utils import transferfunctions as tf
 
 
 class Aperture(object):
@@ -138,10 +138,10 @@ class Aperture(object):
         self.Fourier_file = Fourier_file
         logging.info("Initializing Fourier file {}".format(self.Fourier_file))
         header = fits.getheader(self.infile)
-        header.set('HIERARCH HOLOPY TYPE', 'Fourier transform of an aperture')
-        header.set('HIERARCH HOLOPY ORIGIN', self.infile)
-        header.set('HIERARCH HOLOPY APERTURE INDEX', str(self.index))
-        header.set('HIERARCH HOLOPY APERTURE RADIUS', self.radius)
+        header.set('HIERARCH specklepy TYPE', 'Fourier transform of an aperture')
+        header.set('HIERARCH specklepy ORIGIN', self.infile)
+        header.set('HIERARCH specklepy APERTURE INDEX', str(self.index))
+        header.set('HIERARCH specklepy APERTURE RADIUS', self.radius)
         header.set('UPDATED', str(datetime.now()))
         data = np.zeros(self.data.shape)
         fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)

@@ -15,7 +15,7 @@ def get_scripts(generic):
         scripts = [ fname for fname in glob.glob(os.path.join('bin', '*')) ]
     return scripts
 
-setup(name='holopy',
+setup(name='specklepy',
       version='0.0.3',
       description='',
       long_description=long_description,
@@ -27,7 +27,7 @@ setup(name='holopy',
         'Operating System :: OS Independent',
       ],
       keywords='',
-      url='https://github.com/felixbosco/holopy',
+      url='https://github.com/felixbosco/specklepy',
       author='Felix Bosco',
       author_email='bosco@mpia.de',
       license='MIT',
@@ -35,7 +35,7 @@ setup(name='holopy',
           'astropy',
           'photutils',
       ],
-      scripts=get_scripts('holopy/scripts/*py'),
+      scripts=get_scripts('specklepy/scripts/*py'),
       package_data={},
       include_package_data=True,
       zip_safe=False)

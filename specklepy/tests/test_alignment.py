@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
-from holopy.io.filemanager import FileManager
-from holopy.core import alignment
-from holopy.utils.plot import imshow
+from specklepy.io.filemanager import FileManager
+from specklepy.core import alignment
+from specklepy.utils.plot import imshow
 
 
 class Testalignment(unittest.TestCase):

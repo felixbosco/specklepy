@@ -4,9 +4,9 @@ import glob
 from datetime import datetime
 from astropy.io import fits
 
-from holopy.logging import logging
-from holopy.io.outfile import Outfile
-from holopy.core.alignment import get_shifts
+from specklepy.logging import logging
+from specklepy.io.outfile import Outfile
+from specklepy.core.alignment import get_shifts
 
 
 def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
@@ -19,11 +19,11 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
         mode (str):
         reference_file (str, optional): Path to a reference file, relative to
             which the shifts are computed. If not provided, the reference file
-            index is used. See holopy.core.aligment.get_shifts for details.
+            index is used. See specklepy.core.aligment.get_shifts for details.
         reference_file_index (str, optional): Index of the file in the file
             list, relative to which the shifts are cpmputed. See
-            holopy.core.aligment.get_shifts for details. Default is 0.
-        outfile (holopy.io.outfile, optional): Object to write the result to,
+            specklepy.core.aligment.get_shifts for details. Default is 0.
+        outfile (specklepy.io.outfile, optional): Object to write the result to,
             if provided.
         debug (bool, optional): Set to True to inspect intermediate results.
             Default is False.
@@ -39,7 +39,7 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
         if isinstance(outfile, str):
             outfile = Outfile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
         else:
-            raise TypeError("holopy.core.ssa.ssa received outfile argument of wrong type <{}>!".format(type(outfile)))
+            raise TypeError("specklepy.core.ssa.ssa received outfile argument of wrong type <{}>!".format(type(outfile)))
 
 
     # Do not align just a single file
@@ -90,10 +90,10 @@ def coadd_frames(cube):
     """
 
     if not isinstance(cube, np.ndarray):
-        raise TypeError("holopy.core.ssa.coadd_frames received cube argument of \
+        raise TypeError("specklepy.core.ssa.coadd_frames received cube argument of \
                             type {}, but must be np.ndarray".format(type(cube)))
     if cube.ndim is not 3:
-        raise ValueError("holopy.core.ssa.coadd_frames received cube argument of \
+        raise ValueError("specklepy.core.ssa.coadd_frames received cube argument of \
                             dimension {}, but must be 3".format(cube.ndim))
 
     # Compute shifts

@@ -3,12 +3,12 @@ import os
 from astropy.io import fits
 from datetime import datetime
 
-from holopy.logging import logging
+from specklepy.logging import logging
 
 
 class PSFfile(object):
 
-    def __init__(self, inFile, outDir, frame_shape, cards={}, header_prefix="HIERARCH HOLOPY "):
+    def __init__(self, inFile, outDir, frame_shape, cards={}, header_prefix="HIERARCH specklepy "):
 
         # Create PSF directory, if not existing yet
         # outDir += 'psf/'

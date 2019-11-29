@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from holopy.utils.zernike import Zernike
-from holopy.utils.plot import imshow
+from specklepy.utils.zernike import Zernike
+from specklepy.utils.plot import imshow
 
 
 class TestZernike(unittest.TestCase):

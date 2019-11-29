@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from holopy.core.apodization import apodize
-from holopy.utils.plot import imshow
+from specklepy.core.apodization import apodize
+from specklepy.utils.plot import imshow
 
 
 class TestApodization(unittest.TestCase):

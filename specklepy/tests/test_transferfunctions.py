@@ -3,9 +3,9 @@ import numpy as np
 from matplotlib.colors import LogNorm
 from astropy import units as u
 
-from holopy.core.aperture import Aperture
-from holopy.utils.transferfunctions import psf, otf, mtf, powerspec
-from holopy.utils.plot import imshow, plot_powerspec1d
+from specklepy.core.aperture import Aperture
+from specklepy.utils.transferfunctions import psf, otf, mtf, powerspec
+from specklepy.utils.plot import imshow, plot_powerspec1d
 
 
 class TestTransferFunctions(unittest.TestCase):

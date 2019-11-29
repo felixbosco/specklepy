@@ -8,23 +8,23 @@ from matplotlib.colors import LogNorm
 import matplotlib.pyplot as plt
 
 try:
-    from holopy.logging import logging
-    from holopy.core.aperture import Aperture
-    from holopy.utils.plot import imshow
-    from holopy.utils import transferfunctions as tf
+    from specklepy.logging import logging
+    from specklepy.core.aperture import Aperture
+    from specklepy.utils.plot import imshow
+    from specklepy.utils import transferfunctions as tf
 except ModuleNotFoundError:
     # Prepare import with hardcoded path
     import warnings
-    PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_holopy'
-    warnings.warn("Importing holopy from hardcoded path {}. Apparently holopy is not installed properly on your machine!".format(PATH), ImportWarning)
+    PATH = '/home/bosco/Documents/phd/sowat/pipeline/github_specklepy'
+    warnings.warn("Importing specklepy from hardcoded path {}. Apparently specklepy is not installed properly on your machine!".format(PATH), ImportWarning)
     import sys
     sys.path.insert(0, PATH)
 
     # Repeat import
-    from holopy.logging import logging
-    from holopy.core.aperture import Aperture
-    from holopy.utils.plot import imshow, plot_simple
-    from holopy.utils import transferfunctions as tf
+    from specklepy.logging import logging
+    from specklepy.core.aperture import Aperture
+    from specklepy.utils.plot import imshow, plot_simple
+    from specklepy.utils import transferfunctions as tf
 
 
 def parser(options=None):

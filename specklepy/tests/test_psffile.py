@@ -1,7 +1,7 @@
 import unittest
 from numpy.random import rand
-from holopy.io.filemanager import FileManager
-from holopy.io.psffile import PSFfile
+from specklepy.io.filemanager import FileManager
+from specklepy.io.psffile import PSFfile
 
 
 class TestPSFfile(unittest.TestCase):

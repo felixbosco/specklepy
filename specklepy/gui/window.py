@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from holopy.logging import logging
+from specklepy.logging import logging
 
 
 class Window(QtWidgets.QMainWindow):

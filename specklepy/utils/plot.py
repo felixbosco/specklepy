@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-# from holopy.config import plotting
-from holopy.utils import transferfunctions as tf
+# from specklepy.config import plotting
+from specklepy.utils import transferfunctions as tf
 
 from matplotlib.pyplot import rc
 

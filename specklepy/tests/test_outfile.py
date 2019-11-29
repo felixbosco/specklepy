@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from holopy.io.filemanager import FileManager
-from holopy.io.outfile import Outfile
+from specklepy.io.filemanager import FileManager
+from specklepy.io.outfile import Outfile
 
 
 class TestOutfile(unittest.TestCase):
