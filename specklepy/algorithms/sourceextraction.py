@@ -3,7 +3,7 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from photutils import DAOStarFinder
 
-from holopy.logging import logging
+from specklepy.logging import logging
 
 
 class SourceExtraction(object):

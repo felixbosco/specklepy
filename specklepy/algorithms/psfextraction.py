@@ -7,19 +7,19 @@ from astropy.table import Table
 # from photutils.psf import extract_stars
 # from photutils.psf import EPSFBuilder
 
-from holopy.logging import logging
-from holopy.io.parameterset import ParameterSet
-from holopy.io.filemanager import FileManager
-from holopy.io.psffile import PSFfile
-from holopy.core.aperture import Aperture
-from holopy.utils.plot import imshow
+from specklepy.logging import logging
+from specklepy.io.parameterset import ParameterSet
+from specklepy.io.filemanager import FileManager
+from specklepy.io.psffile import PSFfile
+from specklepy.core.aperture import Aperture
+from specklepy.utils.plot import imshow
 
 
 class PSFExtraction(object):
 
     def __init__(self, params):
         if not isinstance(params, ParameterSet):
-            raise TypeError("params argument of the PSFExtractor class must be instance of holopy.io.parameterset.ParameterSet!")
+            raise TypeError("params argument of the PSFExtractor class must be instance of specklepy.io.parameterset.ParameterSet!")
         self.params = params
         self.radius = params.psfRadius
 
