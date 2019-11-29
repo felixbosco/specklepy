@@ -75,7 +75,7 @@ def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=Tru
 
 
 
-def get_shift(image, reference_image=None, Freference_image=None, mode='maximum', debug=False):
+def get_shift(image, reference_image=None, Freference_image=None, mode='correlation', debug=False):
     """Estimate the shift between an image and a refernce image.
 
     Long description ...
@@ -84,7 +84,7 @@ def get_shift(image, reference_image=None, Freference_image=None, mode='maximum'
         image (np.ndarray):
         reference_image (np.ndarray):
         Freference_image (np.ndarray):
-        mode (str, optional):
+        mode (str, optional): Default is 'correlation'.
         debug (bool):
 
     Returns:
@@ -132,7 +132,7 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
         reference_image_shape (tuple):
         mode (str, optional): Define the size of the output image as 'same'
             to the reference image or expanding to include the 'full'
-            covered field.
+            covered field. Default is 'same'.
         return_reference_padding (bool, optional):
 
     Returns:

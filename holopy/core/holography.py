@@ -27,6 +27,9 @@ def holography(params, mode='same', debug=False):
 
     Args:
         params (holopy.io.parameterset.ParameterSet):
+        mode (str, optional): Define the size of the output image as 'same'
+            to the reference image or expanding to include the 'full'
+            covered field. Default is 'same'.
         debug (bool, optional): Set to True to inspect intermediate results.
             Default is False.
 
@@ -40,6 +43,10 @@ def holography(params, mode='same', debug=False):
                         of type <{}> instead of the expected type \
                         holopy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
+    if mode not in ['same', 'full', 'valid']:
+        raise ValueError("holopy.core.holography.holography received mode \
+                            argument '{}', but must be either 'same', 'full', \
+                            or 'valid'.".format(mode))
 
     # (i-ii) Align cubes
     shifts = get_shifts(files=params.inFiles,
@@ -153,7 +160,9 @@ def get_object(params, shifts, mode='same'):
     Args:
         params (ParameterSet):
         shifts (list):
-        mode (str, optional): Default is 'same'.
+        mode (str, optional): Define the size of the output image as 'same'
+            to the reference image or expanding to include the 'full'
+            covered field. Default is 'same'.
 
     Returns:
         Fobject (np.ndarray, dtype=complex128): Fourier transformed object as a
