@@ -1,8 +1,7 @@
 # Specklepy - A versatile tool for analyzing astronomical short-exposure ("speckle") data
 
 ## To Do:
-* Rename to specklepy
-* Make logger write a copy to a .log file and remove date and 'root' from terminal output
+* Make logger write a copy to a .log file
 * Make standard error messages for TypeError and ValueError
 * Make SSA use new alignment methods
 * Implement RAM save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file
