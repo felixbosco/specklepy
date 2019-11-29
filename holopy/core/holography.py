@@ -75,7 +75,7 @@ def holography(params, mode='same', debug=False):
             with fits.open(file, mode='update') as hdulist:
                 numberFrames = hdulist[0].header['NAXIS3']
                 if not hasattr(params, 'psfNoiseMask'):
-                    params.psfNoiseMask = generate_noise_mask(hdulist[0].data[0], noise_reference_margin=params.noiseReferenceMargin)
+                    params.psfNoiseMask = get_noise_mask(hdulist[0].data[0], noise_reference_margin=params.noiseReferenceMargin)
                 for index in range(numberFrames):
                     reference = np.ma.masked_array(hdulist[0].data[index], mask=params.psfNoiseMask)
                     background = np.mean(reference)
@@ -92,7 +92,7 @@ def holography(params, mode='same', debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        Fobject = evaluate_object(params, shifts=shifts, mode=mode)
+        Fobject = get_object(params, shifts=shifts, mode=mode)
 
         # (x) Apodization
         logging.info("Apodizing the object...")
@@ -124,7 +124,7 @@ def holography(params, mode='same', debug=False):
 
 
 
-def generate_noise_mask(frame, noise_reference_margin):
+def get_noise_mask(frame, noise_reference_margin):
     """Create an annulus-like mask within a given aperture for measuring noise
     and (sky) background.
 
@@ -144,7 +144,7 @@ def generate_noise_mask(frame, noise_reference_margin):
 
 
 
-def evaluate_object(params, shifts, mode='same'):
+def get_object(params, shifts, mode='same'):
     """Reconstruction of the Fourier transformed object with Eq. 1 (Schoedel
     et al., 2013).
 
@@ -161,12 +161,12 @@ def evaluate_object(params, shifts, mode='same'):
     """
 
     if not isinstance(params, ParameterSet):
-        logging.warn("holopy.core.holography.evaluate_object received params argument \
+        logging.warn("holopy.core.holography.get_object received params argument \
                         of type <{}> instead of the expected type \
                         holopy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
     if mode not in ['same', 'full', 'valid']:
-        raise ValueError("holopy.core.holography.evaluate_object received mode \
+        raise ValueError("holopy.core.holography.get_object received mode \
                             argument '{}', but must be either 'same', 'full', \
                             or 'valid'.".format(mode))
 
@@ -175,24 +175,17 @@ def evaluate_object(params, shifts, mode='same'):
                                     reference_image_shape=(1024, 1024),
                                     mode='same')
 
-    logging.info("Fourier transforming the images...")
+    # Padding and Fourier transforming the images
+    logging.info("Padding and Fourier transforming the images...")
     for index, file in enumerate(params.inFiles):
         img = fits.getdata(file)
+        print("\tPadding data form {}".format(file))
         img = pad_array(array=img,
                         pad_vector=pad_vectors[index],
                         mode=mode,
                         reference_image_pad_vector=reference_image_pad_vector)
-
-        # # logging.warning("Images are not expanded to the fill field of view.")
-        # print('\t', pad_vectors)
-        # pad_vector = pad_vectors[index]
-        # img = np.pad(img, pad_vector)
-        # if mode == 'same':
-        #     # Only in same mode, remove the margin outside the field of view
-        #     # of the reference image, see align_cubes() method.
-        #     print('\t', img.shape)
-        #     img = img[: , pad_vector[1][0] : -1-pad_vector[1][1] , pad_vector[2][0] : -1-pad_vector[2][1]]
-        #     print('\t', img.shape)
+        print('\tShift:', shifts[index])
+        print('\tShape:', img.shape)
 
         if index == 0:
             Fimg = fftshift(fft2(img))
@@ -204,19 +197,19 @@ def evaluate_object(params, shifts, mode='same'):
     img_shape = img.shape
     del img
 
-    logging.info("Fourier transforming the PSFs...")
+    logging.info("Padding and Fourier transforming the PSFs...")
     for index, file in enumerate(params.psfFiles):
         psf = fits.getdata(file)
         if index == 0:
             # Pad the Fpsf cube to have the same xz-extent as Fimg
-            print("\tPadding the PSFs")
-            print('\tImages', img_shape)
-            print('\tPSFs', psf.shape)
+            print("\tPadding data form {}".format(file))
+            print('\tImage shape:', img_shape)
+            print('\tPSF shape:', psf.shape)
             dx = img_shape[1] - psf.shape[1]
             dy = img_shape[2] - psf.shape[2]
 
             pad_vector = ((0, 0), (int(np.floor(dx/2)), int(np.ceil(dx/2))), (int(np.floor(dy/2)), int(np.ceil(dy/2))))
-            print('\tPad_width', pad_vector)
+            print('\tPad_width:', pad_vector)
             psf = np.pad(psf, pad_vector)
             try:
                 assert img_shape == psf.shape
