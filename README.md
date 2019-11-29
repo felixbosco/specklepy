@@ -1,7 +1,6 @@
 # Specklepy - A versatile tool for analyzing astronomical short-exposure ("speckle") data
 
 ## To Do:
-* Convert starfinder and psf extraction classes to functions 
 * Make logger write a copy to a .log file
 * Implement RAM save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file
 * Create general script with signature "specklepy holography -f ..."
