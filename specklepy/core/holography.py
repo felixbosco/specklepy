@@ -13,7 +13,7 @@ from specklepy.core.aperture import Aperture
 from specklepy.core.apodization import apodize
 from specklepy.core.ssa import ssa
 from specklepy.algorithms.psfextraction import PSFExtraction
-from specklepy.algorithms.sourceextraction import SourceExtraction
+from specklepy.core.sourceextraction import find_sources
 from specklepy.utils.plot import imshow
 from specklepy.utils.transferfunctions import otf
 
@@ -63,10 +63,11 @@ def holography(params, mode='same', debug=False):
     # Start iteration from steps (iv) thorugh (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
-        finder = SourceExtraction()
-        finder.find_sources(image=image, starfinder_fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
-            background_subtraction=True, verbose=False)
-        finder.writeto(params.allStarsFile)
+        # finder = SourceExtraction()
+        # finder.
+        find_sources(image=image, fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
+            background_subtraction=True, writeto=params.allStarsFile, verbose=False)
+        # finder.writeto(params.allStarsFile)
 
         # (v) Select reference stars
         print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")

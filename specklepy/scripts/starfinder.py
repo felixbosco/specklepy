@@ -19,7 +19,7 @@ try:
     from specklepy.io.parameterset import ParameterSet
     from specklepy.core.aperture import Aperture
     from specklepy.utils.plot import imshow
-    from specklepy.algorithms.sourceextraction import SourceExtraction
+    from specklepy.core.sourceextraction import find_sources
 except ModuleNotFoundError:
     # Prepare import from current path
     PATH = os.getcwd()
@@ -31,7 +31,7 @@ except ModuleNotFoundError:
     from specklepy.io.parameterset import ParameterSet
     from specklepy.core.aperture import Aperture
     from specklepy.utils.plot import imshow
-    from specklepy.algorithms.sourceextraction import SourceExtraction
+    from specklepy.core.sourceextraction import find_sources
 
 
 def parser(options=None):
@@ -73,10 +73,11 @@ def main(options=None):
     if args.outfile is None:
         args.outfile = params.allStarsFile
 
-    finder = SourceExtraction()
-    finder.find_sources(image=args.file, starfinder_fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
-        background_subtraction=background_subtraction)
-    finder.writeto(args.outfile)
+    # finder = SourceExtraction()
+    # finder.
+    find_sources(image=args.file, fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
+        background_subtraction=background_subtraction, writeto=args.outfile)
+    # finder.writeto(args.outfile)
 
     # Plot results
     if args.debug:
