@@ -209,7 +209,7 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
                             of type {}, but must be np.ndarray.".format(type(array)))
     if array.ndim not in [2, 3]:
         raise ValueError("specklepy.core.alignment.pad_array received array argument \
-                            of dimension {}, but must be 2 or 3.".format(type(array)))
+                            of dimension {}, but must be 2 or 3.".format(array.ndim))
 
     padded = np.pad(array, pad_vector)
 
