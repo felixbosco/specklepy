@@ -1,15 +1,12 @@
-class Error(Exception):
-    """Base class for exceptions in this module."""
-    pass
+class SpecklepyValueError(Exception):
 
-# class InputError(Error):
-#     """Exception raised for errors in the input.
-#
-#     Attributes:
-#         expression -- input expression in which the error occurred
-#         message -- explanation of the error
-#     """
-#
-#     def __init__(self, expression, message):
-#         self.expression = expression
-#         self.message = message
+    def __init__(self, function, argument, value, expected):
+        message = "The function {} received {}={}, but must be {}!".format(function, argument, value, expected)
+        raise ValueError(message)
+
+
+class SpecklepyTypeError(Exception):
+
+    def __init__(self, function, argument, type, expected):
+        message = "The function {} received argument {} of type {}, but must be {}".format(function, argument, value, expected)
+        raise TypeError(message)
