@@ -1,4 +1,4 @@
-# holopy
+# Specklepy - A versatile tool for analyzing astronomical short-exposure ("speckle") data
 
 ## To Do:
 * Rename to specklepy
