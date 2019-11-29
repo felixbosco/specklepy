@@ -85,7 +85,8 @@ def get_shift(image, reference_image=None, Freference_image=None, mode='correlat
         reference_image (np.ndarray):
         Freference_image (np.ndarray):
         mode (str, optional): Default is 'correlation'.
-        debug (bool):
+        debug (bool, optional): Set to True to inspect intermediate results.
+            Default is False.
 
     Returns:
         shift (tuple): Tuple of shift indizes for each axis.
@@ -133,11 +134,12 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
         mode (str, optional): Define the size of the output image as 'same'
             to the reference image or expanding to include the 'full'
             covered field. Default is 'same'.
-        return_reference_padding (bool, optional):
 
     Returns:
         pad_vectors (list):
-        reference_image_pad_vector (list, optional):
+        reference_image_pad_vector (list, optional): Pad vector of the reference
+            image, which is needed for pad_array() in 'same' mode, thus is only
+            returned in 'same' mode.
     """
 
     # Check input types
@@ -215,16 +217,6 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     if mode is 'same':
         # Take reference pad vector and adapt to correctly limit the image
         _r = reference_image_pad_vector
-        # print('_r', _r)
-        # for index, tuple in enumerate(_r):
-        #     print('tuple', tuple)
-        #     if tuple[1] == 0:
-        #         _r[index] = (tuple[0], None)
-        #     elif tuple[1] is None:
-        #         pass
-        #     else:
-        #         _r[index] = (tuple[0], -tuple[1])
-
         # Pick only those pixels, covered by the reference image
         if array.ndim == 2:
             padded = padded[_r[0][0] : _adapt_max_coordinate(_r[0][1]) , _r[1][0] : _adapt_max_coordinate(_r[1][1])]
@@ -241,8 +233,20 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     return padded
 
 
-def _adapt_max_coordinate(value):
-    if value == 0:
+def _adapt_max_coordinate(index):
+    """Cast the upper interval border, such that indexing returns the correct
+    entries.
+
+    Long description ...
+
+    Args:
+        index (int): Index
+
+    Returns:
+        None or negative index (NoneType or int): ... depending on index.
+
+    """
+    if index == 0:
         return None
     else:
-        return - value
+        return - index
