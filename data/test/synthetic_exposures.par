@@ -19,3 +19,9 @@ system_gain = 17*u.electron/u.adu
 optics_transmission = 0.9
 quantum_efficiency = 0.9*u.electron/u.ph
 saturation_level = 7200*u.adu
+
+[KWARGS]
+DIT = 0.2*u.ms
+nframes = 150
+nframes_limit = 100
+outfile = data/test/exposures/exposure.fits

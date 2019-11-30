@@ -16,7 +16,8 @@ def get_objects(parameterfile, debug=False):
         parameterfile (str): File from which the objects are instantiated.
 
     Returns:
-        objects (sequence)
+        objects (dict): Dict containing the parameter file section as a key word
+            and the objects (or kwargs dict) as values.
     """
 
     # Check whether files exist
@@ -24,7 +25,7 @@ def get_objects(parameterfile, debug=False):
         raise FileNotFoundError("Parameter file {} not found!".format(parameterfile))
 
     # Prepare objects list
-    objects = []
+    objects = {}
 
     # Read parameter_file
     parser = ConfigParser(inline_comment_prefixes="#")
@@ -43,10 +44,12 @@ def get_objects(parameterfile, debug=False):
                 print(key, type(kwargs[key]), kwargs[key])
 
         if section.lower() == 'target':
-            objects.append(Target(**kwargs))
+            objects['target'] = Target(**kwargs)
         elif section.lower() == 'telescope':
-            objects.append(Telescope(**kwargs))
+            objects['telescope'] = Telescope(**kwargs)
         elif section.lower() == 'detector':
-            objects.append(Detector(**kwargs))
+            objects['detector'] = Detector(**kwargs)
+        elif section.lower() == 'kwargs':
+            objects['kwargs'] = kwargs
 
     return objects
