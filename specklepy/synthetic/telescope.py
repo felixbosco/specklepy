@@ -42,7 +42,7 @@ class Telescope(object):
 			diameter (astrop.units.Quantity): Telescope diameter, used to
 				compute the light collecting area.
 			psf_source (str): File name to read PSFs from or model name. Models
-				can be either 'Airy' or 'Gaussian'.
+				can be either 'AiryDisk' or 'Gaussian'. The models require
 			central_obscuration (float, optional): Radial fraction of the
 				telescope aperture that is blocked by the secondary.
 			psf_plane (int, optional): Index of the first frame to read from
@@ -80,10 +80,8 @@ class Telescope(object):
 		else:
 			self.area = np.pi * (self.diameter / 2)**2
 
-		if psf_source == 'airy_model':
-			self.compute_airy_model()
-		elif psf_source == 'seeing':
-			self.compute_seeing_disk(kwargs)
+		if psf_source.lower() in ['airydisk', 'gaussian']:
+			self.model_psf(psf_source, **kwargs)
 		else:
 			self.read_psf_file(psf_source)
 
@@ -115,7 +113,7 @@ class Telescope(object):
 			warnings.simplefilter('ignore')
 			if ratio < 1.0:
 				self.psf = zoom(self.psf, 1/ratio, order=1) / ratio**2
-				self.psf = self._normalize(self.psf)
+				self.psf = self.normalize(self.psf)
 			else:
 				memory_sum = np.sum(tmp)
 				tmp = zoom(tmp, ratio, order=1) / ratio**2
@@ -149,7 +147,7 @@ class Telescope(object):
 			header = hdulist[hdu_entry].header
 		if header['NAXIS'] == 2:
 			with fits.open(self.psf_source) as hdulist:
-				self.psf = self._normalize(hdulist[hdu_entry].data)
+				self.psf = self.normalize(hdulist[hdu_entry].data)
 		else:
 			for key in self.TIME_STEP_KEYS:
 				try:
@@ -194,7 +192,7 @@ class Telescope(object):
 		    return value * unit
 
 
-	def _normalize(self, array, mode='unity_circular'):
+	def normalize(self, array, mode='unity_circular'):
 		"""Normalizes the array to either have a sum of 1 ('unity' mode) or that the peak value is 1 ('max' mode)."""
 		if mode == 'unity':
 		    return array / np.sum(array)
@@ -221,90 +219,54 @@ class Telescope(object):
 			self.psf_plane += number_planes - 1
 			self.psf_plane = self.psf_plane % data.shape[0]
 			#Normalization
-			self.psf = self._normalize(self.psf)
+			self.psf = self.normalize(self.psf)
 
 
-	def _distance(self, index, reference):
-	    return np.sqrt(np.square(index[0]-reference[0]) + np.square(index[1]-reference[1]))
+	def model_psf(self, model, radius, resolution, shape=256, **kwargs):
+		"""Models the PSF given the desired model function and kwargs.
 
-
-	def compute_airy_model(self, size=256, wavelength=None, first_zero_radius=4):
+		Args:
+			model (str): Must be either 'airydisk' or 'gaussian'.
+			kwargs are forwarded to the model function.
 		"""
-		compute_airy_model() computes a diffraction limited PSF, based on an
-		Airy model on grid with shape = (size, size). The corresponding pixel
-		scale (the psf_resolution) is computed radius of the first zero
-		(first_zero_radius=12, in pix), the telescope diameter and a wavelength.
-		Therefore, please provide the telescope instance with a wavelength
-		attribute.
-		"""
-		if wavelength is None:
-			try:
-				wavelength = self.wavelength
-			except:
-				wavelength = 1*u.micron
-		center = int(size / 2)
-		Airy = models.AiryDisk2D(amplitude=1e6, x_0=center, y_0=center, radius=first_zero_radius)
-		xdata, ydata = np.meshgrid(np.arange(0, size), np.arange(0, size))
-		self.psf = self._normalize(Airy(xdata, ydata))
-		self.psf_resolution = 1.2196698912665045 * np.arctan(wavelength / self.diameter).to(u.mas) / first_zero_radius
 
+		if not isinstance(model, str):
+			raise TypeError('model_psf received model argument of type {}, but \
+							needs to be str type!')
 
-	def _gaussian_2d(self, index, center, fwhm, amplitude=1):
-		if not isinstance(fwhm, tuple):
-			std = 2 * np.sqrt(2 * np.log(2)) * fwhm
-			std = (std, std)
+		if isinstance(radius, u.Quantity):
+			self.radius = radius
+		elif isinstance(radius, float) or isinstance(radius, int):
+			logging.warning("Interpreting float type radius as {}".format(radius * u.arcsec))
+			self.radius = radius * u.arcsec
 		else:
-			std = (2 * np.sqrt(2 * np.log(2)) * fwhm[0], 2 * np.sqrt(2 * np.log(2)) * fwhm[1])
-		return amplitude * np.exp(- np.square((index[0] - center[0]) / std[0]) / 2 - np.square((index[1] - center[1]) / std[1]) / 2)
+			raise TypeError(self.typeerror.format('radius', type(radius), 'u.Quantity'))
 
+		if isinstance(resolution, u.Quantity):
+			self.resolution = resolution
+		elif isinstance(resolution, float) or isinstance(resolution, int):
+			logging.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
+			self.resolution = resolution * u.arcsec
+		else:
+			raise TypeError(self.typeerror.format('resolution', type(resolution), 'u.Quantity'))
 
-	def compute_seeing_disk(self, kwargs={}):
-		"""function compute_seeing_disk()
-		Approximates the seeing disk with a 2D Gaussian of with given FWHM.
-		Yet the function is very slow.
-		Caution: Not tested extensively yet."""
+		if isinstance(shape, int):
+			center = (shape / 2, shape / 2)
+			shape = (shape, shape)
+		elif isinstance(shape, tuple):
+			center = (shape[0] / 2, shape[1] / 2)
+		else:
+			raise TypeError('model_psf received shape argument of type {}, but \
+							needs to be int or tuple type!')
 
-		print('Caution: The function compute_seeing_disk() has not been tested extensively yet.')
+		if model.lower() == 'airydisk':
+			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(radius / resolution))
+		elif model.lower() == 'gaussian':
+			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=float(radius / resolution), y_stddev=float(radius / resolution))
+		else:
+			raise ValueError("model_psf received model argument {}, but must be\
+							either 'AriyDisk' or 'Gaussian'!".format(model))
 
-		# Handling input
-		for key in ['seeing', 'fwhm', 'seeing_fwhm']:
-			if key in kwargs:
-				fwhm = kwargs[key]
-				break
-				# if not isinstance(fwhm, u.Quantity):
-				# 	print('Treating the FWHM of the seeing PSF as in units of arcsec.')
-				# 	fwhm *= u.arcsec
-		try:
-			fwhm
-		except NameError as e:
-			print('Using default FWHM of 1.0arcsec.')
-			fwhm = 1.0*u.arcsec
-
-		for key in ['psf_resolution', 'resolution']:
-			if key in kwargs:
-				fwhm = kwargs[key]
-				break
-		if not hasattr(self, 'psf_resolution'):
-			print('Using default psf_resolution of 20mas per pix.')
-			self.psf_resolution = 0.02*u.arcsec
-
-		for key in ['size', 'psf_size']:
-			if key in kwargs:
-				size = kwargs[key]
-				break
-		try:
-			size
-		except NameError as e:
-			print('Using default size for PSF of 256.')
-			size = 256
-
-		shape = (size, size)
-		center = ((size + 1) / 2, (size + 1) / 2)
-		xdata, ydata = np.mgrid[ : shape[0], : shape[1]]
-		stddev = fwhm / self.psf_resolution / (2 * np.sqrt(2 * np.log(2)))
-		Gaussian = models.Gaussian2D(amplitude=1.0, x_mean=center[0], y_mean=center[1], x_stddev=stddev, y_stddev=stddev)
-		psf = Gaussian(xdata, ydata)
-		#psf = np.zeros(shape)
-		#for index, value in np.ndenumerate(psf):
-		#	psf[index] = self._gaussian_2d(index, center, fwhm/self.psf_resolution)
-		self.psf = self._normalize(psf)
+		y, x = np.mgrid[0:shape[0], 0:shape[1]]
+		self.psf = model(x, y)
+		self.psf = self.normalize(self.psf)

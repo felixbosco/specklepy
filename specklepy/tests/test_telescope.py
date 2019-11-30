@@ -16,7 +16,7 @@ class TestTelescope(unittest.TestCase):
         tel_static = Telescope(8.0*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.scao_long_exposure_psf_file )
         assert np.abs(np.sum(tel_static.psf) - 1.0) < 1e-6
 
-        tel_compute = Telescope(8.2*u.m, psf_source='seeing', seeing_fwhm=0.8*u.arcsec, psf_resolution=0.022*u.arcsec, size=128)
+        tel_compute = Telescope(8.2*u.m, psf_source='Gaussian', radius=0.4*u.arcsec, resolution=0.0106*u.arcsec)
         assert np.abs(np.sum(tel_compute.psf) - 1.0) < 1e-6
 
         if self.visual > 0:
@@ -26,7 +26,7 @@ class TestTelescope(unittest.TestCase):
         # tel_nonstatic(np.ones((64, 64)), 20*u.mas, integration_time=0.2*u.s)
         # assert np.abs(np.sum(tel_nonstatic.psf) - 1.0) < 1e-6
 
-        tel_airy = Telescope(8.2*u.m, psf_source='airy_model', wavelength=1.63*u.micron)
+        tel_airy = Telescope(8.2*u.m, psf_source='AiryDisk', radius=0.01*u.arcsec, resolution=0.0106*u.arcsec)
         # print('Airy model:', tel_airy)
 
     def test_call(self):
