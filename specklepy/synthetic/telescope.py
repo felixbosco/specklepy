@@ -23,6 +23,7 @@ class Telescope(object):
 		Mode 'seeing': Shall compute the psf as a Gaussian seeing disk instead of a file.
 	"""
 
+	__name__ = 'telescope'
 	TIME_STEP_KEYS = ['TIMESTEP', 'INTTIME', 'CDELT3']
 	RESOLUTION_KEYS = ['PIXSIZE', 'CDELT1']
 

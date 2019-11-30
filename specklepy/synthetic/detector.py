@@ -23,6 +23,8 @@ class Detector(object):
 			readout modes with different parameters.
 	"""
 
+	__name__ = 'detector'
+
 	def __init__(self, shape, pixel_size, quantum_efficiency=1.*u.electron/u.ph, system_gain=1.*u.electron/u.adu, **kwargs):
 		# Read input parameters
 		self.shape = shape
