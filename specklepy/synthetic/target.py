@@ -6,29 +6,37 @@ from astropy import constants as const
 from astropy.table import Table
 
 
-# PATH, FILE = os.path.split(__file__)
-# SOURCE_PATH = os.path.join(PATH, './source/data/')
-
 
 class Target(object):
 
+    """ Class carrying information of an astronomical target.
+
+    Long description...
+    Note that Target accepts only two out of the three 'shape', 'FoV', and
+    'pixel_scale'.
+
+    Attributes:
+        shape (tuple, dtype=int):
+        FoV (tuple, dtype=Astropy.units.Quantity):
+        pixel_scale (astropy.Unit):
+
+    Optional attributes:
+        sky_background (int or astropy.units.Quantity, optional):
+        config_file (str, optional):
+        star_table (str, optional):
+        number_stars (int, optional):
+
+    Future features:
+        Replace the FoV attribute by a single value instead of a tuple, in
+            case that the FoV is a square.
+        The object shall obtain a phase center in ICRS, which is set to
+            RA=00:00:00.00 and DEC=00:00:00.00
+    """
+
     __name__ = 'target'
 
+
     def __init__(self, band, **kwargs):
-        """
-        This function accepts two out of the three keywords:
-            Tuple(int): 'shape'
-            Tuple(Astropy.Unit): 'FoV'
-            Astropy.Unit: 'pixel_scale'
-        Optional attributes are:
-            'sky_background':
-            'config_file':
-            'star_table':
-            'number_stars':
-        Future features:
-            Replace the FoV attribute by a single value instead of a tuple, in case that the FoV is a square.
-            The object shall obtain a phase center in ICRS, which is set to RA=00:00:00.00 and DEC=00:00:00.00
-        """
 
         self.photometry_file = os.path.join(os.path.dirname(__file__), 'photometric_bands.dat')
 

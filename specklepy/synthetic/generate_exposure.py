@@ -17,14 +17,13 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     limit per file ('nframes_limit').
     To distribute the synthetic exposures to multiple files, for instance if the
     size of the individual file would become too large, just set
-    'nframes_limit' to a smaller value (default is 100). The
-    last file may contain empty frames.
+    'nframes_limit' to a smaller value (default is 100).
 
     Args:
-        target ():
-        telescope ():
-        detector ():
-        DIT ():
+        target (specklepy.synthetic.Target):
+        telescope (specklepy.synthetic.Telescope):
+        detector (specklepy.synthetic.Detector):
+        DIT (astropy.units.Quantity):
         nframes (int, optional):
         nframes_limit (int, optional):
         outdir (str, optional):

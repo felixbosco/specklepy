@@ -9,18 +9,24 @@ from scipy.signal import fftconvolve
 from scipy.ndimage import zoom
 
 
+
 class Telescope(object):
 
-	"""
-	Attributes are:
-		'diameter':
-		'psf_source':
-		'psf_plane':
-	Optional attributes are:
-		'central_obscuration':
-	Future features are:
-		Mode 'airy_model': Shall compute the psf with the Fourier transform of the aperture instead of a file.
-		Mode 'seeing': Shall compute the psf as a Gaussian seeing disk instead of a file.
+	"""Class carrying the information of a telescope.
+
+	Attributes:
+		diameter (astropy.units.Quantity):
+		psf_source (str):
+		psf_plane (int):
+
+	Optional attributes:
+		central_obscuration (float, optional):
+
+	Future features:
+		Mode 'airy_model': Shall compute the psf with the Fourier transform of
+			the aperture instead of a file.
+		Mode 'seeing': Shall compute the psf as a Gaussian seeing disk instead
+			of a file.
 	"""
 
 	__name__ = 'telescope'

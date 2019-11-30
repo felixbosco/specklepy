@@ -6,18 +6,21 @@ import warnings
 
 class Detector(object):
 
-	"""
-	Attributes are:
-		'shape': pixel times pixel
-		'pixel_size': in arcsec or arcsec per pix
-		'quantum_efficiency':
-		'system_gain':
+	"""Class carrying information of an astronomical detector.
+
+	Attributes:
+		shape (tuple, dtype=int): pixel times pixel
+		pixel_size (astropy.units.Quantity): in arcsec or arcsec per pix
+		quantum_efficiency ():
+		system_gain (astropy.units.Quantity):
+		
 	Optional attributes are:
-		'readout_noise':
-		'dark_current':
-		'saturation_level':
-		'optics_transmission':
-	Future features are:
+		readout_noise (astropy.units.Quantity):
+		dark_current (astropy.units.Quantity):
+		saturation_level (astropy.units.Quantity):
+		optics_transmission (astropy.units.Quantity):
+
+	Future features:
 		Method 'window': Shall enable the interactive windowing of a detector.
 		Attribute dictionary 'readout_modes': Shall enable the flexible use of different
 			readout modes with different parameters.
