@@ -12,8 +12,6 @@ from astropy.table import Table
 
 class Target(object):
 
-
-
     def __init__(self, band, **kwargs):
         """
         This function accepts two out of the three keywords:

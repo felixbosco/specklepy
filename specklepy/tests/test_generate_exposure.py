@@ -6,7 +6,7 @@ from specklepy.synthetic.detector import Detector
 from specklepy.synthetic.generate_exposure import generate_exposure
 
 
-class TestTarget(unittest.TestCase):
+class TestGenerateExposure(unittest.TestCase):
 
     def setUp(self):
         self.star_table = 'data/test/example_star_table.dat'
@@ -26,7 +26,7 @@ class TestTarget(unittest.TestCase):
         self.DIT = 0.2*u.s
 
     def test_call(self):
-        generate_exposure(self.target, self.telescope, self.detector, self.DIT, number_frames=10, outdir=self.outdir, filename=None, verbose=0, maximum_number_frames_per_file=5, randomkeywordwithoutmeaning=3)
+        generate_exposure(self.target, self.telescope, self.detector, self.DIT, nframes=50, outdir=self.outdir, filename=None, verbose=0, nframes_limit=20, randomkeywordwithoutmeaning=3)
 
 
 

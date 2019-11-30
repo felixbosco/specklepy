@@ -5,7 +5,7 @@ from specklepy.synthetic.telescope import Telescope
 from specklepy.utils.plot import imshow
 
 
-class TestTarget(unittest.TestCase):
+class TestTelescope(unittest.TestCase):
 
     def setUp(self):
         self.visual = 1
