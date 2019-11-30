@@ -3,10 +3,10 @@
 Specklepy is a versatile tool for data reduction and image reconstruction of short-exposure ("speckle") data. It also contains a module for generating synthetic observations, which is derived from the VegaPy package.
 
 ## Table of contents
-[To Do](#heading)
-[Data reduction](#heading-1)
-[Image reconstruction](#heading-2)
-[Synthetic image generator](#heading-3)
+[To Do](#to-do)
+[Data reduction](#data-reduction)
+[Image reconstruction](#image-reconstruction)
+[Synthetic image generator](#synthetic-image-generator)
 
 
 ## To Do:
