@@ -30,39 +30,62 @@ class Telescope(object):
 	"""
 
 	__name__ = 'telescope'
+	typeerror = 'Telescope received {} argument of {} type, but needs to be {}!'
 	TIME_STEP_KEYS = ['TIMESTEP', 'INTTIME', 'CDELT3']
 	RESOLUTION_KEYS = ['PIXSIZE', 'CDELT1']
 
 
-	def __init__(self, diameter, psf_source, psf_plane=0, **kwargs):
+	def __init__(self, diameter, psf_source, central_obscuration=None, psf_plane=0, **kwargs):
 		"""Instantiate Telescope class:
 
 		Args:
-			diameter (astrop.units.Quantity):
+			diameter (astrop.units.Quantity): Telescope diameter, used to
+				compute the light collecting area.
+			psf_source (str): File name to read PSFs from or model name. Models
+				can be either 'Airy' or 'Gaussian'.
+			central_obscuration (float, optional): Radial fraction of the
+				telescope aperture that is blocked by the secondary.
+			psf_plane (int, optional): Index of the first frame to read from
+				psf_source.
+			kwargs: Are forwarded to the psf_source model.
 		"""
 
-		# Read input parameters
-		self.diameter = diameter
-		self.psf_source = psf_source
-		self.psf_plane = psf_plane
-		for key in kwargs:
-			self.__setattr__(key, kwargs[key])
+		# Input parameters
+		if isinstance(diameter, u.Quantity):
+			self.diameter = diameter
+		elif isinstance(diameter, float) or isinstance(diameter, int):
+			logging.warning("Interpreting float type diameter as {}".format(diameter * u.m))
+			self.diameter = diameter * u.m
+		else:
+			raise TypeError(self.typeerror.format('diameter', type(diameter), 'u.Quantity'))
 
-		# Compute secondary parameters
-		if hasattr(self, 'central_obscuration'):
+		if isinstance(psf_source, str):
+			self.psf_source = psf_source
+		else:
+			raise TypeError(self.typeerror.format('psf_source', type(psf_source), 'str'))
+
+		if isinstance(central_obscuration, float) or central_obscuration is None:
+			self.central_obscuration = central_obscuration
+		else:
+			raise TypeError(self.typeerror.format('central_obscuration', type(central_obscuration), 'float'))
+
+		if isinstance(psf_plane, int):
+			self.psf_plane = psf_plane
+		else:
+			raise TypeError(self.typeerror.format('psf_plane', type(psf_plane), 'int'))
+
+		# Derive secondary parameters
+		if self.central_obscuration is not None:
 			self.area = (1. - self.central_obscuration**2) * np.pi * (self.diameter / 2)**2
 		else:
 			self.area = np.pi * (self.diameter / 2)**2
 
-		if isinstance(psf_source, str):
-			if psf_source == 'airy_model':
-				self.compute_airy_model()
-			elif psf_source == 'seeing':
-				self.compute_seeing_disk(kwargs)
-			else:
-				self.read_psf_file(psf_source)
+		if psf_source == 'airy_model':
+			self.compute_airy_model()
+		elif psf_source == 'seeing':
+			self.compute_seeing_disk(kwargs)
 		else:
-			raise TypeError('psf_source must be str-type, but is given as {}'.format(type(psf_source)))
+			self.read_psf_file(psf_source)
 
 
 	def __call__(self, flux_array, flux_array_resolution, integration_time=None, verbose=0, **kwargs):

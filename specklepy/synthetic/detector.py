@@ -41,8 +41,12 @@ class Detector(object):
 			shape (tuple, dtype=int): Shape of the detector array, i.e. number
 				of pixels. If provided as int, then the detector will be square
 				shaped.
-
-
+			pixel_scale (u.Quantity):
+			quantum_efficiency (u.Quantity):
+			system_gain (u.Quantity):
+			readout_noise (u.Quantity):
+			optics_transmission (u.Quantity):
+			saturation_level (u.Quantity):
 		"""
 
 		# Input parameters
@@ -98,8 +102,7 @@ class Detector(object):
 		else:
 			raise TypeError(self.typeerror.format('saturation_level', type(saturation_level), 'u.Quantity'))
 
-
-		# Compute secondary parameters
+		# Derive secondary parameters
 		self.array = np.zeros(self.shape)
 		self.FoV = (self.shape[0] * self.pixel_scale, self.shape[1] * self.pixel_scale)
 

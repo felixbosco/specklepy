@@ -34,6 +34,7 @@ class Target(object):
     """
 
     __name__ = 'target'
+    typeerror = 'Target received {} argument of {} type, but needs to be {}!'
     photometry_file = os.path.join(os.path.dirname(__file__), 'photometric_bands.dat')
 
 
@@ -44,12 +45,13 @@ class Target(object):
 
         """
 
-
-        # Read input parameters
+        # Input parameters
         if isinstance(band, str):
             self.band = band
         else:
-            raise TypeError
+            raise TypeError(self.typeerror.format('band', type(band), 'str'))
+
+
         for key in kwargs:
         	self.__setattr__(key, kwargs[key])
 
