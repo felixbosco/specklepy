@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import astropy.units as u
-from astropy import constants as const
+import astropy.constants as const
 from astropy.table import Table
 
 

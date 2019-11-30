@@ -1,8 +1,10 @@
 import sys
-import numpy as np
-from astropy import units as u
-from scipy.ndimage import zoom
 import warnings
+import numpy as np
+from scipy.ndimage import zoom
+from astropy import units as u
+
+
 
 class Detector(object):
 
@@ -13,7 +15,7 @@ class Detector(object):
 		pixel_size (astropy.units.Quantity): in arcsec or arcsec per pix
 		quantum_efficiency ():
 		system_gain (astropy.units.Quantity):
-		
+
 	Optional attributes are:
 		readout_noise (astropy.units.Quantity):
 		dark_current (astropy.units.Quantity):

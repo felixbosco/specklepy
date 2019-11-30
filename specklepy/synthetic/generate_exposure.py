@@ -1,10 +1,11 @@
 import os
+from datetime import datetime
 import numpy as np
 from astropy.io import fits
 import astropy.units as u
-from datetime import datetime
 
 from specklepy.logging import logging
+
 
 
 def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit=100, outdir=None, outfile='exposure.fits', time_stamp='end', verbose=False, **kwargs):

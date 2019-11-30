@@ -1,12 +1,12 @@
 import os
 import sys
+import warnings
 import numpy as np
+from scipy.signal import fftconvolve
+from scipy.ndimage import zoom
 import astropy.units as u
 from astropy.io import fits
 from astropy.modeling import models
-import warnings
-from scipy.signal import fftconvolve
-from scipy.ndimage import zoom
 
 
 
