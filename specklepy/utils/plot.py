@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as clrs
+import astropy.units as u
 
 from specklepy.logging import logging
 from specklepy.utils import transferfunctions as tf
@@ -18,13 +19,39 @@ plt.rc('font', **font)  # pass in the font dict as kwargs
 
 
 
-def imshow(image, title=None, norm=None):
+def imshow(image, title=None, norm=None, colorbar_label=None):
+    """Shows a 2D image.
+
+    Args:
+        image (np.ndarray, ndim=2): Image to be plotted.
+        title (str, optional): Plot title. Default is None.
+        norm (str, optional): Can be set to 'log', for plotting in logarithmic
+            scale. Default is None.
+    """
+
+    if isinstance(image, np.ndarray):
+        if image.ndim != 2:
+            raise ValueError('The function imshow received image argument of \
+                            dimension {}, but needs to be 2!'.format(image.ndim))
+    elif isinstance(image, u.Quantity):
+        unit = image.unit
+        colorbar_label = "({})".format(unit)
+        image = image.value
+    else:
+        raise TypeError('The function imshow received image argument of \
+                        type {}, but needs to be np.ndarray!'.format(type(image)))
+
     if norm == 'log':
         norm = clrs.LogNorm()
     plt.figure()
     plt.imshow(image, norm=norm)
     plt.title(title)
-    plt.colorbar(pad=0.0)
+
+    # Colorbar
+    cbar = plt.colorbar(pad=0.0)
+    if colorbar_label is not None:
+        cbar.set_label(colorbar_label)
+
     plt.show()
     plt.close()
 
