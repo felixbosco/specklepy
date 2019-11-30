@@ -18,16 +18,12 @@ class TestTelescope(unittest.TestCase):
 
         tel_compute = Telescope(8.2*u.m, psf_source='Gaussian', radius=0.4*u.arcsec, resolution=0.0106*u.arcsec)
         assert np.abs(np.sum(tel_compute.psf) - 1.0) < 1e-6
-
         if self.visual > 0:
         	imshow(tel_compute.psf)
 
-        # tel_nonstatic = Telescope(8.2*u.m, central_obscuration=0.14, psf_source=self.scao_short_exposure_psfs_file)
-        # tel_nonstatic(np.ones((64, 64)), 20*u.mas, integration_time=0.2*u.s)
-        # assert np.abs(np.sum(tel_nonstatic.psf) - 1.0) < 1e-6
-
-        tel_airy = Telescope(8.2*u.m, psf_source='AiryDisk', radius=0.01*u.arcsec, resolution=0.0106*u.arcsec)
-        # print('Airy model:', tel_airy)
+        tel_airy = Telescope(8.2*u.m, psf_source='AiryDisk', radius=0.1*u.arcsec, resolution=0.0106*u.arcsec)
+        if self.visual > 0:
+        	imshow(tel_airy.psf)
 
     def test_call(self):
         pass

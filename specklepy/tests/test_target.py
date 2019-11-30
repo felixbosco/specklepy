@@ -7,7 +7,7 @@ from specklepy.utils.plot import imshow
 class TestTarget(unittest.TestCase):
 
     def setUp(self):
-        self.star_table = 'data/test/example_star_table.dat'
+        self.star_table = 'data/test/example_star_table_29mas296875.dat'
 
     def test_init(self):
         Target(band='H', pixel_scale=0.1*u.arcsec, shape=(64, 64), sky_background=13)
