@@ -29,14 +29,15 @@ def imshow(image, title=None, norm=None, colorbar_label=None):
             scale. Default is None.
     """
 
+
     if isinstance(image, np.ndarray):
         if image.ndim != 2:
             raise ValueError('The function imshow received image argument of \
                             dimension {}, but needs to be 2!'.format(image.ndim))
-    elif isinstance(image, u.Quantity):
-        unit = image.unit
-        colorbar_label = "({})".format(unit)
-        image = image.value
+        if isinstance(image, u.Quantity):
+            unit = image.unit
+            colorbar_label = "({})".format(unit)
+            image = image.value
     else:
         raise TypeError('The function imshow received image argument of \
                         type {}, but needs to be np.ndarray!'.format(type(image)))
