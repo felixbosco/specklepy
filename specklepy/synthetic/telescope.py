@@ -35,6 +35,12 @@ class Telescope(object):
 
 
 	def __init__(self, diameter, psf_source, psf_plane=0, **kwargs):
+		"""Instantiate Telescope class:
+
+		Args:
+			diameter (astrop.units.Quantity):
+		"""
+
 		# Read input parameters
 		self.diameter = diameter
 		self.psf_source = psf_source

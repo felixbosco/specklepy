@@ -18,7 +18,7 @@ class TestGenerateExposure(unittest.TestCase):
         self.target = Target(band='H', FoV=11*u.arcsec*2, shape=(1024, 1024), star_table=self.star_table, sky_background=14.4)
         self.telescope = Telescope(8.2*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.psf_source)
         self.detector = Detector((1024, 1024),
-        						pixel_size=0.0106*u.arcsec,
+        						pixel_scale=0.0106*u.arcsec,
         						readout_noise=35*u.electron/u.pix,
         						system_gain=17*u.electron/u.adu,
         						optics_transmission=0.9,

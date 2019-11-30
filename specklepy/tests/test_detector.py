@@ -10,9 +10,9 @@ class TestDetector(unittest.TestCase):
         pass
 
     def test_init(self):
-        det = Detector((64, 64), pixel_size=0.01*u.arcsec, randomkeywortwithoutmeaning=3)
+        det = Detector((64, 64), pixel_scale=0.01*u.arcsec)
 
-        det_RON = Detector((64, 64), pixel_size=0.01*u.arcsec, readout_noise=35*u.electron/u.pix)
+        det_RON = Detector((64, 64), pixel_scale=0.01*u.arcsec, readout_noise=35*u.electron/u.pix)
 
         exposure_array = np.ones((64, 64)) * u.ph / u.s
         RO = det_RON(exposure_array, integration_time=200*u.ms, target_FoV=det_RON.FoV)

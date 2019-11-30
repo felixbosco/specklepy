@@ -34,14 +34,22 @@ class Target(object):
     """
 
     __name__ = 'target'
+    photometry_file = os.path.join(os.path.dirname(__file__), 'photometric_bands.dat')
 
 
     def __init__(self, band, **kwargs):
+        """Instantiate Target class.
 
-        self.photometry_file = os.path.join(os.path.dirname(__file__), 'photometric_bands.dat')
+        Args:
+
+        """
+
 
         # Read input parameters
-        self.band = band
+        if isinstance(band, str):
+            self.band = band
+        else:
+            raise TypeError
         for key in kwargs:
         	self.__setattr__(key, kwargs[key])
 

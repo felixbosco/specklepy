@@ -4,6 +4,8 @@ import numpy as np
 from scipy.ndimage import zoom
 from astropy import units as u
 
+from specklepy.logging import logging
+
 
 
 class Detector(object):
@@ -12,7 +14,7 @@ class Detector(object):
 
 	Attributes:
 		shape (tuple, dtype=int): pixel times pixel
-		pixel_size (astropy.units.Quantity): in arcsec or arcsec per pix
+		pixel_scale (astropy.units.Quantity): in arcsec or arcsec per pix
 		quantum_efficiency ():
 		system_gain (astropy.units.Quantity):
 
@@ -29,29 +31,87 @@ class Detector(object):
 	"""
 
 	__name__ = 'detector'
+	typeerror = 'Detector received {} argument of {} type, but needs to be {}!'
 
-	def __init__(self, shape, pixel_size, quantum_efficiency=1.*u.electron/u.ph, system_gain=1.*u.electron/u.adu, **kwargs):
-		# Read input parameters
-		self.shape = shape
-		self.pixel_size = pixel_size
-		self.quantum_efficiency = quantum_efficiency
-		self.system_gain = system_gain
-		for key in kwargs:
-			self.__setattr__(key, kwargs[key])
+
+	def __init__(self, shape, pixel_scale, quantum_efficiency=1, system_gain=1, readout_noise=0, optics_transmission=1, saturation_level=None):
+		"""Instantiate Detector class.
+
+		Args:
+			shape (tuple, dtype=int): Shape of the detector array, i.e. number
+				of pixels. If provided as int, then the detector will be square
+				shaped.
+
+
+		"""
+
+		# Input parameters
+		if isinstance(shape, tuple):
+			self.shape = shape
+		elif isinstance(shape, int):
+			self.shape = (shape, shape)
+		else:
+			raise TypeError(self.typeerror.format('shape', type(shape), 'tuple'))
+
+		if isinstance(pixel_scale, u.Quantity):
+			self.pixel_scale = pixel_scale
+		elif isinstance(pixel_scale, float) or isinstance(pixel_scale, int):
+			logging.warning("Interpreting float type pixel_scale as {}".format(pixel_scale * u.arcsec))
+			self.pixel_scale = pixel_scale * u.arcsec
+		else:
+			raise TypeError(self.typeerror.format('pixel_scale', type(pixel_scale), 'u.Quantity'))
+
+		if isinstance(quantum_efficiency, u.Quantity):
+			self.quantum_efficiency = quantum_efficiency
+		elif isinstance(quantum_efficiency, float) or isinstance(quantum_efficiency, int):
+			logging.warning("Interpreting float type quantum_efficiency as {}".format(quantum_efficiency * u.electron / u.ph))
+			self.quantum_efficiency = quantum_efficiency * u.electron / u.ph
+		else:
+			raise TypeError(self.typeerror.format('quantum_efficiency', type(quantum_efficiency), 'u.Quantity'))
+
+		if isinstance(system_gain, u.Quantity):
+			self.system_gain = system_gain
+		elif isinstance(system_gain, float) or isinstance(system_gain, int):
+			logging.warning("Interpreting float type system_gain as {}".format(system_gain * u.electron / u.adu))
+			self.system_gain = system_gain * u.electron / u.adu
+		else:
+			raise TypeError(self.typeerror.format('system_gain', type(system_gain), 'u.Quantity'))
+
+		if isinstance(readout_noise, u.Quantity):
+			self.readout_noise = readout_noise
+		elif isinstance(readout_noise, float) or isinstance(readout_noise, int):
+			logging.warning("Interpreting float type readout_noise as {}".format(readout_noise * u.electron))
+			self.readout_noise = readout_noise * u.electron
+		else:
+			raise TypeError(self.typeerror.format('readout_noise', type(readout_noise), 'u.Quantity'))
+
+		if isinstance(optics_transmission, float) or isinstance(optics_transmission, int):
+			self.optics_transmission = optics_transmission
+		else:
+			raise TypeError(self.typeerror.format('optics_transmission', type(optics_transmission), 'float'))
+
+		if isinstance(saturation_level, u.Quantity) or saturation_level is None:
+			self.saturation_level = saturation_level
+		elif isinstance(saturation_level, float) or isinstance(saturation_level, int):
+			logging.warning("Interpreting float type saturation_level as {}".format(saturation_level * u.electron))
+			self.saturation_level = saturation_level * u.electron
+		else:
+			raise TypeError(self.typeerror.format('saturation_level', type(saturation_level), 'u.Quantity'))
+
 
 		# Compute secondary parameters
 		self.array = np.zeros(self.shape)
-		self.FoV = (self.shape[0] * self.pixel_size, self.shape[1] * self.pixel_size)
+		self.FoV = (self.shape[0] * self.pixel_scale, self.shape[1] * self.pixel_scale)
 
 
 	@property
 	def resolution(self):
-		return self.pixel_size
+		return self.pixel_scale
 
 
 	@resolution.setter
 	def resolution(self, value):
-		self.pixel_size = value
+		self.pixel_scale = value
 
 
 	def __call__(self, photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=True):
@@ -93,7 +153,7 @@ class Detector(object):
 				if verbose > 0:
 					print('Bypassed ValueError ({}) in np.random.poisson() by substituting values smaller than zero by zero.'.format(e))
 				tmp = np.random.poisson(np.maximum(tmp.value, 0.0)) * tmp.unit
-		if hasattr(self, 'saturation_level'):
+		if self.saturation_level is not None:
 			tmp = np.minimum(tmp, self.saturation_level * self.system_gain)
 		self.array = np.round(tmp)
 
@@ -106,7 +166,7 @@ class Detector(object):
 		if hasattr(self, 'readout_noise'):
 			tmp += np.round(np.random.normal(0.0, self.readout_noise.value, self.shape) ) * self.readout_noise.unit * u.pix
 		tmp /= self.system_gain
-		if hasattr(self, 'saturation_level'):
+		if self.saturation_level is not None:
 			return np.minimum(tmp, self.saturation_level)
 		# Reset the detector
 		if reset:
