@@ -105,8 +105,11 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     frame_counter = 0
     for outfile in outfiles:
         with fits.open(outfile, mode='update') as hdulist:
+            # Get a new field of view for each file to enable dithering between files
+            fieldofview = target.get_fieldofview((1024, 1024), resolution=telescope.psf_resolution)
             for index in range(hdulist[0].header['NAXIS3']):
-                imaged = telescope(target.data, target.resolution, integration_time=DIT, verbose=verbose)
+
+                imaged = telescope(fieldofview, target.resolution, integration_time=DIT, verbose=verbose)
                 detected = detector(photon_rate_density_array=imaged, integration_time=DIT, target_FoV=target.FoV)
                 detected = detected.decompose()
                 hdulist[0].data[index] = detected.value

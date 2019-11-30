@@ -16,8 +16,9 @@ class TestTarget(unittest.TestCase):
 
 
     def test_call(self):
-        target = Target(band='H', pixel_scale=0.1*u.arcsec, FoV=(2*u.arcmin, 2*u.arcmin), star_table=self.star_table)
-        imshow(target.data.value)
+        target = Target(band='H', pixel_scale=0.1*u.arcsec, FoV=(2*u.arcmin, 2*u.arcmin), star_table=self.star_table, sky_background=13.)
+        image = target.get_fieldofview(1024, 0.1*u.arcsec, dither=(1., 0.5))
+        imshow(image)
 
 
 

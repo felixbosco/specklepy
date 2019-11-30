@@ -86,6 +86,7 @@ class Telescope(object):
 			self.read_psf_file(psf_source)
 
 
+
 	def __call__(self, flux_array, flux_array_resolution, integration_time=None, verbose=0, **kwargs):
 		"""Requires the integration_time only if the PSF is non-static."""
 		tmp = flux_array * self.area
@@ -133,6 +134,7 @@ class Telescope(object):
 		return convolved.decompose()
 
 
+
 	def __str__(self):
 		tmp = "Telescope:\n"
 		for key in self.__dict__:
@@ -140,6 +142,7 @@ class Telescope(object):
 				continue
 			tmp += "{}: {}\n".format(key, self.__dict__[key])
 		return tmp
+
 
 
 	def read_psf_file(self, filename, hdu_entry=0):
@@ -162,6 +165,7 @@ class Telescope(object):
 			except KeyError as e:
 				continue
 			raise IOError("No key from {} was found in file for the psf resolution.".format(self.RESOLUTION_KEYS))
+
 
 
 	def _get_value(self, header, key, alias_dict={'sec': 's', 'milliarcsec': 'mas', 'microns': 'micron'}, verbose=False):
@@ -192,6 +196,7 @@ class Telescope(object):
 		    return value * unit
 
 
+
 	def normalize(self, array, mode='unity_circular'):
 		"""Normalizes the array to either have a sum of 1 ('unity' mode) or that the peak value is 1 ('max' mode)."""
 		if mode == 'unity':
@@ -203,6 +208,7 @@ class Telescope(object):
 		    low_cut = array[0, int(y/2)]
 		    array = np.maximum(array - low_cut, 0)
 		    return array / np.sum(array)
+
 
 
 	def integrate_psf(self, integration_time, hdu_entry=0):
@@ -222,7 +228,8 @@ class Telescope(object):
 			self.psf = self.normalize(self.psf)
 
 
-	def model_psf(self, model, radius, resolution, shape=256, **kwargs):
+
+	def model_psf(self, model, radius, psf_resolution, shape=256, **kwargs):
 		"""Models the PSF given the desired model function and kwargs.
 
 		Args:
@@ -242,13 +249,13 @@ class Telescope(object):
 		else:
 			raise TypeError(self.typeerror.format('radius', type(radius), 'u.Quantity'))
 
-		if isinstance(resolution, u.Quantity):
-			self.resolution = resolution
-		elif isinstance(resolution, float) or isinstance(resolution, int):
-			logging.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
-			self.resolution = resolution * u.arcsec
+		if isinstance(psf_resolution, u.Quantity):
+			self.psf_resolution = psf_resolution
+		elif isinstance(psf_resolution, float) or isinstance(psf_resolution, int):
+			logging.warning("Interpreting float type psf_resolution as {}".format(psf_resolution * u.arcsec))
+			self.psf_resolution = psf_resolution * u.arcsec
 		else:
-			raise TypeError(self.typeerror.format('resolution', type(resolution), 'u.Quantity'))
+			raise TypeError(self.typeerror.format('psf_resolution', type(psf_resolution), 'u.Quantity'))
 
 		if isinstance(shape, int):
 			center = (shape / 2, shape / 2)
@@ -260,9 +267,9 @@ class Telescope(object):
 							needs to be int or tuple type!')
 
 		if model.lower() == 'airydisk':
-			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(radius / resolution))
+			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(radius / psf_resolution))
 		elif model.lower() == 'gaussian':
-			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=float(radius / resolution), y_stddev=float(radius / resolution))
+			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=float(radius / psf_resolution), y_stddev=float(radius / psf_resolution))
 		else:
 			raise ValueError("model_psf received model argument {}, but must be\
 							either 'AriyDisk' or 'Gaussian'!".format(model))
