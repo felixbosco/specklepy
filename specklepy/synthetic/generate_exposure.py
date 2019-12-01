@@ -8,7 +8,7 @@ from specklepy.logging import logging
 
 
 
-def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit=100, outdir=None, outfile='exposure.fits', time_stamp='end', verbose=False, **kwargs):
+def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit=100, outdir=None, outfile='exposure.fits', time_stamp='end', debug=False, **kwargs):
     """Generate synthetic exposures from target, telescope and detector objects.
 
     The function generate_exposure() is the central function of the synthetic
@@ -30,7 +30,7 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
         outdir (str, optional):
         outfile (str, optional):
         time_stamp (str, optional):
-        verbose (bool, optional):
+        debug (bool, optional):
     """
 
     # Compute number of files
@@ -70,7 +70,7 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
                 continue
             card = "HIERARCH SPECKLEPY {} {}".format(object_name.upper(), key.upper())
             if isinstance(dict[key], u.Quantity):
-                hdu.header.set(card, dict[key].value, dict[key].unit) # Appending the unit of a u.Quantity to the comment
+                hdu.header.set(card, "{:.3e}".format(dict[key].value), dict[key].unit) # Appending the unit of a u.Quantity to the comment
             elif isinstance(dict[key], str):
                 hdu.header.set(card, os.path.basename(dict[key])) # Suppress (long) relative paths
             elif isinstance(dict[key], tuple):
@@ -106,16 +106,17 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     for outfile in outfiles:
         with fits.open(outfile, mode='update') as hdulist:
             # Get a new field of view for each file to enable dithering between files
-            fieldofview = target.get_fieldofview((1024, 1024), resolution=telescope.psf_resolution)
+            fieldofview = target.get_fieldofview(FoV=detector.FoV, resolution=telescope.psf_resolution)
+
             for index in range(hdulist[0].header['NAXIS3']):
 
-                imaged = telescope(fieldofview, target.resolution, integration_time=DIT, verbose=verbose)
-                detected = detector(photon_rate_density_array=imaged, integration_time=DIT, target_FoV=target.FoV)
+                imaged = telescope(fieldofview, target.resolution, integration_time=DIT, debug=debug)
+                detected = detector(photon_rate_density_array=imaged, integration_time=DIT, target_FoV=target.FoV, debug=debug)
                 detected = detected.decompose()
                 hdulist[0].data[index] = detected.value
 
                 try:
-                    telescope.psf_plane += skip_frames
+                    telescope.psf_frame += skip_frames
                 except TypeError:
                     pass
 

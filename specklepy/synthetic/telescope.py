@@ -8,6 +8,9 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.modeling import models
 
+from specklepy.utils.plot import imshow
+from specklepy.logging import logging
+
 
 
 class Telescope(object):
@@ -17,7 +20,7 @@ class Telescope(object):
 	Attributes:
 		diameter (astropy.units.Quantity):
 		psf_source (str):
-		psf_plane (int):
+		psf_frame (int):
 
 	Optional attributes:
 		central_obscuration (float, optional):
@@ -35,7 +38,7 @@ class Telescope(object):
 	RESOLUTION_KEYS = ['PIXSIZE', 'CDELT1']
 
 
-	def __init__(self, diameter, psf_source, central_obscuration=None, psf_plane=0, **kwargs):
+	def __init__(self, diameter, psf_source, central_obscuration=None, psf_frame=0, **kwargs):
 		"""Instantiate Telescope class:
 
 		Args:
@@ -45,7 +48,7 @@ class Telescope(object):
 				can be either 'AiryDisk' or 'Gaussian'. The models require
 			central_obscuration (float, optional): Radial fraction of the
 				telescope aperture that is blocked by the secondary.
-			psf_plane (int, optional): Index of the first frame to read from
+			psf_frame (int, optional): Index of the first frame to read from
 				psf_source.
 			kwargs: Are forwarded to the psf_source model.
 		"""
@@ -69,10 +72,10 @@ class Telescope(object):
 		else:
 			raise TypeError(self.typeerror.format('central_obscuration', type(central_obscuration), 'float'))
 
-		if isinstance(psf_plane, int):
-			self.psf_plane = psf_plane
+		if isinstance(psf_frame, int):
+			self.psf_frame = psf_frame
 		else:
-			raise TypeError(self.typeerror.format('psf_plane', type(psf_plane), 'int'))
+			raise TypeError(self.typeerror.format('psf_frame', type(psf_frame), 'int'))
 
 		# Derive secondary parameters
 		if self.central_obscuration is not None:
@@ -87,7 +90,7 @@ class Telescope(object):
 
 
 
-	def __call__(self, flux_array, flux_array_resolution, integration_time=None, verbose=0, **kwargs):
+	def __call__(self, flux_array, flux_array_resolution, integration_time=None, debug=False, **kwargs):
 		"""Requires the integration_time only if the PSF is non-static."""
 		tmp = flux_array * self.area
 		total_flux = np.sum(tmp)
@@ -127,7 +130,7 @@ class Telescope(object):
 			else:
 				raise Exception('Program aborted, re-define the resolution of the objects.')
 		convolved = fftconvolve(tmp, self.psf, mode='same') * tmp_unit
-		if verbose > 0:
+		if debug:
 			print('Check of flux conservation during convolution:')
 			print('Before: ', total_flux)
 			print('After:  ', np.sum(convolved))
@@ -168,7 +171,7 @@ class Telescope(object):
 
 
 
-	def _get_value(self, header, key, alias_dict={'sec': 's', 'milliarcsec': 'mas', 'microns': 'micron'}, verbose=False):
+	def _get_value(self, header, key, alias_dict={'sec': 's', 'milliarcsec': 'mas', 'microns': 'micron'}, debug=False):
 		"""
 		The alias_dict dictionary is used as a mapping from
 		unvalid unit strings for u.Unit(str). Feel free to
@@ -179,14 +182,14 @@ class Telescope(object):
 		unit_str = header.comments[key]
 
 		if unit_str == '':
-		    if verbose:
+		    if debug:
 		        print("Function 'get_value()' did not find a unit in the comment string.")
 		    return value
 		else:
 		    try:
 		        unit = u.Unit(unit_str)
 		    except ValueError as e:
-		        if verbose:
+		        if debug:
 		            print("ValueError:", e)
 		            print("Trying aliases from alias_dict...")
 		        try:
@@ -197,33 +200,65 @@ class Telescope(object):
 
 
 
-	def normalize(self, array, mode='unity_circular'):
-		"""Normalizes the array to either have a sum of 1 ('unity' mode) or that the peak value is 1 ('max' mode)."""
-		if mode == 'unity':
+	def normalize(self, array, mode='sum_circular'):
+		"""Normalizes the input array depending on the mode.
+
+		Args:
+			array (np.ndarray): Array to be normalized.
+			mode (str, optional): Can be either 'sum' for having a sum of 1,
+				'peak' for having a peak value 1, or 'sum_circular' for
+				subtracting a constant and then normalizing to a sum of 1.
+				Default is 'sum_circular'.
+
+		Returns:
+			Normalized array (np.ndarray)
+		"""
+
+		if not isinstance(array, np.ndarray):
+			raise TypeError(self.typeerror.format('array', type(array), 'np.ndarray'))
+		if np.sum(array) == 0:
+			raise ValueError("Normalize received an array of zeros!")
+
+		if mode == 'sum':
 		    return array / np.sum(array)
 		elif mode == 'max':
 		    return array / np.max(array)
-		elif mode == 'unity_circular':
+		elif mode == 'sum_circular':
 		    x, y = array.shape
 		    low_cut = array[0, int(y/2)]
 		    array = np.maximum(array - low_cut, 0)
-		    return array / np.sum(array)
+		    return self.normalize(array, mode='sum')
 
 
 
-	def integrate_psf(self, integration_time, hdu_entry=0):
-		number_planes = int(integration_time / self.timestep)
+	def integrate_psf(self, integration_time, hdu_entry=0, debug=False):
+		"""
+
+		"""
+
+		if isinstance(integration_time, int) or isinstance(integration_time, float):
+			logging.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
+			integration_time = integration_time * u.s
+		elif not isinstance(integration_time, u.Quantity):
+			raise TypeError('integrate_psf received integration_time argument of type {}, but needs to be u.Quantity')
+
+		if integration_time < self.timestep:
+			raise ValueError("The integration time {} was chosen shorter than the time resolution of the psf source, of {}".format(integration_time, self.timestep))
+
+		nframes = int(integration_time / self.timestep)
+
 		with fits.open(self.psf_source) as hdulist:
 			data = hdulist[hdu_entry].data
 
-			self.psf_plane += 1
-			if self.psf_plane + number_planes < data.shape[0]:
-				self.psf = np.sum(data[self.psf_plane : self.psf_plane+number_planes], axis=0)
+			self.psf_frame += 1
+			if self.psf_frame + nframes < data.shape[0]:
+				self.psf = np.sum(data[self.psf_frame : self.psf_frame+nframes], axis=0)
 			else:
-				self.psf = np.sum(data[self.psf_plane : ], axis=0)
-				self.psf += np.sum(data[ : (self.psf_plane+number_planes) % data.shape[0]], axis=0)
-			self.psf_plane += number_planes - 1
-			self.psf_plane = self.psf_plane % data.shape[0]
+				self.psf = np.sum(data[self.psf_frame : ], axis=0)
+				self.psf += np.sum(data[ : (self.psf_frame+nframes) % data.shape[0]], axis=0)
+			self.psf_frame += nframes - 1
+			self.psf_frame = self.psf_frame % data.shape[0]
+
 			#Normalization
 			self.psf = self.normalize(self.psf)
 
@@ -267,9 +302,9 @@ class Telescope(object):
 							needs to be int or tuple type!')
 
 		if model.lower() == 'airydisk':
-			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(radius / psf_resolution))
+			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(self.radius / self.psf_resolution))
 		elif model.lower() == 'gaussian':
-			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=float(radius / psf_resolution), y_stddev=float(radius / psf_resolution))
+			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=float(self.radius / self.psf_resolution), y_stddev=float(self.radius / self.psf_resolution))
 		else:
 			raise ValueError("model_psf received model argument {}, but must be\
 							either 'AriyDisk' or 'Gaussian'!".format(model))

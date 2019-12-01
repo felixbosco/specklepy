@@ -5,6 +5,7 @@ from scipy.ndimage import zoom
 from astropy import units as u
 
 from specklepy.logging import logging
+from specklepy.utils.plot import imshow
 
 
 
@@ -117,8 +118,8 @@ class Detector(object):
 		self.pixel_scale = value
 
 
-	def __call__(self, photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=True):
-		self.expose(photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=compute_photon_shot_noise)
+	def __call__(self, photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
+		self.expose(photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=compute_photon_shot_noise, debug=debug)
 		return self.readout(integration_time=integration_time)
 
 
@@ -144,16 +145,20 @@ class Detector(object):
 			return zoom(subfield, stretch_ratio, order=1) / stretch_ratio[0] / stretch_ratio[1] * subfield.unit
 
 
-	def expose(self, photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=True, verbose=0):
+	def expose(self, photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
+		if debug:
+			imshow(photon_rate_density_array, title='photon_rate_density_array')
 		tmp = self.resample(photon_rate_density_array, target_FoV) * integration_time
 		tmp *= self.quantum_efficiency
 		if hasattr(self, 'optics_transmission'):
 			tmp *= self.optics_transmission
 		if compute_photon_shot_noise:
+			if debug:
+				imshow(tmp, title='expose : tmp')
 			try:
 				tmp = np.random.poisson(tmp.value) * tmp.unit
 			except ValueError as e:
-				if verbose > 0:
+				if debug:
 					print('Bypassed ValueError ({}) in np.random.poisson() by substituting values smaller than zero by zero.'.format(e))
 				tmp = np.random.poisson(np.maximum(tmp.value, 0.0)) * tmp.unit
 		if self.saturation_level is not None:

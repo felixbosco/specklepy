@@ -40,7 +40,7 @@ class Target(object):
     photometry_file = os.path.join(os.path.dirname(__file__), 'photometric_bands.dat')
 
 
-    def __init__(self, band, star_table=None, sky_background=None, photometry_file=None, **kwargs):
+    def __init__(self, band, star_table=None, sky_background=None, photometry_file=None):
         """Instantiate Target class.
 
         Args:
@@ -83,63 +83,6 @@ class Target(object):
 
 
 
-        # for key in kwargs:
-        #     self.__setattr__(key, kwargs[key])
-
-        # Compute secondary parameters
-        # if 'shape' in kwargs and 'FoV' in kwargs and 'pixel_scale' in kwargs:
-        # 	# assert that the three values match
-        # 	raise NotImplementedError('Handling of all three parameters shape, FoV, and pixel_scale is not implemented yet. Give only two of them.')
-        # elif 'shape' in kwargs and 'FoV' in kwargs:
-        # 	# assert that the two values match
-        # 	shape = kwargs['shape']
-        # 	FoV = kwargs['FoV']
-        # 	if not isinstance(FoV, tuple):
-        # 		FoV = (FoV, FoV)
-        # 	try:
-        # 		assert ( FoV[0] / shape[0] - FoV[1] / shape[1]).value < 1e-6
-        # 	except AssertionError as e:
-        # 		raise ValueError("The field of view (FoV) and shape of Target must have the same relative size along both axes.")
-        # 	self.shape = shape
-        # 	self.FoV = FoV
-        # 	self.data = np.zeros(self.shape)
-        # 	self.pixel_scale = self.FoV[0] / self.shape[0]
-        # elif 'pixel_scale' in kwargs and 'FoV' in kwargs:
-        # 	self.FoV = kwargs['FoV']
-        # 	self.pixel_scale = kwargs['pixel_scale']
-        # 	self.shape = (int(self.FoV[0] / self.pixel_scale), int(self.FoV[1] / self.pixel_scale))
-        # 	self.data = np.zeros(shape=self.shape)
-        # elif 'shape' in kwargs and 'pixel_scale' in kwargs:
-        # 	self.shape = kwargs['shape']
-        # 	self.data = np.zeros(self.shape)
-        # 	self.pixel_scale = kwargs['pixel_scale']
-        # 	self.FoV = (self.data.shape[0] * self.pixel_scale, self.data.shape[1] * self.pixel_scale)
-        # else:
-        # 	print(kwargs)
-        # 	if not 'config_file' in kwargs:
-        # 		raise ValueError("Target() requires exactly two out of the three keywords 'shape', 'FoV', and 'pixel_scale'.")
-        # self.data = self.data * u.ph / u.m**2 / u.s
-        # self.resolution = self.pixel_scale
-        # self.band_reference_flux = self.get_reference_flux()
-
-        # # Handle optional parameters
-        # if hasattr(self, 'config_file'):
-        # 	self._read_config_file()
-        # if hasattr(self, 'sky_background'):
-        # 	self._initialize_sky_background()
-        # if hasattr(self, 'number_stars'):
-        # 	self._generate_stars()
-        # if hasattr(self, 'star_table'):
-        # 	if hasattr(self, 'flux_unit'):
-        # 		self._read_star_table(self.flux_unit)
-        # 	else:
-        # 		self._read_star_table()
-
-
-    # def __call__(self):
-    # 	return self.data.decompose()
-
-
     def __str__(self):
     	tmp = "Target:\n"
     	for key in self.__dict__:
@@ -149,12 +92,14 @@ class Target(object):
     	return tmp
 
 
-    def get_fieldofview(self, shape, resolution, dither=None):
+    def get_fieldofview(self, FoV, resolution, dither=None):
         """Creates an image of the field of view.
 
         Args:
-            shape (int or tuple, dtype=int): Shape of the image.
-            resolution (u.Quantity): Resolution of the image.
+            FoV (u.Quantity or tuple, dtype=u.Quantity): Size of the field of
+                view that is covered by the output image.
+            resolution (u.Quantity): Resolution of the image. Optimally, set it
+                to Telescope.psf_resolution to avoid resampling the image.
             dither (tuple, optional): Dither position, relative to the (0, 0)
                 standard phase center.
 
@@ -164,13 +109,16 @@ class Target(object):
         """
 
         # Input parameters
-        if isinstance(shape, int):
-            shape = (shape, shape)
-        elif isinstance (shape, tuple):
-            pass # Correct type
+        if isinstance(FoV, u.Quantity):
+            self.FoV = (FoV, FoV)
+        elif isinstance (FoV, tuple):
+            self.FoV = FoV
+        elif isinstance(FoV, int) or isinstance(FoV, float):
+            logging.warning("Interpreting float type FoV as {}".format(FoV * u.arcsec))
+            FoV = FoV * u.arcsec
+            self.FoV = (FoV, FoV)
         else:
             return TypeError(self.typeerror.format('shape', type(shape), 'tuple'))
-        self.shape = shape
 
         if isinstance(resolution, int) or isinstance(resolution, float):
             logging.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
@@ -188,21 +136,25 @@ class Target(object):
         else:
             return TypeError(self.typeerror.format('dither', type(dither), 'tuple'))
 
-        self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
+
+        # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
+        shape = (int(self.FoV[0] / self.resolution), int(self.FoV[1] / self.resolution))
+        center = (shape[0] / 2, shape[1] / 2)
         self.flux_per_pixel = (self.sky_background_flux * self.resolution**2).decompose()
 
-
-        # Create array
+        # Create array with sky background flux
         image = np.ones(shape=shape) * self.flux_per_pixel
-        print(image.unit)
-
 
         # Add stars from star_table to image
         self.stars = self.read_star_table(self.star_table)
         for row in self.stars:
-            position = (int(row['x'] - phase_center[0]), int(row['y'] - phase_center[1]))
+            position = (int(center[0] + row['x'] - phase_center[0]), int(center[1] + row['y'] - phase_center[1]))
             flux = row['flux']
-            image.value[position] = np.maximum(image.value[position], flux)
+            try:
+                image.value[position] = np.maximum(image.value[position], flux)
+            except IndexError:
+                # Star is placed outside the field of view
+                pass
 
         return image
 

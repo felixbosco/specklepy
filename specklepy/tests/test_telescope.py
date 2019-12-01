@@ -13,17 +13,17 @@ class TestTelescope(unittest.TestCase):
         self.scao_short_exposure_psfs_file = 'data/test/seeing_2ms_shortexposures.fits'
 
     def test_init(self):
-        tel_static = Telescope(8.0*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.scao_long_exposure_psf_file )
-        assert np.abs(np.sum(tel_static.psf) - 1.0) < 1e-6
+        telescope_static_psf = Telescope(8.0*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.scao_long_exposure_psf_file )
+        assert np.abs(np.sum(telescope_static_psf.psf) - 1.0) < 1e-6
 
-        tel_compute = Telescope(8.2*u.m, psf_source='Gaussian', radius=0.4*u.arcsec, resolution=0.0106*u.arcsec)
-        assert np.abs(np.sum(tel_compute.psf) - 1.0) < 1e-6
+        telescope_gaussian_psf = Telescope(8.2*u.m, psf_source='Gaussian', radius=0.1645*u.arcsec, psf_resolution=0.0106*u.arcsec)
+        assert np.abs(np.sum(telescope_gaussian_psf.psf) - 1.0) < 1e-6
         if self.visual > 0:
-        	imshow(tel_compute.psf)
+        	imshow(telescope_gaussian_psf.psf, title="Test 'Gaussian' model")
 
-        tel_airy = Telescope(8.2*u.m, psf_source='AiryDisk', radius=0.1*u.arcsec, resolution=0.0106*u.arcsec)
+        telescope_airydisk_psf = Telescope(8.2*u.m, psf_source='AiryDisk', radius=0.4777*u.arcsec, psf_resolution=0.0106*u.arcsec)
         if self.visual > 0:
-        	imshow(tel_airy.psf)
+        	imshow(telescope_airydisk_psf.psf, title="Test 'AiryDisk' model")
 
     def test_call(self):
         pass

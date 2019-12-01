@@ -1,8 +1,6 @@
 [TARGET]
 band = 'H'
-FoV = 22*u.arcsec
-shape = (1024, 1024)
-star_table = data/test/example_star_table.dat
+star_table = data/test/example_star_table_centered.dat
 sky_background = 14.4
 
 [TELESCOPE]
@@ -10,6 +8,9 @@ diameter = 8.2*u.m
 central_obscuration = 0.14
 name = VLT Unit Telescope
 psf_source = ../simulations/noao_psf_500ms.fits
+#psf_source = AiryDisk
+#radius = 0.04777*u.arcsec
+#psf_resolution = 0.0106*u.arcsec
 
 [DETECTOR]
 shape = (1024, 1024)
@@ -21,7 +22,7 @@ quantum_efficiency = 0.9*u.electron/u.ph
 saturation_level = 7200*u.adu
 
 [KWARGS]
-DIT = 0.2*u.ms
-nframes = 150
+DIT = 0.2*u.s
+nframes = 10
 nframes_limit = 100
 outfile = data/test/exposures/exposure.fits
