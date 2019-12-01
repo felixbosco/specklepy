@@ -58,8 +58,8 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     hdu.header.set('DIT', DIT.value, DIT.unit)
     hdu.header.set('DATE', str(datetime.now()))
     # Add object attributes to header information
-    skip_attributes = {'target': ['shape', 'data', 'stars'],
-                       'telescope': ['psf'],
+    skip_attributes = {'target': ['data', 'stars'],
+                       'telescope': ['psf', 'psf_frame'],
                        'detector': ['shape', 'array']}
     for object in [target, telescope, detector]:
         dict = object.__dict__
@@ -107,7 +107,6 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
         with fits.open(outfile, mode='update') as hdulist:
             # Get a new field of view for each file to enable dithering between files
             photon_rate_density = target.get_photon_rate_density(FoV=detector.FoV, resolution=telescope.psf_resolution)
-
 
             for index in range(hdulist[0].header['NAXIS3']):
                 photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=DIT, debug=debug)

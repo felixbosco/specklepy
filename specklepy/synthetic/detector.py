@@ -28,6 +28,8 @@ class Detector(object):
 	Future features:
 		Attribute dictionary 'readout_modes': Shall enable the flexible use of different
 			readout modes with different parameters.
+		Pixel non-uniformity: Shall use a flatfield file to create static
+			non-uniform pixel responses.
 	"""
 
 	__name__ = 'detector'
@@ -172,7 +174,7 @@ class Detector(object):
 					print('Bypassed ValueError ({}) in np.random.poisson() by substituting values smaller than zero by zero.'.format(e))
 				tmp = np.random.poisson(np.maximum(tmp.value, 0.0)) * tmp.unit
 		if self.saturation_level is not None:
-			tmp = np.minimum(tmp, self.saturation_level * self.system_gain)
+			tmp = np.minimum(tmp, self.saturation_level) # * self.system_gain)
 		self.array = np.round(tmp)
 
 
@@ -186,7 +188,7 @@ class Detector(object):
 			tmp += np.round(np.random.normal(0.0, self.readout_noise.value, self.shape) ) * self.readout_noise.unit * u.pix
 		tmp /= self.system_gain
 		if self.saturation_level is not None:
-			return np.minimum(tmp, self.saturation_level)
+			return np.minimum(tmp, self.saturation_level / self.system_gain)
 		# Reset the detector
 		if reset:
 			self.array = np.zeros(self.shape)

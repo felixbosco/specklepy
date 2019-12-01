@@ -7,22 +7,19 @@ sky_background = 14.4
 diameter = 8.2*u.m
 central_obscuration = 0.14
 name = VLT Unit Telescope
-psf_source = ../simulations/noao_psf_500ms.fits
-#psf_source = AiryDisk
-#radius = 0.04777*u.arcsec
-#psf_resolution = 0.0106*u.arcsec
+psf_source = ../simulations/noao_psf_10s.fits
 
 [DETECTOR]
-shape = (1024, 1024)
+shape = (2048, 2048)
 pixel_scale = 0.0106*u.arcsec
 readout_noise = 35*u.electron/u.pix
 system_gain = 17*u.electron/u.adu
 optics_transmission = 0.9
 quantum_efficiency = 0.9*u.electron/u.ph
-saturation_level = 7200*u.adu
+saturation_level = 7200*u.electron
 
 [KWARGS]
 DIT = 0.2*u.s
 nframes = 10
 nframes_limit = 100
-outfile = data/test/exposures/exposure.fits
+outfile = data/test/exposures/exposures.fits

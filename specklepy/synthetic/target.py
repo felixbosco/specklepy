@@ -183,6 +183,7 @@ class Target(object):
             self.FoV = (FoV, FoV)
         else:
             return TypeError(self.typeerror.format('shape', type(shape), 'tuple'))
+        self.FoV = (self.FoV[0] * 1.1, self.FoV[1] * 1.1) # Add 10% FoV to avoid dark margins
 
         if isinstance(resolution, int) or isinstance(resolution, float):
             logging.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
