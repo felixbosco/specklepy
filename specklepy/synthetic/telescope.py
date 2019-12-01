@@ -19,23 +19,19 @@ class Telescope(object):
 
 	Attributes:
 		diameter (astropy.units.Quantity):
-		psf_source (str):
-		psf_frame (int):
+		psf_source (str): Name of the PSF model or of the file, from which the
+			PSF frames are extracted.
+		psf_frame (int): Current frame of the PSF file.
 
 	Optional attributes:
 		central_obscuration (float, optional):
-
-	Future features:
-		Mode 'airy_model': Shall compute the psf with the Fourier transform of
-			the aperture instead of a file.
-		Mode 'seeing': Shall compute the psf as a Gaussian seeing disk instead
-			of a file.
 	"""
 
 	__name__ = 'telescope'
 	typeerror = 'Telescope received {} argument of {} type, but needs to be {}!'
 	TIME_STEP_KEYS = ['TIMESTEP', 'INTTIME', 'CDELT3']
 	RESOLUTION_KEYS = ['PIXSIZE', 'CDELT1']
+
 
 
 	def __init__(self, diameter, psf_source, central_obscuration=None, psf_frame=0, **kwargs):
@@ -89,8 +85,123 @@ class Telescope(object):
 			self.read_psf_file(psf_source)
 
 
+
 	def __call__(self, *args, **kwargs):
 		return self.get_photon_rate(*args, **kwargs)
+
+
+
+	def __str__(self):
+		tmp = "Telescope:\n"
+		for key in self.__dict__:
+			if key == 'psf':
+				continue
+			tmp += "{}: {}\n".format(key, self.__dict__[key])
+		return tmp
+
+
+
+	def model_psf(self, model, radius, psf_resolution, shape=256, **kwargs):
+		"""Models the PSF given the desired model function and kwargs.
+
+		Args:
+			model (str): Must be either 'airydisk' or 'gaussian'.
+			kwargs are forwarded to the model function.
+		"""
+
+		if not isinstance(model, str):
+			raise TypeError('model_psf received model argument of type {}, but \
+							needs to be str type!')
+
+		if isinstance(radius, u.Quantity):
+			self.radius = radius
+		elif isinstance(radius, float) or isinstance(radius, int):
+			logging.warning("Interpreting float type radius as {}".format(radius * u.arcsec))
+			self.radius = radius * u.arcsec
+		else:
+			raise TypeError(self.typeerror.format('radius', type(radius), 'u.Quantity'))
+
+		if isinstance(psf_resolution, u.Quantity):
+			self.psf_resolution = psf_resolution
+		elif isinstance(psf_resolution, float) or isinstance(psf_resolution, int):
+			logging.warning("Interpreting float type psf_resolution as {}".format(psf_resolution * u.arcsec))
+			self.psf_resolution = psf_resolution * u.arcsec
+		else:
+			raise TypeError(self.typeerror.format('psf_resolution', type(psf_resolution), 'u.Quantity'))
+
+		if isinstance(shape, int):
+			center = (shape / 2, shape / 2)
+			shape = (shape, shape)
+		elif isinstance(shape, tuple):
+			center = (shape[0] / 2, shape[1] / 2)
+		else:
+			raise TypeError('model_psf received shape argument of type {}, but \
+							needs to be int or tuple type!')
+
+		if model.lower() == 'airydisk':
+			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(self.radius / self.psf_resolution))
+		elif model.lower() == 'gaussian':
+			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=float(self.radius / self.psf_resolution), y_stddev=float(self.radius / self.psf_resolution))
+		else:
+			raise ValueError("model_psf received model argument {}, but must be\
+							either 'AriyDisk' or 'Gaussian'!".format(model))
+
+		y, x = np.mgrid[0:shape[0], 0:shape[1]]
+		self.psf = model(x, y)
+		self.psf = self.normalize(self.psf)
+
+
+
+	def read_psf_file(self, filename, hdu_entry=0):
+		with fits.open(filename) as hdulist:
+			header = hdulist[hdu_entry].header
+		if header['NAXIS'] == 2:
+			with fits.open(self.psf_source) as hdulist:
+				self.psf = self.normalize(hdulist[hdu_entry].data)
+		else:
+			for key in self.TIME_STEP_KEYS:
+				try:
+					self.timestep = self._get_value(header, key)
+					break
+				except KeyError as e:
+					continue
+		for key in self.RESOLUTION_KEYS:
+			try:
+				self.psf_resolution = self._get_value(header, key)
+				break
+			except KeyError as e:
+				continue
+			raise IOError("No key from {} was found in file for the psf resolution.".format(self.RESOLUTION_KEYS))
+
+
+
+	def _get_value(self, header, key, alias_dict={'sec': 's', 'milliarcsec': 'mas', 'microns': 'micron'}, debug=False):
+		"""
+		The alias_dict dictionary is used as a mapping from
+		unvalid unit strings for u.Unit(str). Feel free to
+		add new aliases.
+		"""
+
+		value = header[key]
+		unit_str = header.comments[key]
+
+		if unit_str == '':
+			if debug:
+				print("Function 'get_value()' did not find a unit in the comment string.")
+			return value
+		else:
+			try:
+				unit = u.Unit(unit_str)
+			except ValueError as e:
+				if debug:
+					print("ValueError:", e)
+					print("Trying aliases from alias_dict...")
+				try:
+					unit = u.Unit(alias_dict[unit_str])
+				except:
+					raise IOError("Found no matching key in the alias_dict. You may add the corresponding entry.")
+			return value * unit
+
 
 
 	def get_photon_rate(self, photon_rate_density, photon_rate_density_resolution=None, integration_time=None, debug=False):
@@ -133,9 +244,9 @@ class Telescope(object):
 
 
 		# Apply telescope collecting area
-		tmp = photon_rate_density * self.area
-		total_flux = np.sum(tmp)
-		tmp_unit = tmp.unit
+		photon_rate = photon_rate_density * self.area
+		total_flux = np.sum(photon_rate)
+		photon_rate_unit = photon_rate.unit
 
 
 		# Prepare PSF if non-static
@@ -150,91 +261,29 @@ class Telescope(object):
 			except UnitConversionError as e:
 				raise UnitConversionError("The resolution values of the image ({}) and PSF ({}) have different units!".format(photon_rate_density_resolution, self.psf_resolution))
 
-			#convolved = np.zeros(tmp.shape)
+			#convolved = np.zeros(photon_rate.shape)
 			with warnings.catch_warnings():
 				warnings.simplefilter('ignore')
 				if ratio < 1.0:
 					self.psf = zoom(self.psf, 1/ratio, order=1) / ratio**2
 					self.psf = self.normalize(self.psf)
 				else:
-					memory_sum = np.sum(tmp)
-					tmp = zoom(tmp, ratio, order=1) / ratio**2
-					tmp = tmp / np.sum(tmp) * memory_sum
-			# if tmp.shape[0] > 2048+512 or self.psf.shape[0] > 512+256:
-			# 	print('With these sizes (image: {} and PSF: {}), the computation will be very expensive. It is suggested to adapt the resolution of the objects.'.format(tmp.shape, self.psf.shape))
+					memory_sum = np.sum(photon_rate)
+					photon_rate = zoom(photon_rate, ratio, order=1) / ratio**2
+					photon_rate = photon_rate / np.sum(photon_rate) * memory_sum
+			# if photon_rate.shape[0] > 2048+512 or self.psf.shape[0] > 512+256:
+			# 	print('With these sizes (image: {} and PSF: {}), the computation will be very expensive. It is suggested to adapt the resolution of the objects.'.format(photon_rate.shape, self.psf.shape))
 			# 	user_input = input('Do you still want to continue? [Y/N]')
 			# 	if user_input in ['Y', 'y', 'Yes', 'yes']:
 			# 		pass
 			# 	else:
 			# 		raise Exception('Program aborted, re-define the resolution of the objects.')
-		convolved = fftconvolve(tmp, self.psf, mode='same') * tmp_unit
+		convolved = fftconvolve(photon_rate, self.psf, mode='same') * photon_rate_unit
 		if debug:
 			print('Check of flux conservation during convolution:')
 			print('Before: ', total_flux)
 			print('After:  ', np.sum(convolved))
 		return convolved.decompose()
-
-
-
-	def __str__(self):
-		tmp = "Telescope:\n"
-		for key in self.__dict__:
-			if key == 'psf':
-				continue
-			tmp += "{}: {}\n".format(key, self.__dict__[key])
-		return tmp
-
-
-
-	def read_psf_file(self, filename, hdu_entry=0):
-		with fits.open(filename) as hdulist:
-			header = hdulist[hdu_entry].header
-		if header['NAXIS'] == 2:
-			with fits.open(self.psf_source) as hdulist:
-				self.psf = self.normalize(hdulist[hdu_entry].data)
-		else:
-			for key in self.TIME_STEP_KEYS:
-				try:
-					self.timestep = self._get_value(header, key)
-					break
-				except KeyError as e:
-					continue
-		for key in self.RESOLUTION_KEYS:
-			try:
-				self.psf_resolution = self._get_value(header, key)
-				break
-			except KeyError as e:
-				continue
-			raise IOError("No key from {} was found in file for the psf resolution.".format(self.RESOLUTION_KEYS))
-
-
-
-	def _get_value(self, header, key, alias_dict={'sec': 's', 'milliarcsec': 'mas', 'microns': 'micron'}, debug=False):
-		"""
-		The alias_dict dictionary is used as a mapping from
-		unvalid unit strings for u.Unit(str). Feel free to
-		add new aliases.
-		"""
-
-		value = header[key]
-		unit_str = header.comments[key]
-
-		if unit_str == '':
-		    if debug:
-		        print("Function 'get_value()' did not find a unit in the comment string.")
-		    return value
-		else:
-		    try:
-		        unit = u.Unit(unit_str)
-		    except ValueError as e:
-		        if debug:
-		            print("ValueError:", e)
-		            print("Trying aliases from alias_dict...")
-		        try:
-		            unit = u.Unit(alias_dict[unit_str])
-		        except:
-		            raise IOError("Found no matching key in the alias_dict. You may add the corresponding entry.")
-		    return value * unit
 
 
 
@@ -304,54 +353,3 @@ class Telescope(object):
 
 			#Normalization
 			self.psf = self.normalize(self.psf)
-
-
-
-	def model_psf(self, model, radius, psf_resolution, shape=256, **kwargs):
-		"""Models the PSF given the desired model function and kwargs.
-
-		Args:
-			model (str): Must be either 'airydisk' or 'gaussian'.
-			kwargs are forwarded to the model function.
-		"""
-
-		if not isinstance(model, str):
-			raise TypeError('model_psf received model argument of type {}, but \
-							needs to be str type!')
-
-		if isinstance(radius, u.Quantity):
-			self.radius = radius
-		elif isinstance(radius, float) or isinstance(radius, int):
-			logging.warning("Interpreting float type radius as {}".format(radius * u.arcsec))
-			self.radius = radius * u.arcsec
-		else:
-			raise TypeError(self.typeerror.format('radius', type(radius), 'u.Quantity'))
-
-		if isinstance(psf_resolution, u.Quantity):
-			self.psf_resolution = psf_resolution
-		elif isinstance(psf_resolution, float) or isinstance(psf_resolution, int):
-			logging.warning("Interpreting float type psf_resolution as {}".format(psf_resolution * u.arcsec))
-			self.psf_resolution = psf_resolution * u.arcsec
-		else:
-			raise TypeError(self.typeerror.format('psf_resolution', type(psf_resolution), 'u.Quantity'))
-
-		if isinstance(shape, int):
-			center = (shape / 2, shape / 2)
-			shape = (shape, shape)
-		elif isinstance(shape, tuple):
-			center = (shape[0] / 2, shape[1] / 2)
-		else:
-			raise TypeError('model_psf received shape argument of type {}, but \
-							needs to be int or tuple type!')
-
-		if model.lower() == 'airydisk':
-			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(self.radius / self.psf_resolution))
-		elif model.lower() == 'gaussian':
-			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=float(self.radius / self.psf_resolution), y_stddev=float(self.radius / self.psf_resolution))
-		else:
-			raise ValueError("model_psf received model argument {}, but must be\
-							either 'AriyDisk' or 'Gaussian'!".format(model))
-
-		y, x = np.mgrid[0:shape[0], 0:shape[1]]
-		self.psf = model(x, y)
-		self.psf = self.normalize(self.psf)

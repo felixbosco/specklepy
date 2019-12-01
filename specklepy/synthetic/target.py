@@ -27,17 +27,12 @@ class Target(object):
         config_file (str, optional):
         star_table (str, optional):
         number_stars (int, optional):
-
-    Future features:
-        Replace the FoV attribute by a single value instead of a tuple, in
-            case that the FoV is a square.
-        The object shall obtain a phase center in ICRS, which is set to
-            RA=00:00:00.00 and DEC=00:00:00.00
     """
 
     __name__ = 'target'
     typeerror = 'Target received {} argument of {} type, but needs to be {}!'
     photometry_file = os.path.join(os.path.dirname(__file__), 'photometric_bands.dat')
+
 
 
     def __init__(self, band, star_table=None, sky_background=None, photometry_file=None):
@@ -83,6 +78,11 @@ class Target(object):
 
 
 
+    def __call__(self, *args, **kwargs):
+        return self.get_photon_rate_density(*args, **kwargs)
+
+
+
     def __str__(self):
     	tmp = "Target:\n"
     	for key in self.__dict__:
@@ -91,86 +91,6 @@ class Target(object):
     		tmp += "{}: {}\n".format(key, self.__dict__[key])
     	return tmp
 
-
-    def __call__(self, *args, **kwargs):
-        return self.get_photon_rate_density(*args, **kwargs)
-
-
-    def get_photon_rate_density(self, FoV, resolution, dither=None):
-        """Creates an image of the field of view.
-
-        Args:
-            FoV (u.Quantity or tuple, dtype=u.Quantity): Size of the field of
-                view that is covered by the output image.
-            resolution (u.Quantity): Resolution of the image. Optimally, set it
-                to Telescope.psf_resolution to avoid resampling the image.
-            dither (tuple, optional): Dither position, relative to the (0, 0)
-                standard phase center.
-
-        Returns:
-            image (u.Quantity): 2D image of the flux density towards the
-                standard phase center or dithered position.
-        """
-
-        # Input parameters
-        if isinstance(FoV, u.Quantity):
-            self.FoV = (FoV, FoV)
-        elif isinstance (FoV, tuple):
-            self.FoV = FoV
-        elif isinstance(FoV, int) or isinstance(FoV, float):
-            logging.warning("Interpreting float type FoV as {}".format(FoV * u.arcsec))
-            FoV = FoV * u.arcsec
-            self.FoV = (FoV, FoV)
-        else:
-            return TypeError(self.typeerror.format('shape', type(shape), 'tuple'))
-
-        if isinstance(resolution, int) or isinstance(resolution, float):
-            logging.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
-            resolution = resolution * u.arcsec
-        elif isinstance(resolution, u.Quantity):
-            pass
-        else:
-            return TypeError(self.typeerror.format('resolution', type(resolution), 'u.Quantity'))
-        self.resolution = resolution
-
-        if dither is None:
-            phase_center = (0, 0)
-        elif isinstance(dither, tuple):
-            phase_center = dither
-        else:
-            return TypeError(self.typeerror.format('dither', type(dither), 'tuple'))
-
-
-        # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
-        shape = (int(self.FoV[0] / self.resolution), int(self.FoV[1] / self.resolution))
-        center = (shape[0] / 2, shape[1] / 2)
-        self.flux_per_pixel = (self.sky_background_flux * self.resolution**2).decompose()
-
-        # Create array with sky background flux
-        image = np.ones(shape=shape) * self.flux_per_pixel
-
-        # Add stars from star_table to image
-        self.stars = self.read_star_table(self.star_table)
-        for row in self.stars:
-            position = (int(center[0] + row['x'] - phase_center[0]), int(center[1] + row['y'] - phase_center[1]))
-            flux = row['flux']
-            try:
-                image.value[position] = np.maximum(image.value[position], flux)
-            except IndexError:
-                # Star is placed outside the field of view
-                pass
-
-        return image
-
-
-    # @property
-    # def resolution(self):
-    # 	return self.pixel_scale
-    #
-    #
-    # @resolution.setter
-    # def resolution(self, value):
-    # 	self.pixel_scale = value
 
 
     def get_reference_flux(self, photometry_file, band, format='ascii'):
@@ -198,77 +118,6 @@ class Target(object):
             else:
                 return 10**(magnitude.value/-2.5) * self.band_reference_flux
 
-
-    # def _initialize_sky_background(self):
-    # 	"""
-    # 	This function computes the sky background flux per pixel. There is no handler for other
-    # 	data types than int, float, or Astropy.unit.Quantity and the latter does only draw the
-    # 	value attribute from the quantity.
-    # 	"""
-    # 	if isinstance(self.sky_background, int) or isinstance(self.sky_background, float):
-    # 		# Interpreting as mag / arcsec**2
-    # 		self.sky_background_flux = self.magnitude_to_flux(self.sky_background) / u.arcsec**2
-    # 	elif isinstance(self.sky_background, u.Quantity):
-    # 		# Interpreting as mag / arcsec**2
-    # 		print("Caution: This function interpretes sky_background as in units of mag per arcsec**2.")
-    # 		self.sky_background_flux = self.magnitude_to_flux(self.sky_background.value) / u.arcsec**2
-    # 	else:
-    # 		raise TypeError("Function 'Target._initialize_sky_background()' does not accept a magnitude of type {}.".format(type(self.sky_background)))
-    # 	flux_per_pixel = (self.sky_background_flux * self.pixel_scale**2).decompose()
-    # 	# print(type(flux_per_pixel), type(self.data))
-    # 	# print(flux_per_pixel.unit, self.data.unit)
-    # 	# if isinstance(self.data, np.ndarray):
-    # 	# 	self.data = np.maximum(self.data, flux_per_pixel.value) * flux_per_pixel.unit
-    # 	# elif isinstance(self.data, u.quantity.Quantity):
-    # 	# 	self.data = np.maximum(self.data, flux_per_pixel)
-    # 	# else:
-    # 	# 	self.data = np.maximum(self.data, flux_per_pixel)
-    # 	self.data = np.maximum(self.data, flux_per_pixel)
-
-
-    # def _generate_stars(self, saveto='star_table_latest.dat'):
-    # 	pass
-    # 	x = np.zeros((self.number_stars))
-    # 	y = np.zeros((self.number_stars))
-    # 	mag = np.zeros((self.number_stars))
-    # 	flux = np.zeros((self.number_stars))
-    # 	star_table = Table([x, y, mag, flux], names=('x', 'y', 'mag', 'flux'))
-    # 	for n in range(self.number_stars):
-    # 		pass
-    # 	try:
-    # 		star_table.write(saveto, format='ascii')
-    # 	except:
-    # 		pass
-    #
-    #
-    # def _to_map_unit(self, unit, format='ascii'):
-    # 	print('Interpreting flux values in units of {}. To change this, please provide a star_table_dict={"flux_unit": "desired unit"}.'.format(unit))
-    # 	if isinstance(unit, str):
-    # 		unit = u.Unit(unit)
-    # 	try:
-    # 		tmp =  unit.to(self.data.unit)
-    # 	except UnitConversionError as e:
-    # 		table = Table.read(self.photometry_file, format=format)
-    # 		row_index = np.where(table["Band"] == self.band)
-    # 		fwhm = table['FWHM'][row_index][0]
-    # 		wavelength = table['Wavelength'][row_index][0] * u.micron
-    # 		tmp = (unit / const.h * u.ph * fwhm * wavelength).decompose()
-    # 		tmp = unit.to(self.data.unit)
-    # 	return tmp
-    #
-    #
-    # def _read_star_table(self, keyword_x='x', keyword_y='y', keyword_flux='flux'):
-    # 	self.stars = Table.read(self.star_table, format='ascii')
-    # 	for row in self.stars:
-    # 		position = (int(row[keyword_x]), int(row[keyword_y]))
-    # 		try:
-    # 			self.data[position] = np.maximum(self.data[position], row[keyword_flux])
-    # 		except KeyError as e:
-    # 			flux = self.magnitude_to_flux(row['mag'])
-    # 			self.data[position] = np.maximum(self.data[position], flux)
-    # 		except:
-    # 			self.data[position] = np.maximum(self.data[position].value, row['flux']) * self.data.unit
-    # 	#print(self.data)
 
 
     def read_star_table(self, file, format='ascii', keywords=None):
@@ -306,5 +155,69 @@ class Target(object):
         return Table([xx, yy, flux], names=['x', 'y', 'flux'])
 
 
-    # def _read_config_file(self):
-    # 	pass
+
+    def get_photon_rate_density(self, FoV, resolution, dither=None):
+        """Creates an image of the field of view.
+
+        Args:
+            FoV (u.Quantity or tuple, dtype=u.Quantity): Size of the field of
+                view that is covered by the output image.
+            resolution (u.Quantity): Resolution of the image. Optimally, set it
+                to Telescope.psf_resolution to avoid resampling the image.
+            dither (tuple, optional): Dither position, relative to the (0, 0)
+                standard phase center.
+
+        Returns:
+            photon_rate_density (u.Quantity): 2D image of the photon rate
+                density towards the standard phase center or dithered position.
+        """
+
+        # Input parameters
+        if isinstance(FoV, u.Quantity):
+            self.FoV = (FoV, FoV)
+        elif isinstance (FoV, tuple):
+            self.FoV = FoV
+        elif isinstance(FoV, int) or isinstance(FoV, float):
+            logging.warning("Interpreting float type FoV as {}".format(FoV * u.arcsec))
+            FoV = FoV * u.arcsec
+            self.FoV = (FoV, FoV)
+        else:
+            return TypeError(self.typeerror.format('shape', type(shape), 'tuple'))
+
+        if isinstance(resolution, int) or isinstance(resolution, float):
+            logging.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
+            resolution = resolution * u.arcsec
+        elif isinstance(resolution, u.Quantity):
+            pass
+        else:
+            return TypeError(self.typeerror.format('resolution', type(resolution), 'u.Quantity'))
+        self.resolution = resolution
+
+        if dither is None:
+            phase_center = (0, 0)
+        elif isinstance(dither, tuple):
+            phase_center = dither
+        else:
+            return TypeError(self.typeerror.format('dither', type(dither), 'tuple'))
+
+
+        # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
+        shape = (int(self.FoV[0] / self.resolution), int(self.FoV[1] / self.resolution))
+        center = (shape[0] / 2, shape[1] / 2)
+        self.flux_per_pixel = (self.sky_background_flux * self.resolution**2).decompose()
+
+        # Create array with sky background flux
+        photon_rate_density = np.ones(shape=shape) * self.flux_per_pixel
+
+        # Add stars from star_table to photon_rate_density
+        self.stars = self.read_star_table(self.star_table)
+        for row in self.stars:
+            position = (int(center[0] + row['x'] - phase_center[0]), int(center[1] + row['y'] - phase_center[1]))
+            flux = row['flux']
+            try:
+                photon_rate_density.value[position] = np.maximum(photon_rate_density.value[position], flux)
+            except IndexError:
+                # Star is placed outside the field of view
+                pass
+
+        return photon_rate_density
