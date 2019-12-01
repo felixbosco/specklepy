@@ -14,19 +14,18 @@ class Detector(object):
 	"""Class carrying information of an astronomical detector.
 
 	Attributes:
-		shape (tuple, dtype=int): pixel times pixel
-		pixel_scale (astropy.units.Quantity): in arcsec or arcsec per pix
-		quantum_efficiency ():
-		system_gain (astropy.units.Quantity):
+		shape (tuple, dtype=int): 2D tuple of the number of pixels.
+		pixel_scale (astropy.units.Quantity): Pixel scale in arcsec.
 
 	Optional attributes are:
-		readout_noise (astropy.units.Quantity):
-		dark_current (astropy.units.Quantity):
-		saturation_level (astropy.units.Quantity):
-		optics_transmission (astropy.units.Quantity):
+		quantum_efficiency (u.Quantity):
+		system_gain (u.Quantity):
+		readout_noise (u.Quantity):
+		dark_current (u.Quantity):
+		saturation_level (u.Quantity):
+		optics_transmission (u.Quantity):
 
 	Future features:
-		Method 'window': Shall enable the interactive windowing of a detector.
 		Attribute dictionary 'readout_modes': Shall enable the flexible use of different
 			readout modes with different parameters.
 	"""
@@ -35,7 +34,8 @@ class Detector(object):
 	typeerror = 'Detector received {} argument of {} type, but needs to be {}!'
 
 
-	def __init__(self, shape, pixel_scale, quantum_efficiency=1, system_gain=1, readout_noise=0, optics_transmission=1, saturation_level=None):
+
+	def __init__(self, shape, pixel_scale, optics_transmission=1, quantum_efficiency=1, system_gain=1, readout_noise=0, dark_current=None, saturation_level=None):
 		"""Instantiate Detector class.
 
 		Args:
@@ -43,11 +43,12 @@ class Detector(object):
 				of pixels. If provided as int, then the detector will be square
 				shaped.
 			pixel_scale (u.Quantity):
-			quantum_efficiency (u.Quantity):
-			system_gain (u.Quantity):
-			readout_noise (u.Quantity):
-			optics_transmission (u.Quantity):
-			saturation_level (u.Quantity):
+			optics_transmission (u.Quantity, optional):
+			quantum_efficiency (u.Quantity, optional):
+			system_gain (u.Quantity, optional):
+			readout_noise (u.Quantity, optional):
+			dark_current (u.Quantity, optional):
+			saturation_level (u.Quantity, optional):
 		"""
 
 		# Input parameters
@@ -108,23 +109,20 @@ class Detector(object):
 		self.FoV = (self.shape[0] * self.pixel_scale, self.shape[1] * self.pixel_scale)
 
 
+
 	@property
 	def resolution(self):
 		return self.pixel_scale
-
 
 	@resolution.setter
 	def resolution(self, value):
 		self.pixel_scale = value
 
 
+
 	def __call__(self, *args, **kwargs):
 		return self.get_counts(*args, **kwargs)
 
-
-	def get_counts(self, photon_rate, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
-		self.expose(photon_rate, integration_time, target_FoV, compute_photon_shot_noise=compute_photon_shot_noise, debug=debug)
-		return self.readout(integration_time=integration_time)
 
 
 	def __str__(self):
@@ -134,6 +132,13 @@ class Detector(object):
 				continue
 			tmp += "{}: {}\n".format(key, self.__dict__[key])
 		return tmp
+
+
+
+	def get_counts(self, photon_rate, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
+		self.expose(photon_rate, integration_time, target_FoV, compute_photon_shot_noise=compute_photon_shot_noise, debug=debug)
+		return self.readout(integration_time=integration_time)
+
 
 
 	def resample(self, target_data, target_FoV):
@@ -147,6 +152,7 @@ class Detector(object):
 		with warnings.catch_warnings():
 			warnings.simplefilter("ignore")
 			return zoom(subfield, stretch_ratio, order=1) / stretch_ratio[0] / stretch_ratio[1] * subfield.unit
+
 
 
 	def expose(self, photon_rate, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
@@ -170,7 +176,8 @@ class Detector(object):
 		self.array = np.round(tmp)
 
 
-	def readout(self, integration_time, reset=True):
+
+	def readout(self, integration_time, reset=True, window=None):
         # Read copy and clear the array
 		tmp = self.array
 		if hasattr(self, 'dark_current'):
@@ -184,7 +191,3 @@ class Detector(object):
 		if reset:
 			self.array = np.zeros(self.shape)
 		return tmp.decompose()
-
-
-	def window(self):
-		pass
