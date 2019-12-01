@@ -89,33 +89,36 @@ class Telescope(object):
 			self.read_psf_file(psf_source)
 
 
+	def __call__(self, *args, **kwargs):
+		return self.get_photon_rate(*args, **kwargs)
 
-	def __call__(self, flux_array, flux_array_resolution=None, integration_time=None, debug=False):
-		"""Propagates the flux array through the telescope.
 
-		The flux_array is multiplied by the telescope collecting area and then
+	def get_photon_rate(self, photon_rate_density, photon_rate_density_resolution=None, integration_time=None, debug=False):
+		"""Propagates the 'photon_rate_density' array through the telescope.
+
+		The photon_rate_density is multiplied by the telescope collecting area and then
 		convolved with the PSF. If the resolution of the flux array is different
 		from the telescopes psf_resolution, then one is resampled. If the PSF is
 		non-static, it will be integrated over the 'integration_time' value.
 
 		Args:
-			flux_array (np.ndarray, dtype=u.Quantity):
-			flux_array_resolution (u.Quantity, optional):
+			photon_rate_density (np.ndarray, dtype=u.Quantity):
+			photon_rate_density_resolution (u.Quantity, optional):
 			integration_time(u.Quantity, optional): Required only if the PSF is
 				non-static.
 			debug (bool, optional): Set True for debugging. Default is False.
 
 		Returns:
-			PSF-convolved photon rate array.
+			photon_rate (u.Quantity): PSF-convolved photon rate array.
 		"""
 
 		# Input parameters
-		if not isinstance(flux_array, u.Quantity):
-			raise TypeError(self.typeerror.format('flux_array', type(flux_array), 'u.Quantity'))
+		if not isinstance(photon_rate_density, u.Quantity):
+			raise TypeError(self.typeerror.format('photon_rate_density', type(photon_rate_density), 'u.Quantity'))
 
-		if flux_array_resolution is not None:
-			if not isinstance(flux_array_resolution, u.Quantity):
-				raise TypeError(self.typeerror.format('flux_array_resolution', type(flux_array_resolution), 'u.Quantity'))
+		if photon_rate_density_resolution is not None:
+			if not isinstance(photon_rate_density_resolution, u.Quantity):
+				raise TypeError(self.typeerror.format('photon_rate_density_resolution', type(photon_rate_density_resolution), 'u.Quantity'))
 			psf_resample_mode = True
 		else:
 			psf_resample_mode = False
@@ -130,7 +133,7 @@ class Telescope(object):
 
 
 		# Apply telescope collecting area
-		tmp = flux_array * self.area
+		tmp = photon_rate_density * self.area
 		total_flux = np.sum(tmp)
 		tmp_unit = tmp.unit
 
@@ -140,12 +143,12 @@ class Telescope(object):
 			self.integrate_psf(integration_time=integration_time)
 
 
-		# Resample flux_array to psf resolution
+		# Resample photon_rate_density to psf resolution
 		if psf_resample_mode:
 			try:
-				ratio = float(flux_array_resolution / self.psf_resolution)
+				ratio = float(photon_rate_density_resolution / self.psf_resolution)
 			except UnitConversionError as e:
-				raise UnitConversionError("The resolution values of the image ({}) and PSF ({}) have different units!".format(flux_array_resolution, self.psf_resolution))
+				raise UnitConversionError("The resolution values of the image ({}) and PSF ({}) have different units!".format(photon_rate_density_resolution, self.psf_resolution))
 
 			#convolved = np.zeros(tmp.shape)
 			with warnings.catch_warnings():

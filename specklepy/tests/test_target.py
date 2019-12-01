@@ -17,8 +17,8 @@ class TestTarget(unittest.TestCase):
 
     def test_call(self):
         target = Target(band='H', star_table=self.star_table, sky_background=13.)
-        image = target.get_fieldofview(FoV=30*u.arcsec, resolution=.5*u.arcsec, dither=(1., 0.5))
-        imshow(image)
+        photon_rate_density = target.get_photon_rate_density(FoV=30*u.arcsec, resolution=.5*u.arcsec, dither=(1., 0.5))
+        imshow(photon_rate_density, title='photon_rate_density')
 
 
 

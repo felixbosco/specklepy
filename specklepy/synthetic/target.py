@@ -92,7 +92,11 @@ class Target(object):
     	return tmp
 
 
-    def get_fieldofview(self, FoV, resolution, dither=None):
+    def __call__(self, *args, **kwargs):
+        return self.get_photon_rate_density(*args, **kwargs)
+
+
+    def get_photon_rate_density(self, FoV, resolution, dither=None):
         """Creates an image of the field of view.
 
         Args:
@@ -279,7 +283,7 @@ class Target(object):
 
         To Do:
             * Implemented reading of tables with units.
-            * Pass keywords from get_fieldofview call to this function.
+            * Pass keywords from get_photon_rate_density call to this function.
         """
 
         # Input parameters

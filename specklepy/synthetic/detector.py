@@ -118,8 +118,12 @@ class Detector(object):
 		self.pixel_scale = value
 
 
-	def __call__(self, photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
-		self.expose(photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=compute_photon_shot_noise, debug=debug)
+	def __call__(self, *args, **kwargs):
+		return self.get_counts(*args, **kwargs)
+
+
+	def get_counts(self, photon_rate, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
+		self.expose(photon_rate, integration_time, target_FoV, compute_photon_shot_noise=compute_photon_shot_noise, debug=debug)
 		return self.readout(integration_time=integration_time)
 
 
@@ -145,10 +149,10 @@ class Detector(object):
 			return zoom(subfield, stretch_ratio, order=1) / stretch_ratio[0] / stretch_ratio[1] * subfield.unit
 
 
-	def expose(self, photon_rate_density_array, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
+	def expose(self, photon_rate, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
 		if debug:
-			imshow(photon_rate_density_array, title='photon_rate_density_array')
-		tmp = self.resample(photon_rate_density_array, target_FoV) * integration_time
+			imshow(photon_rate, title='photon_rate')
+		tmp = self.resample(photon_rate, target_FoV) * integration_time
 		tmp *= self.quantum_efficiency
 		if hasattr(self, 'optics_transmission'):
 			tmp *= self.optics_transmission
