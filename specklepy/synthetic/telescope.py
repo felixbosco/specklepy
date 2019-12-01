@@ -90,45 +90,80 @@ class Telescope(object):
 
 
 
-	def __call__(self, flux_array, flux_array_resolution, integration_time=None, debug=False, **kwargs):
-		"""Requires the integration_time only if the PSF is non-static."""
+	def __call__(self, flux_array, flux_array_resolution=None, integration_time=None, debug=False):
+		"""Propagates the flux array through the telescope.
+
+		The flux_array is multiplied by the telescope collecting area and then
+		convolved with the PSF. If the resolution of the flux array is different
+		from the telescopes psf_resolution, then one is resampled. If the PSF is
+		non-static, it will be integrated over the 'integration_time' value.
+
+		Args:
+			flux_array (np.ndarray, dtype=u.Quantity):
+			flux_array_resolution (u.Quantity, optional):
+			integration_time(u.Quantity, optional): Required only if the PSF is
+				non-static.
+			debug (bool, optional): Set True for debugging. Default is False.
+
+		Returns:
+			PSF-convolved photon rate array.
+		"""
+
+		# Input parameters
+		if not isinstance(flux_array, u.Quantity):
+			raise TypeError(self.typeerror.format('flux_array', type(flux_array), 'u.Quantity'))
+
+		if flux_array_resolution is not None:
+			if not isinstance(flux_array_resolution, u.Quantity):
+				raise TypeError(self.typeerror.format('flux_array_resolution', type(flux_array_resolution), 'u.Quantity'))
+			psf_resample_mode = True
+		else:
+			psf_resample_mode = False
+
+		if integration_time is None and hasattr(self, 'timestep'):
+			raise ValueError("If the PSF source of Telescope is non-static, the call function requires the integration_time.")
+		elif isinstance(integration_time, float) or isinstance(integration_time, int):
+			logging.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
+			integration_time = integration_time * u.s
+		elif not isinstance(integration_time, u.Quantity):
+			raise TypeError(self.typeerror.format('integration_time', type(integration_time), 'u.Quantity'))
+
+
+		# Apply telescope collecting area
 		tmp = flux_array * self.area
 		total_flux = np.sum(tmp)
 		tmp_unit = tmp.unit
 
-		# Resample flux_array to psf resolution
-		try:
-			ratio = float(flux_array_resolution / self.psf_resolution)
-			#if ratio < 1.0:
-			#	print('')
-			#	print('Be cautious, the resolution of the PSF is worse than of the target data.')
-			#	#raise ValueError('Be cautious, the resolution of the PSF  ({}) is worse than of the target data ({}).'.format(self.psf_resolutio, flux_array_resolution))
-		except UnitConversionError as e:
-			raise UnitConversionError("The resolution values of the image ({}) and PSF ({}) have different units!".format(flux_array_resolution, self.psf_resolution))
 
 		# Prepare PSF if non-static
 		if hasattr(self, 'timestep'):
-			if integration_time is None:
-				raise ValueError("If the PSF source of Telescope is non-static, the call function requires the integration_time.")
 			self.integrate_psf(integration_time=integration_time)
 
-		#convolved = np.zeros(tmp.shape)
-		with warnings.catch_warnings():
-			warnings.simplefilter('ignore')
-			if ratio < 1.0:
-				self.psf = zoom(self.psf, 1/ratio, order=1) / ratio**2
-				self.psf = self.normalize(self.psf)
-			else:
-				memory_sum = np.sum(tmp)
-				tmp = zoom(tmp, ratio, order=1) / ratio**2
-				tmp = tmp / np.sum(tmp) * memory_sum
-		if tmp.shape[0] > 2048+512 or self.psf.shape[0] > 512+256:
-			print('With these sizes (image: {} and PSF: {}), the computation will be very expensive. It is suggested to adapt the resolution of the objects.'.format(tmp.shape, self.psf.shape))
-			user_input = input('Do you still want to continue? [Y/N]')
-			if user_input in ['Y', 'y', 'Yes', 'yes']:
-				pass
-			else:
-				raise Exception('Program aborted, re-define the resolution of the objects.')
+
+		# Resample flux_array to psf resolution
+		if psf_resample_mode:
+			try:
+				ratio = float(flux_array_resolution / self.psf_resolution)
+			except UnitConversionError as e:
+				raise UnitConversionError("The resolution values of the image ({}) and PSF ({}) have different units!".format(flux_array_resolution, self.psf_resolution))
+
+			#convolved = np.zeros(tmp.shape)
+			with warnings.catch_warnings():
+				warnings.simplefilter('ignore')
+				if ratio < 1.0:
+					self.psf = zoom(self.psf, 1/ratio, order=1) / ratio**2
+					self.psf = self.normalize(self.psf)
+				else:
+					memory_sum = np.sum(tmp)
+					tmp = zoom(tmp, ratio, order=1) / ratio**2
+					tmp = tmp / np.sum(tmp) * memory_sum
+			# if tmp.shape[0] > 2048+512 or self.psf.shape[0] > 512+256:
+			# 	print('With these sizes (image: {} and PSF: {}), the computation will be very expensive. It is suggested to adapt the resolution of the objects.'.format(tmp.shape, self.psf.shape))
+			# 	user_input = input('Do you still want to continue? [Y/N]')
+			# 	if user_input in ['Y', 'y', 'Yes', 'yes']:
+			# 		pass
+			# 	else:
+			# 		raise Exception('Program aborted, re-define the resolution of the objects.')
 		convolved = fftconvolve(tmp, self.psf, mode='same') * tmp_unit
 		if debug:
 			print('Check of flux conservation during convolution:')
@@ -232,8 +267,13 @@ class Telescope(object):
 
 
 	def integrate_psf(self, integration_time, hdu_entry=0, debug=False):
-		"""
+		"""Integrates psf frames over the input time.
 
+		Args:
+			integration_time (u.Quantity): This is used to compute number of
+				frames 'nframes', via floor division by the timestep attribute.
+				If None, then the function just exits.
+			debug (bool, optional): Set True for debugging. Default is False.
 		"""
 
 		if isinstance(integration_time, int) or isinstance(integration_time, float):
