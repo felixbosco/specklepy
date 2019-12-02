@@ -12,7 +12,7 @@ from specklepy.synthetic.detector import Detector
 
 
 
-def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit=100, outdir=None, outfile='exposure.fits', time_stamp='end', debug=False, **kwargs):
+def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit=100, dithers=None, outdir=None, outfile='exposure.fits', time_stamp='end', debug=False, **kwargs):
     """Generate synthetic exposures from target, telescope and detector objects.
 
     The function generate_exposure() is the central function of the synthetic
@@ -31,6 +31,7 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
         DIT (astropy.units.Quantity):
         nframes (int, optional):
         nframes_limit (int, optional):
+        dithers (list, optional):
         outdir (str, optional):
         outfile (str, optional):
         time_stamp (str, optional):
@@ -107,10 +108,14 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
 
     # Computation of frames
     frame_counter = 0
-    for outfile in outfiles:
+    for outfile_index, outfile in enumerate(outfiles):
         with fits.open(outfile, mode='update') as hdulist:
             # Get a new field of view for each file to enable dithering between files
-            photon_rate_density = target.get_photon_rate_density(FoV=detector.FoV, resolution=telescope.psf_resolution)
+            if dithers is not None:
+                dither = dithers[outfile_index]
+            else:
+                dither = None
+            photon_rate_density = target.get_photon_rate_density(FoV=detector.FoV, resolution=telescope.psf_resolution, dither=dither)
 
             for index in range(hdulist[0].header['NAXIS3']):
                 photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=DIT, debug=debug)
