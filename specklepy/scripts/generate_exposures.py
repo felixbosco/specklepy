@@ -7,8 +7,7 @@ import warnings
 
 try:
     from specklepy.logging import logging
-    from specklepy.synthetic.read_parameters import get_objects
-    from specklepy.synthetic.generate_exposure import generate_exposure
+    from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 except ModuleNotFoundError:
     # Prepare import from current path
     PATH = os.getcwd()
@@ -17,8 +16,7 @@ except ModuleNotFoundError:
 
     # Repeat import
     from specklepy.logging import logging
-    from specklepy.synthetic.read_parameters import get_objects
-    from specklepy.synthetic.generate_exposure import generate_exposure
+    from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
 
 
