@@ -37,7 +37,7 @@ class Detector(object):
 
 
 
-	def __init__(self, shape, pixel_scale, optics_transmission=1, quantum_efficiency=1, system_gain=1, readout_noise=0, dark_current=None, saturation_level=None):
+	def __init__(self, shape, pixel_scale, optics_transmission=1, quantum_efficiency=1, system_gain=1, readout_noise=None, dark_current=None, saturation_level=None):
 		"""Instantiate Detector class.
 
 		Args:
@@ -69,6 +69,11 @@ class Detector(object):
 		else:
 			raise TypeError(self.typeerror.format('pixel_scale', type(pixel_scale), 'u.Quantity'))
 
+		if isinstance(optics_transmission, float) or isinstance(optics_transmission, int):
+			self.optics_transmission = optics_transmission
+		else:
+			raise TypeError(self.typeerror.format('optics_transmission', type(optics_transmission), 'float'))
+
 		if isinstance(quantum_efficiency, u.Quantity):
 			self.quantum_efficiency = quantum_efficiency
 		elif isinstance(quantum_efficiency, float) or isinstance(quantum_efficiency, int):
@@ -85,18 +90,21 @@ class Detector(object):
 		else:
 			raise TypeError(self.typeerror.format('system_gain', type(system_gain), 'u.Quantity'))
 
-		if isinstance(readout_noise, u.Quantity):
+		if dark_current is None or isinstance(dark_current, u.Quantity):
+			self.dark_current = dark_current
+		elif isinstance(dark_current, float) or isinstance(dark_current, int):
+			logging.warning("Interpreting float type dark_current as {}".format(dark_current * u.electron / u.s))
+			self.dark_current = dark_current * u.electron / u.s
+		else:
+			raise TypeError(self.typeerror.format('dark_current', type(dark_current), 'u.Quantity'))
+
+		if readout_noise is None or isinstance(readout_noise, u.Quantity):
 			self.readout_noise = readout_noise
 		elif isinstance(readout_noise, float) or isinstance(readout_noise, int):
 			logging.warning("Interpreting float type readout_noise as {}".format(readout_noise * u.electron))
 			self.readout_noise = readout_noise * u.electron
 		else:
 			raise TypeError(self.typeerror.format('readout_noise', type(readout_noise), 'u.Quantity'))
-
-		if isinstance(optics_transmission, float) or isinstance(optics_transmission, int):
-			self.optics_transmission = optics_transmission
-		else:
-			raise TypeError(self.typeerror.format('optics_transmission', type(optics_transmission), 'float'))
 
 		if isinstance(saturation_level, u.Quantity) or saturation_level is None:
 			self.saturation_level = saturation_level
@@ -137,8 +145,22 @@ class Detector(object):
 
 
 
-	def get_counts(self, photon_rate, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
-		self.expose(photon_rate, integration_time, target_FoV, compute_photon_shot_noise=compute_photon_shot_noise, debug=debug)
+	def get_counts(self, photon_rate, integration_time, target_FoV, debug=False):
+		"""Computes the counts array from the photon rate.
+
+		Args:
+			photon_rate (u.Quantity): Passed to expose() method.
+			integration_time (u.Quantity): Passed to expose() and readout()
+				methods.
+			target_FoV (tuple, dtype=u.Quantity): Field of view of the target,
+				used when computing which subset is mapped onto the detector.
+			debug (bool, optional): Set True for debugging. Default is False.
+
+		Returns:
+			counts (u.Quantity): Array of the shape of the detector that
+				contains the counts measured within every pixel.
+		"""
+		self.expose(photon_rate=photon_rate, integration_time=integration_time, target_FoV=target_FoV, debug=debug)
 		return self.readout(integration_time=integration_time)
 
 
@@ -157,39 +179,90 @@ class Detector(object):
 
 
 
-	def expose(self, photon_rate, integration_time, target_FoV, compute_photon_shot_noise=True, debug=False):
+	def expose(self, photon_rate, integration_time, target_FoV, debug=False):
+		"""Compute the number of electrons in every pixel after the exposure.
+
+		Args:
+			photon_rate (u.Quantity): Passed to expose() method.
+			integration_time (u.Quantity): Passed to expose() and readout()
+				methods.
+			target_FoV (tuple, dtype=u.Quantity): Field of view of the target,
+				used when computing which subset is mapped onto the detector.
+			debug (bool, optional): Set True for debugging. Default is False.
+		Returns:
+			electrons (u.Quantity)
+		"""
+
+		# Input parameters
+		if isinstance(photon_rate, float) or isinstance(photon_rate, int):
+			logging.warning("Interpreting float type photon_rate as {}".format(photon_rate * u.ph / u.s))
+			photon_rate = photon_rate * u.ph / u.s
+		elif not isinstance(photon_rate, u.Quantity):
+			raise TypeError(self.typeerror.format('photon_rate', type(photon_rate), 'u.Quantity'))
+
+		if isinstance(integration_time, float) or isinstance(integration_time, int):
+			logging.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
+			integration_time = integration_time * u.s
+		elif not isinstance(integration_time, u.Quantity):
+			raise TypeError(self.typeerror.format('integration_time', type(integration_time), 'u.Quantity'))
+
+		# Check target_FoV
+
+		# Resample the photon rate to the detector resolution
+		photon_rate = self.resample(photon_rate, target_FoV)
+		photons = photon_rate * integration_time
 		if debug:
-			imshow(photon_rate, title='photon_rate')
-		tmp = self.resample(photon_rate, target_FoV) * integration_time
-		tmp *= self.quantum_efficiency
-		if hasattr(self, 'optics_transmission'):
-			tmp *= self.optics_transmission
-		if compute_photon_shot_noise:
-			if debug:
-				imshow(tmp, title='expose : tmp')
-			try:
-				tmp = np.random.poisson(tmp.value) * tmp.unit
-			except ValueError as e:
-				if debug:
-					print('Bypassed ValueError ({}) in np.random.poisson() by substituting values smaller than zero by zero.'.format(e))
-				tmp = np.random.poisson(np.maximum(tmp.value, 0.0)) * tmp.unit
+			imshow(photons, title='photons')
+
+		# Compute photon shot noise with Poisson statistics
+		photons = np.random.poisson(photons.value) * photons.unit
+
+		# Incorporate efficiencies
+		if self.optics_transmission is not None:
+			photons = photons * self.optics_transmission
+		electrons = photons * self.quantum_efficiency
+		if debug:
+			imshow(electrons, title='electrons')
+
+		# Limit to the saturation level of the detector
 		if self.saturation_level is not None:
-			tmp = np.minimum(tmp, self.saturation_level) # * self.system_gain)
-		self.array = np.round(tmp)
+			electrons = np.minimum(electrons, self.saturation_level) # * self.system_gain)
+		electrons = np.round(electrons)
+		self.array = electrons
+		return electrons
 
 
 
-	def readout(self, integration_time, reset=True, window=None):
+	def readout(self, integration_time, reset=True):
+		"""Computes the readout of the detector and returns the ADUs for every
+			pixel.
+
+		Args:
+			integration_time (u.Quantity):
+			reset (bool, optional): If set to True, then the electron count of
+				every pixel is reset to zero for the next exposure. Default is
+				True.
+
+		Returns:
+			counts (u.Quantity): Array of the ADUs for every pixel.
+		"""
+
         # Read copy and clear the array
-		tmp = self.array
-		if hasattr(self, 'dark_current'):
-			tmp += np.random.poisson(self.dark_current.value, self.shape) * self.dark_current.unit * u.pix * integration_time
-		if hasattr(self, 'readout_noise'):
-			tmp += np.round(np.random.normal(0.0, self.readout_noise.value, self.shape) ) * self.readout_noise.unit * u.pix
-		tmp /= self.system_gain
+		electrons = self.array
+
+		# Apply dark_current and readout noise following Poisson or Gaussian statistics
+		if self.dark_current is not None:
+			electrons = electrons + np.round(np.random.poisson(self.dark_current.value, self.shape) )* self.dark_current.unit * integration_time
+		if self.readout_noise is not None:
+			electrons = electrons + np.round(np.random.normal(0.0, self.readout_noise.value, self.shape)) * self.readout_noise.unit
+
+		# Convert into ADU
+		counts = electrons / self.system_gain
 		if self.saturation_level is not None:
-			return np.minimum(tmp, self.saturation_level / self.system_gain)
-		# Reset the detector
+			return np.minimum(counts, self.saturation_level / self.system_gain)
+
+		# Reset the detector array
 		if reset:
 			self.array = np.zeros(self.shape)
-		return tmp.decompose()
+
+		return counts.decompose()

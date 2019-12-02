@@ -17,11 +17,11 @@ class TestGenerateExposure(unittest.TestCase):
         self.telescope = Telescope(8.2*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.psf_source)
         self.detector = Detector((1024, 1024),
         						pixel_scale=0.0106*u.arcsec,
-        						readout_noise=35*u.electron/u.pix,
+        						readout_noise=35*u.electron,
         						system_gain=17*u.electron/u.adu,
         						optics_transmission=0.9,
                          		quantum_efficiency=0.9*u.electron/u.ph,
-        						saturation_level=7200*u.adu)
+        						saturation_level=7200*u.electron)
         self.DIT = 0.2*u.s
 
     def test_call(self):
