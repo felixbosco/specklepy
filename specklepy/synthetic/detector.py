@@ -167,23 +167,37 @@ class Detector(object):
 
 
 	def resample(self, photon_rate, photon_rate_resolution):
-		""""""
+		"""Resamples the photon_rate array to the angular resolution of the
+		detector.
 
-		target_FoV = (photon_rate.shape[0] * photon_rate_resolution, photon_rate.shape[1] * photon_rate_resolution)
+		Args:
+			photon_rate (u.Quantity):
+			photon_rate_resolution (u.Quantity):
+
+		Returns:
+			photon_rate_resampled_subset (u.Quantity): Resampled subset of the
+				photon_rate array.
+		"""
 
 		# Assert that the photon_rate covers a larger field of view than the detector field of view
-		if target_FoV[0] < self.FoV[0] or target_FoV[1] < self.FoV[1]:
-			raise ValueError('The FoV of the target object ({}) is smaller than that of the detector ({})!'.format(target_FoV, self.FoV))
+		photon_rate_fieldofview = (photon_rate.shape[0] * photon_rate_resolution, photon_rate.shape[1] * photon_rate_resolution)
+		if photon_rate_fieldofview[0] < self.FoV[0] or photon_rate_fieldofview[1] < self.FoV[1]:
+			raise ValueError('The field of view of the photon rate is smaller than that of the detector ({}) in at least one dimension!'.format(photon_rate_fieldofview, self.FoV))
 
-
-		subfield_shape = [round((self.FoV[i]/ target_FoV[i]).decompose().value * photon_rate.shape[i]) for i, val in enumerate(target_FoV)]
-		x0 = int( (photon_rate.shape[0] - subfield_shape[0])/2 )
-		y0 = int( (photon_rate.shape[1] - subfield_shape[1])/2 )
-		subfield = photon_rate[x0:x0+subfield_shape[0], y0:y0+subfield_shape[1]]
-		stretch_ratio = (self.shape[0] / subfield.shape[0], self.shape[1] / subfield.shape[1])
+		# Resample the photon_rate array to the detector resolution
+		zoom_ratio = float(photon_rate_resolution / self.resolution)
 		with warnings.catch_warnings():
 			warnings.simplefilter("ignore")
-			return zoom(subfield, stretch_ratio, order=1) / stretch_ratio[0] / stretch_ratio[1] * subfield.unit
+			photon_rate_resampled = zoom(photon_rate, zoom_ratio, order=1) * photon_rate.unit
+			photon_rate_resampled = photon_rate_resampled / zoom_ratio**2 # This is necessary for flux conservation
+
+		# Extract the central region of shape=Detector.shape
+		center = (int(photon_rate_resampled.shape[0] / 2), int(photon_rate_resampled.shape[1] / 2))
+		dx = int(self.shape[0] / 2)
+		dy = int(self.shape[1] / 2)
+		photon_rate_resampled_subset = photon_rate_resampled[center[0] - dx : center[0] + dx , center[1] - dy : center[1] + dy]
+
+		return photon_rate_resampled_subset
 
 
 
@@ -215,7 +229,12 @@ class Detector(object):
 		elif not isinstance(integration_time, u.Quantity):
 			raise TypeError(self.typeerror.format('integration_time', type(integration_time), 'u.Quantity'))
 
-		# Check photon_rate_resolution
+		if isinstance(photon_rate_resolution, float) or isinstance(photon_rate_resolution, int):
+			logging.warning("Interpreting float type photon_rate_resolution as {}".format(photon_rate_resolution * u.arcsec))
+			photon_rate_resolution = photon_rate_resolution * u.arcsec
+		elif not isinstance(photon_rate_resolution, u.Quantity):
+			raise TypeError(self.typeerror.format('photon_rate_resolution', type(photon_rate_resolution), 'u.Quantity'))
+			
 
 		# Resample the photon rate to the detector resolution
 		photon_rate = self.resample(photon_rate=photon_rate, photon_rate_resolution=photon_rate_resolution)
