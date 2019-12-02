@@ -31,7 +31,20 @@ class Target(object):
 
     __name__ = 'target'
     typeerror = 'Target received {} argument of {} type, but needs to be {}!'
-    photometry_file = os.path.join(os.path.dirname(__file__), 'photometric_bands.dat')
+    # Credit https://en.wikipedia.org/wiki/Photometric_system
+    photometry_dict =  {'U': {'wavelength': 0.36, 'FWHM': 0.15, 'Flux': 1810.0},
+                        'B': {'wavelength': 0.44, 'FWHM': 0.22, 'Flux': 4260.0},
+                        'V': {'wavelength': 0.55, 'FWHM': 0.16, 'Flux': 3640.0},
+                        'R': {'wavelength': 0.64, 'FWHM': 0.23, 'Flux': 3080.0},
+                        'I': {'wavelength': 0.79, 'FWHM': 0.19, 'Flux': 2550.0},
+                        'J': {'wavelength': 1.26, 'FWHM': 0.16, 'Flux': 1600.0},
+                        'H': {'wavelength': 1.6,  'FWHM': 0.23, 'Flux': 1080.0},
+                        'K': {'wavelength': 2.22, 'FWHM': 0.23, 'Flux': 670.0},
+                        'L': {'wavelength': 3.5,  'FWHM': np.nan, 'Flux': np.nan},
+                        'g': {'wavelength': 0.52, 'FWHM': 0.14, 'Flux': 3730.0},
+                        'r': {'wavelength': 0.67, 'FWHM': 0.14, 'Flux': 4490.0},
+                        'i': {'wavelength': 0.79, 'FWHM': 0.16, 'Flux': 4760.0},
+                        'z': {'wavelength': 0.91, 'FWHM': 0.13, 'Flux': 4810.0}}
 
 
 
@@ -39,7 +52,13 @@ class Target(object):
         """Instantiate Target class.
 
         Args:
-
+            band (str): Name of the band. Used for extracting the band specific
+                reference flux for magnitude 0.
+            star_table (str): Name of the file with the data of all stars.
+            sky_background (u.Quantity): Sky background. Int and float inputs
+                will be interpreted as mag / arcsec**2.
+            photometry_file (str, optional): Name of the file, from which the
+                band specific reference flux is extracted.
         """
 
         # Input parameters
@@ -56,9 +75,7 @@ class Target(object):
         else:
             raise TypeError(self.typeerror.format('star_table', type(star_table), 'str'))
 
-        if photometry_file is None:
-            pass # Take the class value
-        elif isinstance(photometry_file, str):
+        if photometry_file is None or isinstance(photometry_file, str):
             self.photometry_file = photometry_file
         else:
             raise TypeError(self.typeerror.format('photometry_file', type(photometry_file), 'str'))
@@ -94,12 +111,15 @@ class Target(object):
 
 
     def get_reference_flux(self, photometry_file, band, format='ascii'):
-    	#print("Caution: The function 'Target.get_reference_flux()' uses a problematic relative path.")
-    	table = Table.read(photometry_file, format=format)
-    	row_index = np.where(table["Band"] == band)
-    	fwhm = table['FWHM'][row_index][0]
-    	flux = table['Flux'][row_index][0] * u.Jy
-    	return (flux / const.h * fwhm * u.ph).decompose()
+        if photometry_file is None:
+            fwhm = self.photometry_dict[band]['FWHM']
+            flux = self.photometry_dict[band]['Flux']
+        else:
+        	table = Table.read(photometry_file, format=format)
+        	row_index = np.where(table["Band"] == band)
+        	fwhm = table['FWHM'][row_index][0]
+        	flux = table['Flux'][row_index][0] * u.Jy
+        return (flux / const.h * fwhm * u.ph).decompose()
 
 
     def magnitude_to_flux(self, magnitude):
