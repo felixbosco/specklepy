@@ -7,18 +7,16 @@ from specklepy.synthetic.detector import Detector
 class TestDetector(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.photon_rate_array = np.ones((128, 128)) * u.ph / u.s
 
     def test_init(self):
         det = Detector((64, 64), pixel_scale=0.01*u.arcsec)
-
-        det_RON = Detector((64, 64), pixel_scale=0.01*u.arcsec, readout_noise=35*u.electron/u.pix)
-
-        exposure_array = np.ones((64, 64)) * u.ph / u.s
-        RO = det_RON(exposure_array, integration_time=200*u.ms, target_FoV=det_RON.FoV)
+        det_RON = Detector((64, 64), pixel_scale=0.01*u.arcsec, readout_noise=35*u.electron)
 
     def test_call(self):
-        pass
+        det = Detector((64, 64), pixel_scale=0.01*u.arcsec, readout_noise=35*u.electron)
+        det(self.photon_rate_array, integration_time=200*u.ms, photon_rate_resolution=det.pixel_scale)
+        det(self.photon_rate_array, integration_time=200*u.ms, photon_rate_resolution=det.pixel_scale / 2)
 
 
 

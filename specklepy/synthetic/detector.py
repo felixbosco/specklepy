@@ -145,33 +145,41 @@ class Detector(object):
 
 
 
-	def get_counts(self, photon_rate, integration_time, target_FoV, debug=False):
+	def get_counts(self, photon_rate, integration_time, photon_rate_resolution, debug=False):
 		"""Computes the counts array from the photon rate.
 
 		Args:
 			photon_rate (u.Quantity): Passed to expose() method.
 			integration_time (u.Quantity): Passed to expose() and readout()
 				methods.
-			target_FoV (tuple, dtype=u.Quantity): Field of view of the target,
-				used when computing which subset is mapped onto the detector.
+			photon_rate_resolution (u.Quantity): Angular resolution of the
+				photon_rate array, used for resampling this to the detectors
+				grid.
 			debug (bool, optional): Set True for debugging. Default is False.
 
 		Returns:
 			counts (u.Quantity): Array of the shape of the detector that
 				contains the counts measured within every pixel.
 		"""
-		self.expose(photon_rate=photon_rate, integration_time=integration_time, target_FoV=target_FoV, debug=debug)
+		self.expose(photon_rate=photon_rate, integration_time=integration_time, photon_rate_resolution=photon_rate_resolution, debug=debug)
 		return self.readout(integration_time=integration_time)
 
 
 
-	def resample(self, target_data, target_FoV):
+	def resample(self, photon_rate, photon_rate_resolution):
+		""""""
+
+		target_FoV = (photon_rate.shape[0] * photon_rate_resolution, photon_rate.shape[1] * photon_rate_resolution)
+
+		# Assert that the photon_rate covers a larger field of view than the detector field of view
 		if target_FoV[0] < self.FoV[0] or target_FoV[1] < self.FoV[1]:
 			raise ValueError('The FoV of the target object ({}) is smaller than that of the detector ({})!'.format(target_FoV, self.FoV))
-		subfield_shape = [round((self.FoV[i]/ target_FoV[i]).decompose().value * target_data.shape[i]) for i, val in enumerate(target_FoV)]
-		x0 = int( (target_data.shape[0] - subfield_shape[0])/2 )
-		y0 = int( (target_data.shape[1] - subfield_shape[1])/2 )
-		subfield = target_data[x0:x0+subfield_shape[0], y0:y0+subfield_shape[1]]
+
+
+		subfield_shape = [round((self.FoV[i]/ target_FoV[i]).decompose().value * photon_rate.shape[i]) for i, val in enumerate(target_FoV)]
+		x0 = int( (photon_rate.shape[0] - subfield_shape[0])/2 )
+		y0 = int( (photon_rate.shape[1] - subfield_shape[1])/2 )
+		subfield = photon_rate[x0:x0+subfield_shape[0], y0:y0+subfield_shape[1]]
 		stretch_ratio = (self.shape[0] / subfield.shape[0], self.shape[1] / subfield.shape[1])
 		with warnings.catch_warnings():
 			warnings.simplefilter("ignore")
@@ -179,15 +187,16 @@ class Detector(object):
 
 
 
-	def expose(self, photon_rate, integration_time, target_FoV, debug=False):
+	def expose(self, photon_rate, integration_time, photon_rate_resolution, debug=False):
 		"""Compute the number of electrons in every pixel after the exposure.
 
 		Args:
 			photon_rate (u.Quantity): Passed to expose() method.
 			integration_time (u.Quantity): Passed to expose() and readout()
 				methods.
-			target_FoV (tuple, dtype=u.Quantity): Field of view of the target,
-				used when computing which subset is mapped onto the detector.
+			photon_rate_resolution (u.Quantity): Angular resolution of the
+				photon_rate array, used for resampling this to the detectors
+				grid.
 			debug (bool, optional): Set True for debugging. Default is False.
 		Returns:
 			electrons (u.Quantity)
@@ -206,10 +215,10 @@ class Detector(object):
 		elif not isinstance(integration_time, u.Quantity):
 			raise TypeError(self.typeerror.format('integration_time', type(integration_time), 'u.Quantity'))
 
-		# Check target_FoV
+		# Check photon_rate_resolution
 
 		# Resample the photon rate to the detector resolution
-		photon_rate = self.resample(photon_rate, target_FoV)
+		photon_rate = self.resample(photon_rate=photon_rate, photon_rate_resolution=photon_rate_resolution)
 		photons = photon_rate * integration_time
 		if debug:
 			imshow(photons, title='photons')

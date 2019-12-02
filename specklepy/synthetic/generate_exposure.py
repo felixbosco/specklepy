@@ -110,7 +110,7 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
 
             for index in range(hdulist[0].header['NAXIS3']):
                 photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=DIT, debug=debug)
-                counts = detector.get_counts(photon_rate=photon_rate, integration_time=DIT, target_FoV=target.FoV, debug=debug)
+                counts = detector.get_counts(photon_rate=photon_rate, integration_time=DIT, photon_rate_resolution=target.resolution, debug=debug)
                 counts = counts.decompose()
                 hdulist[0].data[index] = counts.value
 
