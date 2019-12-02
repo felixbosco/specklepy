@@ -26,8 +26,8 @@ class Detector(object):
 		optics_transmission (u.Quantity):
 
 	Future features:
-		Attribute dictionary 'readout_modes': Shall enable the flexible use of different
-			readout modes with different parameters.
+		Attribute dictionary 'readout_modes': Shall enable the flexible use of
+			different readout modes with different parameters.
 		Pixel non-uniformity: Shall use a flatfield file to create static
 			non-uniform pixel responses.
 	"""
@@ -234,7 +234,7 @@ class Detector(object):
 			photon_rate_resolution = photon_rate_resolution * u.arcsec
 		elif not isinstance(photon_rate_resolution, u.Quantity):
 			raise TypeError(self.typeerror.format('photon_rate_resolution', type(photon_rate_resolution), 'u.Quantity'))
-			
+
 
 		# Resample the photon rate to the detector resolution
 		photon_rate = self.resample(photon_rate=photon_rate, photon_rate_resolution=photon_rate_resolution)
