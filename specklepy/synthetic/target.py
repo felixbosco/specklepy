@@ -113,12 +113,12 @@ class Target(object):
     def get_reference_flux(self, photometry_file, band, format='ascii'):
         if photometry_file is None:
             fwhm = self.photometry_dict[band]['FWHM']
-            flux = self.photometry_dict[band]['Flux']
+            flux = self.photometry_dict[band]['Flux'] * u.Jy
         else:
         	table = Table.read(photometry_file, format=format)
         	row_index = np.where(table["Band"] == band)
         	fwhm = table['FWHM'][row_index][0]
-        	flux = table['Flux'][row_index][0] * u.Jy
+        	flux = table['Flux'][row_index][0] *u.Jy
         return (flux / const.h * fwhm * u.ph).decompose()
 
 
