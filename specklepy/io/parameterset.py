@@ -55,7 +55,11 @@ class ParameterSet(object):
                     logging.warning("Essential parameter <{}> not found in parameter file or config file!".format(attr))
 
         self.makedirs(dir_list=make_dirs)
-        self.inFiles = FileManager(self.inDir)()
+        try:
+            self.inFiles = FileManager(self.inDir)()
+        except AttributeError:
+            # This is the case for reduction
+            self.scienceFiles = FileManager(self.scienceFiles)()
 
 
     def makedirs(self, dir_list):
