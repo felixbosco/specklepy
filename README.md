@@ -5,9 +5,10 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
 
 ## Table of contents
 - [To Do](#to-do)
+- [Synthetic image generator](#synthetic-image-generator)
 - [Data reduction](#data-reduction)
 - [Image reconstruction](#image-reconstruction)
-- [Synthetic image generator](#synthetic-image-generator)
+- [Version history](#version-history)
 
 
 ## To Do:
@@ -27,13 +28,25 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
   * Center star coordinates in target around (0, 0), which is then mapped to the center of the detector
 
 
-## Data reduction
-Content ...
-
-
 ## Image reconstruction
+The image reconstruction module is the core of Specklepy, thus referred to as `core`.
 Content ...
+
+
+## Data reduction
+To be implemented ...
 
 
 ## Synthetic image generator
-Content ...
+The `synthetic` module is capable of creating synthetic observations from parameter files and reference PSF data, especially short-exposure 'speckle' PSFs. The principle code is borrowed from VegaPy, the Virtual Exposure Generator for Astronomy in Python, but the code received multiple accelerations and features. A stron focus of the changes with respect to VegaPy was put on readability of the code and documentation.
+
+
+## Version history
+These are the incremental updates between versions:
+
+- *0.4.0*: Specklepy received the `synthetic` module for creating synthetic observations
+- *0.3.0*: The image reconstruction module now handles cube alignment. This enabled the first successful holographic image reconstruction of multiple dithered data cubes. Note that this bit of code is labeled vesion 0.0.3 in the setup.py.
+- *0.2.0*: The holographic image reconstruction is nowfunctional. Note that this bit of code is labeled vesion 0.0.2 in the setup.py.
+- *0.1.0*: Note that this bit of code is labeled vesion 0.0.1 in the setup.py.
+- *0.0.1dev*
+
