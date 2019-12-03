@@ -42,7 +42,7 @@ class ReferenceStars(object):
     def init_apertures(self, filename, shift=(0, 0)):
         self.apertures = []
         for star in self.star_table:
-            self.apertures.append(Aperture(star['y'] + shift[0], star['x'] + shift[1], self.radius, data=filename, subset_only=True, verbose=False))
+            self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, subset_only=True, verbose=False))
 
 
     def extract_psfs(self, mode='align_median', file_shifts=None, inspect_aperture=False):
