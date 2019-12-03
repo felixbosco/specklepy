@@ -187,7 +187,7 @@ def get_Fourier_object(params, shifts, mode='same'):
         raise RuntimeError("The number of input files ({}) and PSF files ({}) do not match!".format(len(params.inFiles), len(params.psfFiles)))
 
     # Padding and Fourier transforming the images
-    logging.info("Padding and Fourier transforming the images...")
+    logging.info("Padding the images and PSFs...")
     for file_index, image_file in enumerate(params.inFiles):
         # Initialization
         image_pad_vector = pad_vectors[file_index]
@@ -226,6 +226,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             denominator = np.zeros(img.shape, dtype='complex128')
 
         # Open PSF file
+        print("\rFourier transforming image and PSF file {:4}/{:4}".format(file_index + 1, len(params.inFiles)), end='')
         psf_cube = fits.getdata(params.psfFiles[file_index])
         for frame_index, frame in enumerate(fits.getdata(image_file)):
             # Padding and transforming the image
@@ -243,6 +244,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             # Adding for the average
             enumerator += np.multiply(Fimg, np.conjugate(Fpsf))
             denominator += np.abs(np.square(Fpsf))
+        print()
 
     # Compute the object.
     # Note that by this division implicitly does averaging. By this implicit
