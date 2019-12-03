@@ -10,7 +10,7 @@ from specklepy.io.parameterset import ParameterSet
 from specklepy.io.outfile import Outfile
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
-from specklepy.core.apodization import apodize
+from specklepy.core.apodization import apodizes
 from specklepy.core.ssa import ssa
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.sourceextraction import find_sources
@@ -62,7 +62,7 @@ def holography(params, mode='same', debug=False):
     # Start iteration from steps (iv) thorugh (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
-        find_sources(image=image, fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
+        find_sources(image=image, fwhm=params.starfinderFwhm, noise_threshold=params.signalToNoiseThreshold,
             background_subtraction=True, writeto=params.allStarsFile, starfinder='DAO', verbose=False)
 
         # (v) Select reference stars
