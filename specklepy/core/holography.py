@@ -10,7 +10,7 @@ from specklepy.io.parameterset import ParameterSet
 from specklepy.io.outfile import Outfile
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
-from specklepy.core.apodization import apodizes
+from specklepy.core.apodization import apodize
 from specklepy.core.ssa import ssa
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.sourceextraction import find_sources
@@ -244,7 +244,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             # Adding for the average
             enumerator += np.multiply(Fimg, np.conjugate(Fpsf))
             denominator += np.abs(np.square(Fpsf))
-        print()
+    print()
 
     # Compute the object.
     # Note that by this division implicitly does averaging. By this implicit
