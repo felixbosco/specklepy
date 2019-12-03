@@ -11,6 +11,7 @@ class TestGenerateExposure(unittest.TestCase):
     def setUp(self):
         self.parameterfile = 'data/test/synthetic_exposures.par'
         self.star_table = 'data/test/example_star_table_centered.dat'
+        self.star_table = 'data/test/example_star_table_29mas296875.dat'
         self.psf_source = '../simulations/noao_psf_500ms.fits'
         self.outfile = 'data/test/exposures/exposure.fits'
 
@@ -29,7 +30,7 @@ class TestGenerateExposure(unittest.TestCase):
         get_objects(self.parameterfile, debug=True)
 
     def test_generate_exposure(self):
-        generate_exposure(self.target, self.telescope, self.detector, self.DIT, nframes=15, nframes_limit=10, outfile=self.outfile, debug=False)
+        generate_exposure(self.target, self.telescope, self.detector, self.DIT, nframes=15, nframes_limit=10, outfile=self.outfile, debug=False, dithers=[(10, 0), (-10, 0)])
 
 
 

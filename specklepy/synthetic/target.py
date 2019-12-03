@@ -163,7 +163,13 @@ class Target(object):
 
         # Get data from table columns
         xx = table[keywords['x']]
+        if isinstance(xx, u.Quantity):
+            xx = xx.to(u.arcsec).value
+
         yy = table[keywords['y']]
+        if isinstance(yy, u.Quantity):
+            yy = yy.to(u.arcsec).value
+
         if 'mag' in keywords.keys():
             # Take magnitudes and convert to flux
             magnitudes = table[keywords['mag']]
@@ -216,8 +222,11 @@ class Target(object):
 
         if dither is None:
             phase_center = (0, 0)
-        elif isinstance(dither, tuple):
-            phase_center = dither
+        elif isinstance(dither, tuple) or isinstance(dither, list):
+            if not (isinstance(dither[0], int) or isinstance(dither[0], float)):
+                raise TypeError("Dithers should be provided as int or float. These are then interpreted as arcsecconds.")
+            else:
+                phase_center = dither
         else:
             return TypeError(self.typeerror.format('dither', type(dither), 'tuple'))
 
@@ -233,7 +242,8 @@ class Target(object):
         # Add stars from star_table to photon_rate_density
         self.stars = self.read_star_table(self.star_table)
         for row in self.stars:
-            position = (int(center[0] + row['x'] - phase_center[0]), int(center[1] + row['y'] - phase_center[1]))
+            position = (int(center[0] + (row['x'] - phase_center[0]) / self.resolution.to(u.arcsec).value),
+                        int(center[1] + (row['y'] - phase_center[1]) / self.resolution.to(u.arcsec).value))
             flux = row['flux']
             try:
                 photon_rate_density.value[position] = np.maximum(photon_rate_density.value[position], flux)
