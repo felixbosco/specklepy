@@ -97,7 +97,7 @@ def holography(params, mode='same', debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        Fobject = get_object(params, shifts=shifts, mode=mode)
+        Fobject = get_Fourier_object(params, shifts=shifts, mode=mode)
 
         # (x) Apodization
         logging.info("Apodizing the object...")
@@ -149,7 +149,7 @@ def get_noise_mask(frame, noise_reference_margin):
 
 
 
-def get_object(params, shifts, mode='same'):
+def get_Fourier_object(params, shifts, mode='same'):
     """Reconstruction of the Fourier transformed object with Eq. 1 (Schoedel
     et al., 2013).
 
@@ -168,12 +168,12 @@ def get_object(params, shifts, mode='same'):
     """
 
     if not isinstance(params, ParameterSet):
-        logging.warn("specklepy.core.holography.get_object received params argument \
+        logging.warn("specklepy.core.holography.get_Fourier_object received params argument \
                         of type <{}> instead of the expected type \
                         specklepy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
     if mode not in ['same', 'full', 'valid']:
-        raise ValueError("specklepy.core.holography.get_object received mode \
+        raise ValueError("specklepy.core.holography.get_Fourier_object received mode \
                             argument '{}', but must be either 'same', 'full', \
                             or 'valid'.".format(mode))
 
