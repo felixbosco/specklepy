@@ -33,7 +33,6 @@ class Testalignment(unittest.TestCase):
         pad_vectors, ref_pad_vector = alignment.get_pad_vectors(self.shifts, self.cube_shape, self.image_shape, mode='same')
         for pad_vector in pad_vectors:
             padded = alignment.pad_array(np.ones(self.cube_shape), pad_vector=pad_vector, mode='same', reference_image_pad_vector=ref_pad_vector)
-            print('>>>', padded.shape)
 
 
 

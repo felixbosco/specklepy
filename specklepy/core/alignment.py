@@ -6,7 +6,7 @@ from specklepy.utils.plot import imshow
 
 
 
-def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=True, return_image_shape=False, debug=False):
+def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False, debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -14,13 +14,13 @@ def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=Tru
 
     Args:
         files (list): List of files to align.
-        reference_file (str, optional): Path to a reference file, relative to
-            which the shifts are computed. If not provided, the reference file
-            index is used, see below. Default is None.
-        reference_file_index (str, optional): Index of the file in the file
-            list, relative to which the shifts are cpmputed. Default is 0.
-        lazy_mode (bool, optional): If set to True and  Default is True.
-        debug (bool, optional): If set to True, it shows the 2D correlation.
+        reference_file (str, int, optional):
+            Path to a reference file or index of the file in files, relative to
+            which the shifts are computed. Default is 0.
+        lazy_mode (bool, optional):
+            If set to True and  Default is True.
+        debug (bool, optional):
+            If set to True, it shows the 2D correlation.
 
     Returns:
         shifts (list): List of shifts for each file relative to the reference
@@ -29,6 +29,11 @@ def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=Tru
 
     if not isinstance(files, list):
         files = [files]
+
+    if isinstance(reference_file, int):
+        reference_file = files[reference_file]
+    elif not isinstance(reference_file, str):
+        raise TypeError("The function get_shifts received reference_file argument of type {}, but needs be int or str, i.e. a file name.".format(type(reference_file)))
 
     # Skip computations if only one file is provided
     if lazy_mode and len(files) == 1:
@@ -42,11 +47,6 @@ def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=Tru
         shifts = []
 
         # Identify reference file and Fourier transform the integrated image
-        if reference_file is None:
-            reference_file = files[reference_file_index]
-        else:
-            reference_file_index = None
-
         logging.info("Computing relative shifts between data cubes. Reference file is {}".format(reference_file))
         reference_image = fits.getdata(reference_file)
         if reference_image.ndim == 3:
@@ -58,7 +58,7 @@ def get_shifts(files, reference_file=None, reference_file_index=0, lazy_mode=Tru
 
         # Iterate over files and estimate shift via 2D correlation of the integrated cubes
         for index, file in enumerate(files):
-            if index == reference_file_index:
+            if file == reference_file:
                 shift = (0, 0)
             else:
                 image = fits.getdata(file)
