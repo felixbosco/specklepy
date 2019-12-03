@@ -9,7 +9,7 @@ from specklepy.io.outfile import Outfile
 from specklepy.core import alignment
 
 
-def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
+def ssa(files, mode='same', reference_file=0, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     Long description...
@@ -17,11 +17,9 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
     Args:
         files (list):
         mode (str):
-        reference_file (str, optional): Path to a reference file, relative to
-            which the shifts are computed. If not provided, the reference file
-            index is used. See specklepy.core.aligment.get_shifts for details.
-        reference_file_index (str, optional): Index of the file in the file
-            list, relative to which the shifts are cpmputed. See
+        reference_file (str, int, optional):
+            Path to a reference file or index of the file in files, relative to
+            which the shifts are computed. See
             specklepy.core.aligment.get_shifts for details. Default is 0.
         outfile (specklepy.io.outfile, optional): Object to write the result to,
             if provided.
@@ -35,6 +33,12 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
     logging.info("Starting SSA reconstruction...")
     if not isinstance(files, list):
         files = [files]
+
+    if isinstance(reference_file, int):
+        reference_file = files[reference_file]
+    elif not isinstance(reference_file, str):
+        raise TypeError("The function get_shifts received reference_file argument of type {}, but needs be int or str, i.e. a file name.".format(type(reference_file)))
+
     if outfile is not None and not isinstance(outfile, Outfile):
         if isinstance(outfile, str):
             outfile = Outfile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
@@ -61,7 +65,7 @@ def ssa(files, mode='same', reference_file=None, reference_file_index=0, outfile
             tmp_files.append(tmp_file)
 
         # Align tmp reconstructions and add up
-        file_shifts, image_shape = alignment.get_shifts(tmp_files, reference_file=reference_file, reference_file_index=reference_file_index, return_image_shape=True, lazy_mode=True)
+        file_shifts, image_shape = alignment.get_shifts(tmp_files, reference_file=reference_file, return_image_shape=True, lazy_mode=True)
         pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, image_shape, image_shape, mode='same')
         reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
