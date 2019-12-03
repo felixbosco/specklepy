@@ -51,7 +51,6 @@ def holography(params, mode='same', debug=False):
     # (i-ii) Align cubes
     shifts = get_shifts(files=params.inFiles,
                             reference_file=params.alignmentReferenceFile,
-                            reference_file_index=0,
                             lazy_mode=True,
                             return_image_shape=False,
                             debug=debug)
