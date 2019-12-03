@@ -45,7 +45,7 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
-    defaults_file = "specklepy/config/holography.cfg"
+    defaults_file = "specklepy/config/reduction.cfg"
     essential_attributes = []
     make_dirs = ['tmpDir']
 
