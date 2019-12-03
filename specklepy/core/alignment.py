@@ -32,6 +32,8 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
 
     if isinstance(reference_file, int):
         reference_file = files[reference_file]
+    elif reference_file is None:
+        reference_file = files[0]
     elif not isinstance(reference_file, str):
         raise TypeError("The function get_shifts received reference_file argument of type {}, but needs be int or str, i.e. a file name.".format(type(reference_file)))
 
