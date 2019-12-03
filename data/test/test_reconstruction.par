@@ -5,6 +5,7 @@ tmpDir = data/test/tmp/
 allStarsFile = data/test/example_all_sources.dat
 refSourceFile = data/test/example_ref_sources.dat
 
+
 [NOISE]
 #noiseBoxX = 855
 #noiseBoxY = 553
@@ -12,11 +13,12 @@ refSourceFile = data/test/example_ref_sources.dat
 
 [STARFINDER]
 starfinderFwhm = 5 # pixels
-noiseThreshold = 5  # multiples of sigma
+signalToNoiseThreshold = 5  # multiples of sigma
 
 [PSFEXTRACTION]
 psfRadius = 20
 noiseReferenceMargin = 3
+noiseThreshold = 3  # multiples of standard deviation
 
 [APODIZATION]
 #apodizationType = Airy # Gaussian or Airy

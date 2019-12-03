@@ -9,7 +9,7 @@ from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 class TestGenerateExposure(unittest.TestCase):
 
     def setUp(self):
-        self.parameterfile = 'data/test/synthetic_exposures.par'
+        self.parameterfile = 'data/test/test_synthetic_exposures.par'
         self.star_table = 'data/test/example_star_table_centered.dat'
         self.star_table = 'data/test/example_star_table_29mas296875.dat'
         self.psf_source = '../simulations/noao_psf_500ms.fits'
