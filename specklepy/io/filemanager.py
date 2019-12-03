@@ -51,7 +51,7 @@ class FileManager(object):
         This function interpretes the file input and stores a list to self.files.
         """
         if isinstance(input, str):
-            if '*' in input:
+            if '*' in input or '?'in input:
                 logging.info("Input is a generic file name.")
                 self.input_type = 'generic'
                 # find generic files with glob.glob()
