@@ -10,5 +10,3 @@
 /build/*
 /data/test/*fits
 /data/example/*dat
-/specklepy/deprecated/*
-/specklepy/reduction/*
