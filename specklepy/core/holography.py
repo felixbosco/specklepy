@@ -182,59 +182,73 @@ def get_object(params, shifts, mode='same'):
                                     reference_image_shape=(1024, 1024),
                                     mode='same')
 
+    # Assert that there are the same number of inFiles and psfFiles, which
+    # should be the case after running the holography function.
+    if not len(params.inFiles) == len(params.psfFiles):
+        raise RuntimeError("The number of input files ({}) and PSF files ({}) do not match!".format(len(params.inFiles), len(params.psfFiles)))
+
     # Padding and Fourier transforming the images
     logging.info("Padding and Fourier transforming the images...")
-    for index, file in enumerate(params.inFiles):
-        img = fits.getdata(file)
-        print("\tPadding data from {}".format(file))
-        img = pad_array(array=img,
-                        pad_vector=pad_vectors[index],
-                        mode=mode,
-                        reference_image_pad_vector=reference_image_pad_vector)
-        print('\tShift:', shifts[index])
-        print('\tShape:', img.shape)
+    for file_index, image_file in enumerate(params.inFiles):
+        # Initialization
+        image_pad_vector = pad_vectors[file_index]
+        image_pad_vector.pop(0)
+        if file_index == 0:
+            # Get final image size
+            img = fits.getdata(image_file)[0] # Remove time axis padding
+            print("\tPadding data from {}".format(image_file))
+            img = pad_array(array=img,
+                            pad_vector=image_pad_vector,
+                            mode=mode,
+                            reference_image_pad_vector=reference_image_pad_vector)
+            print('\tShift:', shifts[file_index])
+            print('\tShape:', img.shape)
 
-        if index == 0:
-            Fimg = fftshift(fft2(img))
-        else:
-            Fimg = np.concatenate((Fimg, fftshift(fft2(img))))
-
-
-    # Clear memory
-    img_shape = img.shape
-    del img
-
-    logging.info("Padding and Fourier transforming the PSFs...")
-    for index, file in enumerate(params.psfFiles):
-        psf = fits.getdata(file)
-        if index == 0:
+            # Get pad vector for PSFs
+            psf_file = params.psfFiles[file_index]
+            psf = fits.getdata(psf_file)[0]
             # Pad the Fpsf cube to have the same xz-extent as Fimg
-            print("\tPadding data from {}".format(file))
-            print('\tImage shape:', img_shape)
+            print("\tPadding data from {}".format(psf_file))
+            print('\tImage shape:', img.shape)
             print('\tPSF shape:', psf.shape)
-            dx = img_shape[1] - psf.shape[1]
-            dy = img_shape[2] - psf.shape[2]
+            dx = img.shape[0] - psf.shape[0]
+            dy = img.shape[1] - psf.shape[1]
 
-            pad_vector = ((0, 0), (int(np.floor(dx/2)), int(np.ceil(dx/2))), (int(np.floor(dy/2)), int(np.ceil(dy/2))))
-            print('\tPad_width:', pad_vector)
-            psf = np.pad(psf, pad_vector)
+            psf_pad_vector = ((dx // 2, int(np.ceil(dx/2))), (dy // 2, int(np.ceil(dy/2))))
+            print('\tPad_width:', psf_pad_vector)
+            psf = np.pad(psf, psf_pad_vector)
             try:
-                assert img_shape == psf.shape
+                assert img.shape == psf.shape
             except:
-                raise ValueError("The Fourier transformed images and psfs have different shape, {} and {}. Something went wrong with the padding!".format(Fimg_shape, Fpsf.shape))
+                raise ValueError("The Fourier transformed images and psfs have different shape, {} and {}. Something went wrong with the padding!".format(img.shape, psf.shape))
 
-            # Initialize Fpsf by the transforming the first cube
+            # Initialize the enumerator and denominator
+            enumerator = np.zeros(img.shape, dtype='complex128')
+            denominator = np.zeros(img.shape, dtype='complex128')
+
+        # Open PSF file
+        psf_cube = fits.getdata(params.psfFiles[file_index])
+        for frame_index, frame in enumerate(fits.getdata(image_file)):
+            # Padding and transforming the image
+            img = pad_array(array=frame,
+                            pad_vector=pad_vectors[file_index],
+                            mode=mode,
+                            reference_image_pad_vector=reference_image_pad_vector)
+            Fimg = fftshift(fft2(img))
+
+            # Padding and Fourier transforming PSF
+            psf = psf_cube[frame_index]
+            psf = np.pad(psf, psf_pad_vector)
             Fpsf = fftshift(fft2(psf))
-        else:
-            Fpsf = np.concatenate((Fpsf, fftshift(fft2(np.pad(psf, pad_vector)))))
 
-    # Clear memory
-    del psf
+            # Adding for the average
+            enumerator += np.multiply(Fimg, np.conjugate(Fpsf))
+            denominator += np.abs(np.square(Fpsf))
 
-    # Compute the object
-    enumerator = np.mean(np.multiply(Fimg, np.conjugate(Fpsf)), axis=0)
-    denominator = np.mean(np.abs(np.square(Fpsf)), axis=0)
-    # denominator = np.ma.masked_values(denominator, 0.0)
-    Fobject  = np.divide(enumerator, denominator)
+    # Compute the object.
+    # Note that by this division implicitly does averaging. By this implicit
+    # summing up of enumerator and denominator, this computation is cheaper
+    # in terms of memory usage
+    Fobject = np.divide(enumerator, denominator)
 
     return Fobject
