@@ -156,7 +156,7 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
 
 
 
-def encircled_energy_plot(files, normalize='peak', maximize=False):
+def encircled_energy_plot(files, normalize=None, maximize=False):
     """Plots the encircled energy data from a file.
 
     Args:
