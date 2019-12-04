@@ -136,3 +136,8 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
         colors.append(color)
 
     return colors
+
+
+
+def encircled_energy_plot(file):
+    pass
