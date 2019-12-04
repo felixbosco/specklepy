@@ -1,4 +1,4 @@
 [PATHS]
 scienceFiles = /home/bosco/Documents/sowat/synthetic_observations/noao_600ms_?.fits
 skyFiles = /home/bosco/Documents/sowat/synthetic_observations/sky_600ms_1.fits
-tmpDir = data/test/reduction/tmp/
+tmpDir = /home/bosco/Documents/sowat/synthetic_observations/reduction/

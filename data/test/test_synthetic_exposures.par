@@ -22,4 +22,4 @@ saturation_level = 7200*u.electron
 DIT = 0.2*u.s
 nframes = 10
 nframes_limit = 100
-outfile = data/test/exposures/exposures.fits
+outfile = data/test/synthetic/exposures.fits

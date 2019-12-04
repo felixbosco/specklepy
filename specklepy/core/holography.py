@@ -63,7 +63,7 @@ def holography(params, mode='same', debug=False):
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
         find_sources(image=image, fwhm=params.starfinderFwhm, noise_threshold=params.signalToNoiseThreshold,
-            background_subtraction=True, writeto=params.allStarsFile, starfinder='DAO', verbose=False)
+            background_subtraction=False, writeto=params.allStarsFile, starfinder='DAO', verbose=False)
 
         # (v) Select reference stars
         print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
