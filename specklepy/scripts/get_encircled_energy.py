@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 try:
     from specklepy.logging import logging
     from specklepy.core.aperture import Aperture
-    from specklepy.utils.plot import encircled_energy_plot
+    from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
 except ModuleNotFoundError:
     # Prepare import from current path
     PATH = os.getcwd()
@@ -23,7 +23,7 @@ except ModuleNotFoundError:
     # Repeat import
     from specklepy.logging import logging
     from specklepy.core.aperture import Aperture
-    from specklepy.utils.plot import encircled_energy_plot
+    from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
 
 
 
@@ -36,6 +36,7 @@ def parser(options=None):
     parser.add_argument('-i', '--index', nargs='+', type=int, help='Center index of the aperture to analyse. Provide this as "--index 123 456", without other symbols.')
     parser.add_argument('-r', '--radius', type=int, default=10, help='Radius of the aperture to analyse in pix.')
     parser.add_argument('-o', '--outdir', type=str, default=None, help='Directory to write the results to. Default is to repace .fits by .dat and add a "energy" prefix.')
+    parser.add_argument('-m', '--maximize', type=bool, default=True, help='Set to True to show every debug plot on full screen. Default is True.')
     parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect results.')
 
     if options is None:
@@ -62,8 +63,14 @@ def main(options=None):
     outfile = os.path.join(args.outdir, outfile)
 
 
-    # Starting with the pre-analysis of the file
-    aperture = Aperture(args.index[0], args.index[1], radius=args.radius, data=args.file)
+    # SInitialize the aperture
+    aperture = Aperture(args.index, args.radius, data=args.file, subset_only=False)
+    peak = aperture.get_aperture_peak()
+    aperture = Aperture(peak, args.radius, data=args.file, subset_only=True)
+    if args.debug:
+        imshow(aperture.data, maximize=args.maximize)
+
+
     xdata, ydata = aperture.get_encircled_energy()
 
 
@@ -73,7 +80,7 @@ def main(options=None):
     np.savetxt(outfile, data, header=caption)
 
     if args.debug:
-        encircled_energy_plot(outfile)
+        encircled_energy_plot(outfile, maximize=args.maximize)
 
 
 

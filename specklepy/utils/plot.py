@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as clrs
 import astropy.units as u
@@ -19,7 +20,7 @@ plt.rc('font', **font)  # pass in the font dict as kwargs
 
 
 
-def imshow(image, title=None, norm=None, colorbar_label=None):
+def imshow(image, title=None, norm=None, colorbar_label=None, maximize=False):
     """Shows a 2D image.
 
     Args:
@@ -47,6 +48,8 @@ def imshow(image, title=None, norm=None, colorbar_label=None):
     plt.figure()
     plt.imshow(image, norm=norm)
     plt.title(title)
+    if maximize:
+        maximize_plot()
 
     # Colorbar
     cbar = plt.colorbar(pad=0.0)
@@ -83,6 +86,20 @@ def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
     plt.grid()
     plt.show()
     plt.close()
+
+
+
+def maximize_plot():
+    mng = plt.get_current_fig_manager()
+    backend = mpl.get_backend()
+    if backend == 'Qt4Agg' or backend == 'Qt5Agg':
+        mng.window.showMaximized()
+    elif backend == 'wxAgg':
+        mng.frame.Maximize(True)
+    elif backend == 'TkAgg':
+        mng.window.state('zoomed')
+    else:
+        raise RuntimeWarning("Maximizing plot is not possible with matplotlib backend {}".format(backend))
 
 
 
@@ -139,5 +156,36 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
 
 
 
-def encircled_energy_plot(file):
-    pass
+def encircled_energy_plot(files, normalize='peak', maximize=False):
+    """Plots the encircled energy data from a file.
+
+    Args:
+        file (str):
+            Name of the file to extract the data from.
+    """
+
+    # Input parameters
+    if isinstance(files, str):
+        plt.title(files)
+        files = [files]
+    if not isinstance(files, list):
+        raise TypeError("The function encircled_energy_plot received a file argument of type {}, but needs to be list type!")
+
+    for file in files:
+        xdata, ydata = np.loadtxt(file).transpose()
+
+        plt.xlabel("Radius (pix)")
+        if normalize == 'peak':
+            plt.ylabel("Peak normalized flux")
+            ydata /= ydata[0]
+        elif normalize == 'last':
+            plt.ylabel("Sky normalized flux")
+            ydata /= ydata[-1]
+        else:
+            plt.ylabel("Flux")
+
+        plt.plot(xdata, ydata)
+    if maximize:
+        maximize_plot()
+    plt.show()
+    plt.close()

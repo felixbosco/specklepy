@@ -1,5 +1,6 @@
 import unittest
 import os
+import glob
 
 
 
@@ -12,6 +13,18 @@ class TestApertureAnalysis(unittest.TestCase):
                     -r 100 \
                     -o data/test/analysis/ \
                     -d True')
+
+    def test_execute(self):
+        imagedir = '../synthetic_observations/'
+        files = glob.glob(imagedir + 'holo_s*fits')
+        for file in files:
+            os.system('python specklepy/scripts/get_encircled_energy.py \
+                        -f {} \
+                        -i 660 720 \
+                        -r 100 \
+                        -o {}/analysis/ \
+                        -d True'.format(file, imagedir))
+
 
 
 
