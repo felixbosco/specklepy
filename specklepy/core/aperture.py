@@ -130,24 +130,6 @@ class Aperture(object):
             return self.data
 
 
-    # def recenter_aperture(self, data=None):
-    #     """Returns a copy, which is centered on the emission peak of the aperture."""
-    #
-    #     if self.subset_only and data is None:
-    #         logging.warning("Recentering the aperture on the peak within the guess aperture is working only if subset_only is set to False.")
-    #         raise ValueError("Data error ...")
-    #
-    #     peak = self.get_aperture_peak()
-    #     if data is not None:
-    #         copy = self.__init__(*peak, self.radius, data=data, mask=self.mask, subset_only=True)
-    #     else:
-    #         copy = self.__init__(*peak, self.radius, data=np.ma.getdata(self.data), mask=self.mask, subset_only=True)
-    #
-    #     logging.info("Aperture was recentered to the peak {}.".format(peak))
-    #
-    #     return copy
-
-
     def remove_margins(self):
         if self.subset_only:
             logging.info("Margins are removed already from aperture instance.")
