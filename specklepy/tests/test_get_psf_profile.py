@@ -26,8 +26,8 @@ class TestGetPSFProfile(unittest.TestCase):
     #                     -d True'.format(file, imagedir))
 
     def test_execute_science_airy(self):
-        imagedir = '../synthetic_observations/raw/'
-        files = glob.glob(imagedir + 'airy_*ms_1.fits')
+        imagedir = '../synthetic_observations/'
+        files = glob.glob(imagedir + 'none_airy_*ms.fits')
         for file in files:
             os.system('python specklepy/scripts/get_psf_profile.py \
                         -f {} \
