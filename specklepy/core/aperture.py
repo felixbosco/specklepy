@@ -9,7 +9,22 @@ from specklepy.utils import transferfunctions as tf
 
 class Aperture(object):
 
-    def __init__(self, x0, y0, radius, data, mask='circular', subset_only=True, verbose=True):
+    def __init__(self, *args, data=None, mask='circular', subset_only=True, verbose=True):
+        """
+
+        """
+
+        if len(args) == 2 and (isinstance(args[0], tuple) or isinstance(args[0], list)):
+            x0 = args[0][0]
+            y0 = args[0][1]
+            radius = args[1]
+        elif len(args) == 3:
+            x0 = args[0]
+            y0 = args[1]
+            radius = args[2]
+        else:
+            raise ValueError("Aperture expects either 2 or 3 args, but {} have been provided!".format(len(args)))
+
         # Integer checks and handling non-integer input
         if isinstance(x0, int) and isinstance(y0, int):
             self.x0 = x0
@@ -17,11 +32,14 @@ class Aperture(object):
             self.xoffset = 0
             self.yoffset = 0
         else:
-            if isinstance(x0, float) or isinstance(y0, float):
-                self.x0 = int(np.around(x0))
-                self.y0 = int(np.around(y0))
-                self.xoffset = x0 - self.x0
-                self.yoffset = y0 - self.y0
+            x0 = float(x0)
+            y0 = float(y0)
+            self.x0 = int(np.around(x0))
+            self.y0 = int(np.around(y0))
+            self.xoffset = x0 - self.x0
+            self.yoffset = y0 - self.y0
+
+
         if isinstance(radius, int):
             self.radius = radius
         else:
@@ -112,14 +130,22 @@ class Aperture(object):
             return self.data
 
 
-    # def recenter_aperture(self, peak=None):
-    #     if self.subset_only:
+    # def recenter_aperture(self, data=None):
+    #     """Returns a copy, which is centered on the emission peak of the aperture."""
+    #
+    #     if self.subset_only and data is None:
     #         logging.warning("Recentering the aperture on the peak within the guess aperture is working only if subset_only is set to False.")
+    #         raise ValueError("Data error ...")
+    #
+    #     peak = self.get_aperture_peak()
+    #     if data is not None:
+    #         copy = self.__init__(*peak, self.radius, data=data, mask=self.mask, subset_only=True)
     #     else:
-    #         if peak is None:
-    #             peak = self.get_aperture_peak()
-    #         self = self.__init__(*peak, self.radius, data=np.ma.getdata(self.data), mask=self.mask, subset_only=self.subset_only)
-    #         logging.info("Aperture was recentered to the peak {}.".format(self.index))
+    #         copy = self.__init__(*peak, self.radius, data=np.ma.getdata(self.data), mask=self.mask, subset_only=True)
+    #
+    #     logging.info("Aperture was recentered to the peak {}.".format(peak))
+    #
+    #     return copy
 
 
     def remove_margins(self):
