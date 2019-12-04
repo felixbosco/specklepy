@@ -4,7 +4,7 @@ import glob
 
 
 
-class TestApertureAnalysis(unittest.TestCase):
+class TestGetEncircledEnergy(unittest.TestCase):
 
     def test_execute(self):
         os.system('python specklepy/scripts/get_encircled_energy.py \
