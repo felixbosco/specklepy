@@ -149,7 +149,7 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
     # Create list of colors with varied saturation values
     colors = []
     for saturation_value in saturation_values:
-        color = clrs.to_rgb((hsv_color[0], saturation_value, hsv_color[2]))
+        color = clrs.hsv_to_rgb((hsv_color[0], saturation_value, hsv_color[2]))
         colors.append(color)
 
     return colors
