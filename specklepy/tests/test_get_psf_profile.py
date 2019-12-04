@@ -14,15 +14,26 @@ class TestGetPSFProfile(unittest.TestCase):
                     -o data/test/analysis/ \
                     -d True')
 
-    def test_execute(self):
-        imagedir = '../synthetic_observations/'
-        files = glob.glob(imagedir + '*_s*fits')
+    # def test_execute_science(self):
+    #     imagedir = '../synthetic_observations/'
+    #     files = glob.glob(imagedir + '*_s*fits')
+    #     for file in files:
+    #         os.system('python specklepy/scripts/get_psf_profile.py \
+    #                     -f {} \
+    #                     -i 660 720 \
+    #                     -r 75 \
+    #                     -o {}/analysis/ \
+    #                     -d True'.format(file, imagedir))
+
+    def test_execute_science_airy(self):
+        imagedir = '../synthetic_observations/raw/'
+        files = glob.glob(imagedir + 'airy_*ms_1.fits')
         for file in files:
             os.system('python specklepy/scripts/get_psf_profile.py \
                         -f {} \
                         -i 660 720 \
                         -r 75 \
-                        -o {}/analysis/ \
+                        -o ../synthetic_observations/analysis/ \
                         -d True'.format(file, imagedir))
 
 
