@@ -14,16 +14,16 @@ class TestApertureAnalysis(unittest.TestCase):
                     -o data/test/analysis/ \
                     -d True')
 
-    def test_execute(self):
-        imagedir = '../synthetic_observations/'
-        files = glob.glob(imagedir + '*_s*fits')
-        for file in files:
-            os.system('python specklepy/scripts/get_encircled_energy.py \
-                        -f {} \
-                        -i 660 720 \
-                        -r 75 \
-                        -o {}/analysis/ \
-                        -d True'.format(file, imagedir))
+    # def test_execute(self):
+    #     imagedir = '../synthetic_observations/'
+    #     files = glob.glob(imagedir + '*_s*fits')
+    #     for file in files:
+    #         os.system('python specklepy/scripts/get_encircled_energy.py \
+    #                     -f {} \
+    #                     -i 660 720 \
+    #                     -r 75 \
+    #                     -o {}/analysis/ \
+    #                     -d True'.format(file, imagedir))
 
 
 

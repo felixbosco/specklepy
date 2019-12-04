@@ -113,21 +113,20 @@ class Aperture(object):
             return np.repeat(mask3D, repeats=self.data.shape[0], axis=0)
 
 
-    def get_aperture_peak(self):
-        if self.data.ndim == 3:
-            logging.info("Aperture data are 3D and therefore integrated before the aperture is recentered.")
-            # Integrate the data cube
-            tmp = np.sum(self.data, axis=0)
-            return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
-        else:
-            return np.unravel_index(np.argmax(self.data, axis=None), self.data.shape)
-
-
     def get_integrated(self):
+        """Returns a 2-dimensional represntation of the aperture and integrates
+        along the time axis if necessary.
+        """
         if self.data.ndim == 3:
             return np.sum(self.data, axis=0)
         else:
-            return self.data
+            return copy(self.data)
+
+
+    def get_aperture_peak(self):
+        """Returns the coordinates of the emission peak in the aperture."""
+        tmp = self.get_integrated()
+        return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
 
 
     def remove_margins(self):
@@ -179,31 +178,40 @@ class Aperture(object):
 
 
     def get_encircled_energy(self, saveto=None):
-        # Integrate data if 3D
-        if self.data.ndim == 3:
-            logging.info("Aperture data are 3D and integrated before the encircled energy is estimated.")
-            # Integrate the data cube
-            self.tmp = np.sum(self.data, axis=0)
-        else:
-            self.tmp = copy(self.data)
+        """Extracts the encircled energy from an aperture as a function of
+        radius."""
+
+        tmp = self.get_integrated()
 
         # Initialize variables
         rdata = np.arange(0, self.radius, 1)
-        out = np.zeros((self.radius))
+        ydata = np.zeros(rdata.shape)
         distance_map = self.make_distance_map(center=(self.radius, self.radius))
 
         # Iterate over aperture radii
         for index, subset_radius in enumerate(rdata):
             mask = np.ma.masked_greater(distance_map, subset_radius).mask
-            out[index] = np.sum(np.ma.masked_array(self.tmp, mask=mask))
+            ydata[index] = np.sum(np.ma.masked_array(tmp, mask=mask))
 
         # Save results to file
         if saveto is not None:
-            caption = "radius_(pix) encircled_energy(data_unit)"
-            data = np.concatenate(([rdata], [out]), axis=0).transpose()
-            np.savetxt(saveto, data, header=caption)
+            header = "radius_(pix) encircled_energy(data_unit)"
+            data = np.concatenate(([rdata], [ydata]), axis=0).transpose()
+            np.savetxt(saveto, data, header=header)
             logging.info("Saved encircled energy data to file {}".format(saveto))
 
-        # Clean up temporary file
-        del self.tmp
-        return rdata, out
+        return rdata, ydata
+
+
+    def get_psf_profile(self):
+        """Computes the radial average of the PSF in the aperture."""
+
+        tmp = self.get_integrated()
+
+        radius_map = self.make_distance_map(center=(self.radius, self.radius))
+        rdata = np.unique(radius_map)
+        ydata = np.zeros(rdata.shape)
+        for index, radius in enumerate(rdata):
+            ydata[index] = np.mean(tmp[np.where(radius_map == radius)])
+
+        return rdata, ydata
