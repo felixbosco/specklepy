@@ -15,5 +15,11 @@ class TestSSAReconstrution(unittest.TestCase):
                     -t data/test/tmp/ \
                     -o data/test/example_cubes_ssa.fits')
 
+    # def test_science_data(self):
+    #     os.system('python specklepy/scripts/ssa_reconstruction.py \
+    #                 -f "/home/bosco/Documents/sowat/synthetic_observations/reduction/sglao_600ms_?.fits" \
+    #                 -t /home/bosco/Documents/sowat/synthetic_observations/tmp/ \
+    #                 -o /home/bosco/Documents/sowat/synthetic_observations/ssa_sglao_600ms.fits')
+
 if __name__ == "__main__":
     unittest.main()
