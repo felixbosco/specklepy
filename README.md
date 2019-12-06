@@ -44,6 +44,8 @@ The `synthetic` module is capable of creating synthetic observations from parame
 ## Version history
 These are the incremental updates between versions:
 
+- *0.4.2dev*: Developing error propagation of the PSF estimate
+- *0.4.1dev*: Developing the data `reduction` module, beginning with sky subtraction
 - *0.4.0*: Specklepy received the `synthetic` module for creating synthetic observations
 - *0.3.0*: The image reconstruction module now handles cube alignment. This enabled the first successful holographic image reconstruction of multiple dithered data cubes. Note that this bit of code is labeled vesion 0.0.3 in the setup.py.
 - *0.2.0*: The holographic image reconstruction is nowfunctional. Note that this bit of code is labeled vesion 0.0.2 in the setup.py.
