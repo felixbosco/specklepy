@@ -9,9 +9,28 @@ from specklepy.utils import transferfunctions as tf
 
 class Aperture(object):
 
-    def __init__(self, *args, data=None, mask='circular', subset_only=True, verbose=True):
-        """
+    def __init__(self, *args, data, mask='circular', subset_only=True, verbose=True):
+        """Instantiate Aperture object.
 
+        Long description...
+
+        Args:
+            *args:
+                .
+            data (np.ndarray, str):
+                2D or 3D np.ndarray that the aperture shall be extracted of. If
+                provided as str type, this is assumed to be a path and the 
+                objects tries to read the fits file.
+            mask (str, optional):
+                Mode that is describing, how the aperture is masked. Can be 
+                'circular' or None. If 'circular', then it creates a circular 
+                mask and the data become a np.ma.masked_array. Default is 
+                'circular'.
+            subset_only (bool, optional):
+                If set to True, then the object only stores a copy of the data
+                with radius around the center. Default is True.
+            verbose (bool, optional):
+                Set to True for retrieving more information. Default is True.
         """
 
         if len(args) == 2 and (isinstance(args[0], tuple) or isinstance(args[0], list)):
