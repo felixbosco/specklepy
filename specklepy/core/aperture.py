@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 from copy import copy
 from astropy.io import fits
 from datetime import datetime
@@ -9,7 +10,7 @@ from specklepy.utils import transferfunctions as tf
 
 class Aperture(object):
 
-    def __init__(self, *args, data, mask='circular', crop=True, verbose=True, **kwargs):
+    def __init__(self, *args, data, mask='circular', crop=True, verbose=True):
         """Instantiate Aperture object.
 
         Long description...
@@ -77,26 +78,15 @@ class Aperture(object):
             raise ValueError("Data input of Aperture class must be of dimension 2 or 3, but was provided as data.ndim={}.".format(data.ndim))
         self.data = copy(data)
 
-        # Interprete mask argument
-        self.mask = mask
-        if self.mask is None:
-            pass
-        elif self.mask is 'circular':
-            self.data = np.ma.masked_array(self.data, mask=self.make_mask())
-        else:
-            raise ValueError("Mask type '{}' of Aperture instance not understood.".format(mask))
+        # Remove the margins if requested
+        self.cropped = False
+        if crop:
+            self.crop()
 
-        # Remove the masked margins if requested
-        if 'subset_only' in kwargs:
-            self.cropped = kwargs['subset_only']
-        else:
-            self.cropped = crop
-        if self.cropped:
-            if data.ndim == 2:
-                self.data = copy(self.data[self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
-            elif data.ndim == 3:
-                self.data = copy(self.data[:, self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
-
+        # Create a mask
+        mask = self.make_mask(mode=mask)
+        self.data = np.ma.masked_array(self.data, mask=mask)
+        
 
     @property
     def width(self):
@@ -122,21 +112,43 @@ class Aperture(object):
         return self.data[index]
 
 
-    def make_distance_map(self, center=None):
-        if center is None:
+    def make_distance_map(self):
+        if self.cropped:
+            center = (self.radius, self.radius)
+        else:
             center = self.index
         xx, yy = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
         return np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
 
 
-    def make_mask(self):
-        distance_map = self.make_distance_map()
-        mask2D = np.ma.masked_greater(distance_map, self.radius).mask
-        if self.data.ndim == 2:
-            return mask2D
-        elif self.data.ndim == 3:
-            mask3D = np.expand_dims(mask2D, axis=0)
-            return np.repeat(mask3D, repeats=self.data.shape[0], axis=0)
+    def make_mask(self, mode='circular'):
+        """Create a circular or rectangular mask."""
+
+        if not isinstance(mode, str):
+            raise TypeError("Aperture received mask argument of type {}, but needs to be str type!".format(type(mask)))
+
+        if mode == 'circular':
+            distance_map = self.make_distance_map()
+            mask2D = np.ma.masked_greater(distance_map, self.radius).mask
+            if self.data.ndim == 2:
+                return mask2D
+            elif self.data.ndim == 3:
+                mask3D = np.expand_dims(mask2D, axis=0)
+                return np.repeat(mask3D, repeats=self.data.shape[0], axis=0)
+        elif mode == 'rectangular':
+            if self.cropped:
+                return np.zeros(self.data.shape, dtype=bool)
+            else:
+                mask = np.ones(self.data.shape, dtype=bool)
+                if mask.ndim == 2:
+                    mask[self.x0 - self.radius : self.y0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius +1] = 0
+                elif mask.ndim == 3:
+                    mask[ : , self.x0 - self.radius : self.y0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius +1] = 0
+                return mask
+        else:
+            raise ValueError("Aperture received mask argument {}, but needs to be either 'circular' or 'rectangular'!".format(mask))
+
+        
 
 
     def get_integrated(self):
@@ -215,7 +227,7 @@ class Aperture(object):
         # Initialize variables
         rdata = np.arange(0, self.radius, 1)
         ydata = np.zeros(rdata.shape)
-        distance_map = self.make_distance_map(center=(self.radius, self.radius))
+        distance_map = self.make_distance_map()
 
         # Iterate over aperture radii
         for index, subset_radius in enumerate(rdata):
@@ -237,10 +249,12 @@ class Aperture(object):
 
         tmp = self.get_integrated()
 
-        radius_map = self.make_distance_map(center=(self.radius, self.radius))
+        radius_map = self.make_distance_map()
         rdata = np.unique(radius_map)
         ydata = np.zeros(rdata.shape)
-        for index, radius in enumerate(rdata):
-            ydata[index] = np.mean(tmp[np.where(radius_map == radius)])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for index, radius in enumerate(rdata):
+                ydata[index] = np.mean(tmp[np.where(radius_map == radius)])
 
         return rdata, ydata

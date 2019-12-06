@@ -21,13 +21,13 @@ class TestAperture(unittest.TestCase):
         with self.assertRaises(ValueError):
             Aperture(8.2, 8.3, 3.7, data=self.test_data)
 
-    def test_remove_margins(self):
-        aperture = Aperture(8, 8, 4, data=self.test_data, subset_only=True)
-        aperture.remove_margins()
+    def test_crop(self):
+        aperture = Aperture(8, 8, 4, data=self.test_data, crop=True)
+        aperture.crop()
         # imshow(aperture())
-        aperture = Aperture(8, 8, 4, data=self.test_data, subset_only=False)
+        aperture = Aperture(8, 8, 4, data=self.test_data, crop=False)
         # imshow(aperture())
-        aperture.remove_margins()
+        aperture.crop()
         # imshow(aperture())
 
 
