@@ -9,26 +9,30 @@ from specklepy.utils import transferfunctions as tf
 
 class Aperture(object):
 
-    def __init__(self, *args, data, mask='circular', subset_only=True, verbose=True):
+    def __init__(self, *args, data, mask='circular', crop=True, verbose=True, **kwargs):
         """Instantiate Aperture object.
 
         Long description...
 
         Args:
-            *args:
-                .
+            *args (int, float:
+                Can be either two or three arguments, where the last is always 
+                interpreted as the aperture radius, which must be int type. The
+                other arguments can be either a coordinate tuple or two 
+                individual coordinates.
             data (np.ndarray, str):
                 2D or 3D np.ndarray that the aperture shall be extracted of. If
                 provided as str type, this is assumed to be a path and the 
                 objects tries to read the fits file.
             mask (str, optional):
                 Mode that is describing, how the aperture is masked. Can be 
-                'circular' or None. If 'circular', then it creates a circular 
-                mask and the data become a np.ma.masked_array. Default is 
-                'circular'.
-            subset_only (bool, optional):
+                'circular' or 'rectangular'. If 'circular', then it creates a 
+                circular mask and the data become a np.ma.masked_array. Default
+                is 'circular'.
+            crop (bool, optional):
                 If set to True, then the object only stores a copy of the data
-                with radius around the center. Default is True.
+                with radius around the center. Otherwise all the data beyond 
+                the limits of the aperture are masked. Default is True.
             verbose (bool, optional):
                 Set to True for retrieving more information. Default is True.
         """
@@ -83,8 +87,11 @@ class Aperture(object):
             raise ValueError("Mask type '{}' of Aperture instance not understood.".format(mask))
 
         # Remove the masked margins if requested
-        self.subset_only = subset_only
-        if subset_only:
+        if 'subset_only' in kwargs:
+            self.cropped = kwargs['subset_only']
+        else:
+            self.cropped = crop
+        if self.cropped:
             if data.ndim == 2:
                 self.data = copy(self.data[self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
             elif data.ndim == 3:
@@ -148,15 +155,18 @@ class Aperture(object):
         return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
 
 
-    def remove_margins(self):
-        if self.subset_only:
+    def crop(self):
+        if self.cropped:
             logging.info("Margins are removed already from aperture instance.")
         else:
             if self.data.ndim == 2:
                 self.data = copy(self.data[self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
             elif self.data.ndim == 3:
                 self.data = copy(self.data[:, self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
-            self.subset_only = True
+            self.cropped = True
+
+    def remove_margins(self):
+        self.crop()
 
 
     def initialize_Fourier_file(self, infile, Fourier_file):
