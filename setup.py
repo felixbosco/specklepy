@@ -16,7 +16,7 @@ def get_scripts(generic):
     return scripts
 
 setup(name='specklepy',
-      version='0.4.1dev',
+      version='0.4.2dev',
       description='',
       long_description=long_description,
       long_description_content_type="text/markdown",
