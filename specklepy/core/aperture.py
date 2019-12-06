@@ -88,6 +88,7 @@ class Aperture(object):
         self.data = np.ma.masked_array(self.data, mask=mask)
         
 
+
     @property
     def width(self):
         return self.radius * 2 + 1
@@ -104,12 +105,9 @@ class Aperture(object):
     def shape(self):
         return self.data.shape
 
-
-    def __call__(self):
-        return self.data
-
     def __getitem__(self, index):
         return self.data[index]
+
 
 
     def make_distance_map(self):
@@ -119,6 +117,7 @@ class Aperture(object):
             center = self.index
         xx, yy = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
         return np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
+
 
 
     def make_mask(self, mode='circular'):
@@ -148,23 +147,6 @@ class Aperture(object):
         else:
             raise ValueError("Aperture received mask argument {}, but needs to be either 'circular' or 'rectangular'!".format(mask))
 
-        
-
-
-    def get_integrated(self):
-        """Returns a 2-dimensional represntation of the aperture and integrates
-        along the time axis if necessary.
-        """
-        if self.data.ndim == 3:
-            return np.sum(self.data, axis=0)
-        else:
-            return copy(self.data)
-
-
-    def get_aperture_peak(self):
-        """Returns the coordinates of the emission peak in the aperture."""
-        tmp = self.get_integrated()
-        return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
 
 
     def crop(self):
@@ -179,6 +161,25 @@ class Aperture(object):
 
     def remove_margins(self):
         self.crop()
+
+        
+
+    def get_integrated(self):
+        """Returns a 2-dimensional represntation of the aperture and integrates
+        along the time axis if necessary.
+        """
+        if self.data.ndim == 3:
+            return np.sum(self.data, axis=0)
+        else:
+            return copy(self.data)
+
+
+
+    def get_aperture_peak(self):
+        """Returns the coordinates of the emission peak in the aperture."""
+        tmp = self.get_integrated()
+        return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
+
 
 
     def initialize_Fourier_file(self, infile, Fourier_file):
@@ -196,6 +197,7 @@ class Aperture(object):
         logging.info("Initialized {}".format(self.Fourier_file))
 
 
+
     def powerspec_to_file(self, infile=None, Fourier_file=None):
         if not hasattr(self, 'Fourier_file'):
             self.initialize_Fourier_file(infile, Fourier_file)
@@ -209,6 +211,7 @@ class Aperture(object):
         logging.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
 
 
+
     def powerspec(self):
         self.Fourier_data = np.zeros(self.data.shape)
         for index, frame in enumerate(self.data):
@@ -216,6 +219,7 @@ class Aperture(object):
             self.Fourier_data[index] = tf.powerspec(frame)
         print()
         logging.info("Computed the Fourier transform of every frame.")
+
 
 
     def get_encircled_energy(self, saveto=None):
@@ -242,6 +246,7 @@ class Aperture(object):
             logging.info("Saved encircled energy data to file {}".format(saveto))
 
         return rdata, ydata
+
 
 
     def get_psf_profile(self):
