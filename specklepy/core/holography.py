@@ -141,7 +141,7 @@ def get_noise_mask(frame, noise_reference_margin):
     """
     center = int((frame.shape[0] - 1) / 2)
     radius = center - noise_reference_margin
-    tmp = Aperture(center, center, radius, frame, subset_only=False)
+    tmp = Aperture(center, center, radius, data=frame, crop=False)
     annulus_mask = np.logical_not(tmp.data.mask)
     return annulus_mask
 

@@ -65,9 +65,9 @@ def main(options=None):
 
 
     # SInitialize the aperture
-    aperture = Aperture(args.index, args.radius, data=args.file, subset_only=True)
+    aperture = Aperture(args.index, args.radius, data=args.file, crop=True)
     # peak = aperture.get_aperture_peak()
-    # aperture = Aperture(peak, args.radius, data=args.file, subset_only=True)
+    # aperture = Aperture(peak, args.radius, data=args.file, crop=True)
     if args.debug:
         imshow(aperture.get_integrated(), maximize=args.maximize)
 
