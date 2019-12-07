@@ -39,9 +39,9 @@ class TestAperture(unittest.TestCase):
     def test_call(self):
         imshow(self.test_data)
         test_aperture = Aperture(8, 8, 4, data=self.test_data)
-        imshow(test_aperture())
+        imshow(test_aperture.data)
         test_aperture = Aperture(64, 64, 16, data=self.test_data_large)
-        imshow(test_aperture())
+        imshow(test_aperture.data)
 
 if __name__ == "__main__":
     unittest.main()

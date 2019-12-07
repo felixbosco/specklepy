@@ -17,27 +17,28 @@ class Aperture(object):
 
         Args:
             *args (int, float:
-                Can be either two or three arguments, where the last is always 
+                Can be either two or three arguments, where the last is always
                 interpreted as the aperture radius, which must be int type. The
-                other arguments can be either a coordinate tuple or two 
+                other arguments can be either a coordinate tuple or two
                 individual coordinates.
             data (np.ndarray, str):
                 2D or 3D np.ndarray that the aperture shall be extracted of. If
-                provided as str type, this is assumed to be a path and the 
+                provided as str type, this is assumed to be a path and the
                 objects tries to read the fits file.
             mask (str, optional):
-                Mode that is describing, how the aperture is masked. Can be 
-                'circular' or 'rectangular'. If 'circular', then it creates a 
+                Mode that is describing, how the aperture is masked. Can be
+                'circular' or 'rectangular'. If 'circular', then it creates a
                 circular mask and the data become a np.ma.masked_array. Default
                 is 'circular'.
             crop (bool, optional):
                 If set to True, then the object only stores a copy of the data
-                with radius around the center. Otherwise all the data beyond 
+                with radius around the center. Otherwise all the data beyond
                 the limits of the aperture are masked. Default is True.
             verbose (bool, optional):
                 Set to True for retrieving more information. Default is True.
         """
 
+        # Interprete the args
         if len(args) == 2 and (isinstance(args[0], tuple) or isinstance(args[0], list)):
             x0 = args[0][0]
             y0 = args[0][1]
@@ -58,8 +59,8 @@ class Aperture(object):
         else:
             x0 = float(x0)
             y0 = float(y0)
-            self.x0 = int(np.around(x0))
-            self.y0 = int(np.around(y0))
+            self.x0 = np.rint(x0).astype(int)
+            self.y0 = np.rint(y0).astype(int)
             self.xoffset = x0 - self.x0
             self.yoffset = y0 - self.y0
 
@@ -86,7 +87,7 @@ class Aperture(object):
         # Create a mask
         mask = self.make_mask(mode=mask)
         self.data = np.ma.masked_array(self.data, mask=mask)
-        
+
 
 
     @property
@@ -162,7 +163,7 @@ class Aperture(object):
     def remove_margins(self):
         self.crop()
 
-        
+
 
     def get_integrated(self):
         """Returns a 2-dimensional represntation of the aperture and integrates
