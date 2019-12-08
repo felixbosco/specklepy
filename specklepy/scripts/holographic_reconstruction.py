@@ -60,7 +60,7 @@ def main(options=None):
                         make_dirs=make_dirs)
 
     # Instantiate handler classes
-    params.outFile = RECfile(files=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
+    params.outFile = RECfile(filename=params.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
     holography(params, debug=args.debug)

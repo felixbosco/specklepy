@@ -107,7 +107,7 @@ class Outfile(object):
 
     @data.setter
     def data(self, data):
-        with fits.open(self.filename, mode='update', ext=extension) as hdulist:
+        with fits.open(self.filename, mode='update') as hdulist:
             hdulist[0].data = data
             hdulist[0].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()

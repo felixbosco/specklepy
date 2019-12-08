@@ -55,8 +55,8 @@ def main(options=None):
         os.system('mkdir {}'.format(args.tmpdir))
 
     # Execute reconstruction
-    recfile = RECfile(files=files, filename=args.recfile, cards={"RECONSTRUCTION": "SSA"})
-    ssa(files, tmp_dir=args.tmpdir, recfile=recfile, debug=args.debug)
+    outfile = RECfile(filename=args.recfile, files=files, cards={"RECONSTRUCTION": "SSA"})
+    ssa(files, tmp_dir=args.tmpdir, outfile=outfile, debug=args.debug)
 
 
 if __name__ == '__main__':

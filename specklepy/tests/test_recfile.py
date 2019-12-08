@@ -10,7 +10,7 @@ class TestRECfile(unittest.TestCase):
         self.FileManager = FileManager("data/test/example_cube.fits")
 
     def test_init(self):
-        RECfile(files=self.FileManager.files, filename="data/test/test_recfile.fits", cards={"RECONSTRUCTION": "Test"})
+        RECfile(filename="data/test/test_recfile.fits", files=self.FileManager.files, cards={"RECONSTRUCTION": "Test"})
 
     def test_set_data(self):
         pass
