@@ -8,8 +8,6 @@ import warnings
 try:
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
-    from specklepy.io.filemanager import FileManager
-    from specklepy.io.recfile import RECfile
     from specklepy.core.holography import holography
 except ModuleNotFoundError:
     # Prepare import from current path
@@ -20,8 +18,6 @@ except ModuleNotFoundError:
     # Repeat import
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
-    from specklepy.io.filemanager import FileManager
-    from specklepy.io.recfile import RECfile
     from specklepy.core.holography import holography
 
 
@@ -58,9 +54,6 @@ def main(options=None):
                         defaults_file=defaults_file,
                         essential_attributes=essential_attributes,
                         make_dirs=make_dirs)
-
-    # Instantiate handler classes
-    params.outFile = RECfile(filename=params.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
     holography(params, debug=args.debug)

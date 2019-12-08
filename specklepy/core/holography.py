@@ -48,6 +48,9 @@ def holography(params, mode='same', debug=False):
                             argument '{}', but must be either 'same', 'full', \
                             or 'valid'.".format(mode))
 
+    # Initialize the outfile
+    params.outFile = RECfile(filename=params.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
+
     # (i-ii) Align cubes
     shifts = get_shifts(files=params.inFiles,
                             reference_file=params.alignmentReferenceFile,
