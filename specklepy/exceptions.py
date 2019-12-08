@@ -1,3 +1,6 @@
+def type_error(object, argname, argtype, expected):
+    return "{} received {} argument of type {}, but must be {} type!".format(object, argname, argtype, expected)
+
 class SpecklepyValueError(Exception):
 
     def __init__(self, function, argument, value, expected):
