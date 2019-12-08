@@ -7,10 +7,13 @@ from specklepy.io.outfile import Outfile
 class TestOutfile(unittest.TestCase):
 
     def setUp(self):
-        self.FileManager = FileManager("data/test/example_cube.fits")
+        pass
 
     def test_init(self):
-        Outfile(files=self.FileManager.files, filename="data/test/test_outfile.fits", cards={"RECONSTRUCTION": "Test"})
+        with self.assertRaises(RuntimeError):
+            Outfile(None)
+        Outfile(filename="data/test/test_outfile.fits", shape=None, cards={"RECONSTRUCTION": "Test"})
+        Outfile(filename="data/test/test_outfile.fits", shape=(10, 10), extensions='var', cards={"RECONSTRUCTION": "Test"}, timestamp=True)
 
     def test_set_data(self):
         pass
