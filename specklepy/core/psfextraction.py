@@ -73,7 +73,7 @@ class ReferenceStars(object):
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
+            psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY ")
             self.params.psfFiles.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e.

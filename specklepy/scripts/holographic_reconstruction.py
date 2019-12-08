@@ -9,7 +9,7 @@ try:
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
-    from specklepy.io.outfile import Outfile
+    from specklepy.io.recfile import RECfile
     from specklepy.core.holography import holography
 except ModuleNotFoundError:
     # Prepare import from current path
@@ -21,7 +21,7 @@ except ModuleNotFoundError:
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
-    from specklepy.io.outfile import Outfile
+    from specklepy.io.recfile import RECfile
     from specklepy.core.holography import holography
 
 
@@ -47,7 +47,7 @@ def main(options=None):
 
     # Default values
     defaults_file = "specklepy/config/holography.cfg"
-    essential_attributes = ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile', 'psfRadius', 'noiseThreshold', 'apodizationWidth', 'apodizationType']
+    essential_attributes = ['inDir', 'tmpDir', 'recfile', 'alignmentReferenceFile', 'refSourceFile', 'psfRadius', 'noiseThreshold', 'apodizationWidth', 'apodizationType']
     make_dirs = ['inDir', 'tmpDir']
 
     # Read parameters from file
@@ -60,7 +60,7 @@ def main(options=None):
                         make_dirs=make_dirs)
 
     # Instantiate handler classes
-    params.outFile = Outfile(files=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
+    params.outFile = RECfile(files=params.inFiles, filename=params.outFile, cards={"RECONSTRUCTION": "Holography"})
 
     # Execute reconstruction
     holography(params, debug=args.debug)

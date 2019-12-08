@@ -8,7 +8,7 @@ import warnings
 try:
     from specklepy.logging import logging
     from specklepy.io.filemanager import FileManager
-    from specklepy.io.outfile import Outfile
+    from specklepy.io.recfile import RECfile
     from specklepy.core.ssa import ssa
 except ModuleNotFoundError:
     # Prepare import from current path
@@ -19,7 +19,7 @@ except ModuleNotFoundError:
     # Repeat import
     from specklepy.logging import logging
     from specklepy.io.filemanager import FileManager
-    from specklepy.io.outfile import Outfile
+    from specklepy.io.recfile import RECfile
     from specklepy.core.ssa import ssa
 
 
@@ -31,7 +31,7 @@ def parser(options=None):
 
     parser.add_argument('-f', '--file', type=str, default=None, help='Fits file or generic file name to consider for the SSA reconstruction.')
     parser.add_argument('-t', '--tmpdir', type=str, default=None, help='Path to save temporary files to.')
-    parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the outfile file.')
+    parser.add_argument('-o', '--recfile', type=str, default=None, help='Name of the recfile file.')
     parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
 
     if options is None:
@@ -55,8 +55,8 @@ def main(options=None):
         os.system('mkdir {}'.format(args.tmpdir))
 
     # Execute reconstruction
-    outfile = Outfile(files=files, filename=args.outfile, cards={"RECONSTRUCTION": "SSA"})
-    ssa(files, tmp_dir=args.tmpdir, outfile=outfile, debug=args.debug)
+    recfile = RECfile(files=files, filename=args.recfile, cards={"RECONSTRUCTION": "SSA"})
+    ssa(files, tmp_dir=args.tmpdir, recfile=recfile, debug=args.debug)
 
 
 if __name__ == '__main__':

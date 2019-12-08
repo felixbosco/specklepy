@@ -7,7 +7,7 @@ from astropy.io import fits
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
-from specklepy.io.outfile import Outfile
+from specklepy.io.recfile import RECfile
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
 from specklepy.core.apodization import apodize
@@ -71,7 +71,7 @@ def holography(params, mode='same', debug=False):
 
         # (vi) PSF extraction
         refStars = ReferenceStars(params)
-        refStars.extract_psfs(file_shifts=shifts, inspect_aperture=False)
+        refStars.extract_psfs(file_shifts=shifts, debug=False)
         logging.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding

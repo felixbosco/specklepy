@@ -8,7 +8,7 @@ from specklepy.logging import logging
 
 class PSFfile(object):
 
-    def __init__(self, inFile, outDir, frame_shape, cards={}, header_prefix="HIERARCH specklepy "):
+    def __init__(self, inFile, outDir, frame_shape, cards=None, header_prefix=None):
 
         # Create PSF directory, if not existing yet
         # outDir += 'psf/'
@@ -24,6 +24,16 @@ class PSFfile(object):
         # Type assertion
         if not isinstance(frame_shape, tuple):
             raise TypeError("frame_shape argument must have type tuple but was given as {}.".format(type(frame_shape)))
+
+        if cards is None:
+            cards = {}
+        elif not isinstance(cards, dict):
+            raise TypeError("PSFfile received cards argument of type {}, but needs to be dict type!".format(type(cards)))
+
+        if header_prefix is None:
+            header_prefix = ""
+        elif not isinstance(header_prefix, str):
+            raise TypeError("PSFfile received header_prefix argument of type {}, but needs to be str type!".format(type(header_prefix)))
 
         # Initialize HDU
         hdu = fits.PrimaryHDU()

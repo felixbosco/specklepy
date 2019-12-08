@@ -10,10 +10,10 @@ class TestPSFfile(unittest.TestCase):
         self.frame_shape = (25, 25)
 
     def test_init(self):
-        PSFfile(inFile="data/test/example_cube.fits", outDir="data/test/tmp/", frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"})
+        PSFfile(inFile="data/test/example_cube.fits", outDir="data/test/tmp/", frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"}, header_prefix="HIERARCH SPECKLEPY ")
 
     def test_set_data(self):
-        psf_file = PSFfile(inFile="data/test/example_cube.fits", outDir="data/test/tmp/", frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"})
+        psf_file = PSFfile(inFile="data/test/example_cube.fits", outDir="data/test/tmp/", frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"}, header_prefix="HIERARCH SPECKLEPY ")
         psf_file.update_frame(3, rand(*self.frame_shape))
 
 if __name__ == "__main__":
