@@ -1,15 +1,14 @@
-def type_error(object, argname, argtype, expected):
-    return "{} received {} argument of type {}, but must be {} type!".format(object, argname, argtype, expected)
+class SpecklepyValueError(ValueError):
 
-class SpecklepyValueError(Exception):
-
-    def __init__(self, function, argument, value, expected):
-        message = "The function {} received {}={}, but must be {}!".format(function, argument, value, expected)
-        raise ValueError(message)
+    def __init__(self, object, argname, argvalue, expected, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        message = "{} received argument {}={}, but must be {}!".format(object, argname, argvalue, expected)
+        raise ValueError(message, *args, **kwargs)
 
 
-class SpecklepyTypeError(Exception):
+class SpecklepyTypeError(TypeError):
 
-    def __init__(self, function, argument, type, expected):
-        message = "The function {} received argument {} of type {}, but must be {}".format(function, argument, value, expected)
-        raise TypeError(message)
+    def __init__(self, object, argname, argtype, expected, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        message = "{} received argument {} of type {}, but must be {} type!".format(object, argname, argtype, expected)
+        raise TypeError(message, *args, **kwargs)
