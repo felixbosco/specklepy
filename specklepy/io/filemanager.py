@@ -2,7 +2,6 @@ import glob
 from astropy.io import fits
 
 from specklepy.logging import logging
-from specklepy.io.outfile import Outfile
 
 
 class FileManager(object):
