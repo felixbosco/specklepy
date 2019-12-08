@@ -45,7 +45,7 @@ class ReferenceStars(object):
             self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, crop=True, verbose=False))
 
 
-    def extract_psfs(self, mode='align_median', file_shifts=None, inspect_aperture=False):
+    def extract_psfs(self, mode='align_median', file_shifts=None, debug=False):
         """Extract the PSF of the list of ReferenceStars frame by frame.
 
         Long description...
@@ -53,7 +53,9 @@ class ReferenceStars(object):
         Args:
             mode (str, optional):
             file_shifts (list, optional):
-            inspect_aperture (bool, optional):
+            debug (bool, optional):
+                Shows the (integrated) apertures if set to True. Default is
+                False.
         """
 
         # Input parameters
@@ -84,7 +86,7 @@ class ReferenceStars(object):
             frame_number = fits.getheader(file)['NAXIS3']
 
             # Check apertures visually
-            if inspect_aperture:
+            if debug:
                 for index, aperture in enumerate(self.apertures):
                     imshow(aperture.get_integrated(), title="Inspect reference aperture {}".format(index + 1))
 
