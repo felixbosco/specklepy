@@ -9,15 +9,15 @@ from specklepy.io.outfile import Outfile
 
 class RECfile(Outfile):
 
-    def __init__(self, files, filename=None, cards=None, header_prefix="HIERARCH SPECKLEPY"):
+    def __init__(self, filename, files, cards=None, header_prefix="HIERARCH SPECKLEPY"):
 
         if cards is None:
             cards = {}
 
         # Add list of files to header
         for index, file in enumerate(files):
-            cards["FILE {} NAME".format(index)] = path.basename(file)
-            cards["FILE {} FRAMENUMBER".format(index)] = fits.getheader(file)['NAXIS3']
+            cards["FILE {}".format(index)] = path.basename(file)
+            cards["FILE {} FRAMES".format(index)] = fits.getheader(file)['NAXIS3']
 
         hdr_input = fits.getheader(files[0])
         shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
