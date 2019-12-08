@@ -22,4 +22,4 @@ class RECfile(Outfile):
         hdr_input = fits.getheader(files[0])
         shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
 
-        super().__init__(filename=filename, shape=None, extensions=None, cards=cards, timestamp=False, hprefix=header_prefix)
+        super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, hprefix=header_prefix)
