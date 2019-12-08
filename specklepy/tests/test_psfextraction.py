@@ -28,7 +28,7 @@ class TestPSFextraction(unittest.TestCase):
     def test_extract_psfs(self):
         refStars = ReferenceStars(self.params)
         refStars.extract_psfs()
-        refStars.extract_psfs(mode='align_median')
+        refStars.extract_psfs(mode='weighted_mean')
 
 
 if __name__ == "__main__":

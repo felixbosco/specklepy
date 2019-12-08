@@ -10,7 +10,7 @@ from specklepy.utils import transferfunctions as tf
 
 class Aperture(object):
 
-    def __init__(self, *args, data, var=None, mask='circular', crop=True, verbose=True):
+    def __init__(self, *args, data, vars=None, mask='circular', crop=True, verbose=True):
         """Instantiate Aperture object.
 
         Long description...
@@ -25,7 +25,7 @@ class Aperture(object):
                 2D or 3D np.ndarray that the aperture shall be extracted of. If
                 provided as str type, this is assumed to be a path and the
                 objects tries to read the fits file.
-            var (np.ndarray, optional):
+            vars (np.ndarray, optional):
                 Variance of the data. If not provided, the variance will be
                 estimated along the time axis of a cube. In the future this
                 might read in from a file extension. Default is None.
@@ -83,12 +83,6 @@ class Aperture(object):
             raise ValueError("Data input of Aperture class must be of dimension 2 or 3, but was provided as data.ndim={}.".format(data.ndim))
         self.data = copy(data)
 
-        if var is None:
-            if self.data.ndim == 3:
-                self.var = np.var(self.data, axis=0)
-        else:
-            self.var = None
-
         # Remove the margins if requested
         self.cropped = False
         if crop:
@@ -97,6 +91,12 @@ class Aperture(object):
         # Create a mask
         mask = self.make_mask(mode=mask)
         self.data = np.ma.masked_array(self.data, mask=mask)
+
+        if vars is None:
+            if self.data.ndim == 3:
+                self.vars = np.var(self.data, axis=0)
+        else:
+            self.vars = None
 
 
 
@@ -115,6 +115,10 @@ class Aperture(object):
     @property
     def shape(self):
         return self.data.shape
+
+    @property
+    def nframes(self):
+        return self.data.shape[0]
 
     def __getitem__(self, index):
         return self.data[index]

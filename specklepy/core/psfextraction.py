@@ -8,7 +8,7 @@ from specklepy.io.parameterset import ParameterSet
 from specklepy.io.filemanager import FileManager
 from specklepy.io.psffile import PSFfile
 from specklepy.core.aperture import Aperture
-from specklepy.core.combine import weighted_combine
+from specklepy.core.combine import weighted_mean
 from specklepy.utils.plot import imshow
 
 
@@ -46,7 +46,7 @@ class ReferenceStars(object):
             self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, crop=True, verbose=False))
 
 
-    def extract_psfs(self, mode='align_median', file_shifts=None, debug=False):
+    def extract_psfs(self, file_shifts=None, mode='median', resample=True, debug=False):
         """Extract the PSF of the list of ReferenceStars frame by frame.
 
         Long description...
@@ -60,10 +60,12 @@ class ReferenceStars(object):
         """
 
         # Input parameters
-        if 'median' in mode:
-            combine = np.median
-        elif 'mean' in mode:
-            combine = np.mean
+        if mode == 'median':
+            func = np.median
+        elif mode == 'mean':
+            func = np.mean
+        elif mode == 'weighted_mean':
+            func = weighted_mean
         else:
             raise ValueError('ReferenceStars received unknown mode for extract method ({}).'.format(mode))
 
@@ -94,18 +96,25 @@ class ReferenceStars(object):
             # Extract the PSF by combining the aperture frames in the desired mode
             for frame_index in range(frame_number):
                 print("\r\tExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
-                psf = np.empty((len(self.apertures), self.box_size, self.box_size))
+                psfs = np.empty((len(self.apertures), self.box_size, self.box_size))
+                vars = np.ones((len(self.apertures), self.box_size, self.box_size))
                 for aperture_index, aperture in enumerate(self.apertures):
-                    # Copy aperture into psf
-                    if 'align' in mode:
-                        psf[aperture_index] = ndimage.shift(aperture[frame_index], shift=(aperture.xoffset, aperture.yoffset))
-                    elif 'resample' in mode:
-                        raise NotImplementedError('Resample mode is not implemented yet!')
-                    else:
-                        psf[aperture_index] = aperture[frame_index]
-                    # Normalization of each psf to make median estimate sensible
-                    psf[aperture_index] /= np.sum(psf[aperture_index])
 
-                psf = combine(psf, axis=0)
+                    flux = aperture[frame_index]
+                    # var = aperture.vars
+
+                    if resample:
+                        flux = ndimage.shift(flux, shift=(aperture.xoffset, aperture.yoffset))
+                        # var = ndimage.shift(var, shift=(aperture.xoffset, aperture.yoffset))
+
+                    # Normalization of each psf to make median estimate sensible
+                    psfs[aperture_index] = flux / np.sum(flux)
+                    # vars[aperture_index] = var / np.sum(flux)
+
+                if mode != 'weighted_mean':
+                    psf = func(psfs, axis=0)
+                else:
+                    psf, var = weighted_mean(psfs, axis=0, vars=vars)
+
                 psf_file.update_frame(frame_index, psf)
             print('\r')

@@ -1,6 +1,6 @@
 import numpy as np
 
-def weighted_combine(data, axis=None, weights=None, vars=None):
+def weighted_mean(data, axis=None, weights=None, vars=None):
     """Combine data frames considering weights and variances.
 
     Args:
@@ -15,6 +15,7 @@ def weighted_combine(data, axis=None, weights=None, vars=None):
     """
 
     if vars is not None:
+        vars = np.ma.masked_values(vars, 0.0)
         if weights is None:
             weights = np.divide(1, vars)
         else:

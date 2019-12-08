@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from specklepy.core.combine import weighted_combine
+from specklepy.core.combine import weighted_mean
 from specklepy.utils.plot import imshow
 
 
@@ -19,8 +19,8 @@ class TestCombine(unittest.TestCase):
 
 
     def test_weighted_combin(self):
-        mean, weights = weighted_combine(self.data, axis=0)
-        mean, weights = weighted_combine(self.data, axis=0, vars=self.vars)
+        mean, weights = weighted_mean(self.data, axis=0)
+        mean, weights = weighted_mean(self.data, axis=0, vars=self.vars)
         imshow(mean)
         imshow(weights)
 
