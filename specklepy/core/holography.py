@@ -7,6 +7,7 @@ from astropy.io import fits
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
+from specklepy.io.outfile import Outfile
 from specklepy.io.recfile import RECfile
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
@@ -247,6 +248,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             # Adding for the average
             enumerator += np.multiply(Fimg, np.conjugate(Fpsf))
             denominator += np.abs(np.square(Fpsf))
+
     print()
 
     # Compute the object.
