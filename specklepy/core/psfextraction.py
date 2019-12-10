@@ -43,7 +43,7 @@ class ReferenceStars(object):
     def init_apertures(self, filename, shift=(0, 0)):
         self.apertures = []
         for star in self.star_table:
-            self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, crop=True, verbose=False))
+            self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, mask='rectangular', crop=True, verbose=False))
 
 
     def extract_psfs(self, file_shifts=None, mode='median', resample=True, debug=False):
@@ -101,15 +101,15 @@ class ReferenceStars(object):
                 for aperture_index, aperture in enumerate(self.apertures):
 
                     flux = aperture[frame_index]
-                    # var = aperture.vars
+                    var = aperture.vars
 
                     if resample:
                         flux = ndimage.shift(flux, shift=(aperture.xoffset, aperture.yoffset))
-                        # var = ndimage.shift(var, shift=(aperture.xoffset, aperture.yoffset))
+                        var = ndimage.shift(var, shift=(aperture.xoffset, aperture.yoffset))
 
                     # Normalization of each psf to make median estimate sensible
                     psfs[aperture_index] = flux / np.sum(flux)
-                    # vars[aperture_index] = var / np.sum(flux)
+                    vars[aperture_index] = var / np.sum(flux)
 
                 if mode != 'weighted_mean':
                     psf = func(psfs, axis=0)

@@ -3,11 +3,12 @@ from astropy.modeling.models import Gaussian2D
 from astropy.modeling.models import AiryDisk2D
 
 from specklepy.utils.transferfunctions import otf
+from specklepy.utils.plot import imshow
 from specklepy.logging import logging
 
 
 
-def apodize(object, function='gaussian', **kwargs):
+def apodize(object, function='gaussian', crop=False, **kwargs):
     """Apodize an object with a given model function.
 
     Long description...
@@ -47,9 +48,16 @@ def apodize(object, function='gaussian', **kwargs):
     else:
         raise ValueError("specklepy.core.apodization.apodize received unknown value for function '{}'!".format(function))
 
-
     # Evaluate apodization function on object image grid and multiply on object
     y, x = np.mgrid[0:object.shape[0], 0:object.shape[1]]
     apodization_psf = model(x, y)
+
+    # Crop corners of the PSF
+    if crop:
+        threshold = apodization_psf[0, int(center[1])]
+        apodization_psf -= threshold
+        apodization_psf = np.maximum(apodization_psf, 0.0)
+
+    # Transform into Fourier space
     apodization_otf = otf(apodization_psf)
     return np.multiply(object, apodization_otf)

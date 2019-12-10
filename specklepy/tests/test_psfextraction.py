@@ -28,6 +28,7 @@ class TestPSFextraction(unittest.TestCase):
     def test_extract_psfs(self):
         refStars = ReferenceStars(self.params)
         refStars.extract_psfs()
+        input("Pausing until you want to continue...")
         refStars.extract_psfs(mode='weighted_mean')
 
 

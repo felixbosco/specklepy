@@ -16,9 +16,9 @@ starfinderFwhm = 5 # pixels
 signalToNoiseThreshold = 5  # multiples of sigma
 
 [PSFEXTRACTION]
-psfRadius = 20
+psfRadius = 45
 noiseReferenceMargin = 3
-noiseThreshold = 3  # multiples of standard deviation
+noiseThreshold = 1  # multiples of standard deviation
 
 [APODIZATION]
 #apodizationType = Airy # Gaussian or Airy
