@@ -2,6 +2,10 @@ import numpy as np
 from scipy import ndimage
 from astropy.io import fits
 from astropy.table import Table
+#from astropy.nddata import NDData
+#from astropy.stats import sigma_clipped_stats
+#from photutils.psf import extract_stars
+#from photutils import EPSFBuilder
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
@@ -46,7 +50,7 @@ class ReferenceStars(object):
             self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, mask='rectangular', crop=True, verbose=False))
 
 
-    def extract_psfs(self, file_shifts=None, mode='median', resample=True, debug=False):
+    def extract_psfs(self, file_shifts=None, mode='median', align=True, debug=False):
         """Extract the PSF of the list of ReferenceStars frame by frame.
 
         Long description...
@@ -103,7 +107,7 @@ class ReferenceStars(object):
                     flux = aperture[frame_index]
                     var = aperture.vars
 
-                    if resample:
+                    if align:
                         flux = ndimage.shift(flux, shift=(aperture.xoffset, aperture.yoffset))
                         var = ndimage.shift(var, shift=(aperture.xoffset, aperture.yoffset))
 
@@ -118,3 +122,129 @@ class ReferenceStars(object):
 
                 psf_file.update_frame(frame_index, psf)
             print('\r')
+
+
+    def extract_epsfs(self, file_shifts=None, oversampling=4, debug=False):
+        """Extract effective PSFs following Anderson & King (2000).
+
+        Args:
+            file_shifts
+
+        """
+        # Create a list of psf files and store it to params
+        self.params.psfFiles = []
+
+        # Iterate over params.inFiless
+        for file_index, file in enumerate(self.params.inFiles):
+            # Initialize file by file
+            logging.info("Extracting PSFs from file {}".format(file))
+            psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY")
+            self.params.psfFiles.append(psf_file.filename)
+
+            # Consider alignment of cubes when initializing the apertures, i.e.
+            # the position of the aperture in the shifted cube
+            if file_shifts is None:
+                file_shift = (0, 0)
+            else:
+                file_shift = file_shifts[file_index]
+            self.init_apertures(file, shift=file_shift)
+
+            frame_number = fits.getheader(file)['NAXIS3']
+
+            # Extract the PSF by combining the aperture frames in the desired mode
+            for frame_index in range(frame_number):
+                print("\r\tExtracting PSF from frame {}/{}".format(frame_index + 1, frame_number), end='')
+                
+                if debug:
+                    if frame_index > 0:
+                        break
+
+                # Initialize oversampled grids
+                epsf_oversampled = np.zeros((self.box_size * oversampling, self.box_size * oversampling))
+                ivar_oversampled = np.zeros((self.box_size * oversampling, self.box_size * oversampling))
+
+                for aperture_index, aperture in enumerate(self.apertures):
+                    xoff = np.rint(aperture.xoffset * oversampling).astype(int) + oversampling // 2
+                    yoff = np.rint(aperture.yoffset * oversampling).astype(int) + oversampling // 2
+                    # print(xoff, yoff)
+                    
+                    # Getting coordinates of aperture and stretching to oversampled image
+                    y, x = np.mgrid[0:self.box_size, 0:self.box_size]
+                    x *= oversampling
+                    y *= oversampling
+                    x += xoff
+                    y += yoff
+                    
+                    epsf_oversampled[y, x] += aperture.data[frame_index]
+                    ivar_oversampled[y, x] += np.divide(1, aperture.vars)
+                
+                if debug:
+                    imshow(aperture.data[frame_index], maximize=True)
+                    imshow(epsf_oversampled, maximize=True)
+                    imshow(ivar_oversampled, maximize=True)
+                    imshow(nsamples, maximize=True)
+                
+                # Sample down to the initial grid
+                epsf = np.zeros((self.box_size, self.box_size))
+                for indizes, value in np.ndenumerate(epsf):
+                    weighted_sum = np.multiply(epsf_oversampled, ivar_oversampled)
+                    weighted_sum = np.sum(weighted_sum[indizes[0] * oversampling : (indizes[0] + 1) * oversampling , indizes[1] * oversampling : (indizes[1] + 1) * oversampling])
+                    weights_sum = np.sum(ivar_oversampled[indizes[0] * oversampling : (indizes[0] + 1) * oversampling , indizes[1] * oversampling : (indizes[1] + 1) * oversampling])
+                    epsf[indizes] = np.divide(weighted_sum, weights_sum)
+                if debug:
+                    imshow(epsf, title='ePSF', maximize=True)
+        
+                psf_file.update_frame(frame_index, epsf)
+            print('\r')
+
+
+    def extract_epsfs_deprecated(self, file_shifts=None, debug=False):
+        """Extract effective PSFs following Anderson & King (2000).
+
+        Args:
+            file_shifts
+
+        """
+        # Create a list of psf files and store it to params
+        self.params.psfFiles = []
+
+        # Iterate over params.inFiless
+        for file_index, file in enumerate(self.params.inFiles):
+
+            data = fits.getdata(file)
+            if file_shifts is None:
+                shift = (0, 0)
+            else:
+                shift = file_shifts[file_index]
+            
+            x = self.star_table['x'] - shift[1]
+            y = self.star_table['y'] - shift[0]
+
+            mask = ((x > self.radius) & (x < (data.shape[-1] -1 - self.radius)) & (y > self.radius) & (y < (data.shape[-2] -1 - self.radius))) 
+
+            star_table = Table()
+            star_table['x'] = x[mask]  
+            star_table['y'] = y[mask]  
+
+            print(star_table)
+
+            data = np.sum(data, axis=0)
+            mean_val, median_val, std_val = sigma_clipped_stats(data, sigma=2.)  
+            data -= median_val 
+
+            nddata = NDData(data=data) 
+    
+            stars = extract_stars(nddata, star_table, size=self.box_size) 
+
+            if debug:
+                for i, star in enumerate(stars):
+                    imshow(star.data, title="ePSF star {}".format(i))
+
+            epsf_builder = EPSFBuilder(oversampling=4, maxiters=10, progress_bar=True) 
+
+            epsf, fitted_stars = epsf_builder(stars) 
+
+            if debug:
+                imshow(epsf.data, title="ePSF")
+
+
