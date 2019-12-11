@@ -75,7 +75,7 @@ def holography(params, mode='same', debug=False):
 
         # (vi) PSF extraction
         refStars = ReferenceStars(params)
-        refStars.extract_psfs(file_shifts=shifts, mode='weighted_mean', debug=False)
+        refStars.extract_epsfs(file_shifts=shifts, mode='weighted_mean', debug=False)
         logging.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding

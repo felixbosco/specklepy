@@ -124,7 +124,7 @@ class ReferenceStars(object):
             print('\r')
 
 
-    def extract_epsfs(self, file_shifts=None, oversampling=4, debug=False):
+    def extract_epsfs(self, file_shifts=None, oversampling=4, debug=False, **kwargs):
         """Extract effective PSFs following Anderson & King (2000).
 
         Args:
@@ -164,8 +164,8 @@ class ReferenceStars(object):
                 ivar_oversampled = np.zeros((self.box_size * oversampling, self.box_size * oversampling))
 
                 for aperture_index, aperture in enumerate(self.apertures):
-                    xoff = np.rint(aperture.xoffset * oversampling).astype(int) + oversampling // 2
-                    yoff = np.rint(aperture.yoffset * oversampling).astype(int) + oversampling // 2
+                    xoff = np.floor(aperture.xoffset * oversampling).astype(int) + oversampling // 2
+                    yoff = np.floor(aperture.yoffset * oversampling).astype(int) + oversampling // 2
                     # print(xoff, yoff)
                     
                     # Getting coordinates of aperture and stretching to oversampled image
