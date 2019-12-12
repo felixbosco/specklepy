@@ -14,18 +14,20 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
 ## To Do:
 * General:
   * Make logger write a copy to a .log file
-  * Implement RAM save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file
   * Create general script with signature "specklepy holography -f ..."
 * core module:
+  * Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
   * holography - implement secondary source subtraction
   * Tune star finder routines
+  * Implement frame save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file. This is necessary for "bootstrap resampling", which can deliver uncertainties.
   * [low priority] implement 'valid' mode, that yields a reconstruction only in the intersection of all file field of views
+  * [low priority] implement PSF variation by "interpolation" of the reference PSFs to a fraction of the image
 * data reduction module:
-  * Implement flatfield correction
+  * Implement flatfield correction from flat frames
+  * Implement sky subtraction from sky frames
   * Implement linearity correction (wait for D. Thompson)
 * synthetic exposures module:
-  * Implement dithering
-  * Center star coordinates in target around (0, 0), which is then mapped to the center of the detector
+  * Study whether it makes sense to sample the speckle PSF down before convolution
 
 
 ## Image reconstruction
@@ -44,6 +46,7 @@ The `synthetic` module is capable of creating synthetic observations from parame
 ## Version history
 These are the incremental updates between versions:
 
+- *0.4.3*: The PSF extraction module now contains a mode for creating an effective PSF (in the sense of Anderson & King, 2000), which is oversampling the PSF grid.
 - *0.4.2dev*: Developing error propagation of the PSF estimate
 - *0.4.1dev*: Developing the data `reduction` module, beginning with sky subtraction
 - *0.4.0*: Specklepy received the `synthetic` module for creating synthetic observations
@@ -51,4 +54,3 @@ These are the incremental updates between versions:
 - *0.2.0*: The holographic image reconstruction is nowfunctional. Note that this bit of code is labeled vesion 0.0.2 in the setup.py.
 - *0.1.0*: Note that this bit of code is labeled vesion 0.0.1 in the setup.py.
 - *0.0.1dev*
-
