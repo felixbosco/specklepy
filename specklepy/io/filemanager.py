@@ -1,3 +1,4 @@
+import os
 import glob
 from astropy.io import fits
 
@@ -11,8 +12,46 @@ class FileManager(object):
     """
 
     def __init__(self, input):
-        self._characterize_input(input)
+        """Instantiate a FileManager object.
+
+        Long description...
+
+        Args:
+            input (str):
+
+        """
+
+        self.input = input
+        if isinstance(input, str):
+            self.files = glob.glob(input)
+            self.files.sort()
+            logging.info("FileManager found {} file(s) matching to {}.".format(len(self.files), input))
+
+            for file in self.files:
+                extension = file.split('.')[-1]
+                if extension == 'fits':
+                    try:
+                        fits.getheader(input)
+                    except FileNotFoundError as e:
+                        logging.warning("Fits file <{}> has not been found.".format(input))
+                    self.files = [input]
+                else:
+                    logging.info("Input file is not fits type. FileManager assumes that input file {} contains file names.".format(input))
+                    self._read_file_list_file(input)
+        elif isinstance(input, list):
+            logging.info("FileManager received a list of files.")
+            self.files = input
+        else:
+            raise TypeError("FileManager received input of unexpected type ({}).".format(type(input)))
+
+        # Log identified input files
+        logging.info("FileManager lists the following files:")
+        for f, file in enumerate(self.files):
+            logging.info(f, file)
+
+        # Initialize the index for iteration
         self.index = 0
+
 
     def __iter__(self):
         return self
@@ -32,7 +71,7 @@ class FileManager(object):
         self.files[index] = value
 
     def __str__(self):
-        s = "<specklepy.io.filehandler.FileHandler object>\n"
+        s = "<specklepy.io.filemanager.FileManager object>\n"
         s += "> List of files:\n"
         for file in self.files:
             s += "> {}\n".format(file)
@@ -65,9 +104,9 @@ class FileManager(object):
                     except FileNotFoundError as e:
                         logging.warning("Fits file <{}> has not been found.".format(input))
                     self.files = [input]
-                elif extension == 'spam':
-                    logging.info("Input is the name of a spam spectrum file.")
-                    self.files = [input]
+                # elif extension == 'spam':
+                #     logging.info("Input is the name of a spam spectrum file.")
+                #     self.files = [input]
                 else:
                     logging.info("Assuming that input file {} contains file names.".format(input))
                     self._read_file_list_file(input)
@@ -76,7 +115,7 @@ class FileManager(object):
             self.input_type = 'list'
             self.files = input
         else:
-            raise TypeError("FileHandler got input of unexpected type ({}).".format(type(input)))
+            raise TypeError("FileManager got input of unexpected type ({}).".format(type(input)))
 
 
     def _read_file_list_file(self, input):
