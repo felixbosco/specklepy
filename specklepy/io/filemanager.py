@@ -47,7 +47,7 @@ class FileManager(object):
         # Log identified input files
         logging.info("FileManager lists the following files:")
         for f, file in enumerate(self.files):
-            logging.info("{:4d} {}".format(f, file))
+            logging.info("{:4d}: {}".format(f+1, file))
 
         # Initialize the index for iteration
         self.index = 0
