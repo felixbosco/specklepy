@@ -7,7 +7,7 @@ sky_background = 14.4
 diameter = 8.2*u.m
 central_obscuration = 0.14
 name = VLT Unit Telescope
-psf_source = ../simulations/noao_psf_10s.fits
+psf_source = ../../simulations/noao_psf_10s.fits
 
 [DETECTOR]
 shape = (1024, 1024)

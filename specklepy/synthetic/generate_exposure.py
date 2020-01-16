@@ -62,6 +62,9 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     hdu.data = np.zeros((nframes_limit,) + detector.shape)
     hdu.header.set('DIT', DIT.value, DIT.unit)
     hdu.header.set('DATE', str(datetime.now()))
+    if 'cards' in  kwargs:
+        for key in kwargs['cards']:
+            hdu.header.set(key, kwargs['cards'][key])
     # Add object attributes to header information
     skip_attributes = {'target': ['data', 'stars'],
                        'telescope': ['psf', 'psf_frame'],
