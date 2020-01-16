@@ -1,0 +1,30 @@
+[TARGET]
+band = 'H'
+star_table = data/test/example_star_table_arcsec.dat
+sky_background = 14.4
+
+[TELESCOPE]
+diameter = 8.2*u.m
+central_obscuration = 0.14
+name = VLT Unit Telescope
+psf_source = AiryDisk
+psf_resolution = 20.5013*u.mas 
+radius = 50.635494509195034*u.mas 
+
+
+[DETECTOR]
+shape = (1024, 1024)
+pixel_scale = 0.0106*u.arcsec
+readout_noise = 35*u.electron
+system_gain = 17*u.electron/u.adu
+optics_transmission = 0.9
+quantum_efficiency = 0.9*u.electron/u.ph
+# saturation_level = 60000*u.electron
+
+[KWARGS]
+DIT = 800*0.6*u.s
+nframes = 1
+nframes_limit = 1
+outfile = ../synthetic_observations/airy_600ms.fits
+time_stamp = None
+dithers = [(0, 0)]
