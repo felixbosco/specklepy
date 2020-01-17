@@ -5,15 +5,12 @@ import os
 import sys
 import warnings
 import glob
+from configparser import ConfigParser
 from astropy.io import fits
 from astropy.table import Table
 
 try:
     from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.io.filemanager import FileManager
-    from specklepy.reduction.config import get_instrument_config
-    from specklepy.reduction import sky
 except ModuleNotFoundError:
     # Prepare import from current path
     PATH = os.getcwd()
@@ -22,10 +19,6 @@ except ModuleNotFoundError:
 
     # Repeat import
     from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.io.filemanager import FileManager
-    from specklepy.reduction.config import get_instrument_config
-    from specklepy.reduction import sky
 
 
 
@@ -36,7 +29,9 @@ def parser(options=None):
 
     parser.add_argument('-i', '--instrument', type=str, help='Name of the instrument.')
     parser.add_argument('-p', '--path', type=str, help='Path to the files.')
-    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
+    parser.add_argument('-o', '--outfile', type=str, default='files.tab', help="Name of the output file containing the file overview. Default is 'files.tab'.")
+    parser.add_argument('-s', '--sortby', type=str, default='OBSTYPE', help="Header card to sort the output table by. Default is 'OBSTYPE'.")
+    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results. Default is False.')
 
     if options is None:
         args = parser.parse_args()
@@ -51,40 +46,46 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
-    header_cards = ['OBJECT', 'OBSTYPE', 'EXPTIME']
+    header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES']
     instrument_config_file = 'specklepy/config/instruments.cfg'
 
     # Verification of args
-    instr = get_instrument_config(args.instrument, instrument_config_file)
-    keywords = [instr[card] for card in header_cards]
     if not os.path.isdir(os.path.dirname(args.path)):
         raise RuntimeError("Path not found: {}".format(args.path))
 
+    # Read config
+    config = ConfigParser()
+    config.read(instrument_config_file)
+    instrument = config['INSTRUMENTS'][args.instrument]
+    instrument_header_cards = config[instrument]
+
     # Find files
     files = glob.glob(args.path)
+    logging.info("Found {} file(s)".format(len(files)))
 
-    # Prepare table creation with dictionary
-    datadict = {'FILE': []}
-    for keyword in keywords:
-        datadict[keyword] = []
+    # Prepare dictionary for collecting table data
+    table_data = {'FILE': []}
+    for card in header_cards:
+        table_data[card] = []
 
+    # Read data from files
     for file in files:
         hdr = fits.getheader(file)
-        try:
-            for keyword in keywords:
-                datadict[keyword].append(hdr[keyword])
-            datadict['FILE'].append(file)
-        except KeyError:
-            logging.info("Skipping {} due to missing header key ({})".format(file, keyword))
+        table_data['FILE'].append(os.path.basename(file))
+        for card in header_cards:
+            try:
+                table_data[card].append(hdr[instrument_header_cards[card]])
+            except KeyError:
+                logging.info("Skipping file {} due to missing header card ({}).".format(os.path.basename(file), instrument_header_cards[card]))
+                table_data[card].append("_" * 3)
 
     # Create table from dict and save
-    table = Table([datadict[keyword] for keyword in datadict.keys()], names=datadict.keys())
+    table = Table([table_data[keyword] for keyword in table_data.keys()], names=table_data.keys())
+    table.sort('FILE')
     table.sort('OBSTYPE')
-    table.write('files.tab', format='ascii', overwrite=True)
-
-
-
-
+    table.sort(args.sortby)
+    logging.info("Writing data to {}".format(args.outfile))
+    table.write(args.outfile, format='ascii.fixed_width', overwrite=True)
 
 
 
