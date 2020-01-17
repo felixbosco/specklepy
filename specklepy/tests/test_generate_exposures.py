@@ -12,11 +12,11 @@ class TestGenerateExposures(unittest.TestCase):
 
     def test_study_data(self):
         path = 'data/example/synthetic/'
-        for mode in ['airy', 'dark', 'sky', 'noao', 'glao']:
-            for time in ['200', '600', '1200']:
+        for mode in ['airy']:#, 'dark', 'sky', 'noao', 'glao']:
+            for time in ['600']:#['200', '600', '1200']:
                 parameter_file = "{}{}_{}ms.par".format(path, mode, time)
                 os.system('python specklepy/scripts/generate_exposures.py -p {}'.format(parameter_file))
-        os.system('python specklepy/scripts/generate_exposures.py -p {}flat.par'.format(path))
+        # os.system('python specklepy/scripts/generate_exposures.py -p {}flat.par'.format(path))
 
 
 
