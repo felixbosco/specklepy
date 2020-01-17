@@ -28,4 +28,4 @@ nframes_limit = 10
 outfile = data/test/synthetic/flat_200ms.fits
 time_stamp=None
 dithers = [(60, 60)]
-cards={'OBJECT': 'TWILIGHT', 'OBSTYPE': 'FLAT'}
+cards={'OBJECT': 'SKY', 'OBSTYPE': 'FLAT'}

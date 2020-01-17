@@ -4,11 +4,13 @@ import argparse
 import os
 import sys
 import warnings
+from astropy.table import Table
 
 try:
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
+    from specklepy.reduction import flat
     from specklepy.reduction import sky
 except ModuleNotFoundError:
     # Prepare import from current path
@@ -20,6 +22,7 @@ except ModuleNotFoundError:
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
+    from specklepy.reduction import flat
     from specklepy.reduction import sky
 
 
@@ -59,7 +62,16 @@ def main(options=None):
                         make_dirs=make_dirs)
 
     # Execute data reduction
-    sky.subtract(params, debug=args.debug)
+    # (0) Read file list table
+    print(params.fileList)
+
+    # (1) Flat fielding
+    flat.make_master_flat(params)
+
+    # (...) Linearisation
+
+    # (...) Sky subtraction
+    # sky.subtract(params, debug=args.debug)
 
 
 

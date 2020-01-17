@@ -1,5 +1,6 @@
 import os
 from configparser import ConfigParser
+from astropy.table import Table
 
 from specklepy.logging import logging
 from specklepy.io.filemanager import FileManager
@@ -59,7 +60,7 @@ class ParameterSet(object):
             self.inFiles = FileManager(self.inDir)()
         except AttributeError:
             # This is the case for reduction
-            self.scienceFiles = FileManager(self.scienceFiles)()
+            self.fileList = Table.read(self.fileList, format='ascii.fixed_width')
 
 
     def makedirs(self, dir_list):

@@ -1,4 +1,10 @@
 [PATHS]
-scienceFiles = /home/bosco/Documents/sowat/synthetic_observations/noao_600ms_?.fits
-skyFiles = /home/bosco/Documents/sowat/synthetic_observations/sky_600ms_1.fits
-tmpDir = /home/bosco/Documents/sowat/synthetic_observations/reduction/
+filePath = data/test/synthetic/
+fileList = data/test/reduction/test_file_list.tab
+tmpDir = data/test/reduction/tmp/
+
+[FLAT]
+masterFlatFile = data/test/reduction/MasterFlat.fits
+
+[SKY]
+ordered = True
