@@ -207,7 +207,7 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
         raise ValueError("specklepy.core.alignment.pad_array received array argument \
                             of dimension {}, but must be 2 or 3.".format(array.ndim))
 
-    padded = np.pad(array, pad_vector)
+    padded = np.pad(array, pad_vector, mode='constant')
 
     # Crop the image according to the desired mode
     if mode is 'same':

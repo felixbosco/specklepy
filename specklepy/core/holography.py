@@ -219,7 +219,7 @@ def get_Fourier_object(params, shifts, mode='same'):
 
             psf_pad_vector = ((dx // 2, int(np.ceil(dx/2))), (dy // 2, int(np.ceil(dy/2))))
             print('\tPad_width:', psf_pad_vector)
-            psf = np.pad(psf, psf_pad_vector)
+            psf = np.pad(psf, psf_pad_vector, mode='constant',)
             try:
                 assert img.shape == psf.shape
             except:
@@ -230,7 +230,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             denominator = np.zeros(img.shape, dtype='complex128')
 
         # Open PSF file
-        print("\rFourier transforming image and PSF file {:4}/{:4}".format(file_index + 1, len(params.inFiles)), end='')
+        print("\r\tFourier transforming image and PSF file {:4}/{:4}".format(file_index + 1, len(params.inFiles)), end='')
         psf_cube = fits.getdata(params.psfFiles[file_index])
         for frame_index, frame in enumerate(fits.getdata(image_file)):
             # Padding and transforming the image
@@ -242,7 +242,7 @@ def get_Fourier_object(params, shifts, mode='same'):
 
             # Padding and Fourier transforming PSF
             psf = psf_cube[frame_index]
-            psf = np.pad(psf, psf_pad_vector)
+            psf = np.pad(psf, psf_pad_vector, mode='constant',)
             Fpsf = fftshift(fft2(psf))
 
             # Adding for the average
