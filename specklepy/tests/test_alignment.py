@@ -8,7 +8,7 @@ from specklepy.utils.plot import imshow
 class Testalignment(unittest.TestCase):
 
     def setUp(self):
-        self.files = FileManager('/home/bosco/Documents/sowat/simulations/noAO_200ms_x100*_st4_shift.fits')()
+        self.files = FileManager('specklepy/tests/files/synthetic/noao_200ms*.fits')()
         self.shifts = [(0, 0), (34, -20), (-14, -51)]
         self.image_shape = (1024, 1024)
         self.cube_shape = (100, 1024, 1024)
