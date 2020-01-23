@@ -4,7 +4,8 @@ fileList = specklepy/tests/files/reduction/test_file_list.tab
 tmpDir = specklepy/tests/files/reduction/tmp/
 
 [FLAT]
+skipFlat = True
 masterFlatFile = specklepy/tests/files/reduction/MasterFlat.fits
 
 [SKY]
-ordered = True
+orderedSkySubtraction = False

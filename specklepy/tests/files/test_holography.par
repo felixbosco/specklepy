@@ -1,6 +1,6 @@
 [PATHS]
-inDir = specklepy/tests/files/synthetic/noao_200ms_?.fits
-outFile = specklepy/tests/files/noao_200ms_holo.fits
+inDir = specklepy/tests/files/synthetic/gao_200ms_?.fits
+outFile = specklepy/tests/files/glao_200ms_holo.fits
 tmpDir = specklepy/tests/files/tmp/
 allStarsFile = specklepy/tests/files/example_all_sources.dat
 refSourceFile = specklepy/tests/files/example_ref_sources.dat
