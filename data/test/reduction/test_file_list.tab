@@ -2,6 +2,7 @@
 |               dark_1200ms_1.fits |    DARK |      DARK |      H |     1.2 |      10 |
 |                dark_200ms_1.fits |    DARK |      DARK |      H |     0.2 |      10 |
 |                flat_200ms_1.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 |
+|                flat_200ms_2.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 |
 |               noao_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
 |               noao_1200ms_2.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
 |               noao_1200ms_3.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
