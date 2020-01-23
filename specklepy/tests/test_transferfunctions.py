@@ -15,7 +15,7 @@ class TestTransferFunctions(unittest.TestCase):
         amp = np.ones((size, size))
         pha = np.random.rand(size, size) * 1e1
         # imshow(pha, title="Phase")
-        amp = Aperture(x0=128, y0=128, radius=64, data=amp, subset_only=False)()
+        amp = Aperture(128, 128, 64, data=amp, crop=False).data
         self.aperture = amp * np.exp(1j * pha)
         # imshow(np.abs(self.aperture), title="abs Aperture")
 
