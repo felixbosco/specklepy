@@ -5,7 +5,7 @@ from specklepy.io.filemanager import FileManager
 class TestFileManager(unittest.TestCase):
 
     def setUp(self):
-        self.filename = "data/test/example_cube.fits"
+        self.filename = "specklepy/tests/files/example_cube.fits"
 
     def test_init(self):
         FileManager(self.filename)
