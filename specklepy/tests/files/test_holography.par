@@ -1,0 +1,26 @@
+[PATHS]
+inDir = specklepy/tests/files/synthetic/noao_200ms_?.fits
+outFile = specklepy/tests/files/noao_200ms_holo.fits
+tmpDir = specklepy/tests/files/tmp/
+allStarsFile = specklepy/tests/files/example_all_sources.dat
+refSourceFile = specklepy/tests/files/example_ref_sources.dat
+
+[NOISE]
+#noiseBoxX = 855
+#noiseBoxY = 553
+#noiseBoxHalfWidth = 60
+
+[STARFINDER]
+starfinderFwhm = 5 # pixels
+signalToNoiseThreshold = 5  # multiples of sigma
+
+[PSFEXTRACTION]
+psfRadius = 45
+noiseReferenceMargin = 3
+noiseThreshold = 1  # multiples of standard deviation
+
+[APODIZATION]
+#apodizationType = Airy # Gaussian or Airy
+#apodizationWidth = 4.777 # in pixels
+apodizationType = Gaussian # Gaussian or Airy
+apodizationWidth = 1.645 # in pixels
