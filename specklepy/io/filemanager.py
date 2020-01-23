@@ -31,10 +31,10 @@ class FileManager(object):
                 extension = file.split('.')[-1]
                 if extension == 'fits':
                     try:
-                        fits.getheader(input)
+                        fits.getheader(file)
                     except FileNotFoundError as e:
-                        logging.warning("Fits file <{}> has not been found.".format(input))
-                    self.files = [input]
+                        logging.warning("Fits file <{}> has not been found.".format(file))
+                    # self.files = [input]
                 else:
                     logging.info("Input file is not fits type. FileManager assumes that input file {} contains file names.".format(input))
                     self._read_file_list_file(input)
