@@ -12,8 +12,8 @@ class TestOutfile(unittest.TestCase):
     def test_init(self):
         with self.assertRaises(RuntimeError):
             Outfile(None)
-        Outfile(filename="data/test/test_outfile.fits", shape=None, cards={"RECONSTRUCTION": "Test"})
-        Outfile(filename="data/test/test_outfile.fits", shape=(10, 10), extensions='var', cards={"RECONSTRUCTION": "Test"}, timestamp=True)
+        Outfile(filename="specklepy/tests/files/test_outfile.fits", shape=None, cards={"RECONSTRUCTION": "Test"})
+        Outfile(filename="specklepy/tests/files/test_outfile.fits", shape=(10, 10), extensions='var', cards={"RECONSTRUCTION": "Test"}, timestamp=True)
 
     def test_set_data(self):
         pass

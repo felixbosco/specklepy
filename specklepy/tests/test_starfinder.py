@@ -6,9 +6,9 @@ class TestStarfinder(unittest.TestCase):
 
     def test_execute(self):
         os.system('python specklepy/scripts/starfinder.py \
-                    -f data/test/example_cube_ssa.fits \
-                    -p data/test/test_parfile.ini \
-                    -o data/test/example_all_sources.dat')
+                    -f specklepy/tests/files/example_cube_ssa.fits \
+                    -p specklepy/tests/files/test_reconstruction.par \
+                    -o specklepy/tests/files/starfinder_stars.dat')
 
 
 if __name__ == "__main__":

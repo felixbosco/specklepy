@@ -12,6 +12,10 @@
 |  exposure_20200116_163819_2.fits |     ___ |       ___ |      H |     0.2 |       5 |
 |  exposure_20200116_164950_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 |
 |  exposure_20200116_164950_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 |
+|  exposure_20200123_152214_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 |
+|  exposure_20200123_152214_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 |
+|  exposure_20200123_152404_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 |
+|  exposure_20200123_152404_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 |
 | exposures_20200116_172428_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
 | exposures_20200116_172458_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
 | exposures_20200116_172636_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
@@ -19,8 +23,11 @@
 | exposures_20200116_172923_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
 | exposures_20200117_135316_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
 | exposures_20200117_135730_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
+| exposures_20200123_152509_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
+| exposures_20200123_152844_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
+| exposures_20200123_152916_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
 |                flat_200ms_1.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 |
-|                flat_600ms_1.fits |    FLAT |       SKY |      H |     0.6 |      10 |
+|                flat_200ms_2.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 |
 |               glao_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
 |               glao_1200ms_2.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
 |               glao_1200ms_3.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |

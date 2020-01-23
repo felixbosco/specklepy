@@ -6,14 +6,14 @@ class TestSSAReconstrution(unittest.TestCase):
 
     def test_one_cube(self):
         os.system('python specklepy/scripts/ssa_reconstruction.py \
-                    -f data/test/example_cube.fits \
-                    -o data/test/example_cube_ssa.fits')
+                    -f specklepy/tests/files/example_cube.fits \
+                    -o specklepy/tests/files/example_cube_ssa.fits')
 
     def test_multiple_cubes(self):
         os.system('python specklepy/scripts/ssa_reconstruction.py \
-                    -f "/home/bosco/Documents/sowat/simulations/noAO_200ms_x100*_st4_shift.fits" \
-                    -t data/test/tmp/ \
-                    -o data/test/example_cubes_ssa.fits')
+                    -f specklepy/tests/files/synthetic/noao_200ms_\*.fits \
+                    -t specklepy/tests/files/tmp/ \
+                    -o specklepy/tests/files/example_cubes_ssa.fits')
 
     # def test_science_data(self):
     #     os.system('python specklepy/scripts/ssa_reconstruction.py \

@@ -8,7 +8,7 @@ from specklepy.utils.plot import imshow
 class TestHolography(unittest.TestCase):
 
     def setUp(self):
-        self.params = ParameterSet(parameter_file='data/test/test_reconstruction.par',
+        self.params = ParameterSet(parameter_file='specklepy/tests/files/test_reconstruction.par',
                         defaults_file='specklepy/config/holography.cfg',
                         essential_attributes=[],
                         make_dirs=[])

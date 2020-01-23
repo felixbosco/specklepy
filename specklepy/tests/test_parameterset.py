@@ -5,7 +5,7 @@ from specklepy.io.parameterset import ParameterSet
 class TestParameterSet(unittest.TestCase):
 
     def setUp(self):
-        self.parameter_file = "data/test/test_parfile.ini"
+        self.parameter_file = "specklepy/tests/files/test_reconstruction.par"
         self.defaults_file = "specklepy/config/holography.cfg"
         self.essential_attributes = ['inDir', 'tmpDir', 'outFile', 'refSourceFile', 'maskRadius', 'noiseThreshold', 'nonsenseKeyWord']
         self.make_dirs = ['inDir', 'tmpDir']

@@ -10,9 +10,8 @@ class TestGenerateExposure(unittest.TestCase):
 
     def setUp(self):
         self.parameterfile = 'specklepy/tests/files/test_synthetic_exposures.par'
-        self.star_table = 'specklepy/tests/files/example_star_table_centered.dat'
-        # self.star_table = 'specklepy/tests/files/example_star_table_29mas296875.dat'
-        self.psf_source = '../../simulations/noao_psf_500ms.fits'
+        self.star_table = 'specklepy/tests/files/example_star_table_arcsec.dat'
+        self.psf_source = 'specklepy/tests/files/psf_short_exposures.fits'
         self.outfile = 'specklepy/tests/files/synthetic/exposure.fits'
 
         self.target = Target(band='H', star_table=self.star_table, sky_background=14.4)

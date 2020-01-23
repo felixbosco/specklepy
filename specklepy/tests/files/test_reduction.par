@@ -1,10 +1,10 @@
 [PATHS]
-filePath = data/test/synthetic/
-fileList = data/test/reduction/test_file_list.tab
-tmpDir = data/test/reduction/tmp/
+filePath = specklepy/tests/files/synthetic/
+fileList = specklepy/tests/files/reduction/test_file_list.tab
+tmpDir = specklepy/tests/files/reduction/tmp/
 
 [FLAT]
-masterFlatFile = data/test/reduction/MasterFlat.fits
+masterFlatFile = specklepy/tests/files/reduction/MasterFlat.fits
 
 [SKY]
 ordered = True
