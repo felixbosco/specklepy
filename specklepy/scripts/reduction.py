@@ -49,7 +49,7 @@ def main(options=None):
 
     # Default values
     defaults_file = "specklepy/config/reduction.cfg"
-    essential_attributes = []
+    essential_attributes = ['filePath', 'fileList', 'tmpDir', 'skipFlat', 'orderedSkySubtraction', 'skipSky']
     make_dirs = ['tmpDir']
 
     # Read parameters from file
@@ -68,13 +68,19 @@ def main(options=None):
     print(params.fileList)
 
     # (1) Flat fielding
-    master_flat = MasterFlat(params.fileList, filename= params.masterFlatFile, file_path=params.filePath)
-    master_flat.make_master_flat()
+    if not params.skipFlat:
+        master_flat = MasterFlat(params.fileList, filename=params.masterFlatFile, file_path=params.filePath)
+        master_flat.make_master_flat()
 
     # (...) Linearisation
 
+    # (...) Identify setups
+
+
     # (...) Sky subtraction
-    # sky.subtract(params, debug=args.debug)
+    if not params.skipSky:
+        sequences = sky.identify_sequences(params.fileList, ordered_sky_subtraction=params.orderedSkySubtraction)
+        # sky.subtract(params, debug=args.debug)
 
 
 
