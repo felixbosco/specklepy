@@ -59,7 +59,8 @@ def main(options=None):
         params = ParameterSet(parameter_file=args.parameter_file,
                         defaults_file=defaults_file,
                         essential_attributes=essential_attributes,
-                        make_dirs=make_dirs)
+                        make_dirs=make_dirs,
+                        separate_files=True)
 
     # Execute data reduction
     # (0) Read file list table

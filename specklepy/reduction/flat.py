@@ -11,7 +11,7 @@ from specklepy.logging import logging
 
 class MasterFlat(object):
 
-    def __init__(self, files, filename, file_path=None):
+    def __init__(self, files, filename='MasterFlat.fits', file_path=None):
         # Store input parameters
         if isinstance(files, list):
             self.files = files
