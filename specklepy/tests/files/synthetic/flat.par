@@ -1,6 +1,6 @@
 [TARGET]
 band = 'H'
-star_table = data/test/example_star_table_arcsec.dat
+star_table = specklepy/tests/files/example_star_table_arcsec.dat
 sky_background = -10
 
 [TELESCOPE]
@@ -23,9 +23,9 @@ saturation_level = 60000*u.electron
 
 [KWARGS]
 DIT = 0.2*u.s
-nframes = 10
+nframes = 20
 nframes_limit = 10
-outfile = data/test/synthetic/flat_200ms.fits
+outfile = specklepy/tests/files/synthetic/flat_200ms.fits
 time_stamp=None
 dithers = [(60, 60)]
 cards={'OBJECT': 'SKY', 'OBSTYPE': 'FLAT'}

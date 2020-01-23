@@ -1,15 +1,13 @@
 [TARGET]
 band = 'H'
-star_table = data/test/example_star_table_arcsec.dat
+star_table = specklepy/tests/files/example_star_table_arcsec.dat
 sky_background = 14.4
 
 [TELESCOPE]
 diameter = 8.2*u.m
 central_obscuration = 0.14
 name = VLT Unit Telescope
-psf_source = AiryDisk
-psf_resolution = 20.5013*u.mas
-radius = 50.635494509195034*u.mas
+psf_source = ../../simulations/noao_psf_10s.fits
 
 [DETECTOR]
 shape = (1024, 1024)
@@ -17,15 +15,15 @@ pixel_scale = 0.0106*u.arcsec
 dark_current = 0.1*u.electron/u.s
 readout_noise = 35*u.electron
 system_gain = 17*u.electron/u.adu
-optics_transmission = 0.0
+optics_transmission = 0.9
 quantum_efficiency = 0.9*u.electron/u.ph
 saturation_level = 60000*u.electron
 
 [KWARGS]
-DIT = 0.6*u.s
+DIT = 1.2*u.s
 nframes = 10
 nframes_limit = 10
-outfile = data/test/synthetic/flat_600ms.fits
+outfile = specklepy/tests/files/synthetic/sky_1200ms.fits
 time_stamp=None
 dithers = [(60, 60)]
-cards={'OBJECT': 'SKY', 'OBSTYPE': 'FLAT'}
+cards={'OBJECT': 'SKY', 'OBSTYPE': 'SKY'}

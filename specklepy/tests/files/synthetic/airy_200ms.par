@@ -1,6 +1,6 @@
 [TARGET]
 band = 'H'
-star_table = data/test/example_star_table_arcsec.dat
+star_table = specklepy/tests/files/example_star_table_arcsec.dat
 sky_background = 14.4
 
 [TELESCOPE]
@@ -23,10 +23,10 @@ quantum_efficiency = 0.9*u.electron/u.ph
 # saturation_level = 60000*u.electron
 
 [KWARGS]
-DIT = 800*0.6*u.s
+DIT = 800*0.2*u.s
 nframes = 1
 nframes_limit = 1
-outfile = data/test/synthetic/airy_600ms.fits
+outfile = specklepy/tests/files/synthetic/airy_200ms.fits
 time_stamp = None
 dithers = [(0, 0)]
 cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}

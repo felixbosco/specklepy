@@ -1,6 +1,6 @@
 [TARGET]
 band = 'H'
-star_table = data/test/example_star_table_arcsec.dat
+star_table = specklepy/tests/files/example_star_table_arcsec.dat
 sky_background = 14.4
 
 [TELESCOPE]
@@ -20,10 +20,10 @@ quantum_efficiency = 0.9*u.electron/u.ph
 saturation_level = 60000*u.electron
 
 [KWARGS]
-DIT = 0.2*u.s
+DIT = 1.2*u.s
 nframes = 800
 nframes_limit = 100
-outfile = data/test/synthetic/noao_200ms.fits
+outfile = specklepy/tests/files/synthetic/noao_1200ms.fits
 time_stamp = None
 dithers = [[0, 0], [-0.07076381,  0.39284687], [ 0.06677676, -0.58862834], [ 0.19091716, -0.07010549], [ 0.08940329, -0.60859351], [-0.70222277,  0.50141262], [ 0.98970495,  0.4181025 ], [ 0.33994158, -0.15549552], [-0.55528554, -0.65049679], [ 0.6059739 ,  0.49964013], [-0.18552312, -0.36058627]] # np.random.uniform(-1, 1, (10, 2))
 cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}

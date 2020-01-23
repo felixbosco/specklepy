@@ -9,11 +9,11 @@ from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 class TestGenerateExposure(unittest.TestCase):
 
     def setUp(self):
-        self.parameterfile = 'data/test/test_synthetic_exposures.par'
-        self.star_table = 'data/test/example_star_table_centered.dat'
-        # self.star_table = 'data/test/example_star_table_29mas296875.dat'
+        self.parameterfile = 'specklepy/tests/files/test_synthetic_exposures.par'
+        self.star_table = 'specklepy/tests/files/example_star_table_centered.dat'
+        # self.star_table = 'specklepy/tests/files/example_star_table_29mas296875.dat'
         self.psf_source = '../../simulations/noao_psf_500ms.fits'
-        self.outfile = 'data/test/synthetic/exposure.fits'
+        self.outfile = 'specklepy/tests/files/synthetic/exposure.fits'
 
         self.target = Target(band='H', star_table=self.star_table, sky_background=14.4)
         self.telescope = Telescope(8.2 * u.m, central_obscuration=0.14, name="VLT Unit Telescope",

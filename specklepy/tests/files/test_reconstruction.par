@@ -1,9 +1,9 @@
 [PATHS]
-inDir = data/test/example_cube.fits
-outFile = data/test/example_cube_holo.fits
-tmpDir = data/test/tmp/
-allStarsFile = data/test/example_all_sources.dat
-refSourceFile = data/test/example_ref_sources.dat
+inDir = specklepy/tests/files/example_cube.fits
+outFile = specklepy/tests/files/example_cube_holo.fits
+tmpDir = specklepy/tests/files/tmp/
+allStarsFile = specklepy/tests/files/example_all_sources.dat
+refSourceFile = specklepy/tests/files/example_ref_sources.dat
 
 
 [NOISE]

@@ -1,13 +1,13 @@
 [TARGET]
 band = 'H'
-star_table = data/test/example_star_table_arcsec.dat
+star_table = specklepy/tests/files/example_star_table_arcsec.dat
 sky_background = 14.4
 
 [TELESCOPE]
 diameter = 8.2*u.m
 central_obscuration = 0.14
 name = VLT Unit Telescope
-psf_source = ../../simulations/noao_psf_10s.fits
+psf_source = ../../simulations/glao_psf_10s.fits
 
 [DETECTOR]
 shape = (1024, 1024)
@@ -23,7 +23,7 @@ saturation_level = 60000*u.electron
 DIT = 0.6*u.s
 nframes = 800
 nframes_limit = 100
-outfile = data/test/synthetic/noao_600ms.fits
+outfile = specklepy/tests/files/synthetic/glao_600ms.fits
 time_stamp = None
 dithers = [[0, 0], [-0.07076381,  0.39284687], [ 0.06677676, -0.58862834], [ 0.19091716, -0.07010549], [ 0.08940329, -0.60859351], [-0.70222277,  0.50141262], [ 0.98970495,  0.4181025 ], [ 0.33994158, -0.15549552], [-0.55528554, -0.65049679], [ 0.6059739 ,  0.49964013], [-0.18552312, -0.36058627]] # np.random.uniform(-1, 1, (10, 2))
 cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}
