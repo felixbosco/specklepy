@@ -8,7 +8,7 @@ from specklepy.io.filemanager import FileManager
 
 class ParameterSet(object):
 
-    def __init__(self, parameter_file=None, defaults_file=None, essential_attributes=[], make_dirs=[], type_dict={}):
+    def __init__(self, parameter_file=None, defaults_file=None, essential_attributes=[], make_dirs=[], separate_files=False):
         # Store file names
         self.parameter_file = parameter_file
         self.defaults_file = defaults_file
@@ -53,13 +53,12 @@ class ParameterSet(object):
                                 setattr(self, key, value)
                             attr_set = True
                 if not attr_set:
-                    logging.warning("Essential parameter <{}> not found in parameter file or config file!".format(attr))
+                    logging.warning("Essential parameter '{}' not found in parameter file or config file!".format(attr))
 
         self.makedirs(dir_list=make_dirs)
-        try:
+        if not separate_files:
             self.inFiles = FileManager(self.inDir)()
-        except AttributeError:
-            # This is the case for reduction
+        else:
             self.fileList = Table.read(self.fileList, format='ascii.fixed_width')
 
 

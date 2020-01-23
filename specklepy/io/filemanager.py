@@ -102,7 +102,7 @@ class FileManager(object):
                     try:
                         fits.getheader(input)
                     except FileNotFoundError as e:
-                        logging.warning("Fits file <{}> has not been found.".format(input))
+                        logging.warning("Fits file '{}' has not been found.".format(input))
                     self.files = [input]
                 # elif extension == 'spam':
                 #     logging.info("Input is the name of a spam spectrum file.")
