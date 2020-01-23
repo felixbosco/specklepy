@@ -97,7 +97,10 @@ def maximize_plot():
     elif backend == 'wxAgg':
         mng.frame.Maximize(True)
     elif backend == 'TkAgg':
-        mng.window.state('zoomed')
+        try:
+            mng.window.state('zoomed')
+        except:
+            logging.warn("Could not maximize plot")
     else:
         raise RuntimeWarning("Maximizing plot is not possible with matplotlib backend {}".format(backend))
 
