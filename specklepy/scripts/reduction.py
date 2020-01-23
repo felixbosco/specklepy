@@ -22,7 +22,7 @@ except ModuleNotFoundError:
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
-    from specklepy.reduction import flat
+    from specklepy.reduction.flat import MasterFlat
     from specklepy.reduction import sky
 
 
@@ -63,10 +63,12 @@ def main(options=None):
 
     # Execute data reduction
     # (0) Read file list table
+    logging.info("Reading file list ...")
     print(params.fileList)
 
     # (1) Flat fielding
-    flat.make_master_flat(params)
+    master_flat = MasterFlat(params.fileList, filename= params.masterFlatFile, file_path=params.filePath)
+    master_flat.make_master_flat()
 
     # (...) Linearisation
 
