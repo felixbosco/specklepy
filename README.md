@@ -16,11 +16,12 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
   * Make logger write a copy to a .log file
   * Create general script with signature "specklepy holography -f ..."
 * core module:
+  * Measure "PSF quality" and implement a weighting scheme for frames 
   * Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
   * holography - implement secondary source subtraction
   * Tune star finder routines
   * Implement frame save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file. This is necessary for "bootstrap resampling", which can deliver uncertainties.
-  * [low priority] implement 'valid' mode, that yields a reconstruction only in the intersection of all file field of views
+  * [low priority] implement 'valid' mode, that yields a reconstruction only in the intersection of all file field of views. Current mode is a 'same' mode, which covers the field of the one reference image. We could also think about a 'full' mode that covers the complete observed field, which might be noisy in the dithered outskirts though
   * [low priority] implement PSF variation by "interpolation" of the reference PSFs to a fraction of the image
 * data reduction module:
   * Implement flatfield correction from flat frames
