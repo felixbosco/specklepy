@@ -5,9 +5,9 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
 
 ## Table of contents
 - [To Do](#to-do)
-- [Synthetic image generator](#synthetic-image-generator)
 - [Data reduction](#data-reduction)
 - [Image reconstruction](#image-reconstruction)
+- [Synthetic image generator](#synthetic-image-generator)
 - [Version history](#version-history)
 
 
@@ -15,6 +15,10 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
 * General:
   * Make logger write a copy to a .log file
   * Create general script with signature "specklepy holography -f ..."
+* data reduction module:
+  * Implement flatfield correction from flat frames
+  * Implement sky subtraction from sky frames
+  * Implement linearity correction (wait for D. Thompson)
 * core module:
   * Measure "PSF quality" and implement a weighting scheme for frames 
   * Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
@@ -23,21 +27,17 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
   * Implement frame save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file. This is necessary for "bootstrap resampling", which can deliver uncertainties.
   * [low priority] implement 'valid' mode, that yields a reconstruction only in the intersection of all file field of views. Current mode is a 'same' mode, which covers the field of the one reference image. We could also think about a 'full' mode that covers the complete observed field, which might be noisy in the dithered outskirts though
   * [low priority] implement PSF variation by "interpolation" of the reference PSFs to a fraction of the image
-* data reduction module:
-  * Implement flatfield correction from flat frames
-  * Implement sky subtraction from sky frames
-  * Implement linearity correction (wait for D. Thompson)
 * synthetic exposures module:
   * Study whether it makes sense to sample the speckle PSF down before convolution
+
+
+## Data reduction
+To be implemented ...
 
 
 ## Image reconstruction
 The image reconstruction module is the core of Specklepy, thus referred to as `core`.
 Content ...
-
-
-## Data reduction
-To be implemented ...
 
 
 ## Synthetic image generator
