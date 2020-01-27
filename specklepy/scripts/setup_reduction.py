@@ -46,7 +46,7 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
-    header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES']
+    header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
     instrument_config_file = 'specklepy/config/instruments.cfg'
 
     # Verification of args

@@ -1,81 +1,89 @@
-|                             FILE | OBSTYPE |    OBJECT | FILTER | EXPTIME | nFRAMES |
-|               airy_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |   960.0 |       1 |
-|                airy_200ms_1.fits | SCIENCE | SYNTHETIC |      H |   160.0 |       1 |
-|                airy_600ms_1.fits | SCIENCE | SYNTHETIC |      H |   480.0 |       1 |
-|               dark_1200ms_1.fits |    DARK |      DARK |      H |     1.2 |      10 |
-|                dark_200ms_1.fits |    DARK |      DARK |      H |     0.2 |      10 |
-|  exposure_20200116_163342_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-|  exposure_20200116_163342_2.fits |     ___ |       ___ |      H |     0.2 |       5 |
-|  exposure_20200116_163543_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-|  exposure_20200116_163543_2.fits |     ___ |       ___ |      H |     0.2 |       5 |
-|  exposure_20200116_163819_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-|  exposure_20200116_163819_2.fits |     ___ |       ___ |      H |     0.2 |       5 |
-|  exposure_20200116_164950_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 |
-|  exposure_20200116_164950_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 |
-|  exposure_20200123_152214_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 |
-|  exposure_20200123_152214_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 |
-|  exposure_20200123_152404_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 |
-|  exposure_20200123_152404_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 |
-| exposures_20200116_172428_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200116_172458_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200116_172636_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200116_172835_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200116_172923_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200117_135316_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200117_135730_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200123_152509_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200123_152844_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-| exposures_20200123_152916_1.fits |     ___ |       ___ |      H |     0.2 |      10 |
-|                flat_200ms_1.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 |
-|                flat_200ms_2.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 |
-|               glao_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               glao_1200ms_2.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               glao_1200ms_3.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               glao_1200ms_4.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               glao_1200ms_5.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               glao_1200ms_6.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               glao_1200ms_7.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               glao_1200ms_8.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|                glao_200ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_200ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_200ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_200ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_200ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_200ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_200ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_200ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                glao_600ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                glao_600ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                glao_600ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                glao_600ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                glao_600ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                glao_600ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                glao_600ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                glao_600ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|               noao_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               noao_1200ms_2.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               noao_1200ms_3.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               noao_1200ms_4.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               noao_1200ms_5.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               noao_1200ms_6.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               noao_1200ms_7.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|               noao_1200ms_8.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 |
-|                noao_200ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_200ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_200ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_200ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_200ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_200ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_200ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_200ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 |
-|                noao_600ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                noao_600ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                noao_600ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                noao_600ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                noao_600ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                noao_600ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                noao_600ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                noao_600ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 |
-|                sky_1200ms_1.fits |     SKY |       SKY |      H |     1.2 |      10 |
-|                 sky_200ms_1.fits |     SKY |       SKY |      H |     0.2 |      10 |
-|                 sky_600ms_1.fits |     SKY |       SKY |      H |     0.6 |      10 |
+|                             FILE | OBSTYPE |    OBJECT | FILTER | EXPTIME | nFRAMES |                       DATE |
+|               airy_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |   960.0 |       1 | 2020-01-16 17:35:12.671361 |
+|                airy_200ms_1.fits | SCIENCE | SYNTHETIC |      H |   160.0 |       1 | 2020-01-16 17:35:08.366280 |
+|                airy_600ms_1.fits | SCIENCE | SYNTHETIC |      H |   480.0 |       1 | 2020-01-23 15:29:21.758689 |
+|               dark_1200ms_1.fits |    DARK |      DARK |      H |     1.2 |      10 | 2020-01-16 17:35:25.257576 |
+|                dark_200ms_1.fits |    DARK |      DARK |      H |     0.2 |      10 | 2020-01-16 17:35:14.774854 |
+|  exposure_20200116_163342_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 16:33:42.733420 |
+|  exposure_20200116_163342_2.fits |     ___ |       ___ |      H |     0.2 |       5 | 2020-01-16 16:33:42.733420 |
+|  exposure_20200116_163543_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 16:35:43.533689 |
+|  exposure_20200116_163543_2.fits |     ___ |       ___ |      H |     0.2 |       5 | 2020-01-16 16:35:43.533689 |
+|  exposure_20200116_163819_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 16:38:19.047704 |
+|  exposure_20200116_163819_2.fits |     ___ |       ___ |      H |     0.2 |       5 | 2020-01-16 16:38:19.047704 |
+|  exposure_20200116_164950_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 | 2020-01-16 16:49:50.657143 |
+|  exposure_20200116_164950_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 | 2020-01-16 16:49:50.657143 |
+|  exposure_20200123_152214_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 | 2020-01-23 15:22:14.548225 |
+|  exposure_20200123_152214_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 | 2020-01-23 15:22:14.548225 |
+|  exposure_20200123_152404_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 | 2020-01-23 15:24:04.267657 |
+|  exposure_20200123_152404_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 | 2020-01-23 15:24:04.267657 |
+|  exposure_20200123_155930_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 | 2020-01-23 15:59:30.248817 |
+|  exposure_20200123_155930_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 | 2020-01-23 15:59:30.248817 |
+|  exposure_20200123_160035_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 | 2020-01-23 16:00:35.607541 |
+|  exposure_20200123_160035_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 | 2020-01-23 16:00:35.607541 |
+|  exposure_20200123_160146_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 | 2020-01-23 16:01:46.588060 |
+|  exposure_20200123_160146_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 | 2020-01-23 16:01:46.588060 |
+|  exposure_20200123_160236_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |      10 | 2020-01-23 16:02:36.923363 |
+|  exposure_20200123_160236_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |       5 | 2020-01-23 16:02:36.923363 |
+| exposures_20200116_172428_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 17:24:28.220689 |
+| exposures_20200116_172458_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 17:24:58.929453 |
+| exposures_20200116_172636_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 17:26:36.567951 |
+| exposures_20200116_172835_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 17:28:35.662359 |
+| exposures_20200116_172923_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-16 17:29:23.567166 |
+| exposures_20200117_135316_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-17 13:53:16.760750 |
+| exposures_20200117_135730_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-17 13:57:30.635696 |
+| exposures_20200123_152509_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-23 15:25:09.434688 |
+| exposures_20200123_152844_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-23 15:28:44.017729 |
+| exposures_20200123_152916_1.fits |     ___ |       ___ |      H |     0.2 |      10 | 2020-01-23 15:29:16.733618 |
+|                flat_200ms_1.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 | 2020-01-16 18:21:44.763859 |
+|                flat_200ms_2.fits |    FLAT |  TWILIGHT |      H |     0.2 |      10 | 2020-01-16 18:21:44.763859 |
+|               glao_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|               glao_1200ms_2.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|               glao_1200ms_3.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|               glao_1200ms_4.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|               glao_1200ms_5.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|               glao_1200ms_6.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|               glao_1200ms_7.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|               glao_1200ms_8.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 18:12:19.026411 |
+|                glao_200ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_200ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_200ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_200ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_200ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_200ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_200ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_200ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:57:49.851961 |
+|                glao_600ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|                glao_600ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|                glao_600ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|                glao_600ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|                glao_600ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|                glao_600ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|                glao_600ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|                glao_600ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 18:05:08.849380 |
+|               noao_1200ms_1.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|               noao_1200ms_2.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|               noao_1200ms_3.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|               noao_1200ms_4.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|               noao_1200ms_5.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|               noao_1200ms_6.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|               noao_1200ms_7.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|               noao_1200ms_8.fits | SCIENCE | SYNTHETIC |      H |     1.2 |     100 | 2020-01-16 17:49:57.523208 |
+|                noao_200ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_200ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_200ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_200ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_200ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_200ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_200ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_200ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.2 |     100 | 2020-01-16 17:35:58.798297 |
+|                noao_600ms_1.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                noao_600ms_2.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                noao_600ms_3.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                noao_600ms_4.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                noao_600ms_5.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                noao_600ms_6.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                noao_600ms_7.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                noao_600ms_8.fits | SCIENCE | SYNTHETIC |      H |     0.6 |     100 | 2020-01-16 17:42:47.924201 |
+|                sky_1200ms_1.fits |     SKY |       SKY |      H |     1.2 |      10 | 2020-01-16 17:35:47.346560 |
+|                 sky_200ms_1.fits |     SKY |       SKY |      H |     0.2 |      10 | 2020-01-16 17:35:30.513867 |
+|                 sky_600ms_1.fits |     SKY |       SKY |      H |     0.6 |      10 | 2020-01-16 17:35:36.101141 |
