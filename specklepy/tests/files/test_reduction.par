@@ -8,4 +8,4 @@ skipFlat = True
 masterFlatFile = specklepy/tests/files/reduction/MasterFlat.fits
 
 [SKY]
-orderedSkySubtraction = False
+ignore_time_stamps = True

@@ -9,22 +9,50 @@ from specklepy.utils.plot import imshow
 
 
 
-def identify_sequences(file_list, ordered_sky_subtraction=True):
+def identify_sequences(file_list, ignore_time_stamps=False):
+
+    """Identify observational sequences for sky subtraction.
+
+    Typically, observations are organized in sequences such as 'object-sky-object' for optimizing the required
+    telescope time. This function now identifies (blocks of) sky files and afterwards allocates science or object files
+    to these blocks by choosing estimating the minimum time delay to one of the sky files.
+
+    Args:
+        file_list (astropy.table.Table):
+        shape (tuple, dtype=int, optional):
+        cards (dict, optional):
+        timestamp (bool, optional):
+            Set to True to automatically add a time stamp to the file name.
+            Default is False.
+        hprefix (str, optional):
+            Prefix of header cards. Default is None.
+    """
 
     if not isinstance(file_list, Table):
         raise SpecklepyTypeError('identify_sequences', 'file_list', type(file_list), 'astropy.table.Table')
 
     sequences = []
-    is_science_file = file_list['OBSTYPE'] == 'SCIENCE'
-    science_files = list(file_list['FILE'][is_science_file])
-    is_sky_file = file_list['OBSTYPE'] == 'SKY'
-    sky_files = list(file_list['FILE'][is_science_file])
-    if ordered_sky_subtraction:
-        pass
-    else:
-        sequences.append(Sequence(science_files=science_files, sky_files=sky_files))
+    observation_setups = np.unique(file_list['Setup'])
+    for setup in observation_setups:
 
-    logging.info("Identified {} squence(s)...".format(len(sequences)))
+        # Check for setup
+        is_in_setup = file_list['Setup'] == setup
+
+        # Check for science or sky type
+        is_science_file = file_list['OBSTYPE'] == 'SCIENCE'
+        is_science_file &= is_in_setup
+        science_files = list(file_list['FILE'][is_science_file])
+        is_sky_file = file_list['OBSTYPE'] == 'SKY'
+        is_sky_file &= is_in_setup
+        sky_files = list(file_list['FILE'][is_sky_file])
+
+        # Assigning sky files to science files
+        if ignore_time_stamps:
+            sequences.append(Sequence(science_files=science_files, sky_files=sky_files))
+        else:
+            pass
+
+    logging.info("Identified {} sequence(s)...".format(len(sequences)))
     return sequences
 
 
@@ -41,6 +69,10 @@ class Sequence(object):
             self.sky_files = sky_files
         else:
             raise SpecklepyTypeError('Sequence', 'sky_files', type(sky_files), 'list')
+
+    @property
+    def files(self):
+        return self.sky_files + self.science_files
 
     def make_master_sky(self):
         self.master_sky = 0
