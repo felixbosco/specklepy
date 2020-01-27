@@ -24,8 +24,9 @@ except ModuleNotFoundError:
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
     from specklepy.reduction.flat import MasterFlat
-    from specklepy.reduction import setups
+    from specklepy.reduction.setups import identify_setups
     from specklepy.reduction import sky
+    from specklepy.utils.plot import imshow
 
 
 
@@ -51,7 +52,7 @@ def main(options=None):
 
     # Default values
     defaults_file = "specklepy/config/reduction.cfg"
-    essential_attributes = ['filePath', 'fileList', 'tmpDir', 'skipFlat', 'setupKeywords', 'ignore_time_stamps', 'skipSky']
+    essential_attributes = ['filePath', 'fileList', 'tmpDir', 'skipFlat', 'setupKeywords', 'skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']
     make_dirs = ['tmpDir']
 
     # Read parameters from file
@@ -77,14 +78,14 @@ def main(options=None):
     # (...) Linearisation
 
     # (...) Identify setups
-    params.fileList = setups.identify_setups(params.fileList, params.setupKeywords)
+    params.fileList = identify_setups(params.fileList, params.setupKeywords)
 
     # (...) Sky subtraction
     if not params.skipSky:
-        sequences = sky.identify_sequences(params.fileList, ignore_time_stamps=params.ignore_time_stamps)
+        sequences = sky.identify_sequences(params.fileList, ignore_time_stamps=params.ignore_time_stamps, file_path=params.filePath)
         for sequence in sequences:
-            print(sequence.files)
-        # sky.subtract(params, debug=args.debug)
+            sequence.subtract_master_sky(saveto=params.tmpDir, filename_prefix=params.skySubtractionPrefix)
+
 
 
 
