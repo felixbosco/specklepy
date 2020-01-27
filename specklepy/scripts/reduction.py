@@ -78,12 +78,12 @@ def main(options=None):
 
     # (...) Identify setups
     params.fileList = setups.identify_setups(params.fileList, params.setupKeywords)
-    print(params.fileList)
 
     # (...) Sky subtraction
     if not params.skipSky:
         sequences = sky.identify_sequences(params.fileList, ignore_time_stamps=params.ignore_time_stamps)
-        print(sequences)
+        for sequence in sequences:
+            print(sequence.files)
         # sky.subtract(params, debug=args.debug)
 
 
