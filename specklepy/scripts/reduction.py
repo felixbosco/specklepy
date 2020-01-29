@@ -4,14 +4,13 @@ import argparse
 import os
 import sys
 import warnings
-from astropy.table import Table
 
 try:
     from specklepy.logging import logging
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
     from specklepy.reduction.flat import MasterFlat
-    from specklepy.reduction import setups
+    from specklepy.deprecated import setups
     from specklepy.reduction import sky
 except ModuleNotFoundError:
     # Prepare import from current path
@@ -24,7 +23,7 @@ except ModuleNotFoundError:
     from specklepy.io.parameterset import ParameterSet
     from specklepy.io.filemanager import FileManager
     from specklepy.reduction.flat import MasterFlat
-    from specklepy.reduction.setups import identify_setups
+    from specklepy.deprecated.setups import identify_setups
     from specklepy.reduction import sky
     from specklepy.utils.plot import imshow
 
@@ -75,12 +74,11 @@ def main(options=None):
         flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
         master_flat = MasterFlat(flat_files, filename=params.masterFlatFile, file_path=params.filePath)
         master_flat.combine()
-        # inFiles.table = master_flat.run_correction(inFiles.table, filter={'OBSTYPE': ['SCIENCE', 'SKY']})
+        inFiles.table = master_flat.run_correction(inFiles.table, filter={'OBSTYPE': ['SCIENCE', 'SKY']}, prefix=params.flatCorrectionPrefix)
 
     # (...) Linearisation
 
     # (...) Identify setups
-    # inFiles.table = identify_setups(inFiles.table, params.setupKeywords)
     inFiles.identify_setups(params.setupKeywords)
 
     # (...) Sky subtraction
