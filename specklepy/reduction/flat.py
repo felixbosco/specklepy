@@ -59,6 +59,22 @@ class MasterFlat(object):
         self.outfile.data = master_flat
 
 
-    def run_correction(self, filelist, filter={}):
-        pass
+    def run_correction(self, filelist, filter=None, prefix=None):
+
+        # Input parameters
+        if isinstance(filelist, list):
+            files = filelist
+        elif isinstance(filelist, Table):
+            is_flat_file = filelist['OBSTYPE'] == 'FLAT'
+            self.files = filelist['FILE'][is_flat_file]
+        else:
+            raise SpecklepyTypeError('MasterFlat', 'filelist', type(filelist), 'astropy.table.Table')
+
+        for file in filelist:
+
+            # Apply filter
+            # files =
+            pass
+
+        return filelist
 
