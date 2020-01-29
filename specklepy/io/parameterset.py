@@ -8,7 +8,7 @@ from specklepy.io.filemanager import FileManager
 
 class ParameterSet(object):
 
-    def __init__(self, parameter_file=None, defaults_file=None, essential_attributes=[], make_dirs=[], separate_files=False):
+    def __init__(self, parameter_file=None, defaults_file=None, essential_attributes=[], make_dirs=[]):
         # Store file names
         self.parameter_file = parameter_file
         self.defaults_file = defaults_file
@@ -56,10 +56,11 @@ class ParameterSet(object):
                     logging.warning("Essential parameter '{}' not found in parameter file or config file!".format(attr))
 
         self.makedirs(dir_list=make_dirs)
-        if not separate_files:
-            self.inFiles = FileManager(self.inDir)()
-        else:
-            self.fileList = Table.read(self.fileListFile, format='ascii.fixed_width')
+        try:
+            self.inFiles = FileManager(self.inDir).files
+        except AttributeError:
+            logging.warn("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in parameter file!")
+
 
 
     def makedirs(self, dir_list):
