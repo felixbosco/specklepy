@@ -1,13 +1,14 @@
 [PATHS]
 filePath = specklepy/tests/files/synthetic/
-fileList = specklepy/tests/files/reduction/test_file_list.tab
+fileListFile = specklepy/tests/files/reduction/test_file_list.tab
 tmpDir = specklepy/tests/files/reduction/tmp/
 
 [FLAT]
 skipFlat = True
 masterFlatFile = specklepy/tests/files/reduction/MasterFlat.fits
+flatCorrectionPrefix = f_
 
 [SKY]
-skipSky = False
-skySubtractionPrefix = skysub_
+skipSky = True
+skySubtractionPrefix = s
 ignore_time_stamps = True

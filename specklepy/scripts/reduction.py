@@ -52,7 +52,7 @@ def main(options=None):
 
     # Default values
     defaults_file = "specklepy/config/reduction.cfg"
-    essential_attributes = ['filePath', 'fileList', 'tmpDir', 'skipFlat', 'setupKeywords', 'skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']
+    essential_attributes = ['filePath', 'fileListFile', 'tmpDir', 'skipFlat', 'flatCorrectionPrefix', 'setupKeywords', 'skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']
     make_dirs = ['tmpDir']
 
     # Read parameters from file
@@ -82,7 +82,7 @@ def main(options=None):
 
     # (...) Sky subtraction
     if not params.skipSky:
-        sequences = sky.identify_sequences(params.fileList, ignore_time_stamps=params.ignore_time_stamps, file_path=params.filePath)
+        sequences = sky.identify_sequences(params.fileList, file_path=params.filePath, ignore_time_stamps=params.ignore_time_stamps)
         for sequence in sequences:
             sequence.subtract_master_sky(saveto=params.tmpDir, filename_prefix=params.skySubtractionPrefix)
 
