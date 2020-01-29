@@ -1,5 +1,7 @@
-import os
 import glob
+import os
+import string
+import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.table import Table
 
@@ -122,3 +124,62 @@ class FileManager(object):
                 mask &= (filter_dict[key] == self.table[key])
 
         return self.table[namekey][mask].data
+
+
+    def identify_setups(self, keywords):
+        """Identify distinct observational setups in a list of files.
+
+        This function identifies distinct observational setups.
+
+        Args:
+            filelist (astropy.table.Table):
+            keywords (list of str):
+        """
+
+        # Check input parameters
+        # if not isinstance(filelist, Table):
+        #     raise SpecklepyTypeError('identify_setups', 'filelist', type(filelist), 'astropy.table.Table')
+
+        if not isinstance(keywords, list):
+            raise SpecklepyTypeError('identify_setups', 'keywords', type(keywords), 'list')
+
+        # if not isinstance(return_setups, bool):
+        #     raise SpecklepyTypeError('identify_setups', 'return_setups', type(return_setups), 'bool')
+
+
+        # Identifying setups key-by-key
+        logging.info("Identifying distinct observational setups in the file list...")
+        self.table['Setup'] = [None] * len(self.table['FILE'])
+
+        for key in keywords:
+            unique = np.unique(self.table[key].data)
+            logging.info("Identified {} setups by keyword {}:".format(len(unique), key))
+            logging.info("\t{}".format(unique))
+            if len(unique) == 1:
+                continue
+
+            for index, setup in enumerate(unique):
+                for row in self.table:
+                    if row[key] == setup:
+                        if row['Setup'] is None:
+                            row['Setup'] = [str(index)]
+                        else:
+                            row['Setup'].append(str(index))
+
+        for row in self.table:
+            row['Setup'] = ''.join(row['Setup'])
+
+        # Overwrite setup keys by length-1 string
+        combinations = np.unique(self.table['Setup'].data)
+        for index, combination in enumerate(combinations):
+            row_indizes = np.where(self.table['Setup'].data == combination)
+            self.table['Setup'][row_indizes] = string.ascii_uppercase[index]
+
+
+        # Return
+        # if return_setups:
+        #     # Create setups dict
+        #     setups_dict = {}
+        #     return filelist, setups_dict
+        # else:
+        #     return filelist

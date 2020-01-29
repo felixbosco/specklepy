@@ -52,7 +52,7 @@ def main(options=None):
 
     # Default values
     defaults_file = "specklepy/config/reduction.cfg"
-    essential_attributes = ['filePath', 'fileListFile', 'tmpDir', 'skipFlat', 'flatCorrectionPrefix', 'setupKeywords', 'skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']
+    essential_attributes = ['filePath', 'fileList', 'tmpDir', 'skipFlat', 'flatCorrectionPrefix', 'setupKeywords', 'skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']
     make_dirs = ['tmpDir']
 
     # Read parameters from file
@@ -62,24 +62,26 @@ def main(options=None):
         params = ParameterSet(parameter_file=args.parameter_file,
                         defaults_file=defaults_file,
                         essential_attributes=essential_attributes,
-                        make_dirs=make_dirs,
-                        separate_files=True)
+                        make_dirs=make_dirs)
 
     # Execute data reduction
     # (0) Read file list table
     logging.info("Reading file list ...")
-    print(params.fileList)
+    inFiles = FileManager(params.fileList)
+    print(inFiles.table)
 
     # (1) Flat fielding
     if not params.skipFlat:
-        master_flat = MasterFlat(params.fileList, filename=params.masterFlatFile, file_path=params.filePath)
+        flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
+        master_flat = MasterFlat(flat_files, filename=params.masterFlatFile, file_path=params.filePath)
         master_flat.combine()
-        params.fileList = master_flat.run_correction(params.fileList, filter={'OBSTYPE': ['SCIENCE', 'SKY']})
+        # inFiles.table = master_flat.run_correction(inFiles.table, filter={'OBSTYPE': ['SCIENCE', 'SKY']})
 
     # (...) Linearisation
 
     # (...) Identify setups
-    params.fileList = identify_setups(params.fileList, params.setupKeywords)
+    # inFiles.table = identify_setups(inFiles.table, params.setupKeywords)
+    inFiles.identify_setups(params.setupKeywords)
 
     # (...) Sky subtraction
     if not params.skipSky:
