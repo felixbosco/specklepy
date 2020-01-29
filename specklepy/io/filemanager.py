@@ -132,20 +132,12 @@ class FileManager(object):
         This function identifies distinct observational setups.
 
         Args:
-            filelist (astropy.table.Table):
             keywords (list of str):
         """
 
         # Check input parameters
-        # if not isinstance(filelist, Table):
-        #     raise SpecklepyTypeError('identify_setups', 'filelist', type(filelist), 'astropy.table.Table')
-
         if not isinstance(keywords, list):
             raise SpecklepyTypeError('identify_setups', 'keywords', type(keywords), 'list')
-
-        # if not isinstance(return_setups, bool):
-        #     raise SpecklepyTypeError('identify_setups', 'return_setups', type(return_setups), 'bool')
-
 
         # Identifying setups key-by-key
         logging.info("Identifying distinct observational setups in the file list...")
@@ -174,12 +166,3 @@ class FileManager(object):
         for index, combination in enumerate(combinations):
             row_indizes = np.where(self.table['Setup'].data == combination)
             self.table['Setup'][row_indizes] = string.ascii_uppercase[index]
-
-
-        # Return
-        # if return_setups:
-        #     # Create setups dict
-        #     setups_dict = {}
-        #     return filelist, setups_dict
-        # else:
-        #     return filelist
