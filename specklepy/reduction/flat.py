@@ -4,7 +4,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError
-from specklepy.io.outfile import Outfile
+from specklepy.io.masterfile import MasterFile
 from specklepy.logging import logging
 
 
@@ -55,6 +55,6 @@ class MasterFlat(object):
 
         # Store master flat to file
         if not hasattr(self, 'outfile'):
-            self.outfile = Outfile(self.filename, shape=master_flat.shape, hprefix='HIERARCH SPECKLEPY')
+            self.outfile = MasterFile(self.filename, files=self.files, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
         self.outfile.data = master_flat
 
