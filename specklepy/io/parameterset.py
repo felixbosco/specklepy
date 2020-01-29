@@ -59,7 +59,7 @@ class ParameterSet(object):
         if not separate_files:
             self.inFiles = FileManager(self.inDir)()
         else:
-            self.fileList = Table.read(self.fileList, format='ascii.fixed_width')
+            self.fileList = Table.read(self.fileListFile, format='ascii.fixed_width')
 
 
     def makedirs(self, dir_list):
