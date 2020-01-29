@@ -73,7 +73,8 @@ def main(options=None):
     # (1) Flat fielding
     if not params.skipFlat:
         master_flat = MasterFlat(params.fileList, filename=params.masterFlatFile, file_path=params.filePath)
-        master_flat.make_master_flat()
+        master_flat.combine()
+        params.fileList = master_flat.run_correction(params.fileList, filter={'OBSTYPE': ['SCIENCE', 'SKY']})
 
     # (...) Linearisation
 

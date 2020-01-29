@@ -11,15 +11,15 @@ from specklepy.logging import logging
 
 class MasterFlat(object):
 
-    def __init__(self, files, filename='MasterFlat.fits', file_path=None):
+    def __init__(self, filelist, filename='MasterFlat.fits', file_path=None):
         # Store input parameters
-        if isinstance(files, list):
-            self.files = files
-        elif isinstance(files, Table):
-            is_flat_file = files['OBSTYPE'] == 'FLAT'
-            self.files = files['FILE'][is_flat_file]
+        if isinstance(filelist, list):
+            self.files = filelist
+        elif isinstance(filelist, Table):
+            is_flat_file = filelist['OBSTYPE'] == 'FLAT'
+            self.files = filelist['FILE'][is_flat_file]
         else:
-            raise SpecklepyTypeError('MasterFlat', 'files', type(files), 'astropy.table.Table')
+            raise SpecklepyTypeError('MasterFlat', 'filelist', type(filelist), 'astropy.table.Table')
 
         if isinstance(filename, str):
             self.filename = filename
@@ -32,8 +32,8 @@ class MasterFlat(object):
             raise SpecklepyTypeError('MasterFlat', 'file_path', type(file_path), 'str')
 
 
-    def make_master_flat(self):
-        logging.info("Combining the following files to a master flat:")
+    def combine(self):
+        logging.info("Combining the following filelist to a master flat:")
 
         # Read image frames from file
         for index, file in enumerate(self.files):
@@ -55,6 +55,10 @@ class MasterFlat(object):
 
         # Store master flat to file
         if not hasattr(self, 'outfile'):
-            self.outfile = MasterFile(self.filename, files=self.files, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
+            self.outfile = MasterFile(self.filename, filelist=self.filelist, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
         self.outfile.data = master_flat
+
+
+    def run_correction(self, filelist, filter={}):
+        pass
 
