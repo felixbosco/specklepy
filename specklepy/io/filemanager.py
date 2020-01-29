@@ -4,6 +4,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table
 
 from specklepy.logging import logging
+from specklepy.exceptions import SpecklepyTypeError
 
 
 class FileManager(object):
@@ -38,7 +39,7 @@ class FileManager(object):
             self.files = input
 
         else:
-            raise TypeError("FileManager received input of unexpected type ({}).".format(type(input)))
+            raise SpecklepyTypeError("FileManager", 'input', type(input), 'str')# received input of unexpected type ({}).".format(type(input)))
 
         # Log identified input files
         logging.info("FileManager lists the following files:")
@@ -91,11 +92,11 @@ class FileManager(object):
         """
 
         try:
-            self.filelist = Table.read(file)
-            self.files = self.filelist[namekey].data
+            self.table = Table.read(file)
+            self.files = self.table[namekey].data
         except IORegistryError:
-            self.filelist = Table.read(file, format='ascii.fixed_width')
-            self.files = self.filelist[namekey].data
+            self.table = Table.read(file, format='ascii.fixed_width')
+            self.files = self.table[namekey].data
         except:
             self.files = []
             logging.info("Reading file names from input file {}.".format(file))
@@ -103,3 +104,21 @@ class FileManager(object):
                 for filename in f.readlines():
                     filename = filename.replace('\n', '')
                     self.files.append(filename)
+
+
+    def filter(self, filter_dict, namekey='FILE'):
+
+        if not isinstance(filter_dict, dict):
+            raise SpecklepyTypeError('FileManager.filter', 'filter_dict', type(filter_dict), 'dict')
+
+        mask = [True] * len(self.table[namekey])
+        for index, key in enumerate(filter_dict.keys()):
+            if isinstance(filter_dict[key], list):
+                submask = [False] * len(self.table[namekey])
+                for correct in filter_dict[key]:
+                    submask |= (self.table[key] == correct)
+                mask &= submask
+            else:
+                mask &= (filter_dict[key] == self.table[key])
+
+        return self.table[namekey][mask].data
