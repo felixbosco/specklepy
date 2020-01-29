@@ -6,9 +6,11 @@ class TestFileManager(unittest.TestCase):
 
     def setUp(self):
         self.filename = "specklepy/tests/files/example_cube.fits"
+        self.filelist = "specklepy/tests/files/reduction/test_file_list.tab"
 
     def test_init(self):
         FileManager(self.filename)
+        FileManager(self.filelist)
 
     def test_str(self):
         fh = FileManager(self.filename)

@@ -1,6 +1,7 @@
 import os
 import glob
-from astropy.io import fits
+from astropy.io.registry import IORegistryError
+from astropy.table import Table
 
 from specklepy.logging import logging
 
@@ -22,25 +23,20 @@ class FileManager(object):
         """
 
         self.input = input
-        if isinstance(input, str):
-            self.files = glob.glob(input)
+        if isinstance(self.input, str):
+            # Search for files
+            self.files = glob.glob(self.input)
             self.files.sort()
-            logging.info("FileManager found {} file(s) matching to {}.".format(len(self.files), input))
+            logging.info("FileManager found {} file(s) matching to {!r}.".format(len(self.files), input))
 
-            for file in self.files:
-                extension = file.split('.')[-1]
-                if extension == 'fits':
-                    try:
-                        fits.getheader(file)
-                    except FileNotFoundError as e:
-                        logging.warning("Fits file <{}> has not been found.".format(file))
-                    # self.files = [input]
-                else:
-                    logging.info("Input file is not fits type. FileManager assumes that input file {} contains file names.".format(input))
-                    self._read_file_list_file(input)
+            if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
+                logging.info("Input file is not fits type. FileManager assumes that input file {!r} contains file names.".format(self.files[0]))
+                self.extract_file_names(self.files[0])
+
         elif isinstance(input, list):
             logging.info("FileManager received a list of files.")
             self.files = input
+
         else:
             raise TypeError("FileManager received input of unexpected type ({}).".format(type(input)))
 
@@ -84,47 +80,26 @@ class FileManager(object):
         return len(self.files)
 
 
-    def _characterize_input(self, input):
-        """
-        This function interpretes the file input and stores a list to self.files.
-        """
-        if isinstance(input, str):
-            if '*' in input or '?'in input:
-                logging.info("Input is a generic file name.")
-                self.input_type = 'generic'
-                # find generic files with glob.glob()
-                self.files = glob.glob(input)
-                self.files.sort()
-                logging.info("Found {} files matching to the generic name {}.".format(len(self.files), input))
-            else:
-                extension = input.split('.')[-1]
-                if extension == 'fits':
-                    try:
-                        fits.getheader(input)
-                    except FileNotFoundError as e:
-                        logging.warning("Fits file '{}' has not been found.".format(input))
-                    self.files = [input]
-                # elif extension == 'spam':
-                #     logging.info("Input is the name of a spam spectrum file.")
-                #     self.files = [input]
-                else:
-                    logging.info("Assuming that input file {} contains file names.".format(input))
-                    self._read_file_list_file(input)
-        elif isinstance(input, list):
-            logging.info("Input is a list of files.")
-            self.input_type = 'list'
-            self.files = input
-        else:
-            raise TypeError("FileManager got input of unexpected type ({}).".format(type(input)))
+    def is_fits_file(self, filename):
+        _, extension = os.path.splitext(filename)
+        return extension == '.fits'
 
 
-    def _read_file_list_file(self, input):
+    def extract_file_names(self, file, namekey='FILE'):
         """
-        Interpretes text file input.
+        Interpretes text in a file input.
         """
-        self.files = []
-        logging.info("Reading files from input file list {}.".format(input))
-        with open(input, 'r') as f:
-            for filename in f.readlines():
-                filename = filename.replace('\n', '')
-                self.files.append(filename)
+
+        try:
+            self.filelist = Table.read(file)
+            self.files = self.filelist[namekey].data
+        except IORegistryError:
+            self.filelist = Table.read(file, format='ascii.fixed_width')
+            self.files = self.filelist[namekey].data
+        except:
+            self.files = []
+            logging.info("Reading file names from input file {}.".format(file))
+            with open(file, 'r') as f:
+                for filename in f.readlines():
+                    filename = filename.replace('\n', '')
+                    self.files.append(filename)
