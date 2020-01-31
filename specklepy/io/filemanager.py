@@ -30,7 +30,10 @@ class FileManager(object):
             # Search for files
             self.files = glob.glob(self.input)
             self.files.sort()
-            logging.info("FileManager found {} file(s) matching to {!r}.".format(len(self.files), input))
+            if len(self.files) == 0:
+                raise FileNotFoundError("FileManager did not find any file matching to{!r}.".format(input))
+            else:
+                logging.info("FileManager found {} file(s) matching to {!r}.".format(len(self.files), input))
 
             if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
                 logging.info("Input file is not fits type. FileManager assumes that input file {!r} contains file names.".format(self.files[0]))
