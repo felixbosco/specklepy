@@ -2,25 +2,11 @@
 
 import argparse
 import os
-import sys
-import warnings
 
-try:
-    from specklepy.logging import logging
-    from specklepy.io.filemanager import FileManager
-    from specklepy.io.recfile import RECfile
-    from specklepy.core.ssa import ssa
-except ModuleNotFoundError:
-    # Prepare import from current path
-    PATH = os.getcwd()
-    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
-    sys.path.insert(0, PATH)
-
-    # Repeat import
-    from specklepy.logging import logging
-    from specklepy.io.filemanager import FileManager
-    from specklepy.io.recfile import RECfile
-    from specklepy.core.ssa import ssa
+from specklepy.logging import logging
+from specklepy.io.filemanager import FileManager
+from specklepy.io.recfile import RECfile
+from specklepy.core.ssa import ssa
 
 
 

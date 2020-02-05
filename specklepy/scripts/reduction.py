@@ -1,31 +1,12 @@
 #!/usr/bin/env python
 
 import argparse
-import os
-import sys
-import warnings
 
-try:
-    from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.io.filemanager import FileManager
-    from specklepy.reduction.flat import MasterFlat
-    from specklepy.deprecated import setups
-    from specklepy.reduction import sky
-except ModuleNotFoundError:
-    # Prepare import from current path
-    PATH = os.getcwd()
-    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
-    sys.path.insert(0, PATH)
-
-    # Repeat import
-    from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.io.filemanager import FileManager
-    from specklepy.reduction.flat import MasterFlat
-    from specklepy.deprecated.setups import identify_setups
-    from specklepy.reduction import sky
-    from specklepy.utils.plot import imshow
+from specklepy.logging import logging
+from specklepy.io.parameterset import ParameterSet
+from specklepy.io.filemanager import FileManager
+from specklepy.reduction.flat import MasterFlat
+from specklepy.reduction import sky
 
 
 

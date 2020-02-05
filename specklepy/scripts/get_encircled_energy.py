@@ -5,25 +5,9 @@ import os
 import sys
 import warnings
 import numpy as np
-from astropy.io import fits
-from datetime import datetime
-from matplotlib.colors import LogNorm
-import matplotlib.pyplot as plt
 
-try:
-    from specklepy.logging import logging
-    from specklepy.core.aperture import Aperture
-    from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
-except ModuleNotFoundError:
-    # Prepare import from current path
-    PATH = os.getcwd()
-    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
-    sys.path.insert(0, PATH)
-
-    # Repeat import
-    from specklepy.logging import logging
-    from specklepy.core.aperture import Aperture
-    from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
+from specklepy.core.aperture import Aperture
+from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
 
 
 

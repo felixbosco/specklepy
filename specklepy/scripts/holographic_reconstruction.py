@@ -5,20 +5,8 @@ import os
 import sys
 import warnings
 
-try:
-    from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.core.holography import holography
-except ModuleNotFoundError:
-    # Prepare import from current path
-    PATH = os.getcwd()
-    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
-    sys.path.insert(0, PATH)
-
-    # Repeat import
-    from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.core.holography import holography
+from specklepy.io.parameterset import ParameterSet
+from specklepy.core.holography import holography
 
 
 

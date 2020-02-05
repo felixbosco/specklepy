@@ -1,37 +1,15 @@
 #!/usr/bin/env python
 
 import argparse
-import os
-import sys
-import warnings
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.io import fits
-from astropy.stats import sigma_clipped_stats
 from astropy.visualization import SqrtStretch
 from astropy.visualization.mpl_normalize import ImageNormalize
-from photutils import DAOStarFinder
 from photutils import CircularAperture
 
-
-try:
-    from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.core.aperture import Aperture
-    from specklepy.utils.plot import imshow
-    from specklepy.core.sourceextraction import find_sources
-except ModuleNotFoundError:
-    # Prepare import from current path
-    PATH = os.getcwd()
-    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
-    sys.path.insert(0, PATH)
-
-    # Repeat import
-    from specklepy.logging import logging
-    from specklepy.io.parameterset import ParameterSet
-    from specklepy.core.aperture import Aperture
-    from specklepy.utils.plot import imshow
-    from specklepy.core.sourceextraction import find_sources
+from specklepy.logging import logging
+from specklepy.io.parameterset import ParameterSet
+from specklepy.core.sourceextraction import find_sources
 
 
 def parser(options=None):

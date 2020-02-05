@@ -2,23 +2,11 @@
 
 import argparse
 import os
-import sys
-import warnings
 import glob
 from configparser import ConfigParser
 from astropy.io import fits
-from astropy.table import Table
 
-try:
-    from specklepy.logging import logging
-except ModuleNotFoundError:
-    # Prepare import from current path
-    PATH = os.getcwd()
-    warnings.warn("Importing from path {}. Apparently the package is not installed properly on your machine!".format(PATH), ImportWarning)
-    sys.path.insert(0, PATH)
-
-    # Repeat import
-    from specklepy.logging import logging
+from specklepy.logging import logging
 
 
 
