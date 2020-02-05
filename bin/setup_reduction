@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+
+"""Set up the parameter file for a Specklepy data reduction."""
+
+import specklepy.scripts.setup_reduction as script
+
+if __name__ == '__main__':
+    script.main()
