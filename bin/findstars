@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
-"""
-Executes holographic reconstruction following a paramter file.
-"""
+"""Find sources in an image file."""
 
-import holopy.scripts.find_stars as find
+import specklepy.scripts.starfinder as script
 
 if __name__ == '__main__':
-    args = find.parser()
-    find.main(args)
+    script.main()

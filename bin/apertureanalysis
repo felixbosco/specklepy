@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-"""
-Analyzses apertures of argument files.
+"""Analyses apertures around sources within argument files.
 """
 
-import holopy.scripts.analyze_aperture as analyze
+import specklepy.scripts.apertureanalysis as script
 
 if __name__ == '__main__':
-    args = analyze.parser()
-    analyze.main(args)
+    script.main()
