@@ -5,12 +5,12 @@ import glob
 import os
 
 
-def long_description(filename):
-    with open(filename, "r") as f:
+def long_description():
+    with open("README.md", "r") as f:
         long_description = f.read()
     return long_description
 
-def find_scripts(generic):
+def find_scripts():
     """ Grab all the scripts in the bin directory.  """
     scripts = []
     if os.path.isdir('bin'):
@@ -18,9 +18,9 @@ def find_scripts(generic):
     return scripts
 
 setup(name='specklepy',
-      version='0.4.3',
+      version='0.4.4',
       description='Specklepy Holographic Data Reduction',
-      long_description=long_description("README.md"),
+      long_description=long_description(),
       long_description_content_type="text/markdown",
       classifiers=[
         'License :: OSI Approved :: MIT License',
@@ -41,7 +41,7 @@ setup(name='specklepy',
           'photutils',
       ],
       packages=find_packages(),
-      #scripts=find_scripts('specklepy/scripts/*py'),
+      scripts=find_scripts(),
       package_data={},
       include_package_data=True,
       zip_safe=False)
