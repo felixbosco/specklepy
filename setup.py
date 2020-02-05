@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import glob
 import os
 
 
-with open("README.md", "r") as f:
-    long_description = f.read()
+def long_description(filename):
+    with open(filename, "r") as f:
+        long_description = f.read()
+    return long_description
 
-def get_scripts(generic):
+def find_scripts(generic):
     """ Grab all the scripts in the bin directory.  """
     scripts = []
     if os.path.isdir('bin'):
@@ -17,14 +19,17 @@ def get_scripts(generic):
 
 setup(name='specklepy',
       version='0.4.3',
-      description='',
-      long_description=long_description,
+      description='Specklepy Holographic Data Reduction',
+      long_description=long_description("README.md"),
       long_description_content_type="text/markdown",
       classifiers=[
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.7',
-        'Topic :: Data Processing :: Astronomy',
         'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3.7',
+        'Intended Audience :: Science/Research',
+        'Topic :: Data Processing :: Astronomy',
+        'Topic :: Scientific/Engineering :: Astronomy',
+        'Topic :: Software Development :: Libraries :: Python Modules',
       ],
       keywords='',
       url='https://github.com/felixbosco/specklepy',
@@ -35,7 +40,8 @@ setup(name='specklepy',
           'astropy',
           'photutils',
       ],
-      scripts=get_scripts('specklepy/scripts/*py'),
+      packages=find_packages(),
+      #scripts=find_scripts('specklepy/scripts/*py'),
       package_data={},
       include_package_data=True,
       zip_safe=False)
