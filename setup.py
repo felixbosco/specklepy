@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 import glob
 import os
 
@@ -14,8 +14,14 @@ def find_scripts():
     """ Grab all the scripts in the bin directory.  """
     scripts = []
     if os.path.isdir('bin'):
-        scripts = [ fname for fname in glob.glob(os.path.join('bin', '*')) ]
+        # scripts = [ fname for fname in  ]
+        scripts = glob.glob(os.path.join('bin', '*'))
     return scripts
+
+def find_packages():
+    return find_namespace_packages(exclude=['*data/*', '*deprecated/*'])
+
+
 
 setup(name='specklepy',
       version='0.4.4',
@@ -42,6 +48,6 @@ setup(name='specklepy',
       ],
       packages=find_packages(),
       scripts=find_scripts(),
-      package_data={},
+      # package_data={},
       include_package_data=True,
       zip_safe=False)
