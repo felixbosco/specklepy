@@ -31,7 +31,7 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
-    defaults_file = "specklepy/config/reduction.cfg"
+    defaults_file = os.path.join(os.path.dirname(__file__), '../config/reduction.cfg')
     essential_attributes = ['filePath', 'fileList', 'tmpDir', 'skipFlat', 'flatCorrectionPrefix', 'setupKeywords', 'skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']
     make_dirs = ['tmpDir']
 

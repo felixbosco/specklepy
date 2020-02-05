@@ -5,6 +5,7 @@ import os
 import glob
 from configparser import ConfigParser
 from astropy.io import fits
+from astropy.table import Table
 
 from specklepy.logging import logging
 
@@ -35,7 +36,7 @@ def main(options=None):
 
     # Default values
     header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
-    instrument_config_file = 'specklepy/config/instruments.cfg'
+    instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
     # Verification of args
     if not os.path.isdir(os.path.dirname(args.path)):

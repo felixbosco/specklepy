@@ -30,7 +30,8 @@ def main(options=None):
     args = parser(options=options)
 
     # Default values
-    defaults_file = "specklepy/config/holography.cfg"
+    dir = os.path.dirname(__file__)
+    defaults_file = os.path.join(dir, 'config/holography.cfg')
     essential_attributes = ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile', 'psfRadius', 'noiseThreshold', 'apodizationWidth', 'apodizationType']
     make_dirs = ['inDir', 'tmpDir']
 

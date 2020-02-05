@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.visualization import SqrtStretch
@@ -35,7 +36,7 @@ def main(options=None):
 
     # Default values
     background_subtraction = True
-    defaults_file = "specklepy/config/holography.cfg"
+    defaults_file = os.path.join(os.path.dirname(__file__), "../config/holography.cfg")
     essential_attributes = ['allStarsFile', 'noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth', 'noiseThreshold', 'starfinderFwhm']
 
     if args.file is None:
