@@ -10,7 +10,6 @@ from astropy.table import Table
 from specklepy.logging import logging
 
 
-
 def parser(options=None):
 
     parser = argparse.ArgumentParser(description='This script reduces the data, following the parameters specified in the paramater fils.',
