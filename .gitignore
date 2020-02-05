@@ -3,6 +3,7 @@
 *.fits
 *.fits.gz
 *.fits.bak
+*.log
 
 # Directories
 *.egg
@@ -10,4 +11,5 @@
 /build/*
 /data/test/*fits
 /data/example/*dat
+/dist/*
 .idea/*
