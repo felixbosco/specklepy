@@ -47,6 +47,7 @@ The `synthetic` module is capable of creating synthetic observations from parame
 ## Version history
 These are the incremental updates between versions:
 
+- *0.4.4dev*: Debugging the scripts and the logging scheme
 - *0.4.4*: The setup is now also installing the sub-packages, config files and scripts
 - *0.4.3*: The PSF extraction module now contains a mode for creating an effective PSF (in the sense of Anderson & King, 2000), which is oversampling the PSF grid.
 - *0.4.2dev*: Developing error propagation of the PSF estimate

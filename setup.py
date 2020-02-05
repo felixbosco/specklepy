@@ -11,20 +11,19 @@ def long_description():
     return long_description
 
 def find_scripts():
-    """ Grab all the scripts in the bin directory.  """
+    """Grab all the scripts in the bin directory."""
     scripts = []
     if os.path.isdir('bin'):
-        # scripts = [ fname for fname in  ]
         scripts = glob.glob(os.path.join('bin', '*'))
     return scripts
 
 def find_packages():
-    return find_namespace_packages(exclude=['*data/*', '*deprecated/*'])
+    return find_namespace_packages(exclude=['*build/*', '*data/*', '*deprecated/*'])
 
 
 
 setup(name='specklepy',
-      version='0.4.4',
+      version='0.4.4dev',
       description='Specklepy Holographic Data Reduction',
       long_description=long_description(),
       long_description_content_type="text/markdown",
