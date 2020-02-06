@@ -1,8 +1,9 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
+
 
 def get_sample_draw_vectors(nDraws, nFrames, first_uniform=False):
-    """Generate draw vectors or weights for bootstrap resampling.
+    """Generate draw or weight vectors for bootstrap resampling.
 
     Args:
         nDraws (int):
