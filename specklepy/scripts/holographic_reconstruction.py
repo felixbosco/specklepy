@@ -31,7 +31,7 @@ def main(options=None):
 
     # Default values
     dir = os.path.dirname(__file__)
-    defaults_file = os.path.join(dir, 'config/holography.cfg')
+    defaults_file = os.path.join(dir, '../config/holography.cfg')
     essential_attributes = ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile', 'psfRadius', 'noiseThreshold', 'apodizationWidth', 'apodizationType']
     make_dirs = ['inDir', 'tmpDir']
 
