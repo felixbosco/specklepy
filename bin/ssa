@@ -5,5 +5,4 @@
 import specklepy.scripts.ssa_reconstruction as script
 
 if __name__ == '__main__':
-    # args = script.parser()
-    script.main()#args)
+    script.main()
