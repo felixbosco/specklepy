@@ -4,14 +4,50 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
 
 
 ## Table of contents
-- [To Do](#to-do)
+- [Installation](#installation)
 - [Data reduction](#data-reduction)
 - [Image reconstruction](#image-reconstruction)
 - [Synthetic image generator](#synthetic-image-generator)
+- [Development](#development)
 - [Version history](#version-history)
 
+## Installation
+The source code of Specklepy is available at github and can be downloaded by cloning the git repository to an arbitrary directory. 
+`cd` to the directory of choice and execute:
+```bash
+git clone 
+```
 
-## To Do:
+It is recommended to install Specklepy with `pip`:
+```bash
+pip install .
+```
+
+If `pip` is not available to you, you can also execute the setup script:
+```bash
+python setup.py install
+```
+
+This installation also creates all the binary scripts that are described below. You may want to double check whether the installation was successful by calling one of the scripts with the `--help` flag:
+ ```bash
+holography -h
+```
+
+## Data reduction
+To be implemented ...
+
+
+## Image reconstruction
+The image reconstruction module is the core of Specklepy, thus referred to as `core`.
+Content ...
+
+
+## Synthetic image generator
+The `synthetic` module is capable of creating synthetic observations from parameter files and reference PSF data, especially short-exposure 'speckle' PSFs. The principle code is borrowed from VegaPy, the Virtual Exposure Generator for Astronomy in Python, but the code received multiple accelerations and features. A stron focus of the changes with respect to VegaPy was put on readability of the code and documentation.
+
+
+## Development:
+These are the current To-Do items:
 * General:
   * Make logger write a copy to a .log file
   * Create general script with signature "specklepy holography -f ..."
@@ -29,20 +65,7 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
   * [low priority] implement PSF variation by "interpolation" of the reference PSFs to a fraction of the image
 * synthetic exposures module:
   * Study whether it makes sense to sample the speckle PSF down before convolution
-
-
-## Data reduction
-To be implemented ...
-
-
-## Image reconstruction
-The image reconstruction module is the core of Specklepy, thus referred to as `core`.
-Content ...
-
-
-## Synthetic image generator
-The `synthetic` module is capable of creating synthetic observations from parameter files and reference PSF data, especially short-exposure 'speckle' PSFs. The principle code is borrowed from VegaPy, the Virtual Exposure Generator for Astronomy in Python, but the code received multiple accelerations and features. A stron focus of the changes with respect to VegaPy was put on readability of the code and documentation.
-
+  
 
 ## Version history
 These are the incremental updates between versions:
