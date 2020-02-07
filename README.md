@@ -15,7 +15,7 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
 The source code of Specklepy is available at github and can be downloaded by cloning the git repository to an arbitrary directory. 
 `cd` to the directory of choice and execute:
 ```bash
-git clone 
+git clone https://github.com/felixbosco/specklepy.git
 ```
 
 It is recommended to install Specklepy with `pip`:
@@ -23,18 +23,20 @@ It is recommended to install Specklepy with `pip`:
 pip install .
 ```
 
-If `pip` is not available to you, you can also execute the setup script:
+If `pip` is not available to you, you can also execute the setup script. This should work in the same way but has not been tested extensively.
 ```bash
 python setup.py install
 ```
-
 This installation also creates all the binary scripts that are described below. You may want to double check whether the installation was successful by calling one of the scripts with the `--help` flag:
- ```bash
+```bash
 holography -h
 ```
 
+For updating your Specklepy to the latest version, just `git pull` and repeat `pip install .` or `python setup.py install`.
+
+
 ## Data reduction
-To be implemented ...
+The data reduction with Specklepy is divided in two steps: Setup and execution. For setting up the files table and parameter file, execute the  
 
 
 ## Image reconstruction
