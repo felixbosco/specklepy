@@ -146,6 +146,7 @@ These are the current To-Do items:
 * General:
   * ~~Make logger write a copy to a .log file~~
   * Create general script with signature "specklepy holography -f ..."
+  * Make command line arguments to positional arguments for required args
 * data reduction module:
   * The `specklepy_reduction_setup` script should also create a dummy parameter file
   * Implement flatfield correction from flat frames
