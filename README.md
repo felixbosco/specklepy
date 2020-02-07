@@ -18,15 +18,14 @@ The source code of Specklepy is available at github and can be downloaded by clo
 git clone https://github.com/felixbosco/specklepy.git
 ```
 
-It is recommended to install Specklepy with `pip`:
+It is recommended to install Specklepy with `pip`. If `pip` is not available to you, you can also execute the setup script. This should work in the same way but has not been tested extensively.
 ```bash
 pip install .
-```
-
-If `pip` is not available to you, you can also execute the setup script. This should work in the same way but has not been tested extensively.
-```bash
 python setup.py install
 ```
+
+
+
 This installation also creates all the binary scripts that are described below. You may want to double check whether the installation was successful by calling one of the scripts with the `--help` flag:
 ```bash
 holography -h
@@ -69,13 +68,16 @@ For generating exposures just execute the binary:
 generate_exposures -p your_parameter_file.par
 ```
 
-The parameter files follow `INI` structure syntax and is interpreted by the package parameter file reader. 
+The parameter files follow `INI` structure syntax and are interpreted by the package parameter file reader. 
 Units should be provided by adding `*u.` since the code is translated into `astropy.quantities`, using the `astropy.units` package. 
-An example could look like this:
+If no unit is provided, the objects usually interpret the values in default units.
+In the example below, the `sky_background = 14.4` will be interpreted in units mag / arcsec^2.
+We refer to the doc-strings in the code for further details.
+A parameter file could look like this:
 ``` 
 [TARGET]
 band = 'H'
-star_table = specklepy/tests/files/example_star_table_arcsec.dat
+star_table = your_star_table.dat
 sky_background = 14.4
 
 [TELESCOPE]
@@ -83,29 +85,29 @@ diameter = 8.2*u.m
 central_obscuration = 0.14
 name = VLT Unit Telescope
 psf_source = AiryDisk
-psf_resolution = 20.5013*u.mas 
-radius = 50.635494509195034*u.mas 
-
+psf_resolution = 20.5*u.mas 
+radius = 50.6*u.mas 
 
 [DETECTOR]
 shape = (1024, 1024)
-pixel_scale = 0.0106*u.arcsec
+pixel_scale = 0.01*u.arcsec
 dark_current = 0.1*u.electron/u.s
 readout_noise = 35*u.electron
 system_gain = 17*u.electron/u.adu
 optics_transmission = 0.9
 quantum_efficiency = 0.9*u.electron/u.ph
-# saturation_level = 60000*u.electron
+saturation_level = 60000*u.electron
 
 [KWARGS]
-DIT = 800*0.2*u.s
-nframes = 1
-nframes_limit = 1
-outfile = specklepy/tests/files/synthetic/airy_200ms.fits
+DIT = 1.2*u.s
+nframes = 100
+nframes_limit = 100
+outfile = airy_1200ms.fits
 time_stamp = None
 dithers = [(0, 0)]
 cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}
 ```
+
 
 [(top)](table-of-contents)
 
