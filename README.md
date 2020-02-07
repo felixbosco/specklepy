@@ -55,6 +55,30 @@ specklepy_reduction -p your_parameter_file.par
 The image reconstruction module is the core of Specklepy, thus referred to as `core`.
 Content ...
 
+```
+[PATHS]
+inDir = your_input_files_*.fits # May contain the bash * 
+outFile = holographic_reconstruction.fits
+tmpDir = tmp/
+allStarsFile = all_sources.dat
+refSourceFile = ref_sources.dat
+
+[STARFINDER]
+starfinderFwhm = 5 # pixels
+signalToNoiseThreshold = 5  # multiples of sigma
+
+[PSFEXTRACTION]
+psfRadius = 45
+noiseReferenceMargin = 3
+noiseThreshold = 1  # multiples of standard deviation
+
+[APODIZATION]
+#apodizationType = Airy # Gaussian or Airy
+#apodizationWidth = 4.777 # in pixels
+apodizationType = Gaussian # Gaussian or Airy
+apodizationWidth = 1.645 # in pixels
+```
+
 [(top)](table-of-contents)
 
 
