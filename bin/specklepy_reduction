@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+
+"""Executes Specklepy data reduction following a parameter file."""
+
+import specklepy.scripts.reduction as script
+
+if __name__ == '__main__':
+    script.main()
