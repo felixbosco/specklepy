@@ -36,7 +36,12 @@ For updating your Specklepy to the latest version, just `git pull` and repeat `p
 
 
 ## Data reduction
-The data reduction with Specklepy is divided in two steps: Setup and execution. For setting up the files table and parameter file, execute the  
+The data reduction with Specklepy is divided in two steps: Setup and execution. For setting up the files table and parameter file, execute the `setup_reduction` script. This gathers files and saves a list.
+
+The actual reduction is executed by calling the recuction script.
+```bash
+specklepy_reduction -p your_parameter_file.par
+```
 
 
 ## Image reconstruction
@@ -72,7 +77,7 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
-- *0.4.4dev*: Debugging the scripts and the logging scheme
+- *0.4.5dev*: Debugging the scripts and the logging scheme
 - *0.4.4*: The setup is now also installing the sub-packages, config files and scripts
 - *0.4.3*: The PSF extraction module now contains a mode for creating an effective PSF (in the sense of Anderson & King, 2000), which is oversampling the PSF grid.
 - *0.4.2dev*: Developing error propagation of the PSF estimate
