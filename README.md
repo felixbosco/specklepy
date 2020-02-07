@@ -28,7 +28,7 @@ python setup.py install
 
 This installation also creates all the binary scripts that are described below. You may want to double check whether the installation was successful by calling one of the scripts with the `--help` flag:
 ```bash
-holography -h
+specklepy_holography -h
 ```
 
 For updating your Specklepy to the latest version, just `git pull` and repeat `pip install .` or `python setup.py install`.
@@ -37,7 +37,7 @@ For updating your Specklepy to the latest version, just `git pull` and repeat `p
 
 ## Data reduction
 The data reduction with Specklepy is divided in two steps: Setup and execution. 
-For setting up the files table and parameter file, execute the `setup_reduction` script. 
+For setting up the files table and parameter file, execute the `specklepy_reduction_setup` script. 
 This gathers files located at `--path` and saves the list to the `--outfile`. 
 Note that this function already inspects the fits headers for information on the respective observational setup.
 For reading in the file headers properly you have to provide the `--instrument`. 
@@ -53,7 +53,12 @@ specklepy_reduction -p your_parameter_file.par
 
 ## Image reconstruction
 The image reconstruction module is the core of Specklepy, thus referred to as `core`.
-Content ...
+Available reconstructions are the simple shift-and-add (SSA) algorithm and speckle holography.
+
+#### SSA reconstruction
+```
+specklepy_ssa 
+```
 
 ```
 [PATHS]
@@ -73,10 +78,10 @@ noiseReferenceMargin = 3
 noiseThreshold = 1  # multiples of standard deviation
 
 [APODIZATION]
-#apodizationType = Airy # Gaussian or Airy
-#apodizationWidth = 4.777 # in pixels
-apodizationType = Gaussian # Gaussian or Airy
-apodizationWidth = 1.645 # in pixels
+# apodizationType = Airy # Gaussian or Airy
+# apodizationWidth = 4.777 # in pixels
+apodizationType = Gaussian
+apodizationWidth = 1.645
 ```
 
 [(top)](table-of-contents)
@@ -142,7 +147,7 @@ These are the current To-Do items:
   * ~~Make logger write a copy to a .log file~~
   * Create general script with signature "specklepy holography -f ..."
 * data reduction module:
-  * The `setup_reduction` script should also create a dummy parameter file
+  * The `specklepy_reduction_setup` script should also create a dummy parameter file
   * Implement flatfield correction from flat frames
   * Implement sky subtraction from sky frames
   * Implement linearity correction (wait for D. Thompson)
