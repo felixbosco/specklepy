@@ -64,8 +64,9 @@ The image reconstruction module is the core of Specklepy, thus referred to as `c
 Available reconstructions are the simple shift-and-add (SSA) algorithm and speckle holography.
 
 #### SSA reconstruction
+The SSA reconstruction does not take many parameters but reconstructs an image from the input files, specified with the `--file` flag. Temporary files are saved to the `--tmpDir` directory and the reconstruction is saved to the `--outfile`.
 ```
-specklepy_ssa
+specklepy_ssa -f your_files_*.fits -t tmp/ -o your_files_ssa.fits
 ```
 
 #### Holographic reconstruction
