@@ -10,23 +10,32 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
-    Long description...
+    This function iterates over a list of files and uses the module function
+    get_shift in 'correlation' mode to compute the relative shifts of files with
+    respect to a reference file.
 
     Args:
-        files (list): List of files to align.
+        files (list):
+            List of files to align.
         reference_file (str, int, optional):
             Path to a reference file or index of the file in files, relative to
             which the shifts are computed. Default is 0.
         lazy_mode (bool, optional):
-            If set to True and  Default is True.
+            Set to False, to enforce the alignment of a single file with respect
+            to the reference file. Default is True.
+        return_image_shape (bool, optional):
+            Set to True for for returning the shape of the anticipated output
+            image. Default is False.
         debug (bool, optional):
             If set to True, it shows the 2D correlation.
 
     Returns:
-        shifts (list): List of shifts for each file relative to the reference
-            file.
+        shifts (list):
+            List of shifts for each file relative to the reference file.
     """
 
+    # Check input parameters
+    # TODO: Add a check, whether files is indeed a string before putting it into a list
     if not isinstance(files, list):
         files = [files]
 
@@ -76,22 +85,36 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
         return shifts
 
 
-
+# TODO: combine reference image and Freference_image into a single argument and
+# accept a keyword arg is_transformed to indicate that the reference image
+# already is transformed.
 def get_shift(image, reference_image=None, Freference_image=None, mode='correlation', debug=False):
-    """Estimate the shift between an image and a refernce image.
+    """Estimate the shift between an image and a reference image.
 
-    Long description ...
+    Estimate the relative shift between an image and a reference image by means
+    of a 2D correlation ('correlation' mode) or by comparison of the emission
+    peaks ('peak' or 'maximum' modes).
 
     Args:
         image (np.ndarray):
+            2D array of the image to be shifted.
         reference_image (np.ndarray):
+            2D array of the reference image of the shift.
         Freference_image (np.ndarray):
-        mode (str, optional): Default is 'correlation'.
-        debug (bool, optional): Set to True to inspect intermediate results.
-            Default is False.
+            ... to be deprecated
+        mode (str, optional):
+            Mode of the shift estimate. In 'correlation' mode, a 2D correlation
+            is used to estimate the shift of the array. This is computationally
+            much more expensive than the identical 'maximum' or 'peak' modes,
+            which simply identify the coordinates of the emission peaks and
+            return the difference. Though these modes may be fooled by reference
+            sources of similar brightness. Default is 'correlation'.
+        debug (bool, optional):
+            Set to True to inspect intermediate results. Default is False.
 
     Returns:
-        shift (tuple): Tuple of shift indizes for each axis.
+        shift (tuple):
+            Tuple of shift indizes for each axis.
     """
 
     # Simple comparison of the peaks in the images
@@ -121,26 +144,30 @@ def get_shift(image, reference_image=None, Freference_image=None, mode='correlat
         raise ValueError("get_shift received unknown mode {}".format(mode))
 
 
-
+# TODO: reference_image_shape does not seem to be used, remove from the code!
+# TODO: array_shape is used only to decide if cube_mode or not. This could be cleaned!
+# TODO: mode is used only to decide whether the reference_image_pad_vector is returned. This could be made more clear!
 def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
     """Computes padding vectors from the relative shifts between files.
 
-    Long description...
-
     Args:
-        shifts (list): Shifts between files, relative to a reference image. See
-            specklepy.alignment.get_shifts for details.
+        shifts (list):
+            Shifts between files, relative to a reference image. See get_shifts
+            function for details.
         array_shape (tuple):
+            Shape of the input image.
         reference_image_shape (tuple):
-        mode (str, optional): Define the size of the output image as 'same'
-            to the reference image or expanding to include the 'full'
-            covered field. Default is 'same'.
+            Shape of the final image.
+        mode (str, optional):
+            Define the size of the output image as 'same' as the reference image
+            or expanding to include the 'full' covered field. Default is 'same'.
 
     Returns:
         pad_vectors (list):
-        reference_image_pad_vector (list, optional): Pad vector of the reference
-            image, which is needed for pad_array() in 'same' mode, thus is only
-            returned in 'same' mode.
+            List of padding vectors for each shift in shifts.
+        reference_image_pad_vector (list, optional):
+            Pad vector of the reference image, which is needed for pad_array()
+            in 'same' mode, thus is only returned in 'same' mode.
     """
 
     # Check input types
@@ -183,21 +210,29 @@ def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
         return pad_vectors
 
 
+
 def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
-    """Pads an array acoording to the pad_vector and crops the image given the
+    """Pads an array according to the pad_vector and crops the image given the
     mode.
 
-    Long description...
+    Pads an array with zeros to match a desired field size. Intermediately, it
+    always creates a 'full' image and only in 'same' mode it crops the edges
+    such that the returned array covers only the field of the reference image.
 
     Args:
         array (np.ndarray):
+            Input array that shall be padded to match the 'full' or 'same'
+            fields.
         pad_vector (list):
-        mode (str, optional): Define the size of the output image as 'same'
-            to the reference image or expanding to include the 'full'
-            covered field.
+            List of padding vectors, as obtained from get_pad_vectors().
+        mode (str, optional):
+            Define the size of the output image as 'same' to the reference image
+            or expanding to include the 'full' covered field.
 
     Returns:
         padded (np.ndarray):
+            Padded array, matching the field of the reference image in 'same'
+            mode, or the complete field in 'full' mode.
     """
 
     if not isinstance(array, np.ndarray):
@@ -229,17 +264,18 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     return padded
 
 
+
 def _adapt_max_coordinate(index):
     """Cast the upper interval border, such that indexing returns the correct
     entries.
 
-    Long description ...
-
     Args:
-        index (int): Index
+        index (int):
+            Index.
 
     Returns:
-        None or negative index (NoneType or int): ... depending on index.
+        None or negative index (NoneType or int):
+            ... depending on index.
 
     """
     if index == 0:
