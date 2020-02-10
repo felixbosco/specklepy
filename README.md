@@ -3,6 +3,7 @@
 Specklepy is a versatile tool for data reduction and image reconstruction of short-exposure ("speckle") data. It also contains a module for generating synthetic observations, which is derived from the VegaPy package.
 
 
+
 ## Table of contents
 - [Installation](#installation)
 - [Data reduction](#data-reduction)
@@ -11,8 +12,10 @@ Specklepy is a versatile tool for data reduction and image reconstruction of sho
 - [Development](#development)
 - [Version history](#version-history)
 
+
+
 ## Installation
-The source code of Specklepy is available at github and can be downloaded by cloning the git repository to an arbitrary directory. 
+The source code of Specklepy is available at github and can be downloaded by cloning the git repository to an arbitrary directory.
 `cd` to the directory of choice and execute:
 ```bash
 git clone https://github.com/felixbosco/specklepy.git
@@ -24,8 +27,6 @@ pip install .
 python setup.py install
 ```
 
-
-
 This installation also creates all the binary scripts that are described below. You may want to double check whether the installation was successful by calling one of the scripts with the `--help` flag:
 ```bash
 specklepy_holography -h
@@ -33,14 +34,20 @@ specklepy_holography -h
 
 For updating your Specklepy to the latest version, just `git pull` and repeat `pip install .` or `python setup.py install`.
 
-[(top)](table-of-contents)
+[(top)](#table-of-contents)
+
+
 
 ## Data reduction
-The data reduction with Specklepy is divided in two steps: Setup and execution. 
-For setting up the files table and parameter file, execute the `specklepy_reduction_setup` script. 
-This gathers files located at `--path` and saves the list to the `--outfile`. 
+The data reduction with Specklepy is divided in two steps: Setup and execution.
+For setting up the files table and parameter file, execute the `specklepy_reduction_setup` script.
+```bash
+specklepy_reduction_setup -i your_instrument -p path/to/your/files/ -o files.tab
+```
+
+This gathers files located at `--path` and saves the list to the `--outfile`.
 Note that this function already inspects the fits headers for information on the respective observational setup.
-For reading in the file headers properly you have to provide the `--instrument`. 
+For reading in the file headers properly you have to provide the `--instrument`.
 If this step is not working properly, you can adopt the configuration file `specklepy/config/instruments/cfg`.
 
 The actual reduction is executed by calling the reduction script.
@@ -48,7 +55,8 @@ The actual reduction is executed by calling the reduction script.
 specklepy_reduction -p your_parameter_file.par
 ```
 
-[(top)](table-of-contents)
+[(top)](#table-of-contents)
+
 
 
 ## Image reconstruction
@@ -57,12 +65,19 @@ Available reconstructions are the simple shift-and-add (SSA) algorithm and speck
 
 #### SSA reconstruction
 ```
-specklepy_ssa 
+specklepy_ssa
 ```
 
+#### Holographic reconstruction
+For a holographic reconstruction, you can gather all your parameters in a parameter file and execute the script from your working directory:
+```
+specklepy_holography -p your_parameter_file.par
+```
+
+An example parameter file is following `INI` structure. Note that the inDir is guiding to a path and the bash `*` may be used to collect all files matching to the description.
 ```
 [PATHS]
-inDir = your_input_files_*.fits # May contain the bash * 
+inDir = your_input_files_*.fits # May contain the bash *
 outFile = holographic_reconstruction.fits
 tmpDir = tmp/
 allStarsFile = all_sources.dat
@@ -84,26 +99,27 @@ apodizationType = Gaussian
 apodizationWidth = 1.645
 ```
 
-[(top)](table-of-contents)
+[(top)](#table-of-contents)
+
 
 
 ## Synthetic image generator
-The `synthetic` module is capable of creating synthetic observations from parameter files and reference PSF data, especially short-exposure 'speckle' PSFs. 
-The principle code is borrowed from VegaPy, the Virtual Exposure Generator for Astronomy in Python, but the code received multiple accelerations and features. 
-A strong focus of the changes with respect to VegaPy was put on readability of the code and documentation. 
+The `synthetic` module is capable of creating synthetic observations from parameter files and reference PSF data, especially short-exposure 'speckle' PSFs.
+The principle code is borrowed from VegaPy, the Virtual Exposure Generator for Astronomy in Python, but the code received multiple accelerations and features.
+A strong focus of the changes with respect to VegaPy was put on readability of the code and documentation.
 
 For generating exposures just execute the binary:
 ```bash
 generate_exposures -p your_parameter_file.par
 ```
 
-The parameter files follow `INI` structure syntax and are interpreted by the package parameter file reader. 
-Units should be provided by adding `*u.` since the code is translated into `astropy.quantities`, using the `astropy.units` package. 
+The parameter files follow `INI` structure syntax and are interpreted by the package parameter file reader.
+Units should be provided by adding `*u.` since the code is translated into `astropy.quantities`, using the `astropy.units` package.
 If no unit is provided, the objects usually interpret the values in default units.
 In the example below, the `sky_background = 14.4` will be interpreted in units mag / arcsec^2.
 We refer to the doc-strings in the code for further details.
 A parameter file could look like this:
-``` 
+```
 [TARGET]
 band = 'H'
 star_table = your_star_table.dat
@@ -114,8 +130,8 @@ diameter = 8.2*u.m
 central_obscuration = 0.14
 name = VLT Unit Telescope
 psf_source = AiryDisk
-psf_resolution = 20.5*u.mas 
-radius = 50.6*u.mas 
+psf_resolution = 20.5*u.mas
+radius = 50.6*u.mas
 
 [DETECTOR]
 shape = (1024, 1024)
@@ -137,8 +153,8 @@ dithers = [(0, 0)]
 cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}
 ```
 
+[(top)](#table-of-contents)
 
-[(top)](table-of-contents)
 
 
 ## Development:
@@ -153,7 +169,7 @@ These are the current To-Do items:
   * Implement sky subtraction from sky frames
   * Implement linearity correction (wait for D. Thompson)
 * core module:
-  * Measure "PSF quality" and implement a weighting scheme for frames 
+  * Measure "PSF quality" and implement a weighting scheme for frames
   * Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
   * holography - implement secondary source subtraction
   * Tune star finder routines
@@ -162,9 +178,10 @@ These are the current To-Do items:
   * **low priority:** implement PSF variation by "interpolation" of the reference PSFs to a fraction of the image
 * synthetic exposures module:
   * Study whether it makes sense to sample the speckle PSF down before convolution
- 
- [(top)](table-of-contents)
- 
+
+ [(top)](#table-of-contents)
+
+
 
 ## Version history
 These are the incremental updates between versions:
@@ -180,4 +197,4 @@ These are the incremental updates between versions:
 - *0.1.0*: Note that this bit of code is labeled vesion 0.0.1 in the setup.py.
 - *0.0.1dev*
 
-[(top)](table-of-contents)
+[(top)](#table-of-contents)
