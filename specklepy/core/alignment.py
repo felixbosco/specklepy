@@ -88,6 +88,7 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
 # TODO: combine reference image and Freference_image into a single argument and
 # accept a keyword arg is_transformed to indicate that the reference image
 # already is transformed.
+# TODO: Test 'peak' mode. There seem to be old variable names...
 def get_shift(image, reference_image=None, Freference_image=None, mode='correlation', debug=False):
     """Estimate the shift between an image and a reference image.
 
