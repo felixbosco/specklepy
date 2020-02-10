@@ -128,7 +128,7 @@ def coadd_frames(cube):
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
         peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
-    # shifts = alignment_from_indizes(peak_indizes)
+
 
     # Compute shifts from indizes
     peak_indizes = peak_indizes.transpose()
@@ -147,7 +147,7 @@ def coadd_frames(cube):
     return coadded
 
 
-
+# TODO: The following function definitions are deprecated and substituted by functions within the alignment package!
 def create_pad_vector_entry(shift_entry):
     if shift_entry <= 0 :
         return (np.abs(shift_entry), 0)
