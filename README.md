@@ -187,16 +187,17 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
+- *0.5.1dev*: Implementation of the 'full' mode for reconstructions.
 - *0.5.0*: The code is now easily installable, creates binary scripts to be used everywhere in the system. Extensive updates on the documentation.
-- *0.4.5dev*: Debugging the scripts and the logging scheme
+- *0.4.5*: Debugging the scripts and the logging scheme
 - *0.4.4*: The setup is now also installing the sub-packages, config files and scripts
 - *0.4.3*: The PSF extraction module now contains a mode for creating an effective PSF (in the sense of Anderson & King, 2000), which is oversampling the PSF grid.
-- *0.4.2dev*: Developing error propagation of the PSF estimate
-- *0.4.1dev*: Developing the data `reduction` module, beginning with sky subtraction
+- *0.4.2*: Developing error propagation of the PSF estimate
+- *0.4.1*: Developing the data `reduction` module, beginning with sky subtraction
 - *0.4.0*: Specklepy received the `synthetic` module for creating synthetic observations
 - *0.3.0*: The image reconstruction module now handles cube alignment. This enabled the first successful holographic image reconstruction of multiple dithered data cubes. Note that this bit of code is labeled vesion 0.0.3 in the setup.py.
 - *0.2.0*: The holographic image reconstruction is nowfunctional. Note that this bit of code is labeled vesion 0.0.2 in the setup.py.
 - *0.1.0*: Note that this bit of code is labeled vesion 0.0.1 in the setup.py.
-- *0.0.1dev*
+- *0.0.1*: Setup of code structure.
 
 [(top)](#table-of-contents)
