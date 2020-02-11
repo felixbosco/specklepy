@@ -2,15 +2,18 @@
 
 import argparse
 import os
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.visualization import SqrtStretch
 from astropy.visualization.mpl_normalize import ImageNormalize
 from photutils import CircularAperture
 
-from specklepy.logging import logging
-from specklepy.io.parameterset import ParameterSet
 from specklepy.core.sourceextraction import find_sources
+from specklepy.io.parameterset import ParameterSet
+from specklepy.logging import logging
+
 
 
 def parser(options=None):
@@ -28,6 +31,7 @@ def parser(options=None):
     else:
         args = parser.parse_args(options)
     return args
+
 
 
 def main(options=None):
@@ -70,5 +74,13 @@ def main(options=None):
         plt.close()
 
 
+
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logging.info('Interrupted by user...')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

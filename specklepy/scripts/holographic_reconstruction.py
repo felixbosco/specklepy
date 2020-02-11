@@ -25,6 +25,7 @@ def parser(options=None):
     return args
 
 
+
 def main(options=None):
 
     args = parser(options=options)
@@ -48,5 +49,13 @@ def main(options=None):
     holography(params, debug=args.debug)
 
 
+
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logging.info('Interrupted by user...')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
+import os
+import sys
+
 import numpy as np
 from astropy.io import fits
 from matplotlib.colors import LogNorm
@@ -8,6 +11,7 @@ from matplotlib.colors import LogNorm
 from specklepy.logging import logging
 from specklepy.core.aperture import Aperture
 from specklepy.utils.plot import imshow, plot_simple
+
 
 
 def parser(options=None):
@@ -29,6 +33,7 @@ def parser(options=None):
     else:
         args = parser.parse_args(options)
     return args
+
 
 
 def main(options=None):
@@ -132,11 +137,12 @@ def main(options=None):
 
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logging.info('Interrupted by user...')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

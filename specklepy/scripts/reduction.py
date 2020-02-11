@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import argparse
+import os
+import sys
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
@@ -70,6 +72,12 @@ def main(options=None):
 
 
 
-
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logging.info('Interrupted by user...')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

@@ -2,12 +2,14 @@
 
 import argparse
 import os
+import sys
 import glob
 from configparser import ConfigParser
 from astropy.io import fits
 from astropy.table import Table
 
 from specklepy.logging import logging
+
 
 
 def parser(options=None):
@@ -78,4 +80,11 @@ def main(options=None):
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logging.info('Interrupted by user...')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
