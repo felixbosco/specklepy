@@ -5,33 +5,39 @@ import glob
 from datetime import datetime
 from astropy.io import fits
 
-from specklepy.logging import logging
-from specklepy.io.parameterset import ParameterSet
-from specklepy.io.outfile import Outfile
-from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
 from specklepy.core.apodization import apodize
-from specklepy.core.ssa import ssa
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.sourceextraction import find_sources
+from specklepy.core.ssa import ssa
+from specklepy.io.outfile import Outfile
+from specklepy.io.parameterset import ParameterSet
+from specklepy.io.reconstructionfile import ReconstructionFile
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.logging import logging
 from specklepy.utils.plot import imshow
 from specklepy.utils.transferfunctions import otf
 
 
 
 def holography(params, mode='same', debug=False):
-    """Execute the holographic image reconstruction following the algorithm
-    outlined in Schoedel et al (2013, Section 3).
+    """Execute the holographic image reconstruction.
 
-    Long description ...
+    The holographic image reconstruction is an algorithm as outlined, eg. by
+    Schoedel et al (2013, Section 3). This function follows that algorithm, see
+    comments in the code. Most of the important functions are imported from
+    other modules of specklepy.
 
     Args:
         params (specklepy.io.parameterset.ParameterSet):
-        mode (str, optional): Define the size of the output image as 'same'
-            to the reference image or expanding to include the 'full'
-            covered field. Default is 'same'.
-        debug (bool, optional): Set to True to inspect intermediate results.
+            Class instance that carries all important parameters.
+        mode (str, optional):
+            Define the size of the output image as 'same' to the reference
+            image or expanding to include the 'full' covered field. Default is
+            'same'.
+        debug (bool, optional):
+            Set to True to inspect intermediate results.
             Default is False.
 
     Returns:
@@ -45,9 +51,8 @@ def holography(params, mode='same', debug=False):
                         specklepy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
     if mode not in ['same', 'full', 'valid']:
-        raise ValueError("specklepy.core.holography.holography received mode \
-                            argument '{}', but must be either 'same', 'full', \
-                            or 'valid'.".format(mode))
+        raise SpecklepyValueError('holography()', argname='mode', argvalue=mode, expected="either 'same', 'full', or 'valid'")
+
 
     # Initialize the outfile
     params.outFile = ReconstructionFile(filename=params.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
@@ -60,10 +65,10 @@ def holography(params, mode='same', debug=False):
                             debug=debug)
 
     # (iii) Compute SSA reconstruction
-    image = ssa(params.inFiles, outfile=params.outFile, tmp_dir=params.tmpDir)
+    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.tmpDir)
     total_flux = np.sum(image) # Stored for flux conservation
 
-    # Start iteration from steps (iv) thorugh (xi)
+    # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
         find_sources(image=image, fwhm=params.starfinderFwhm, noise_threshold=params.signalToNoiseThreshold,
@@ -130,18 +135,19 @@ def holography(params, mode='same', debug=False):
 
 
 
-
-
 def get_noise_mask(frame, noise_reference_margin):
     """Create an annulus-like mask within a given aperture for measuring noise
     and (sky) background.
 
     Args:
-        frame ():
-        noise_reference_margin (int): Width of the reference annulus:
+        frame (np.ndarray):
+            Image frame within which the mask is derived.
+        noise_reference_margin (int):
+            Width of the reference annulus in pixels.
 
     Returns:
         annulus_mask (np.ndarray, dtype=bool):
+            Mask array, derived from the frame.
     """
     center = int((frame.shape[0] - 1) / 2)
     radius = center - noise_reference_margin
@@ -151,19 +157,21 @@ def get_noise_mask(frame, noise_reference_margin):
 
 
 
-
 def get_Fourier_object(params, shifts, mode='same'):
-    """Reconstruction of the Fourier transformed object with Eq. 1 (Schoedel
-    et al., 2013).
+    """Reconstruction of the Fourier transformed object.
 
-    Long description...
+    This function computes the Fourier transformed object information, as
+    defined in Eq. 1 (Schoedel et al., 2013).
 
     Args:
-        params (ParameterSet):
+        params (specklepy.io.parameterset.ParameterSet):
+            Class instance that carries all important parameters.
         shifts (list):
-        mode (str, optional): Define the size of the output image as 'same'
-            to the reference image or expanding to include the 'full'
-            covered field. Default is 'same'.
+            List of integer shifts between the files.
+        mode (str, optional):
+            Define the size of the output image as 'same' to the reference
+            image or expanding to include the 'full' covered field. Default is
+            'same'.
 
     Returns:
         Fobject (np.ndarray, dtype=complex128): Fourier transformed object as a
@@ -176,9 +184,7 @@ def get_Fourier_object(params, shifts, mode='same'):
                         specklepy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
     if mode not in ['same', 'full', 'valid']:
-        raise ValueError("specklepy.core.holography.get_Fourier_object received mode \
-                            argument '{}', but must be either 'same', 'full', \
-                            or 'valid'.".format(mode))
+        raise SpecklepyValueError('get_Fourier_object()', argname='mode', argvalue=mode, expected="either 'same', 'full', or 'valid'")
 
     files_contain_data_cubes = fits.getdata(params.inFiles[0]).ndim == 3
     pad_vectors, reference_image_pad_vector = get_pad_vectors(shifts=shifts,
