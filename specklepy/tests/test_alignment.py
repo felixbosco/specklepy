@@ -1,20 +1,34 @@
 import unittest
+import os
 import numpy as np
+from astropy.io import fits
+
 from specklepy.io.filemanager import FileManager
 from specklepy.core import alignment
 from specklepy.utils.plot import imshow
 
 
-class Testalignment(unittest.TestCase):
+class TestAlignment(unittest.TestCase):
 
     def setUp(self):
-        self.files = FileManager('specklepy/tests/files/synthetic/noao_200ms*.fits')()
+        self.path = 'specklepy/tests/files/'
+        self.files = FileManager(os.path.join(self.path, 'synthetic/noao_200ms*.fits'))()
         self.shifts = [(0, 0), (34, -20), (-14, -51)]
         self.image_shape = (1024, 1024)
         self.cube_shape = (100, 1024, 1024)
 
+    def test_get_shift(self):
+        image = fits.getdata(self.path + 'tmp/glao_200ms_1_ssa.fits')
+        ref_image = fits.getdata(self.path + 'tmp/glao_200ms_2_ssa.fits')
+        shift_peak = alignment.get_shift(image=image, reference_image=ref_image, mode='peak')
+        shift_max  = alignment.get_shift(image=image, reference_image=ref_image, mode='maximum')
+        shift_corr = alignment.get_shift(image=image, reference_image=ref_image, mode='correlation')
+        self.assertEqual(shift_max, shift_peak)
+        self.assertAlmostEqual(shift_max, shift_corr)
+
     def test_get_shifts(self):
-        alignment.get_shifts(self.files)
+        alignment.get_shifts(self.files, mode='peak')
+        alignment.get_shifts(self.files, mode='correlation')
 
     def test_get_pad_vectors(self):
         # Test all modes
