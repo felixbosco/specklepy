@@ -5,7 +5,7 @@ from datetime import datetime
 from astropy.io import fits
 
 from specklepy.core import alignment
-from specklepy.exceptions import SpecklepyTypeError
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logging
 
@@ -61,7 +61,10 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         else:
             raise SpecklepyTypeError('ssa()', argname='files', argtype=type(files), expected='list')
 
-    if not isinstance(mode, str):
+    if isinstance(mode, str):
+        if not mode in ['same', 'full', 'valid']:
+            raise SpecklepyValueError('ssa()', argname='mode', argvalue=mode, expected="'same', 'full' or 'valid'")
+    else:
         raise SpecklepyTypeError('ssa()', argname='mode', argtype=type(mode), expected='str')
 
     if reference_file is None:
@@ -108,10 +111,13 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         # Align tmp reconstructions and add up
         file_shifts, image_shape = alignment.get_shifts(tmp_files, reference_file=reference_file, return_image_shape=True, lazy_mode=True)
         pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, cube_mode=(len(image_shape) == 3), return_reference_image_pad_vector=True)
-        reconstruction = np.zeros(image_shape)
+        # reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
             tmp_image = fits.getdata(file)
-            reconstruction += alignment.pad_array(tmp_image, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
+            if index is 0:
+                reconstruction = alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+            else:
+                reconstruction += alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
 
     logging.info("Reconstruction finished...")
 

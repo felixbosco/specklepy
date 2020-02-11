@@ -5,15 +5,16 @@ import os
 class TestSSAReconstrution(unittest.TestCase):
 
     def test_one_cube(self):
-        os.system('python specklepy/scripts/ssa_reconstruction.py \
-                    -f specklepy/tests/files/example_cube.fits \
-                    -o specklepy/tests/files/example_cube_ssa.fits')
+        os.system('python specklepy/scripts/ssa_reconstruction.py '
+                  '-f specklepy/tests/files/example_cube.fits '
+                  '-o specklepy/tests/files/example_cube_ssa.fits')
 
     def test_multiple_cubes(self):
-        os.system('python specklepy/scripts/ssa_reconstruction.py \
-                    -f specklepy/tests/files/synthetic/noao_200ms_\*.fits \
-                    -t specklepy/tests/files/tmp/ \
-                    -o specklepy/tests/files/example_cubes_ssa.fits')
+        os.system('python specklepy/scripts/ssa_reconstruction.py '
+                  '-m full '
+                  '-f specklepy/tests/files/synthetic/noao_200ms_\*.fits '
+                  '-t specklepy/tests/files/tmp/ '
+                  '-o specklepy/tests/files/example_cubes_ssa.fits')
 
     # def test_science_data(self):
     #     os.system('python specklepy/scripts/ssa_reconstruction.py \
