@@ -161,22 +161,23 @@ cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}
 ## Development:
 These are the current To-Do items:
 * General:
-  * ~~Make logger write a copy to a .log file~~
-  * Create general script with signature "specklepy holography -f ..."
-  * Make command line arguments to positional arguments for required args
+  * **low priority:** Create general script with signature "specklepy holography -f ..."
+  * **low priority:** Make command line arguments to positional arguments for required args
 * data reduction module:
   * The `specklepy_reduction_setup` script should also create a dummy parameter file
-  * Implement flatfield correction from flat frames
-  * Implement sky subtraction from sky frames
-  * Implement linearity correction (wait for D. Thompson)
+  * Flatfield correction from flat frames
+  * Sky subtraction from sky frames
+  * Linearity correction (wait for D. Thompson)
 * core module:
+  * Division of the field of view into chunks with separate PSFs for consideration of variable PSFs.
+  * Propagation of uncertainties if provided
   * Measure "PSF quality" and implement a weighting scheme for frames
-  * Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
-  * holography - implement secondary source subtraction
-  * Tune star finder routines
-  * Implement frame save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file. This is necessary for "bootstrap resampling", which can deliver uncertainties.
-  * **low priority:** implement 'valid' mode, that yields a reconstruction only in the intersection of all file field of views. Current mode is a 'same' mode, which covers the field of the one reference image. We could also think about a 'full' mode that covers the complete observed field, which might be noisy in the dithered outskirts though
-  * **low priority:** implement PSF variation by "interpolation" of the reference PSFs to a fraction of the image
+  * Reconstruction modes that return reconstructions that cover the 'same' field of view as a reference, the 'full' field of view covered by at least one exposure or (**low priority:**) 'valid' field of view that is covered by all exposures
+  * Secondary source subtraction for holography function 
+  * Bootstrap resampling for estimating the photo- and astrometric uncertainties
+  * **low priority:** Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
+  * **low priority:** Tune star finder routines
+  * **low priority:** Implement frame save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file. This is necessary for "bootstrap resampling", which can deliver uncertainties.
 * synthetic exposures module:
   * Study whether it makes sense to sample the speckle PSF down before convolution
 
