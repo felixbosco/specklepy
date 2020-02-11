@@ -146,23 +146,3 @@ def coadd_frames(cube):
 
     return coadded
 
-
-# TODO: The following function definitions are deprecated and substituted by functions within the alignment package!
-def create_pad_vector_entry(shift_entry):
-    if shift_entry <= 0 :
-        return (np.abs(shift_entry), 0)
-    else:
-        return (0, shift_entry)
-
-
-
-def create_pad_vector(shift):
-    return (create_pad_vector_entry(shift[0]), create_pad_vector_entry(shift[1]))
-
-
-
-def shift_array(array, shift):
-    shape = array.shape
-    pad_array = array[max(0, shift[0]) : shape[0]+min(0, shift[0]) , max(0, shift[1]) : shape[1]+min(0, shift[1])]
-    pad_vector = create_pad_vector(shift)
-    return np.pad(pad_array, pad_vector, mode='constant')
