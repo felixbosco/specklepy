@@ -187,6 +187,7 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
+- *0.5.0*: The code is now easily installable, creates binary scripts to be used everywhere in the system. Extensive updates on the documentation.
 - *0.4.5dev*: Debugging the scripts and the logging scheme
 - *0.4.4*: The setup is now also installing the sub-packages, config files and scripts
 - *0.4.3*: The PSF extraction module now contains a mode for creating an effective PSF (in the sense of Anderson & King, 2000), which is oversampling the PSF grid.
