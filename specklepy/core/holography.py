@@ -184,7 +184,8 @@ def get_Fourier_object(params, shifts, mode='same'):
                                     cube_mode=fits.getdata(params.inFiles[0]).ndim==3,
                                     # array_shape=fits.getdata(params.inFiles[0]).shape,
                                     # reference_image_shape=(1024, 1024),
-                                    mode='same')
+                                    return_reference_image_pad_vector=True)
+                                    # mode='same')
 
     # Assert that there are the same number of inFiles and psfFiles, which
     # should be the case after running the holography function.

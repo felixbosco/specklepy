@@ -164,9 +164,7 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
 
 
 
-# TODO: array_shape is used only to decide if cube_mode or not. This could be cleaned!
-# TODO: mode is used only to decide whether the reference_image_pad_vector is returned. This could be made more clear!
-def get_pad_vectors(shifts, cube_mode=False, mode='same'):
+def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=False):
     """Computes padding vectors from the relative shifts between files.
 
     Args:
@@ -176,11 +174,9 @@ def get_pad_vectors(shifts, cube_mode=False, mode='same'):
         cube_mode (bool, optional):
             If image is a cube, the estimated pad vectors will obtain pad_vector
             entries of (0, 0) for the zeroth axis. Default is False.
-        array_shape (tuple):
-            Shape of the input image.
-        mode (str, optional):
-            Define the size of the output image as 'same' as the reference image
-            or expanding to include the 'full' covered field. Default is 'same'.
+        return_reference_image_pad_vector (bool, optional):
+            In 'same' mode, pad_array needs also the pad vector of the reference
+            image. This is returned if this arg is set True. Default is False.
 
     Returns:
         pad_vectors (list):
@@ -191,16 +187,7 @@ def get_pad_vectors(shifts, cube_mode=False, mode='same'):
     """
 
     # Check input types
-    if mode not in ['same', 'full', 'valid']:
-        raise ValueError("specklepy.core.alignment.get_pad_vectors received mode \
-                            argument '{}', but must be either 'same', 'full', \
-                            or 'valid'.".format(mode))
 
-    # If image is a cube, the estimated pad vectors will be adjusted in the end
-    # if len(array_shape) == 3:
-    #     cube_mode = True
-    # else:
-    #     cube_mode = False
 
     # Initialize list
     pad_vectors = []
@@ -222,8 +209,8 @@ def get_pad_vectors(shifts, cube_mode=False, mode='same'):
 
         pad_vectors.append(pad_vector)
 
-    if mode is 'same':
-        # In 'same' mode, pad_array needs also the pad vector of the reference image
+    # In 'same' mode, pad_array needs also the pad vector of the reference image
+    if return_reference_image_pad_vector:
         reference_image_pad_vector = [(np.abs(xmin), np.abs(xmax)), (np.abs(ymin), np.abs(ymax))]
         return pad_vectors, reference_image_pad_vector
     else:

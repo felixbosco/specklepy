@@ -88,7 +88,7 @@ def ssa(files, mode='same', reference_file=0, outfile=None, tmp_dir=None, lazy_m
 
         # Align tmp reconstructions and add up
         file_shifts, image_shape = alignment.get_shifts(tmp_files, reference_file=reference_file, return_image_shape=True, lazy_mode=True)
-        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, cube_mode=(len(self.image_shape) == 3), mode='same')
+        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, cube_mode=(len(image_shape) == 3), return_reference_image_pad_vector=True)
         reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
             tmp_image = fits.getdata(file)
@@ -140,7 +140,7 @@ def coadd_frames(cube):
 
     # Shift frames and add to coadded
     coadded = np.zeros(cube[0].shape)
-    pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube_mode=False)
+    pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=True)
     for index, frame in enumerate(cube):
         coadded += alignment.pad_array(frame, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
 
