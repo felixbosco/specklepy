@@ -1,12 +1,13 @@
 import numpy as np
 from astropy.io import fits
 
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logging
 from specklepy.utils.plot import imshow
 
 
 
-def get_shifts(files, reference_file=0, mode='correlation', lazy_mode=True, return_image_shape=False, debug=False):
+def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -43,16 +44,26 @@ def get_shifts(files, reference_file=0, mode='correlation', lazy_mode=True, retu
     """
 
     # Check input parameters
-    # TODO: Add a check, whether files is indeed a string before putting it into a list
     if not isinstance(files, list):
-        files = [files]
-
-    if isinstance(reference_file, int):
-        reference_file = files[reference_file]
-    elif reference_file is None:
+        if isinstance(files, str):
+            files = [files]
+        else:
+            raise SpecklepyTypeError('get_shifts()', argname='files', argtype=type(files), expected='list')
+    if reference_file is None:
         reference_file = files[0]
+    elif isinstance(reference_file, int):
+        reference_file = files[reference_file]
     elif not isinstance(reference_file, str):
-        raise TypeError("The function get_shifts received reference_file argument of type {}, but needs be int or str, i.e. a file name.".format(type(reference_file)))
+        raise SpecklepyTypeError('get_shifts()', argname='reference_file', argtype=type(reference_file), expected='str')
+    if isinstance(mode, str):
+        if mode not in ['correlation', 'maximum', 'peak']:
+            raise SpecklepyValueError('get_shifts()', argname='mode', argvalue=mode, expected="'correlation', 'maximum' or 'peak'")
+    else:
+        raise SpecklepyTypeError('get_shifts()', argname='mode', argtype=type(mode), expected='str')
+    if not isinstance(lazy_mode, bool):
+        raise SpecklepyTypeError('get_shifts()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
+    if not isinstance(return_image_shape, bool):
+        raise SpecklepyTypeError('get_shifts()', argname='return_image_shape', argtype=type(return_image_shape), expected='bool')
 
     # Skip computations if only one file is provided
     if lazy_mode and len(files) == 1:
@@ -131,6 +142,13 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
         raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(image)}")
     if not isinstance(reference_image, np.ndarray) or image.ndim is not 2:
         raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(reference_image)}")
+    if not isinstance(is_Fourier_transformed, bool):
+        raise SpecklepyTypeError('get_shift()', argname='is_Fourier_transformed', argtype=type(is_Fourier_transformed), expected='bool')
+    if isinstance(mode, str):
+        if mode not in ['correlation', 'maximum', 'peak']:
+            raise SpecklepyValueError('get_shift()', argname='mode', argvalue=mode, expected="'correlation', 'maximum' or 'peak'")
+    else:
+        raise SpecklepyTypeError('get_shift()', argname='mode', argtype=type(mode), expected='str')
 
     # Simple comparison of the peaks in the images
     if mode == 'maximum' or mode == 'peak':
@@ -159,9 +177,6 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
         shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
         return shift
 
-    else:
-        raise ValueError("get_shift received unknown mode {}".format(mode))
-
 
 
 def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=False):
@@ -186,8 +201,17 @@ def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=F
             in 'same' mode, thus is only returned in 'same' mode.
     """
 
-    # Check input types
-
+    # Check input parameters
+    if isinstance(shifts, list):
+        pass
+    elif isinstance(shifts, np.ndarray):
+        pass
+    else:
+        raise SpecklepyTypeError('get_pad_vectors()', argname='shifts', argtype=type(shifts), expected='list')
+    if not isinstance(cube_mode, bool):
+        raise SpecklepyTypeError('get_pad_vectors()', argname='cube_mode', argtype=type(cube_mode), expected='bool')
+    if not isinstance(return_reference_image_pad_vector, bool):
+        raise SpecklepyTypeError('get_pad_vectors()', argname='return_reference_image_pad_vector', argtype=type(return_reference_image_pad_vector), expected='bool')
 
     # Initialize list
     pad_vectors = []
@@ -242,12 +266,15 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
             mode, or the complete field in 'full' mode.
     """
 
-    if not isinstance(array, np.ndarray):
-        raise TypeError("specklepy.core.alignment.pad_array received array argument \
-                            of type {}, but must be np.ndarray.".format(type(array)))
-    if array.ndim not in [2, 3]:
-        raise ValueError("specklepy.core.alignment.pad_array received array argument \
-                            of dimension {}, but must be 2 or 3.".format(array.ndim))
+    # Check input parameters
+    if isinstance(array, np.ndarray):
+        if array.ndim not in [2, 3]:
+            raise SpecklepyValueError('pad_array()', argname='array.ndim', argvalue=array.ndim, expected='2 or 3')
+    else:
+        raise SpecklepyTypeError('pad_array()', argname='array', argtype=type(array), expected='np.ndarray')
+
+
+
 
     padded = np.pad(array, pad_vector, mode='constant')
 

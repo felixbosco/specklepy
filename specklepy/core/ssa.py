@@ -55,7 +55,11 @@ def ssa(files, mode='same', reference_file=0, outfile=None, tmp_dir=None, lazy_m
     logging.info("Starting SSA reconstruction...")
     # Check parameters
     if not isinstance(files, list):
-        files = [files]
+        if isinstance(files, str):
+            files = [files]
+        else:
+            raise SpecklepyTypeError('get_shifts()', argname='files', argtype=type(files), expected='list')
+
 
     if isinstance(reference_file, int):
         reference_file = files[reference_file]
