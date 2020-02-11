@@ -4,12 +4,13 @@ import glob
 from datetime import datetime
 from astropy.io import fits
 
-from specklepy.logging import logging
-from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core import alignment
+from specklepy.exceptions import SpecklepyTypeError
+from specklepy.io.reconstructionfile import ReconstructionFile
+from specklepy.logging import logging
 
 
-def ssa(files, mode='same', reference_file=0, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
+def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of
@@ -58,19 +59,33 @@ def ssa(files, mode='same', reference_file=0, outfile=None, tmp_dir=None, lazy_m
         if isinstance(files, str):
             files = [files]
         else:
-            raise SpecklepyTypeError('get_shifts()', argname='files', argtype=type(files), expected='list')
+            raise SpecklepyTypeError('ssa()', argname='files', argtype=type(files), expected='list')
 
+    if not isinstance(mode, str):
+        raise SpecklepyTypeError('ssa()', argname='mode', argtype=type(mode), expected='str')
 
-    if isinstance(reference_file, int):
+    if reference_file is None:
+        reference_file = files[0]
+    elif isinstance(reference_file, int):
         reference_file = files[reference_file]
     elif not isinstance(reference_file, str):
-        raise TypeError("The function get_shifts received reference_file argument of type {}, but needs be int or str, i.e. a file name.".format(type(reference_file)))
+        raise SpecklepyTypeError('ssa()', argname='reference_file', argtype=type(reference_file), expected='str or int')
 
-    if outfile is not None and not isinstance(outfile, ReconstructionFile):
-        if isinstance(outfile, str):
-            outfile = ReconstructionFile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
-        else:
-            raise TypeError("specklepy.core.ssa.ssa received outfile argument of wrong type <{}>!".format(type(outfile)))
+    if outfile is None:
+        pass
+    elif isinstance(outfile, str):
+        outfile = ReconstructionFile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
+    elif isinstance(outfile, ReconstructionFile):
+        pass
+    else:
+        raise SpecklepyTypeError('ssa()', argname='outfile', argtype=type(outfile), expected='str')
+
+    if tmp_dir is not None:
+        if isinstance(tmp_dir, str) and not os.path.isdir(tmp_dir):
+            os.makedirs(path)
+
+    if not isinstance(lazy_mode, bool):
+        raise SpecklepyTypeError('ssa()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
 
     # Do not align just a single file
     if lazy_mode and len(files) == 1:
