@@ -136,7 +136,7 @@ def coadd_frames(cube):
     xmean = int(xmean)
     ymean = int(ymean)
     shifts = np.array([xmean - peak_indizes[0], ymean - peak_indizes[1]])
-    shifts =  shifts.transpose()
+    shifts = shifts.transpose()
 
     # Shift frames and add to coadded
     coadded = np.zeros(cube[0].shape)

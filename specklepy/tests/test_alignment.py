@@ -14,8 +14,8 @@ class TestAlignment(unittest.TestCase):
         self.path = 'specklepy/tests/files/'
         self.files = FileManager(os.path.join(self.path, 'synthetic/glao_600ms*.fits'))()
         self.shifts = [(0, 0), (34, -20), (-14, -51)]
-        self.image_shape = (1024, 1024)
-        self.cube_shape = (100, 1024, 1024)
+        self.image_shape = (512, 512)
+        self.cube_shape = (10, 512, 512)
 
     def test_get_shift(self):
         image = fits.getdata(self.path + 'tmp/glao_200ms_1_ssa.fits')
@@ -34,10 +34,10 @@ class TestAlignment(unittest.TestCase):
         alignment.get_pad_vectors(self.shifts, cube_mode=(len(self.cube_shape) == 3), return_reference_image_pad_vector=True)
 
     def test_pad_array(self):
-        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(self.shifts, cube_mode=(len(self.image_shape) == 3), return_reference_image_pad_vector=True)
+        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
         padded = alignment.pad_array(np.ones(self.image_shape), pad_vectors[1], mode='same', reference_image_pad_vector=ref_pad_vector)
         imshow(padded)
-        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(self.shifts, cube_mode=(len(self.cube_shape) == 3), return_reference_image_pad_vector=True)
+        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(self.shifts, cube_mode=True, return_reference_image_pad_vector=True)
         for pad_vector in pad_vectors:
             padded = alignment.pad_array(np.ones(self.cube_shape), pad_vector=pad_vector, mode='same', reference_image_pad_vector=ref_pad_vector)
 
