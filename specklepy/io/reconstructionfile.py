@@ -7,7 +7,7 @@ from specklepy.logging import logging
 from specklepy.io.outfile import Outfile
 
 
-class RECfile(Outfile):
+class ReconstructionFile(Outfile):
 
     def __init__(self, filename, files, cards=None, header_prefix="HIERARCH SPECKLEPY"):
 

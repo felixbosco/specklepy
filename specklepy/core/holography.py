@@ -8,7 +8,7 @@ from astropy.io import fits
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
 from specklepy.io.outfile import Outfile
-from specklepy.io.recfile import RECfile
+from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
 from specklepy.core.apodization import apodize
@@ -50,7 +50,7 @@ def holography(params, mode='same', debug=False):
                             or 'valid'.".format(mode))
 
     # Initialize the outfile
-    params.outFile = RECfile(filename=params.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
+    params.outFile = ReconstructionFile(filename=params.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
 
     # (i-ii) Align cubes
     shifts = get_shifts(files=params.inFiles,

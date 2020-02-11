@@ -5,7 +5,7 @@ from datetime import datetime
 from astropy.io import fits
 
 from specklepy.logging import logging
-from specklepy.io.recfile import RECfile
+from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core import alignment
 
 
@@ -66,9 +66,9 @@ def ssa(files, mode='same', reference_file=0, outfile=None, tmp_dir=None, lazy_m
     elif not isinstance(reference_file, str):
         raise TypeError("The function get_shifts received reference_file argument of type {}, but needs be int or str, i.e. a file name.".format(type(reference_file)))
 
-    if outfile is not None and not isinstance(outfile, RECfile):
+    if outfile is not None and not isinstance(outfile, ReconstructionFile):
         if isinstance(outfile, str):
-            outfile = RECfile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
+            outfile = ReconstructionFile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
         else:
             raise TypeError("specklepy.core.ssa.ssa received outfile argument of wrong type <{}>!".format(type(outfile)))
 

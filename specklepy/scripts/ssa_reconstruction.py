@@ -5,7 +5,7 @@ import os
 
 from specklepy.logging import logging
 from specklepy.io.filemanager import FileManager
-from specklepy.io.recfile import RECfile
+from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core.ssa import ssa
 
 
@@ -41,7 +41,7 @@ def main(options=None):
         os.system('mkdir {}'.format(args.tmpdir))
 
     # Execute reconstruction
-    outfile = RECfile(filename=args.outfile, files=files, cards={"RECONSTRUCTION": "SSA"})
+    outfile = ReconstructionFile(filename=args.outfile, files=files, cards={"RECONSTRUCTION": "SSA"})
     ssa(files, tmp_dir=args.tmpdir, outfile=outfile, debug=args.debug)
 
 
