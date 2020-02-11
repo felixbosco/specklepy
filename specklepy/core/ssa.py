@@ -137,11 +137,9 @@ def coadd_frames(cube):
     """
 
     if not isinstance(cube, np.ndarray):
-        raise TypeError("specklepy.core.ssa.coadd_frames received cube argument of \
-                            type {}, but must be np.ndarray".format(type(cube)))
+        raise SpecklepyTypeError('coadd_frames()', argname='cube', argtype=type(cube), expected='np.ndarray')
     if cube.ndim is not 3:
-        raise ValueError("specklepy.core.ssa.coadd_frames received cube argument of \
-                            dimension {}, but must be 3".format(cube.ndim))
+        raise SpecklepyValueError('coadd_frames()', argname='cube.ndim', argvalue=cube.ndim, expected='3')
 
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
