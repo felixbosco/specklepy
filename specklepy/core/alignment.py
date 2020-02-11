@@ -163,20 +163,21 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
         raise ValueError("get_shift received unknown mode {}".format(mode))
 
 
-# TODO: reference_image_shape does not seem to be used, remove from the code!
+
 # TODO: array_shape is used only to decide if cube_mode or not. This could be cleaned!
 # TODO: mode is used only to decide whether the reference_image_pad_vector is returned. This could be made more clear!
-def get_pad_vectors(shifts, array_shape, mode='same'):
+def get_pad_vectors(shifts, cube_mode=False, array_shape=None, mode='same'):
     """Computes padding vectors from the relative shifts between files.
 
     Args:
         shifts (list):
             Shifts between files, relative to a reference image. See get_shifts
             function for details.
+        cube_mode (bool, optional):
+            If image is a cube, the estimated pad vectors will obtain pad_vector
+            entries of (0, 0) for the zeroth axis. Default is False.
         array_shape (tuple):
             Shape of the input image.
-        reference_image_shape (tuple):
-            Shape of the final image.
         mode (str, optional):
             Define the size of the output image as 'same' as the reference image
             or expanding to include the 'full' covered field. Default is 'same'.
@@ -196,10 +197,10 @@ def get_pad_vectors(shifts, array_shape, mode='same'):
                             or 'valid'.".format(mode))
 
     # If image is a cube, the estimated pad vectors will be adjusted in the end
-    if len(array_shape) == 3:
-        cube_mode = True
-    else:
-        cube_mode = False
+    # if len(array_shape) == 3:
+    #     cube_mode = True
+    # else:
+    #     cube_mode = False
 
     # Initialize list
     pad_vectors = []
