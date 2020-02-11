@@ -17,8 +17,9 @@ def parser(options=None):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-f', '--file', type=str, default=None, help='Fits file or generic file name to consider for the SSA reconstruction.')
-    parser.add_argument('-t', '--tmpdir', type=str, default=None, help='Path to save temporary files to.')
-    parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the output file.')
+    parser.add_argument('-m', '--mode', type=str, default='same', help="Reconstruction mode, can be 'same' (default), 'full' or 'valid'. ")
+    parser.add_argument('-t', '--tmpdir', type=str, default='tmp/', help='Path to save temporary files to.')
+    parser.add_argument('-o', '--outfile', type=str, default='ssa.fits', help='Name of the output file.')
     parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
 
     if options is None:
@@ -34,7 +35,7 @@ def main(options=None):
     args = parser(options=options)
 
     if args.file is not None:
-        files = FileManager(args.file)()
+        files = FileManager(args.file).files
     else:
         logging.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
@@ -43,7 +44,7 @@ def main(options=None):
         os.system('mkdir {}'.format(args.tmpdir))
 
     # Execute reconstruction
-    ssa(files, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
+    ssa(files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
 
 
 
