@@ -5,6 +5,7 @@ import os
 import sys
 import warnings
 
+from specklepy.logging import logging
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
 

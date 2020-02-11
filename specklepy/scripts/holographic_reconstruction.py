@@ -5,8 +5,9 @@ import os
 import sys
 import warnings
 
-from specklepy.io.parameterset import ParameterSet
 from specklepy.core.holography import holography
+from specklepy.io.parameterset import ParameterSet
+from specklepy.logging import logging
 
 
 

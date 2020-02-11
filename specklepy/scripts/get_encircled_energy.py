@@ -7,6 +7,7 @@ import warnings
 import numpy as np
 
 from specklepy.core.aperture import Aperture
+from specklepy.logging import logging
 from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
 
 
