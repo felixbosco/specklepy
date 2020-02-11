@@ -41,8 +41,7 @@ def main(options=None):
         os.system('mkdir {}'.format(args.tmpdir))
 
     # Execute reconstruction
-    outfile = ReconstructionFile(filename=args.outfile, files=files, cards={"RECONSTRUCTION": "SSA"})
-    ssa(files, tmp_dir=args.tmpdir, outfile=outfile, debug=args.debug)
+    ssa(files, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
 
 
 if __name__ == '__main__':
