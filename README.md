@@ -175,6 +175,7 @@ These are the current To-Do items:
   * Reconstruction modes that return reconstructions that cover the 'same' field of view as a reference, the 'full' field of view covered by at least one exposure or (**low priority:**) 'valid' field of view that is covered by all exposures
   * Secondary source subtraction for holography function 
   * Bootstrap resampling for estimating the photo- and astrometric uncertainties
+  * Add a call of starfinder after the last iteration of the scripts to save the results
   * **low priority:** Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
   * **low priority:** Tune star finder routines
   * **low priority:** Implement frame save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file. This is necessary for "bootstrap resampling", which can deliver uncertainties.
@@ -188,7 +189,8 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
-- *0.5.1dev*: Implementation of the 'full' mode for reconstructions.
+- *0.5.2dev*: Implement division of the field of view for considering PSF variation
+- *0.5.1*: Implementation of the 'full' mode for reconstructions.
 - *0.5.0*: The code is now easily installable, creates binary scripts to be used everywhere in the system. Extensive updates on the documentation.
 - *0.4.5*: Debugging the scripts and the logging scheme
 - *0.4.4*: The setup is now also installing the sub-packages, config files and scripts
