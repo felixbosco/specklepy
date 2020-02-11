@@ -6,7 +6,7 @@ from specklepy.utils.plot import imshow
 
 
 
-def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False, debug=False):
+def get_shifts(files, reference_file=0, mode='correlation', lazy_mode=True, return_image_shape=False, debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -20,6 +20,14 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
         reference_file (str, int, optional):
             Path to a reference file or index of the file in files, relative to
             which the shifts are computed. Default is 0.
+        mode (str, optional):
+            Mode of the shift estimate. In 'correlation' mode, a 2D correlation
+            is used to estimate the shift of the array. This is computationally
+            much more expensive than the identical 'maximum' or 'peak' modes,
+            which simply identify the coordinates of the emission peaks and
+            return the difference. Though these modes may be fooled by reference
+            sources of similar brightness. Passed to get_shift() function.
+            Default is 'correlation'.
         lazy_mode (bool, optional):
             Set to False, to enforce the alignment of a single file with respect
             to the reference file. Default is True.
@@ -58,7 +66,7 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
         shifts = []
 
         # Identify reference file and Fourier transform the integrated image
-        logging.info("Computing relative shifts between data cubes. Reference file is {}".format(reference_file))
+        logging.info(f"Computing relative shifts between data cubes. Reference file is {reference_file}")
         reference_image = fits.getdata(reference_file)
         if reference_image.ndim == 3:
             # Integrating over time axis if reference image is a cube
@@ -75,9 +83,10 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
                 image = fits.getdata(file)
                 if image.ndim == 3:
                     image = np.sum(image, axis=0)
-                shift = get_shift(image, Freference_image=Freference_image, mode='correlation', debug=debug)
+                shift = get_shift(image, reference_image=Freference_image, is_Fourier_transformed=True, mode=mode, debug=debug)
             shifts.append(shift)
-        logging.info("Identified the following shifts:\n\t{}".format(shifts))
+            logging.info(f"Identified a shift of {shift} for file {file}")
+        logging.info(f"Identified the following shifts:\n\t{shifts}")
 
     if return_image_shape:
         return shifts, image_shape
@@ -85,11 +94,8 @@ def get_shifts(files, reference_file=0, lazy_mode=True, return_image_shape=False
         return shifts
 
 
-# TODO: combine reference image and Freference_image into a single argument and
-# accept a keyword arg is_transformed to indicate that the reference image
-# already is transformed.
-# TODO: Test 'peak' mode. There seem to be old variable names...
-def get_shift(image, reference_image=None, Freference_image=None, mode='correlation', debug=False):
+
+def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='correlation', debug=False):
     """Estimate the shift between an image and a reference image.
 
     Estimate the relative shift between an image and a reference image by means
@@ -101,8 +107,10 @@ def get_shift(image, reference_image=None, Freference_image=None, mode='correlat
             2D array of the image to be shifted.
         reference_image (np.ndarray):
             2D array of the reference image of the shift.
-        Freference_image (np.ndarray):
-            ... to be deprecated
+        is_Fourier_transformed (bool):
+            Indicate whether the reference image is already Fourier transformed.
+            This is implemented to save computation by computing that transform
+            only once.
         mode (str, optional):
             Mode of the shift estimate. In 'correlation' mode, a 2D correlation
             is used to estimate the shift of the array. This is computationally
@@ -118,20 +126,30 @@ def get_shift(image, reference_image=None, Freference_image=None, mode='correlat
             Tuple of shift indizes for each axis.
     """
 
+    # Check input parameters
+    if not isinstance(image, np.ndarray) or image.ndim is not 2:
+        raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(image)}")
+    if not isinstance(reference_image, np.ndarray) or image.ndim is not 2:
+        raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(reference_image)}")
+
     # Simple comparison of the peaks in the images
     if mode == 'maximum' or mode == 'peak':
         peak_image = np.unravel_index(np.argmax(image, axis=None), image.shape)
-        peak_ref_image = np.unravel_index(np.argmax(ref_image, axis=None), ref_image.shape)
-        return (peak_image[0] - peak_ref_image[0], peak_image[1] - peak_ref_image[1])
+        peak_ref_image = np.unravel_index(np.argmax(reference_image, axis=None), reference_image.shape)
+        return (peak_ref_image[0] - peak_image[0] , peak_ref_image[1] - peak_image[1])
 
     # Using correlation of the two images
     elif mode == 'correlation':
-        if reference_image is not None and Freference_image is None:
+        if not is_Fourier_transformed:
             Freference_image = np.fft.fft2(reference_image)
-        elif Freference_image is not None and reference_image is None:
-            pass
         else:
-            raise ValueError("Exactly one of reference_image or Freference_image needs be provided to get_shift!")
+            Freference_image = reference_image
+        # if reference_image is not None and Freference_image is None:
+        #     Freference_image = np.fft.fft2(reference_image)
+        # elif Freference_image is not None and reference_image is None:
+        #     pass
+        # else:
+        #     raise ValueError("Exactly one of reference_image or Freference_image needs be provided to get_shift!")
         Fimage = np.conjugate(np.fft.fft2(image))
         correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
         correlation = np.fft.fftshift(correlation)
@@ -148,7 +166,7 @@ def get_shift(image, reference_image=None, Freference_image=None, mode='correlat
 # TODO: reference_image_shape does not seem to be used, remove from the code!
 # TODO: array_shape is used only to decide if cube_mode or not. This could be cleaned!
 # TODO: mode is used only to decide whether the reference_image_pad_vector is returned. This could be made more clear!
-def get_pad_vectors(shifts, array_shape, reference_image_shape, mode='same'):
+def get_pad_vectors(shifts, array_shape, mode='same'):
     """Computes padding vectors from the relative shifts between files.
 
     Args:
