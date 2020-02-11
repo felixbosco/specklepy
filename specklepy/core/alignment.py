@@ -166,7 +166,7 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
 
 # TODO: array_shape is used only to decide if cube_mode or not. This could be cleaned!
 # TODO: mode is used only to decide whether the reference_image_pad_vector is returned. This could be made more clear!
-def get_pad_vectors(shifts, cube_mode=False, array_shape=None, mode='same'):
+def get_pad_vectors(shifts, cube_mode=False, mode='same'):
     """Computes padding vectors from the relative shifts between files.
 
     Args:

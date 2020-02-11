@@ -181,8 +181,9 @@ def get_Fourier_object(params, shifts, mode='same'):
                             or 'valid'.".format(mode))
 
     pad_vectors, reference_image_pad_vector = get_pad_vectors(shifts=shifts,
-                                    array_shape=fits.getdata(params.inFiles[0]).shape,
-                                    reference_image_shape=(1024, 1024),
+                                    cube_mode=fits.getdata(params.inFiles[0]).ndim==3,
+                                    # array_shape=fits.getdata(params.inFiles[0]).shape,
+                                    # reference_image_shape=(1024, 1024),
                                     mode='same')
 
     # Assert that there are the same number of inFiles and psfFiles, which
