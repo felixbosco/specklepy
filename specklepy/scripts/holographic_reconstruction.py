@@ -16,6 +16,7 @@ def parser(options=None):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
+    parser.add_argument('-m', '--mode', type=str, default='same', help="Reconstruction mode, can be 'same', 'full' or 'valid'.")
     parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
 
     if options is None:
@@ -46,7 +47,7 @@ def main(options=None):
                         make_dirs=make_dirs)
 
     # Execute reconstruction
-    holography(params, debug=args.debug)
+    holography(params, mode=args.mode, debug=args.debug)
 
 
 
