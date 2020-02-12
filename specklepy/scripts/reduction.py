@@ -34,7 +34,10 @@ def main(options=None):
 
     # Default values
     defaults_file = os.path.join(os.path.dirname(__file__), '../config/reduction.cfg')
-    essential_attributes = ['filePath', 'fileList', 'tmpDir', 'skipFlat', 'flatCorrectionPrefix', 'setupKeywords', 'skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']
+    essential_attributes = {'paths': ['filePath', 'fileList', 'tmpDir'],
+                            'setup': ['setupKeywords'],
+                            'flat': ['skipFlat', 'flatCorrectionPrefix'],
+                            'sky': ['skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']}
     make_dirs = ['tmpDir']
 
     # Read parameters from file

@@ -29,9 +29,10 @@ class ParameterSet(object):
                 Path to a file that contains parameters
             defaults_file (str, optional):
                 Path to a file that contains default parameters.
-            essential_attributes (list, optional):
-                List of attributes that are essential and are thus filled from
+            essential_attributes (dict, optional):
+                Dict of attributes that are essential and are thus filled from
                 the defaults file, if not provided in the parameter file.
+                Absent parameters cause exceptions.
             make_dirs (list, optional):
                 List of directory paths to create, if they are not existing yet.
         """
@@ -55,7 +56,7 @@ class ParameterSet(object):
             raise SpecklepyTypeError('ParameterSet', argname='defaults_file', argtype=type(defaults_file), expected='str')
 
         if essential_attributes is None:
-            essential_attributes = []
+            essential_attributes = {}
         if make_dirs is None:
             make_dirs = []
 
@@ -107,6 +108,15 @@ class ParameterSet(object):
             #         setattr(self, key, eval(value))
             #     except:
             #         setattr(self, key, value)
+
+        # Check for the essential parameters
+        for section in essential_attributes.keys():
+            if not hasattr(self, section):
+                raise AttributeError(f"ParameterSet does not have essential section {section}!")
+            for attr in essential_attributes[section]:
+                if not hasattr(self.getattr(section), attr):
+                    raise AttributeError(f"ParameterSet.{section} does not have essential attribute {attr}!")
+
 
         # Create directories
         self.makedirs(dir_list=make_dirs)

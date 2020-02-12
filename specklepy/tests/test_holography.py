@@ -10,7 +10,7 @@ class TestHolography(unittest.TestCase):
     def setUp(self):
         self.params = ParameterSet(parameter_file='specklepy/tests/files/test_reconstruction.par',
                         defaults_file='specklepy/config/holography.cfg',
-                        essential_attributes=[],
+                        essential_attributes={},
                         make_dirs=[])
         self.shifts = [(0, 0)] * 3
 

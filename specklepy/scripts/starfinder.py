@@ -41,7 +41,9 @@ def main(options=None):
     # Default values
     background_subtraction = True
     defaults_file = os.path.join(os.path.dirname(__file__), "../config/holography.cfg")
-    essential_attributes = ['allStarsFile', 'noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth', 'noiseThreshold', 'starfinderFwhm']
+    essential_attributes = {'paths': ['allStarsFile'],
+                            'noise': ['noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth'],
+                            'starfinder': ['noiseThreshold', 'starfinderFwhm']}
 
     if args.file is None:
         logging.error("No file or file list was provided! Use --help for instructions.")
@@ -54,11 +56,11 @@ def main(options=None):
         params = ParameterSet(parameter_file=args.parameter_file, defaults_file=defaults_file, essential_attributes=essential_attributes)
 
     if args.outfile is None:
-        args.outfile = params.allStarsFile
+        args.outfile = params.paths.allStarsFile
 
     # finder = SourceExtraction()
     # finder.
-    find_sources(image=args.file, fwhm=params.starfinderFwhm, noise_threshold=params.noiseThreshold,
+    find_sources(image=args.file, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.noiseThreshold,
         background_subtraction=background_subtraction, writeto=args.outfile)
     # finder.writeto(args.outfile)
 
