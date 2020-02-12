@@ -149,11 +149,9 @@ class Outfile(object):
         """
 
         with fits.open(self.filename, mode='update') as hdulist:
-            hdulist.info()
             hdu = fits.ImageHDU(data=data, name=name, header=header)
             if index is None:
                 hdulist.append(hdu=hdu)
             else:
                 hdulist.insert(index=index, hdu=hdu)
-            hdulist.info()
             hdulist.flush()
