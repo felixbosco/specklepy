@@ -69,7 +69,7 @@ class ParameterSet(object):
             defaults.read(self.defaults_file)
 
             for section in defaults.sections():
-                self.__setattr__(section.lower(), Section(defaults[section]))
+                setattr(self, section.lower(), Section(defaults[section]))
             # for attr in essential_attributes:
             #     if not hasattr(self, attr):
             #         attr_set = False
@@ -93,14 +93,14 @@ class ParameterSet(object):
         parser.read(self.parameter_file)
         for section in parser.sections():
             if not hasattr(self, section.lower()):
-                self.__setattr__(section.lower(), Section(parser[section]))
+                setattr(self, section.lower(), Section(parser[section]))
             else:
                 for option in parser[section]:
                     value = parser[section][option]
                     try:
-                        self.__getattribute__(section.lower()).__setattr__(option, eval(value))
+                        getattr(self, section.lower()).__setattr__(option, eval(value))
                     except:
-                        self.__getattribute__(section.lower()).__setattr__(option, value)
+                        getattr(self, section.lower()).__setattr__(option, value)
             # for key in parser[section]:
             #     value = parser[section][key]
             #     # Interprete data type
@@ -114,7 +114,7 @@ class ParameterSet(object):
             if not hasattr(self, section):
                 raise AttributeError(f"ParameterSet does not have essential section {section}!")
             for attr in essential_attributes[section]:
-                if not hasattr(self.getattr(section), attr):
+                if not hasattr(getattr(self, section), attr):
                     raise AttributeError(f"ParameterSet.{section} does not have essential attribute {attr}!")
 
 
