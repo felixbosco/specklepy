@@ -42,7 +42,7 @@ def main(options=None):
     background_subtraction = True
     defaults_file = os.path.join(os.path.dirname(__file__), "../config/holography.cfg")
     essential_attributes = {'paths': ['allStarsFile'],
-                            'noise': ['noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth'],
+                            # 'noise': ['noiseBoxX', 'noiseBoxY', 'noiseBoxHalfWidth'],
                             'starfinder': ['noiseThreshold', 'starfinderFwhm']}
 
     if args.file is None:
