@@ -9,6 +9,6 @@ masterFlatFile = specklepy/tests/files/reduction/MasterFlat.fits
 flatCorrectionPrefix = f
 
 [SKY]
-skipSky = True
+skipSky = False
 skySubtractionPrefix = s
 ignore_time_stamps = True

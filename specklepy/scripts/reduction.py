@@ -49,26 +49,26 @@ def main(options=None):
     # Execute data reduction
     # (0) Read file list table
     logging.info("Reading file list ...")
-    inFiles = FileManager(params.fileList)
+    inFiles = FileManager(params.paths.fileList)
     print(inFiles.table)
 
     # (1) Flat fielding
-    if not params.skipFlat:
+    if not params.flat.skipFlat:
         flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
-        master_flat = MasterFlat(flat_files, filename=params.masterFlatFile, file_path=params.filePath)
+        master_flat = MasterFlat(flat_files, filename=params.flat.masterFlatFile, file_path=params.paths.filePath)
         master_flat.combine()
-        inFiles.table = master_flat.run_correction(inFiles.table, filter={'OBSTYPE': ['SCIENCE', 'SKY']}, prefix=params.flatCorrectionPrefix)
+        inFiles.table = master_flat.run_correction(inFiles.table, filter={'OBSTYPE': ['SCIENCE', 'SKY']}, prefix=params.flat.flatCorrectionPrefix)
 
     # (...) Linearisation
 
     # (...) Identify setups
-    inFiles.identify_setups(params.setupKeywords)
+    inFiles.identify_setups(params.setup.setupKeywords)
 
     # (...) Sky subtraction
-    if not params.skipSky:
-        sequences = sky.identify_sequences(params.fileList, file_path=params.filePath, ignore_time_stamps=params.ignore_time_stamps)
+    if not params.sky.skipSky:
+        sequences = sky.identify_sequences(inFiles.table, file_path=params.paths.filePath, ignore_time_stamps=params.sky.ignore_time_stamps)
         for sequence in sequences:
-            sequence.subtract_master_sky(saveto=params.tmpDir, filename_prefix=params.skySubtractionPrefix)
+            sequence.subtract_master_sky(saveto=params.paths.tmpDir, filename_prefix=params.sky.skySubtractionPrefix)
 
 
 

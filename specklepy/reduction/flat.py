@@ -13,7 +13,7 @@ class MasterFlat(object):
 
     def __init__(self, filelist, filename='MasterFlat.fits', file_path=None):
         # Store input parameters
-        if isinstance(filelist, list):
+        if isinstance(filelist, (list, np.ndarray)):
             self.files = filelist
         elif isinstance(filelist, Table):
             is_flat_file = filelist['OBSTYPE'] == 'FLAT'
@@ -55,7 +55,7 @@ class MasterFlat(object):
 
         # Store master flat to file
         if not hasattr(self, 'outfile'):
-            self.outfile = MasterFile(self.filename, filelist=self.filelist, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
+            self.outfile = MasterFile(self.filename, files=self.files, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
         self.outfile.data = master_flat
 
 
