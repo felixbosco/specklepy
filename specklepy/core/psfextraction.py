@@ -33,10 +33,10 @@ class ReferenceStars(object):
         if not isinstance(params, ParameterSet):
             raise TypeError("params argument of the PSFExtractor class must be instance of specklepy.io.parameterset.ParameterSet!")
         self.params = params
-        self.radius = params.psfRadius
+        self.radius = params.psfextraction.psfRadius
 
         # Extract stars out of params.refSourceFile
-        self.star_table = Table.read(params.refSourceFile, format='ascii')
+        self.star_table = Table.read(params.paths.refSourceFile, format='ascii')
 
 
     @property
@@ -80,7 +80,7 @@ class ReferenceStars(object):
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY ")
+            psf_file = PSFfile(file, outDir=self.params.paths.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY ")
             self.params.psfFiles.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e.
@@ -138,7 +138,7 @@ class ReferenceStars(object):
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY")
+            psf_file = PSFfile(file, outDir=self.params.paths.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY")
             self.params.psfFiles.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e.

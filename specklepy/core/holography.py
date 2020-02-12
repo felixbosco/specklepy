@@ -55,24 +55,24 @@ def holography(params, mode='same', debug=False):
 
 
     # Initialize the outfile
-    params.outFile = ReconstructionFile(filename=params.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
+    params.outFile = ReconstructionFile(filename=params.paths.outFile, files=params.inFiles, cards={"RECONSTRUCTION": "Holography"})
 
     # (i-ii) Align cubes
     shifts = get_shifts(files=params.inFiles,
-                            reference_file=params.alignmentReferenceFile,
+                            reference_file=params.paths.alignmentReferenceFile,
                             lazy_mode=True,
                             return_image_shape=False,
                             debug=debug)
 
     # (iii) Compute SSA reconstruction
-    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.tmpDir)
+    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.paths.tmpDir)
     total_flux = np.sum(image) # Stored for flux conservation
 
     # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
-        find_sources(image=image, fwhm=params.starfinderFwhm, noise_threshold=params.signalToNoiseThreshold,
-            background_subtraction=False, writeto=params.allStarsFile, starfinder='DAO', verbose=False)
+        find_sources(image=image, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.signalToNoiseThreshold,
+            background_subtraction=False, writeto=params.paths.allStarsFile, starfinder='DAO', verbose=False)
 
         # (v) Select reference stars
         print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
@@ -88,12 +88,12 @@ def holography(params, mode='same', debug=False):
             with fits.open(file, mode='update') as hdulist:
                 numberFrames = hdulist[0].header['NAXIS3']
                 if not hasattr(params, 'psfNoiseMask'):
-                    params.psfNoiseMask = get_noise_mask(hdulist[0].data[0], noise_reference_margin=params.noiseReferenceMargin)
+                    params.psfNoiseMask = get_noise_mask(hdulist[0].data[0], noise_reference_margin=params.psfextraction.noiseReferenceMargin)
                 for index in range(numberFrames):
                     reference = np.ma.masked_array(hdulist[0].data[index], mask=params.psfNoiseMask)
                     background = np.mean(reference)
                     noise = np.std(reference)
-                    update = np.maximum(hdulist[0].data[index] - background - params.noiseThreshold * noise, 0.0)
+                    update = np.maximum(hdulist[0].data[index] - background - params.psfextraction.noiseThreshold * noise, 0.0)
                     if np.sum(update) == 0.0:
                         raise ValueError("After background subtraction and noise thresholding, no signal is leftover. Please reduce the noiseThreshold!")
                     update = update / np.sum(update) # Flux sum of order unity
@@ -109,7 +109,7 @@ def holography(params, mode='same', debug=False):
 
         # (x) Apodization
         logging.info("Apodizing the object...")
-        Fobject = apodize(Fobject, params.apodizationType, radius=params.apodizationWidth)
+        Fobject = apodize(Fobject, params.apodization.apodizationType, radius=params.apodization.apodizationWidth)
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
         image = ifft2(Fobject)
