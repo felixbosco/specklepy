@@ -13,10 +13,16 @@ class ParameterSet(object):
     def __init__(self, parameter_file, defaults_file=None, essential_attributes=None, make_dirs=None):
         """Class that carries parameters.
 
-        This class carries all the important parameters and is also capable
-        of reading parameter files, where essential parameters can be defined,
-        which are completed from a defaults file if not provided in the
-        parameter file.
+        This class carries all the important parameters. The values are
+        provided by reading in a default/ config file first (if a file is
+        provided) and then reading in the actual parameter file to overwrite
+        the default values. The parameters are stored hierarchically following
+        the sections of the defaults or parameter files to allow the same names
+        in multiple sections. The parameters are stored within Section class
+        instances, see below, and are thereby accessible via attribute calls.
+
+        In a second step this class is checking a list of essential parameters
+        for existence and creates directories, if the arguments are not None.
 
         Args:
             parameter_file (str):
@@ -85,15 +91,15 @@ class ParameterSet(object):
         logging.info("Reading parameter file {}".format(self.parameter_file))
         parser.read(self.parameter_file)
         for section in parser.sections():
-            if not hasattr(self, section):
+            if not hasattr(self, section.lower()):
                 self.__setattr__(section.lower(), Section(parser[section]))
             else:
                 for option in parser[section]:
                     value = parser[section][option]
                     try:
-                        self.__getattribute__(section).__setattr__(option, eval(value))
+                        self.__getattribute__(section.lower()).__setattr__(option, eval(value))
                     except:
-                        self.__getattribute__(section).__setattr__(option, value)
+                        self.__getattribute__(section.lower()).__setattr__(option, value)
             # for key in parser[section]:
             #     value = parser[section][key]
             #     # Interprete data type
@@ -107,7 +113,7 @@ class ParameterSet(object):
 
         # Create file lists
         try:
-            self.inFiles = FileManager(self.inDir).files
+            self.inFiles = FileManager(self.paths.inDir).files
         except AttributeError:
             logging.warning("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in parameter file!")
 
