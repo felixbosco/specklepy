@@ -7,16 +7,22 @@ from specklepy.io.outfile import Outfile
 class TestOutfile(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.path = "specklepy/tests/files/"
+        self.file = "test_outfile.fits"
 
     def test_init(self):
         with self.assertRaises(RuntimeError):
             Outfile(None)
-        Outfile(filename="specklepy/tests/files/test_outfile.fits", shape=None, cards={"RECONSTRUCTION": "Test"})
-        Outfile(filename="specklepy/tests/files/test_outfile.fits", shape=(10, 10), extensions='var', cards={"RECONSTRUCTION": "Test"}, timestamp=True)
+        Outfile(filename=self.path+self.file, shape=None, cards={"RECONSTRUCTION": "Test"})
+        Outfile(filename=self.path+self.file, shape=(10, 10), extensions='var', cards={"RECONSTRUCTION": "Test"}, timestamp=True)
 
     def test_set_data(self):
         pass
+
+    def test_new_extension(self):
+        outfile = Outfile(filename=self.path+self.file, shape=(10, 10), cards={"RECONSTRUCTION": "Test"})
+        outfile.new_extension(name='VAR', data=np.zeros((10,10)))
+
 
 if __name__ == "__main__":
     unittest.main()

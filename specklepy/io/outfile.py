@@ -114,16 +114,46 @@ class Outfile(object):
         logging.info("Updating data in {}".format(self.filename))
 
 
-    def __getitem__(self, index):
-        return fits.getdata(self.filename)[index]
+    def __getitem__(self, extension):
+        return fits.getdata(self.filename, extension)#[index]
 
 
-    def __setitem__(self, index, data):
+    def __setitem__(self, extension, data):
         with fits.open(self.filename, mode='update') as hdulist:
-            hdulist[0].data[index] = data
-            hdulist[0].header.set('UPDATED', str(datetime.now()))
+            hdulist[extension].data = data
+            hdulist[extension].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
 
 
     def update_frame(self, frame_index, data):
-        self[frame_index] = data
+        self.data[frame_index] = data
+
+
+    def new_extension(self, name, data=None, header=None, index=None):
+        """Create a new fits extension.
+
+        All arguments are passed to the new HDU in the HDUlist of instances
+        file, i.e. 'self.filename'.
+
+        Args:
+            name (str):
+                Name of the new extension/ HDU.
+            data (array, optional):
+                Data array, passed to the new HDU.
+            header (fits.header, optional):
+                Fits header, passed to the new HDU.
+            index (int, optional):
+                Index of the extension, before which the new hdu is inserted.
+                None translates into appending the new HDU at the end of the
+                HDUlist.
+        """
+
+        with fits.open(self.filename, mode='update') as hdulist:
+            hdulist.info()
+            hdu = fits.ImageHDU(data=data, name=name, header=header)
+            if index is None:
+                hdulist.append(hdu=hdu)
+            else:
+                hdulist.insert(index=index, hdu=hdu)
+            hdulist.info()
+            hdulist.flush()
