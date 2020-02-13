@@ -110,6 +110,11 @@ class FileManager(object):
                     filename = filename.replace('\n', '')
                     self.files.append(filename)
 
+        # Replace finite length strings of file names by object type for
+        # file names of arbitrary lengths
+        file_column = np.array(self.table[namekey], dtype=object)
+        self.table[namekey] = file_column
+
 
     def filter(self, filter_dict, namekey='FILE'):
 
