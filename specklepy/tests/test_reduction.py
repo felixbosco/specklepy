@@ -2,7 +2,8 @@ import unittest
 import os
 
 
-class TestReduce(unittest.TestCase):
+
+class TestReduction(unittest.TestCase):
 
     def setUp(self):
         self.parameter_file = 'specklepy/tests/files/test_reduction.par'

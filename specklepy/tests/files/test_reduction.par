@@ -6,7 +6,7 @@ tmpDir = specklepy/tests/files/reduction/tmp/
 [FLAT]
 skipFlat = False
 masterFlatFile = specklepy/tests/files/reduction/MasterFlat.fits
-flatCorrectionPrefix = f
+flatCorrectionPrefix = f_
 
 [SKY]
 skipSky = True

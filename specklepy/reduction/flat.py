@@ -127,7 +127,7 @@ class MasterFlat(object):
             # masterfile carries no variance information
             pass
 
-        flatfield_corrected_files = 
+        flatfield_corrected_files = {}
         for file in filelist:
             logging.info(f"Applying flat field correction on file {file}")
             # Create output file name
