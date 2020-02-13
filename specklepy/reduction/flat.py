@@ -62,38 +62,42 @@ class MasterFlat(object):
 
             # Create a master flat
             if index is 0:
-                master_flat = data
+                flats = data
             else:
-                np.append(master_flat, data, axis=0)
+                np.append(flats, data, axis=0)
 
-        # Collapse master flat
+        # Collapse master flat along axis 0
         if method is 'median':
-            master_flat = np.median(master_flat, axis=0)
+            master_flat = np.median(flats, axis=0)
         elif method is 'clip':
-            master_flat = sigma_clip(master_flat, axis=0, masked=True)
-            var = np.var(master_flat, axis=0)
-            master_flat = np.mean(master_flat, axis=0)
+            flats = sigma_clip(flats, axis=0, masked=True)
+            master_flat = np.mean(flats, axis=0)
+            master_flat_var = np.var(flats, axis=0)
+        del flats
 
         # Normalize the master flat
         logging.info(f"Normalizing master flat in {method} mode...")
         if method is 'median':
             norm = np.median(master_flat)
-            master_flat /= norm
+            master_flat_normed = np.divide(master_flat, norm)
         elif method is 'clip':
             norm = np.mean(master_flat)
             norm_var = np.var(master_flat)
-            # TODO double check the variance propagation formula
-            var = np.divide(var, np.square(norm)) + np.divide(np.square(master_flat), np.power(norm, 4)) * norm_var
-            master_flat /= norm
+            master_flat_normed = np.divide(master_flat, norm)
+            master_flat_normed_var = np.divide(master_flat_var, np.square(norm)) + np.divide(np.square(master_flat), np.power(norm, 4)) * norm_var
+
 
         # Store master flat to file
         if not hasattr(self, 'masterfile'):
-            self.masterfile = MasterFile(self.filename, files=self.files, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
-        if 'var' in locals():
-            var = np.where(var.mask, np.nan, var) # Replace masked values by NaNs
-            master_flat = np.where(master_flat.mask, np.nan, master_flat) # Replace masked values by NaNs
-            self.masterfile.new_extension('VAR', data=var)
-        self.masterfile.data = master_flat
+            self.masterfile = MasterFile(self.filename, files=self.files, shape=master_flat_normed.shape, header_prefix='HIERARCH SPECKLEPY')
+        master_flat_normed = np.where(master_flat_normed.mask, np.nan, master_flat_normed) # Replace masked values by NaNs
+        self.masterfile.data = master_flat_normed
+
+        # Store variance in extension
+        if 'master_flat_normed_var' in locals():
+            master_flat_normed_var = np.where(master_flat_normed_var.mask, np.nan, master_flat_normed_var) # Replace masked values by NaNs
+            self.masterfile.new_extension('VAR', data=master_flat_normed_var)
+
 
 
     def run_correction(self, filelist, filter=None, prefix=None, savedir=None):
@@ -145,6 +149,7 @@ class MasterFlat(object):
             image = np.divide(image, master_flat)
 
             # Save corrected file to update in the FileManager
+            header.set('PIPELINE', 'SPECKLEPY')
             header.set('FLATCORR', str(datetime.now()))
             primary_hdu = fits.PrimaryHDU(data=image, header=header)
             hdulist = fits.HDUList(hdus=[primary_hdu])
