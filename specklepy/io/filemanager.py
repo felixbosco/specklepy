@@ -129,6 +129,21 @@ class FileManager(object):
         return self.table[namekey][mask].data
 
 
+    def update_filenames(self, filenames):
+        """Updates the file names in the files table.
+
+        Args:
+            filenames (dict):
+                Dictionary mapping the current file names onto new ones.
+        """
+
+        if not isinstance(filenames, dict):
+            raise SpecklepyTypeError('FileManager.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
+
+        for outdated in filenames.keys():
+            self.table['FILE'][outdated] = filenames[outdated]
+
+
     def identify_setups(self, keywords):
         """Identify distinct observational setups in a list of files.
 
