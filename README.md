@@ -189,8 +189,8 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
-- *0.5.2dev*: Implement division of the field of view for considering PSF variation
-- *0.5.1*: Implementation of the 'full' mode for reconstructions.
+- *0.5.2dev*: Implement noise propagation during data reduction
+- *0.5.1*: Implementation of the 'full' mode for reconstructions
 - *0.5.0*: The code is now easily installable, creates binary scripts to be used everywhere in the system. Extensive updates on the documentation.
 - *0.4.5*: Debugging the scripts and the logging scheme
 - *0.4.4*: The setup is now also installing the sub-packages, config files and scripts
