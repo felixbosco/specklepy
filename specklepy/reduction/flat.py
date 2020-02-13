@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from datetime import datetime
 from astropy.io import fits
 from astropy.table import Table
 from astropy.stats import sigma_clip
@@ -74,7 +75,7 @@ class MasterFlat(object):
             master_flat = np.mean(master_flat, axis=0)
 
         # Normalize the master flat
-        logging.info("Normalizing master flat {}".format(self.filename))
+        logging.info(f"Normalizing master flat in {method} mode...")
         if method is 'median':
             norm = np.median(master_flat)
             master_flat /= norm
@@ -95,7 +96,7 @@ class MasterFlat(object):
         self.masterfile.data = master_flat
 
 
-    def run_correction(self, filelist, filter=None, prefix=None):
+    def run_correction(self, filelist, filter=None, prefix=None, savedir=None):
         """Executes the flat field correction of a filelist.
 
         Args:
@@ -106,6 +107,8 @@ class MasterFlat(object):
                 FileManager.
             prefix (str, optional):
                 File prefix for the output files.
+            savedir (str, optional):
+                Directory, in which the files will be stored.
         """
 
         # Input parameters
@@ -119,16 +122,35 @@ class MasterFlat(object):
 
         master_flat = self.masterfile.data
         try:
-            var = self.masterfile['VAR']
+            master_flat_var = self.masterfile['VAR']
         except KeyError:
             # masterfile carries no variance information
             pass
 
-        flatfield_corrected_files = {}
+        flatfield_corrected_files = 
         for file in filelist:
+            logging.info(f"Applying flat field correction on file {file}")
+            # Create output file name
             corrected_file = prefix + file
-            # image = fits.getdata(file)
-            # image = np.divide(image, master_flat)
+            if savedir is not None:
+                corrected_file = os.path.join(savedir, corrected_file)
+
+            # Read data and header information
+            image, header = fits.getdata(os.path.join(self.file_path, file), header=True)
+
+            # Apply flat field correction
+            if 'master_flat_var' in locals():
+                image_var = np.multiply(np.square(np.divide(image, np.square(master_flat))), master_flat_var)
+            image = np.divide(image, master_flat)
+
+            # Save corrected file to update in the FileManager
+            header.set('FLATCORR', str(datetime.now()))
+            primary_hdu = fits.PrimaryHDU(data=image, header=header)
+            hdulist = fits.HDUList(hdus=[primary_hdu])
+            if 'image_var' in locals():
+                var_hdu = fits.ImageHDU(data=image_var, name='VAR')
+                hdulist.append(var_hdu)
+            hdulist.writeto(corrected_file)
             flatfield_corrected_files[file] = corrected_file
 
         return flatfield_corrected_files
