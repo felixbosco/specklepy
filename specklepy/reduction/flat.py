@@ -136,8 +136,11 @@ class MasterFlat(object):
             logging.info(f"Applying flat field correction on file {file}")
             # Create output file name
             corrected_file = prefix + file
-            if savedir is not None:
-                corrected_file = os.path.join(savedir, corrected_file)
+            # if savedir is not None:
+            #     corrected_file = os.path.join(savedir, corrected_file)
+            # else:
+            #     corrected_file = os.path.join(self.file_path, corrected_file)
+            flatfield_corrected_files[file] = corrected_file
 
             # Read data and header information
             image, header = fits.getdata(os.path.join(self.file_path, file), header=True)
@@ -156,8 +159,11 @@ class MasterFlat(object):
             if 'image_var' in locals():
                 var_hdu = fits.ImageHDU(data=image_var, name='VAR')
                 hdulist.append(var_hdu)
+            if savedir is not None:
+                corrected_file = os.path.join(savedir, corrected_file)
+            else:
+                corrected_file = os.path.join(self.file_path, corrected_file)
             hdulist.writeto(corrected_file)
-            flatfield_corrected_files[file] = corrected_file
 
         return flatfield_corrected_files
 

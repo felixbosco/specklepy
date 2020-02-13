@@ -145,9 +145,11 @@ class FileManager(object):
         if not isinstance(filenames, dict):
             raise SpecklepyTypeError('FileManager.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
 
+        logging.info('Updating file names:')
         for outdated in filenames.keys():
             index = np.where(self.table['FILE'] == outdated)
             self.table['FILE'][index] = filenames[outdated]
+            logging.info(f"{outdated} > {filenames[outdated]}")
 
 
     def identify_setups(self, keywords):

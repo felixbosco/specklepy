@@ -61,9 +61,9 @@ def main(options=None):
         master_flat = MasterFlat(flat_files, filename=params.flat.masterFlatFile, file_path=params.paths.filePath)
         master_flat.combine()
         to_be_flatfield_corrected = inFiles.filter({'OBSTYPE': ['SCIENCE', 'SKY']})
-        flatfield_corrected = master_flat.run_correction(to_be_flatfield_corrected, prefix=params.flat.flatCorrectionPrefix, savedir=params.paths.tmpDir)
+        flatfield_corrected = master_flat.run_correction(to_be_flatfield_corrected, prefix=params.flat.flatCorrectionPrefix)#, savedir=params.paths.tmpDir)
         inFiles.update_filenames(flatfield_corrected)
-        print(inFiles.table)
+
 
     # (...) Linearisation
 
