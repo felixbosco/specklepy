@@ -82,6 +82,7 @@ class MasterFlat(object):
         elif method is 'clip':
             norm = np.mean(master_flat)
             norm_var = np.var(master_flat)
+            # TODO double check the variance propagation formula
             var = np.divide(var, np.square(norm)) + np.divide(np.square(master_flat), np.power(norm, 4)) * norm_var
             master_flat /= norm
 
@@ -89,7 +90,6 @@ class MasterFlat(object):
         if not hasattr(self, 'masterfile'):
             self.masterfile = MasterFile(self.filename, files=self.files, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
         if 'var' in locals():
-            # Todo Propagate normalization here!
             var = np.where(var.mask, np.nan, var) # Replace masked values by NaNs
             master_flat = np.where(master_flat.mask, np.nan, master_flat) # Replace masked values by NaNs
             self.masterfile.new_extension('VAR', data=var)
@@ -140,6 +140,7 @@ class MasterFlat(object):
 
             # Apply flat field correction
             if 'master_flat_var' in locals():
+                # TODO double check the variance propagation formula
                 image_var = np.multiply(np.square(np.divide(image, np.square(master_flat))), master_flat_var)
             image = np.divide(image, master_flat)
 
