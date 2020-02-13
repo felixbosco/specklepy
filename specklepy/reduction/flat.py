@@ -2,10 +2,12 @@ import os
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from astropy.stats import sigma_clip
 
-from specklepy.exceptions import SpecklepyTypeError
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.masterfile import MasterFile
 from specklepy.logging import logging
+from specklepy.utils.plot import imshow
 
 
 
@@ -32,7 +34,24 @@ class MasterFlat(object):
             raise SpecklepyTypeError('MasterFlat', 'file_path', type(file_path), 'str')
 
 
-    def combine(self):
+    def combine(self, method='clip'):
+        """Combine the frames of the stored files to a master flat.
+
+        Args:
+            method (str, optional):
+                Method for the frame combination. Can be either 'median' for a
+                conventional median combination without propagation of
+                uncertainties (since the median does not allow for this) or
+                'clip' for sigma clipping and a subsequent estimate of the
+                variance of the cube, followed by a mean combination.
+        """
+
+        if isinstance(method, str):
+            if method not in ['clip', 'median']:
+                raise SpecklepyValueError('MasterFlat.combine()', argname='method', argtype=method, expected="'clip' or 'median'")
+        else:
+            raise SpecklepyTypeError('MasterFlat.combine()', argname='method', argtype=type(method), expected='str')
+
         logging.info("Combining the following filelist to a master flat:")
 
         # Read image frames from file
@@ -47,34 +66,70 @@ class MasterFlat(object):
                 np.append(master_flat, data, axis=0)
 
         # Collapse master flat
-        master_flat = np.median(master_flat, axis=0)
+        if method is 'median':
+            master_flat = np.median(master_flat, axis=0)
+        elif method is 'clip':
+            master_flat = sigma_clip(master_flat, axis=0, masked=True)
+            var = np.var(master_flat, axis=0)
+            master_flat = np.mean(master_flat, axis=0)
 
         # Normalize the master flat
         logging.info("Normalizing master flat {}".format(self.filename))
-        master_flat /= np.median(master_flat)
+        if method is 'median':
+            norm = np.median(master_flat)
+            master_flat /= norm
+        elif method is 'clip':
+            norm = np.mean(master_flat)
+            norm_var = np.var(master_flat)
+            var = np.divide(var, np.square(norm)) + np.divide(np.square(master_flat), np.power(norm, 4)) * norm_var
+            master_flat /= norm
 
         # Store master flat to file
-        if not hasattr(self, 'outfile'):
-            self.outfile = MasterFile(self.filename, files=self.files, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
-        self.outfile.data = master_flat
+        if not hasattr(self, 'masterfile'):
+            self.masterfile = MasterFile(self.filename, files=self.files, shape=master_flat.shape, header_prefix='HIERARCH SPECKLEPY')
+        if 'var' in locals():
+            # Todo Propagate normalization here!
+            var = np.where(var.mask, np.nan, var) # Replace masked values by NaNs
+            master_flat = np.where(master_flat.mask, np.nan, master_flat) # Replace masked values by NaNs
+            self.masterfile.new_extension('VAR', data=var)
+        self.masterfile.data = master_flat
 
 
     def run_correction(self, filelist, filter=None, prefix=None):
+        """Executes the flat field correction of a filelist.
+
+        Args:
+            filelist (list or astropy.Table):
+                List of files to receive the flatfield correction.
+            filter (dict, optional):
+                Dictionary passed to file filtering function within
+                FileManager.
+            prefix (str, optional):
+                File prefix for the output files.
+        """
 
         # Input parameters
-        if isinstance(filelist, list):
-            files = filelist
-        elif isinstance(filelist, Table):
-            is_flat_file = filelist['OBSTYPE'] == 'FLAT'
-            self.files = filelist['FILE'][is_flat_file]
+        if isinstance(filelist, (list, np.ndarray)):
+            pass
+        # elif isinstance(filelist, Table):
+        #     is_flat_file = filelist['OBSTYPE'] == 'FLAT'
+        #     files = filelist['FILE'][is_flat_file]
         else:
             raise SpecklepyTypeError('MasterFlat', 'filelist', type(filelist), 'astropy.table.Table')
 
-        for file in filelist:
-
-            # Apply filter
-            # files =
+        master_flat = self.masterfile.data
+        try:
+            var = self.masterfile['VAR']
+        except KeyError:
+            # masterfile carries no variance information
             pass
 
-        return filelist
+        flatfield_corrected_files = {}
+        for file in filelist:
+            corrected_file = prefix + file
+            # image = fits.getdata(file)
+            # image = np.divide(image, master_flat)
+            flatfield_corrected_files[file] = corrected_file
+
+        return flatfield_corrected_files
 
