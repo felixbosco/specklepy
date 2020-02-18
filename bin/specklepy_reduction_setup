@@ -2,7 +2,18 @@
 
 """Set up the parameter file for a Specklepy data reduction."""
 
+import os
+import sys
+from specklepy.logging import logging
 import specklepy.scripts.setup_reduction as script
 
 if __name__ == '__main__':
-    script.main()
+
+    try:
+        script.main()
+    except KeyboardInterrupt:
+        logging.info('Interrupted by user...')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
