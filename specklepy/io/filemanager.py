@@ -170,9 +170,13 @@ class FileManager(object):
         self.table['Setup'] = [None] * len(self.table['FILE'])
 
         for key in keywords:
-            unique = np.unique(self.table[key].data)
-            logging.info("Identified {} setups by keyword {}:".format(len(unique), key))
-            logging.info("\t{}".format(unique))
+            try:
+                unique = np.unique(self.table[key].data)
+            except KeyError:
+                logging.info(f"Key {key} is not available in the file table and will be ignored!")
+                continue
+            logging.info(f"Identified {len(unique)} setups by keyword {key}:")
+            logging.info(f"\t{unique}")
             if len(unique) == 1:
                 continue
 
