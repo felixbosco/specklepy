@@ -4,9 +4,11 @@ import argparse
 import os
 import sys
 import glob
+import warnings
 from configparser import ConfigParser
 from astropy.io import fits
 from astropy.table import Table
+from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 
 from specklepy.logging import logging
 
@@ -17,10 +19,11 @@ def parser(options=None):
     parser = argparse.ArgumentParser(description='This script reduces the data, following the parameters specified in the paramater fils.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    parser.add_argument('path', type=str, help='Path to the files.')
     parser.add_argument('-i', '--instrument', type=str, help='Name of the instrument.')
-    parser.add_argument('-p', '--path', type=str, help='Path to the files.')
-    parser.add_argument('-o', '--outfile', type=str, default='files.tab', help="Name of the output file containing the file overview. Default is 'files.tab'.")
-    parser.add_argument('-s', '--sortby', type=str, default='OBSTYPE', help="Header card to sort the output table by. Default is 'OBSTYPE'.")
+    parser.add_argument('-o', '--outfile', type=str, default='specklepy_reduction_files.tab', help="Name of the output file containing the file overview.")
+    parser.add_argument('-p', '--parfile', type=str, default='specklepy_reduction.ini', help="Name of the output parameter file.")
+    parser.add_argument('-s', '--sortby', type=str, default='OBSTYPE', help="Header card to sort the output table by.")
     parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
@@ -49,8 +52,20 @@ def main(options=None):
     instrument = config['INSTRUMENTS'][args.instrument]
     instrument_header_cards = config[instrument]
 
+    # Double check whether all aliases are defined
+    for card in header_cards:
+        try:
+            instrument_header_cards[card]
+        except:
+            logging.info(f"Dropping header card {card} from setup identification, as there is no description in the config file."
+                         f"\nCheck out {instrument_config_file} for details.")
+            header_cards.remove(card)
+
     # Find files
-    files = glob.glob(args.path)
+    if '*' in args.path:
+        files = glob.glob(args.path)
+    else:
+        files = glob.glob(args.path + '*fits')
     logging.info("Found {} file(s)".format(len(files)))
 
     # Prepare dictionary for collecting table data
@@ -60,13 +75,17 @@ def main(options=None):
 
     # Read data from files
     for file in files:
-        hdr = fits.getheader(file)
+        logging.info(f"Retrieving header information from file {file}")
+        try:
+            hdr = fits.getheader(file)
+        except (AstropyWarning, AstropyUserWarning):
+            print("Caught")
         table_data['FILE'].append(os.path.basename(file))
         for card in header_cards:
             try:
                 table_data[card].append(hdr[instrument_header_cards[card]])
             except KeyError:
-                logging.info("Skipping file {} due to missing header card ({}).".format(os.path.basename(file), instrument_header_cards[card]))
+                logging.info(f"Skipping file {os.path.basename(file)} due to missing header card ({instrument_header_cards[card]}).")
                 table_data[card].append("_" * 3)
 
     # Create table from dict and save
@@ -76,6 +95,22 @@ def main(options=None):
     table.sort(args.sortby)
     logging.info("Writing data to {}".format(args.outfile))
     table.write(args.outfile, format='ascii.fixed_width', overwrite=True)
+
+    # Write dummy parameter file for the reduction
+    logging.info("Creating default reduction INI file {}".format(args.parfile))
+    par_file_content = "[PATHS]"\
+                       f"\nfilePath = {args.path}"\
+                       f"\nfileList = {args.outfile}"\
+                       "\ntmpDir = tmp/"\
+                       "\n\n[FLAT]"\
+                       "\nskipFlat = False"\
+                       "\nmasterFlatFile = MasterFlat.fits"\
+                       "\nflatCorrectionPrefix = f_"\
+                       "\n\n[SKY]"\
+                       "\nskipSky = False"\
+                       "\nskySubtractionPrefix = s"
+    with open(args.parfile, 'w+') as parfile:
+        parfile.write(par_file_content)
 
 
 
