@@ -6,6 +6,7 @@ from astropy.io import fits
 
 from specklepy.core import alignment
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logging
 
@@ -85,27 +86,41 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
 
     if tmp_dir is not None:
         if isinstance(tmp_dir, str) and not os.path.isdir(tmp_dir):
-            os.makedirs(path)
+            os.makedirs(tmp_dir)
 
     if not isinstance(lazy_mode, bool):
         raise SpecklepyTypeError('ssa()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
 
     # Do not align just a single file
     if lazy_mode and len(files) == 1:
-        cube = fits.getdata(files[0])
-        reconstruction = coadd_frames(cube)
+        with fits.open(files[0]) as hdulist:
+            cube = hdulist[0].data
+            try:
+                var_cube = hdulist['VAR'].data
+                reconstruction, reconstruction_var = coadd_frames(cube, var_cube=var_cube)
+            except:
+                reconstruction = coadd_frames(cube)
 
     # Align reconstructions if multiple files are given
     else:
         # Compute temporary reconstructions of the individual cubes
         tmp_files = []
         for index, file in enumerate(files):
-            cube = fits.getdata(file)
-            tmp = coadd_frames(cube)
+            with fits.open(files[0]) as hdulist:
+                cube = hdulist[0].data
+                try:
+                    var_cube = hdulist['VAR'].data
+                    tmp, tmp_var = coadd_frames(cube, var_cube=var_cube)
+                except:
+                    tmp = coadd_frames(cube)
             tmp_file = os.path.basename(file).replace(".fits", "_ssa.fits")
             tmp_file = os.path.join(tmp_dir, tmp_file)
             logging.info("Saving interim SSA reconstruction of cube to {}".format(tmp_file))
-            fits.writeto(tmp_file, tmp, overwrite=True)
+            tmp_file_object = Outfile(tmp_file, shape=tmp.shape)
+            tmp_file_object.data = tmp
+            if 'tmp_var' in locals():
+                tmp_file_object.new_extension('VAR', data=tmp_var)
+            # fits.writeto(tmp_file, tmp, overwrite=True)
             tmp_files.append(tmp_file)
 
         # Align tmp reconstructions and add up
@@ -113,30 +128,54 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, cube_mode=(len(image_shape) == 3), return_reference_image_pad_vector=True)
         # reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
-            tmp_image = fits.getdata(file)
+            with fits.open(file) as hdulist:
+                tmp_image = hdulist[0].data
+                try:
+                    tmp_image_var = hdulist['VAR'].data
+                except:
+                    # No VAR extension in file
+                    pass
             if index is 0:
                 reconstruction = alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                try:
+                    reconstruction_var = alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                except:
+                    pass
             else:
                 reconstruction += alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                try:
+                    reconstruction_var += alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                except:
+                    pass
 
     logging.info("Reconstruction finished...")
 
     # Save the result to an Outfile
     if outfile is not None:
         outfile.data = reconstruction
+        if 'reconstruction_var' in locals():
+            outfile.new_extension(name='VAR', data=reconstruction_var)
 
+    if 'reconstruction_var' in locals():
+        return reconstruction, reconstruction_var
+        # Otherwise:
     return reconstruction
 
 
 
-def coadd_frames(cube):
-    """
-    Compute the simple shift-and-add (SSA) reconstruction of a data cube via
-    the SSA algorithm and return the result.
+def coadd_frames(cube, var_cube=None):
+    """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
+
+    This function uses the SSA algorithm to coadd frames of a cube. If
+    provided, this function coadds the variances within a var cube considering
+    the exact same shifts.
 
     Args:
         cube (np.ndarray, ndim=3):
             Data cube which is integrated along the zero-th axis.
+        var_cube (np.ndarray, ndim=3, optional):
+            Data cube of variances which is integrated along the zero-th axis
+            with the same shifts as the cube.
     Returns:
         coadded (np.ndarray, ndim=2):
             SSA-integrated frames of the input cube.
@@ -146,6 +185,11 @@ def coadd_frames(cube):
         raise SpecklepyTypeError('coadd_frames()', argname='cube', argtype=type(cube), expected='np.ndarray')
     if cube.ndim is not 3:
         raise SpecklepyValueError('coadd_frames()', argname='cube.ndim', argvalue=cube.ndim, expected='3')
+
+    if var_cube is not None and not isinstance(var_cube, np.ndarray):
+        raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube), expected='np.ndarray')
+    if var_cube.shape != cube.shape:
+        raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=var_cube.shape, expected=str(cube.shape))
 
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
@@ -166,6 +210,12 @@ def coadd_frames(cube):
     pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=True)
     for index, frame in enumerate(cube):
         coadded += alignment.pad_array(frame, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
+
+    if var_cube is not None:
+        var_coadded = np.zeros(coadded.shape)
+        for index, frame in enumerate(var_cube):
+            var_coadded += alignment.pad_array(frame, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
+        return coadded, var_coadded
 
     return coadded
 
