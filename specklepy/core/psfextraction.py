@@ -179,10 +179,9 @@ class ReferenceStars(object):
                     ivar_oversampled[y, x] += np.divide(1, aperture.vars)
                 
                 if debug:
-                    imshow(aperture.data[frame_index], maximize=True)
-                    imshow(epsf_oversampled, maximize=True)
-                    imshow(ivar_oversampled, maximize=True)
-                    imshow(nsamples, maximize=True)
+                    imshow(aperture.data[frame_index], maximize=True, title=f"Aperture {aperture_index}")
+                    imshow(epsf_oversampled, maximize=True, title="oversampled ePSF")
+                    imshow(ivar_oversampled, maximize=True, title='oversampled IVAR')
                 
                 # Sample down to the initial grid
                 epsf = np.zeros((self.box_size, self.box_size))
