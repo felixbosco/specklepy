@@ -20,16 +20,24 @@ plt.rc('font', **font)  # pass in the font dict as kwargs
 
 
 
-def imshow(image, title=None, norm=None, colorbar_label=None, maximize=False, saveto=None):
+def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maximize=False):
     """Shows a 2D image.
 
     Args:
-        image (np.ndarray, ndim=2): Image to be plotted.
-        title (str, optional): Plot title. Default is None.
-        norm (str, optional): Can be set to 'log', for plotting in logarithmic
-            scale. Default is None.
+        image (np.ndarray, ndim=2):
+            Image to be plotted.
+        title (str, optional):
+            Plot title. Default is None.
+        norm (str, optional):
+            Can be set to 'log', for plotting in logarithmic scale. Default is
+            None.
+        colorbar_label (str, optional):
+            Label of the color bar. Default is None.
+        saveto (str, optional):
+            Path to save the plot to. Default is None.
+        maximize (bool, optional):
+            Set true for showing the plot on full screen. Default is False.
     """
-
 
     if isinstance(image, np.ndarray):
         if image.ndim != 2:
@@ -162,11 +170,47 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
 
 
 
+def psf_profile_plot(files, normalize=None, maximize=False):
+    """Plots the psf profile data from a file.
+
+    Args:
+        files (str):
+            Name of the file to extract the data from.
+    """
+
+    # Input parameters
+    if isinstance(files, str):
+        plt.title(files)
+        files = [files]
+    if not isinstance(files, list):
+        raise TypeError(f"The function psf_profile_plot received a file argument of type {type(files)}, but needs to be list type!")
+
+    for file in files:
+        xdata, ydata = np.loadtxt(file).transpose()
+
+        plt.xlabel("Radius (pix)")
+        if normalize == 'peak':
+            plt.ylabel("Peak normalized flux")
+            ydata /= ydata[0]
+        elif normalize == 'last':
+            plt.ylabel("Sky normalized flux")
+            ydata /= ydata[-1]
+        else:
+            plt.ylabel("Flux")
+
+        plt.plot(xdata, ydata)
+    if maximize:
+        maximize_plot()
+    plt.show()
+    plt.close()
+
+
+
 def encircled_energy_plot(files, normalize=None, maximize=False):
     """Plots the encircled energy data from a file.
 
     Args:
-        file (str):
+        files (str):
             Name of the file to extract the data from.
     """
 
