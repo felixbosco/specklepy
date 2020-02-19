@@ -37,7 +37,7 @@ def main(options=None):
     essential_attributes = {'paths': ['filePath', 'fileList', 'tmpDir'],
                             'setup': ['setupKeywords'],
                             'flat': ['skipFlat', 'flatCorrectionPrefix'],
-                            'sky': ['skipSky', 'ignoreTimeStamps', 'skySubtractionPrefix', 'backgroundSigmaClip']}
+                            'sky': ['skipSky', 'ignoreTimeStamps', 'skySubtractionPrefix', 'fromImage', 'backgroundMethod', 'backgroundSigmaClip']}
     make_dirs = ['tmpDir']
 
     # Read parameters from file
@@ -48,6 +48,10 @@ def main(options=None):
                         defaults_file=defaults_file,
                         essential_attributes=essential_attributes,
                         make_dirs=make_dirs)
+
+    # Check parameter values
+    if params.sky.backgroundMethod not in ['scalar']:
+        raise RuntimeError(f"Background subtraction method {params.sky.backgroundMethod!r} is not implemented.")
 
     # Execute data reduction
     # (0) Read file list table
@@ -75,7 +79,11 @@ def main(options=None):
         if hasattr(params.sky, 'fromImage') and params.sky.fromImage:
             logging.info("Estimating background flux from the images...")
             science_files = inFiles.filter({'OBSTYPE': 'Science'})
-            sky.subtract_scalar_background(science_files, params=params, prefix=params.sky.skySubtractionPrefix, debug=args.debug)
+            if params.sky.backgroundMethod is 'scalar':
+                sky.subtract_scalar_background(science_files, params=params, prefix=params.sky.skySubtractionPrefix, debug=args.debug)
+            elif params.sky.backgroundMethod is '2D':
+                # Todo implement subtraction of 2D background
+                pass
         else:
             logging.info("Estimating background flux from sky frames...")
             sequences = sky.identify_sequences(inFiles.table, file_path=params.paths.filePath, ignore_time_stamps=params.sky.ignoreTimeStamps)
