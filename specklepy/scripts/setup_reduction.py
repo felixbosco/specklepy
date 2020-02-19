@@ -16,7 +16,7 @@ from specklepy.logging import logging
 
 def parser(options=None):
 
-    parser = argparse.ArgumentParser(description='This script reduces the data, following the parameters specified in the paramater fils.',
+    parser = argparse.ArgumentParser(description='This script sets up the file list and paramater file for data reduction.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('path', type=str, help='Path to the files.')

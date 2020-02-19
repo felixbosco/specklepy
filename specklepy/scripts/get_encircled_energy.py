@@ -14,7 +14,7 @@ from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
 
 def parser(options=None):
 
-    parser = argparse.ArgumentParser(description='This script extracts the encircled energy as a function of readius within an aperture.',
+    parser = argparse.ArgumentParser(description='This script extracts the encircled energy as a function of radius within an aperture.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('file', type=str, default=None, help='File name to analyse.')

@@ -13,7 +13,7 @@ from specklepy.logging import logging
 
 def parser(options=None):
 
-    parser = argparse.ArgumentParser(description='This script creates a simple shift-and-add (SSA) reconstruction of the input files.',
+    parser = argparse.ArgumentParser(description='This script creates a holographic reconstruction of the input files.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('parameter_file', type=str, help='Path to the parameter file.')

@@ -14,7 +14,7 @@ from specklepy.reduction import sky
 
 def parser(options=None):
 
-    parser = argparse.ArgumentParser(description='This script reduces the data, following the parameters specified in the paramater fils.',
+    parser = argparse.ArgumentParser(description='This script reduces the data, following the parameters specified in the paramater files.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('parameter_file', type=str, help='Path to the parameter file.')
