@@ -37,7 +37,7 @@ def main(options=None):
     defaults_file = os.path.join(dir, '../config/holography.cfg')
     essential_attributes = {'paths': ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile'],
                             'starfinder': ['starfinderFwhm', 'noiseThreshold'],
-                            'psfextraction': ['psfRadius', 'noiseReferenceMargin'],
+                            'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin'],
                             'apodization': ['apodizationWidth', 'apodizationType']}
     make_dirs = ['tmpDir']
 

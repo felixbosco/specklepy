@@ -13,7 +13,7 @@ refSourceFile = specklepy/tests/files/example_ref_sources.dat
 
 [STARFINDER]
 starfinderFwhm = 5 # pixels
-signalToNoiseThreshold = 5  # multiples of sigma
+noiseThreshold = 5  # multiples of sigma
 
 [PSFEXTRACTION]
 psfRadius = 45

@@ -71,7 +71,7 @@ def holography(params, mode='same', debug=False):
     # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
-        find_sources(image=image, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.signalToNoiseThreshold,
+        find_sources(image=image, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.noiseThreshold,
             background_subtraction=False, writeto=params.paths.allStarsFile, starfinder='DAO', verbose=False)
 
         # (v) Select reference stars
@@ -80,7 +80,10 @@ def holography(params, mode='same', debug=False):
 
         # (vi) PSF extraction
         refStars = ReferenceStars(params)
-        refStars.extract_epsfs(file_shifts=shifts, mode='weighted_mean', debug=debug)
+        if params.psfextraction.mode.lower() == 'epsf':
+            refStars.extract_epsfs(file_shifts=shifts, debug=debug)
+        elif params.psfextraction.mode.lower() in ['mean', 'median', 'weighted_mean']:
+            refStars.extract_psfs(file_shifts=shifts, mode=params.psfextraction.mode.lower(), debug=debug)
         logging.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
