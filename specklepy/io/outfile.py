@@ -10,7 +10,7 @@ from specklepy.exceptions import SpecklepyTypeError
 
 class Outfile(object):
 
-    def __init__(self, filename, shape=None, extensions=None, cards=None, header=None, timestamp=False, hprefix=None):
+    def __init__(self, filename, shape=None, extensions=None, cards=None, header=None, timestamp=False, hprefix=None, verbose=True):
         """Instantiate a generic outfile.
 
         Args:
@@ -68,7 +68,13 @@ class Outfile(object):
                 hprefix = hprefix + ' '
             self.hprefix = hprefix
         else:
-            raise SpecklepyTypeError('Outfile', 'hprefix', type(shape), 'str')
+            raise SpecklepyTypeError('Outfile', 'hprefix', type(hprefix), 'str')
+
+        if isinstance(verbose, bool):
+            self.verbose = verbose
+        else:
+            raise SpecklepyTypeError('Outfile', 'verbose', type(verbose), 'bool')
+
 
         # Initialize primary HDU
         hdu = fits.PrimaryHDU(header=header)
@@ -91,7 +97,8 @@ class Outfile(object):
                 hdulist.append(exthdu)
 
         # Write HDU list to file
-        logging.info("Initializing file {}".format(self.filename))
+        if self.verbose:
+            logging.info("Initializing file {}".format(self.filename))
         hdulist.writeto(self.filename, overwrite=True)
 
 
@@ -111,7 +118,8 @@ class Outfile(object):
             hdulist[0].data = data
             hdulist[0].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
-        logging.info("Updating data in {}".format(self.filename))
+        if self.verbose:
+            logging.info("Updating data in {}".format(self.filename))
 
 
     def __getitem__(self, extension):
