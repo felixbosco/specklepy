@@ -16,9 +16,9 @@ def parser(options=None):
     parser = argparse.ArgumentParser(description='This script creates a simple shift-and-add (SSA) reconstruction of the input files.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
+    parser.add_argument('parameter_file', type=str, help='Path to the parameter file.')
     parser.add_argument('-m', '--mode', type=str, default='same', help="Reconstruction mode, can be 'same', 'full' or 'valid'.")
-    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()

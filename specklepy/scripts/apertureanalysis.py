@@ -19,14 +19,14 @@ def parser(options=None):
     parser = argparse.ArgumentParser(description='This script analyses the statistics of an aperture across the time axis of a cube/ set of cubes for stars in the input file.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-f', '--file', type=str, default=None, help='File name to analyse.')
+    parser.add_argument('file', type=str, default=None, help='File name to analyse.')
     parser.add_argument('-F', '--Fourier_file', type=str, default=None, help='The file may be a tmp file, such that the Fourier transformations do not have to be repeated.')
     parser.add_argument('-i', '--index', nargs='+', type=int, help='Center index of the aperture to analyse. Provide this as "--index 123 456", without other symbols.')
     parser.add_argument('-r', '--radius', type=int, default=10, help='Radius of the aperture to analyse in pix.')
     parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the file to write the results to. Default is to just repace .fits by .dat.')
     parser.add_argument('-p', '--pixel_scale', type=float, default=None, help='Pixel scale in arcsec for computing the spatial frequencies.')
     # parser.add_argument('-v', '--visual', action='store_const', const=True, default=False, help='Show the plots?')
-    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()

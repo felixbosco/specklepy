@@ -21,10 +21,10 @@ def parser(options=None):
     parser = argparse.ArgumentParser(description='This script searches for stars in the input file and creates a list file.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-f', '--file', type=str, default=None, help='Fits file to search for stars.')
+    parser.add_argument('file', type=str, default=None, help='Fits file to search for stars.')
     parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
     parser.add_argument('-o', '--outfile', type=str, default=None, help='Name of the output file.')
-    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()

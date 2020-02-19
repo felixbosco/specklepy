@@ -21,7 +21,7 @@ def parser(options=None):
     parser.add_argument('-p', '--path', type=str, help='Path to the files.')
     parser.add_argument('-o', '--outfile', type=str, default='files.tab', help="Name of the output file containing the file overview. Default is 'files.tab'.")
     parser.add_argument('-s', '--sortby', type=str, default='OBSTYPE', help="Header card to sort the output table by. Default is 'OBSTYPE'.")
-    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results. Default is False.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()

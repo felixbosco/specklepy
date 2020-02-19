@@ -16,11 +16,11 @@ def parser(options=None):
     parser = argparse.ArgumentParser(description='This script creates a simple shift-and-add (SSA) reconstruction of the input files.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-f', '--file', type=str, default=None, help='Fits file or generic file name to consider for the SSA reconstruction.')
+    parser.add_argument('file', type=str, default=None, help='Fits file or generic file name to consider for the SSA reconstruction.')
     parser.add_argument('-m', '--mode', type=str, default='same', help="Reconstruction mode, can be 'same' (default), 'full' or 'valid'. ")
     parser.add_argument('-t', '--tmpdir', type=str, default='tmp/', help='Path to save temporary files to.')
     parser.add_argument('-o', '--outfile', type=str, default='ssa.fits', help='Name of the output file.')
-    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()

@@ -17,8 +17,8 @@ def parser(options=None):
     parser = argparse.ArgumentParser(description='This script reduces the data, following the parameters specified in the paramater fils.',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('-p', '--parameter_file', type=str, help='Path to the parameter file.')
-    parser.add_argument('-d', '--debug', type=bool, default=False, help='Set to True to inspect intermediate results.')
+    parser.add_argument('parameter_file', type=str, help='Path to the parameter file.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
         args = parser.parse_args()
