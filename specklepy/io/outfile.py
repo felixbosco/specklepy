@@ -15,13 +15,26 @@ class Outfile(object):
 
         Args:
             filename (str):
+                Name of the file that is always referred to in the background.
             shape (tuple, dtype=int, optional):
+                If provided, the file will be initialized with an empty array
+                of this shape. Default is None.
+            extensions (list of str, optional):
+                List of name(s) of extension(s) that will be initialized right
+                away. Default is None.
             cards (dict, optional):
+                Dictionary of cards that will be added to the fits header.
+                Default is None.
+            header (fits.header, optional):
+                Header that will be used to initialize the new Primary HDU.
+                Default is None.
             timestamp (bool, optional):
                 Set to True to automatically add a time stamp to the file name.
                 Default is False.
             hprefix (str, optional):
                 Prefix of header cards. Default is None.
+            verbose (bool, optional):
+                Set to False to suppress logging output. Default is True.
         """
 
         # Input parameters
@@ -53,6 +66,11 @@ class Outfile(object):
             self.cards = cards
         else:
             raise SpecklepyTypeError('Outfile', 'cards', type(cards), 'dict')
+
+        if header is None or isinstance(header, fits.header):
+            pass
+        else:
+            raise SpecklepyTypeError('Outfile', 'header', type(header), 'fits.header')
 
         if not isinstance(timestamp, bool):
             raise SpecklepyTypeError('Outfile', 'timestamp', type(timestamp), 'bool')
