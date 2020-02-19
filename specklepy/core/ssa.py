@@ -11,6 +11,7 @@ from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logging
 
 
+
 def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
