@@ -165,7 +165,7 @@ These are the current To-Do items:
   * **low priority:** Make command line arguments to positional arguments for required args
 * data reduction module:
   * Flatfield correction from flat frames
-  * Sky subtraction from sky frames
+  * Extend scalar sky subtraction from the images to two-dimensional sky estimates (from sky frames)
   * Linearity correction (wait for D. Thompson)
 * core module:
   * Division of the field of view into chunks with separate PSFs for consideration of variable PSFs.
