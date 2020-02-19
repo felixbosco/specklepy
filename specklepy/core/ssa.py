@@ -122,7 +122,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             tmp_file = os.path.basename(file).replace(".fits", "_ssa.fits")
             tmp_file = os.path.join(tmp_dir, tmp_file)
             logging.info("Saving interim SSA reconstruction of cube to {}".format(tmp_file))
-            tmp_file_object = Outfile(tmp_file, shape=tmp.shape)
+            tmp_file_object = Outfile(tmp_file, shape=tmp.shape, verbose=False)
             tmp_file_object.data = tmp
             if 'tmp_var' in locals():
                 tmp_file_object.new_extension(var_ext, data=tmp_var)
