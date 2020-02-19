@@ -20,7 +20,7 @@ plt.rc('font', **font)  # pass in the font dict as kwargs
 
 
 
-def imshow(image, title=None, norm=None, colorbar_label=None, maximize=False):
+def imshow(image, title=None, norm=None, colorbar_label=None, maximize=False, saveto=None):
     """Shows a 2D image.
 
     Args:
@@ -55,6 +55,9 @@ def imshow(image, title=None, norm=None, colorbar_label=None, maximize=False):
     cbar = plt.colorbar(pad=0.0)
     if colorbar_label is not None:
         cbar.set_label(colorbar_label)
+
+    if saveto is not None:
+        plt.savefig(saveto, dpi=300)
 
     plt.show()
     plt.close()
