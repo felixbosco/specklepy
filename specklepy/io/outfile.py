@@ -10,7 +10,7 @@ from specklepy.exceptions import SpecklepyTypeError
 
 class Outfile(object):
 
-    def __init__(self, filename, shape=None, extensions=None, cards=None, timestamp=False, hprefix=None):
+    def __init__(self, filename, shape=None, extensions=None, cards=None, header=None, timestamp=False, hprefix=None):
         """Instantiate a generic outfile.
 
         Args:
@@ -71,7 +71,7 @@ class Outfile(object):
             raise SpecklepyTypeError('Outfile', 'hprefix', type(shape), 'str')
 
         # Initialize primary HDU
-        hdu = fits.PrimaryHDU()
+        hdu = fits.PrimaryHDU(header=header)
         for key in self.cards:
             hdu.header.set(self.hprefix + key, self.cards[key])
         if self.shape is not None:
@@ -125,10 +125,12 @@ class Outfile(object):
             hdulist.flush()
 
 
-    def update_frame(self, frame_index, data):
+    def update_frame(self, frame_index, data, extension=None):
+        if extension is None:
+            extension = 0
         with fits.open(self.filename, mode='update') as hdulist:
-            hdulist[0].data[frame_index] = data
-            hdulist[0].header.set('UPDATED', str(datetime.now()))
+            hdulist[extension].data[frame_index] = data
+            hdulist[extension].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
         # self.data[frame_index] = data
 
