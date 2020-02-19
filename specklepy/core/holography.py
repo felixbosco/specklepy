@@ -47,10 +47,8 @@ def holography(params, mode='same', debug=False):
 
     logging.info("Starting holographic reconstruction of {} files...".format(len(params.inFiles)))
     if not isinstance(params, ParameterSet):
-        logging.warn("specklepy.core.holography.holography received params argument \
-                        of type <{}> instead of the expected type \
-                        specklepy.io.parameterset.ParameterSet. This may cause \
-                        unforeseen errors.".format(type(params)))
+        logging.warning(f"holography function received params argument of type {type(params)!r} instead of the expected type " \
+                        "specklepy.io.parameterset.ParameterSet. This may cause unforeseen errors.")
     if mode not in ['same', 'full', 'valid']:
         raise SpecklepyValueError('holography()', argname='mode', argvalue=mode, expected="either 'same', 'full', or 'valid'")
 
