@@ -8,7 +8,7 @@ import numpy as np
 
 from specklepy.core.aperture import Aperture
 from specklepy.logging import logging
-from specklepy.utils.plot import imshow, encircled_energy_plot
+from specklepy.utils.plot import imshow, psf_profile_plot
 
 
 
@@ -21,8 +21,8 @@ def parser(options=None):
     parser.add_argument('-i', '--index', nargs='+', type=int, help='Center index of the aperture to analyse. Provide this as "--index 123 456", without other symbols.')
     parser.add_argument('-r', '--radius', type=int, default=10, help='Radius of the aperture to analyse in pix.')
     parser.add_argument('-n', '--normalize', type=str, default=None, help='Normalize the flux values, to either "peak", "aperture" or set to None for not normalizing. Default is None.')
-    parser.add_argument('-o', '--outdir', type=str, default=None, help='Directory to write the results to. Default is to repace .fits by .dat and add a "energy" prefix.')
-    parser.add_argument('-m', '--maximize', type=bool, default=True, help='Set to True to show every debug plot on full screen. Default is True.')
+    parser.add_argument('-o', '--outfile', type=str, default=None, help='Saves the results to this file.')
+    parser.add_argument('-m', '--maximize', action='store_true', help='Set to show every debug plot on full screen.')
     parser.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
 
     if options is None:
@@ -44,12 +44,13 @@ def main(options=None):
     if args.file is None:
         raise RuntimeError("No file was provided!")
 
-    outfile = os.path.basename(args.file)
-    outfile = "psf_" + outfile.replace(".fits", ".dat")
-    outfile = os.path.join(args.outdir, outfile)
+    if args.outfile is None:
+        outfile = os.path.basename(args.file)
+        outfile = "psf_" + outfile.replace(".fits", ".dat")
+        # outfile = os.path.join(args.outdir, outfile)
 
 
-    # SInitialize the aperture
+    # Initialize the aperture
     aperture = Aperture(args.index, args.radius, data=args.file, crop=True)
     # peak = aperture.get_aperture_peak()
     # aperture = Aperture(peak, args.radius, data=args.file, crop=True)
@@ -73,7 +74,7 @@ def main(options=None):
     np.savetxt(outfile, data, header=header)
 
     if args.debug:
-        encircled_energy_plot(outfile, maximize=args.maximize)
+        psf_profile_plot(outfile, maximize=args.maximize)
 
 
 
