@@ -37,7 +37,7 @@ def main(options=None):
     essential_attributes = {'paths': ['filePath', 'fileList', 'tmpDir'],
                             'setup': ['setupKeywords'],
                             'flat': ['skipFlat', 'flatCorrectionPrefix'],
-                            'sky': ['skipSky', 'ignore_time_stamps', 'skySubtractionPrefix']}
+                            'sky': ['skipSky', 'ignoreTimeStamps', 'skySubtractionPrefix']}
     make_dirs = ['tmpDir']
 
     # Read parameters from file
@@ -72,9 +72,13 @@ def main(options=None):
 
     # (...) Sky subtraction
     if not params.sky.skipSky:
-        sequences = sky.identify_sequences(inFiles.table, file_path=params.paths.filePath, ignore_time_stamps=params.sky.ignore_time_stamps)
-        for sequence in sequences:
-            sequence.subtract_master_sky(saveto=params.paths.tmpDir, filename_prefix=params.sky.skySubtractionPrefix)
+        if hasattr(params.sky, 'fromImage') and params.sky.fromImage:
+            logging.info("Estimating background flux from the images...")
+        else:
+            logging.info("Estimating background flux from sky frames...")
+            sequences = sky.identify_sequences(inFiles.table, file_path=params.paths.filePath, ignore_time_stamps=params.sky.ignoreTimeStamps)
+            for sequence in sequences:
+                sequence.subtract_master_sky(saveto=params.paths.tmpDir, filename_prefix=params.sky.skySubtractionPrefix)
 
 
 
