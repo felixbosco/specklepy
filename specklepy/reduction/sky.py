@@ -49,6 +49,10 @@ def identify_sequences(file_list, file_path='', ignore_time_stamps=False):
         is_sky_file &= is_in_setup
         sky_files = list(file_list['FILE'][is_sky_file])
 
+        # Check whether there are sky files
+        if len(sky_files) is 0:
+            raise RuntimeError("There are no sky files in the list!")
+
         # Assigning sky files to science files
         if ignore_time_stamps:
             sequences.append(Sequence(science_files=science_files, sky_files=sky_files, file_path=file_path))
