@@ -4,6 +4,7 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from photutils import DAOStarFinder, IRAFStarFinder
 
+from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logging
 
 
@@ -37,9 +38,10 @@ def find_sources(image, noise_threshold, fwhm, starfinder='DAO', background_subt
             filename = image
             image = fits.getdata(filename)
         else:
-            raise TypeError("The function sourceextraction.find_stars received \
-                                argument image of type {}, but needs to be \
-                                either np.ndarray or str type!".format(type(image)))
+            raise SpecklepyTypeError('find_sources()', argname='image', argtype=type(image), expected='np.ndarray or str')
+            # raise TypeError("The function sourceextraction.find_stars received \
+            #                     argument image of type {}, but needs to be \
+            #                     either np.ndarray or str type!".format(type(image)))
     else:
         filename = 'current cube'
 
