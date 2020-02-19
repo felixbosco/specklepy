@@ -4,6 +4,7 @@ import os
 import glob
 from datetime import datetime
 from astropy.io import fits
+from IPython import embed
 
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
 from specklepy.core.aperture import Aperture
@@ -65,7 +66,10 @@ def holography(params, mode='same', debug=False):
                             debug=debug)
 
     # (iii) Compute SSA reconstruction
-    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.paths.tmpDir)
+    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.paths.tmpDir, variance_extension_name=params.uncertainties.varianceExtensionName)
+    if isinstance(image, tuple):
+        # SSA returned a reconstruction image and a variance image
+        image, image_var = image
     total_flux = np.sum(image) # Stored for flux conservation
 
     # Start iteration from steps (iv) through (xi)

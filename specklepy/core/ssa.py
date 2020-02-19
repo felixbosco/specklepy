@@ -92,12 +92,17 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
     if not isinstance(lazy_mode, bool):
         raise SpecklepyTypeError('ssa()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
 
+    if 'variance_extension_name' in kwargs.keys():
+        var_ext = kwargs['variance_extension_name']
+    else:
+        var_ext = 'VAR'
+
     # Do not align just a single file
     if lazy_mode and len(files) == 1:
         with fits.open(files[0]) as hdulist:
             cube = hdulist[0].data
             try:
-                var_cube = hdulist['VAR'].data
+                var_cube = hdulist[var_ext].data
                 reconstruction, reconstruction_var = coadd_frames(cube, var_cube=var_cube)
             except:
                 reconstruction = coadd_frames(cube)
@@ -110,7 +115,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             with fits.open(files[0]) as hdulist:
                 cube = hdulist[0].data
                 try:
-                    var_cube = hdulist['VAR'].data
+                    var_cube = hdulist[var_ext].data
                     tmp, tmp_var = coadd_frames(cube, var_cube=var_cube)
                 except:
                     tmp = coadd_frames(cube)
@@ -120,7 +125,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             tmp_file_object = Outfile(tmp_file, shape=tmp.shape)
             tmp_file_object.data = tmp
             if 'tmp_var' in locals():
-                tmp_file_object.new_extension('VAR', data=tmp_var)
+                tmp_file_object.new_extension(var_ext, data=tmp_var)
             # fits.writeto(tmp_file, tmp, overwrite=True)
             tmp_files.append(tmp_file)
 
@@ -132,7 +137,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             with fits.open(file) as hdulist:
                 tmp_image = hdulist[0].data
                 try:
-                    tmp_image_var = hdulist['VAR'].data
+                    tmp_image_var = hdulist[var_ext].data
                 except:
                     # No VAR extension in file
                     pass
@@ -155,7 +160,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
     if outfile is not None:
         outfile.data = reconstruction
         if 'reconstruction_var' in locals():
-            outfile.new_extension(name='VAR', data=reconstruction_var)
+            outfile.new_extension(name=var_ext, data=reconstruction_var)
 
     if 'reconstruction_var' in locals():
         return reconstruction, reconstruction_var

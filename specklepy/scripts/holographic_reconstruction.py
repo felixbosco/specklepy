@@ -38,7 +38,8 @@ def main(options=None):
     essential_attributes = {'paths': ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile'],
                             'starfinder': ['starfinderFwhm', 'noiseThreshold'],
                             'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin'],
-                            'apodization': ['apodizationWidth', 'apodizationType']}
+                            'apodization': ['apodizationWidth', 'apodizationType'],
+                            'uncertainties': ['varianceExtensionName']}
     make_dirs = ['tmpDir']
 
     # Read parameters from file
