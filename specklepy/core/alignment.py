@@ -172,7 +172,7 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
         correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
         correlation = np.fft.fftshift(correlation)
         if debug:
-            imshow(np.abs(correlation), title='FFT shifted correlation of file {}'.format(index))
+            imshow(np.abs(correlation), title='FFT shifted correlation')
         shift = np.unravel_index(np.argmax(correlation), correlation.shape)
         shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
         return shift
