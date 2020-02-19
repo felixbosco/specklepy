@@ -133,6 +133,10 @@ def holography(params, mode='same', debug=False):
         if answer.lower() in ['n', 'no']:
             break
 
+    # Repeat astrometry and photometry, i.e. StarFinder on final image
+    find_sources(image=image, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.noiseThreshold,
+                 background_subtraction=False, writeto=params.paths.allStarsFile, starfinder='DAO', verbose=False)
+
     # Finally return the image
     return image
 
