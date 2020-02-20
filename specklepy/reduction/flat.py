@@ -7,6 +7,7 @@ from astropy.stats import sigma_clip
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.masterfile import MasterFile
+from specklepy.io.reductionfile import ReductionFile
 from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 
@@ -89,7 +90,7 @@ class MasterFlat(object):
 
         # Store master flat to file
         if not hasattr(self, 'masterfile'):
-            self.masterfile = MasterFile(self.filename, files=self.files, shape=master_flat_normed.shape, header_prefix='HIERARCH SPECKLEPY')
+            self.masterfile = MasterFile(self.filename, files=self.files, shape=master_flat_normed.shape, header_card_prefix='HIERARCH SPECKLEPY')
         master_flat_normed = np.where(master_flat_normed.mask, np.nan, master_flat_normed) # Replace masked values by NaNs
         self.masterfile.data = master_flat_normed
 
@@ -125,45 +126,30 @@ class MasterFlat(object):
             raise SpecklepyTypeError('MasterFlat', 'filelist', type(filelist), 'astropy.table.Table')
 
         master_flat = self.masterfile.data
-        try:
-            master_flat_var = self.masterfile['VAR']
-        except KeyError:
-            # masterfile carries no variance information
-            pass
 
         flatfield_corrected_files = {}
         for file in filelist:
             logger.info(f"Applying flat field correction on file {file}")
-            # Create output file name
-            corrected_file = prefix + file
-            # if savedir is not None:
-            #     corrected_file = os.path.join(savedir, corrected_file)
-            # else:
-            #     corrected_file = os.path.join(self.file_path, corrected_file)
-            flatfield_corrected_files[file] = corrected_file
 
             # Read data and header information
             image, header = fits.getdata(os.path.join(self.file_path, file), header=True)
 
             # Apply flat field correction
-            if 'master_flat_var' in locals():
+            flatfielded_data = np.divide(image, master_flat)
+
+            corrected_file = ReductionFile(file=os.path.join(self.file_path, file),
+                                           data=flatfielded_data,
+                                           prefix=prefix,
+                                           path=self.file_path,
+                                           reduction='FLATCORR')
+
+            # Propagate variance if the master flat has this information
+            if self.masterfile.has_extension('VAR'):
+                master_flat_var = self.masterfile['VAR']
                 # TODO double check the variance propagation formula
                 image_var = np.multiply(np.square(np.divide(image, np.square(master_flat))), master_flat_var)
-            image = np.divide(image, master_flat)
-
-            # Save corrected file to update in the FileManager
-            header.set('PIPELINE', 'SPECKLEPY')
-            header.set('FLATCORR', str(datetime.now()))
-            primary_hdu = fits.PrimaryHDU(data=image, header=header)
-            hdulist = fits.HDUList(hdus=[primary_hdu])
-            if 'image_var' in locals():
-                var_hdu = fits.ImageHDU(data=image_var, name='VAR')
-                hdulist.append(var_hdu)
-            if savedir is not None:
-                corrected_file = os.path.join(savedir, corrected_file)
-            else:
-                corrected_file = os.path.join(self.file_path, corrected_file)
-            hdulist.writeto(corrected_file)
+                corrected_file.new_extension(name='VAR', data=image_var)
+            flatfield_corrected_files[file] = corrected_file.filename
 
         return flatfield_corrected_files
 
