@@ -14,7 +14,7 @@ class TestOutfile(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             Outfile(None)
         Outfile(filename=self.path+self.file, shape=None, cards={"RECONSTRUCTION": "Test"})
-        Outfile(filename=self.path+self.file, shape=(10, 10), extensions='var', cards={"RECONSTRUCTION": "Test"}, timestamp=True)
+        Outfile(filename=self.path+self.file, shape=(10, 10), extensions={'name': 'var', 'shape': (10, 20)}, cards={"RECONSTRUCTION": "Test"}, timestamp=True)
 
     def test_set_data(self):
         pass

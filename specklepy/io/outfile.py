@@ -4,7 +4,7 @@ from astropy.io import fits
 from datetime import datetime
 
 from specklepy.logging import logger
-from specklepy.exceptions import SpecklepyTypeError
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 
 
 class Outfile(object):
@@ -24,9 +24,13 @@ class Outfile(object):
                 If provided, the file will be initialized with an empty array
                 of this shape. This argument will be ignored if data argument
                 is provided. Default is None.
-            extensions (list of str, optional):
-                List of name(s) of extension(s) that will be initialized right
-                away. Default is None.
+            extensions (list of dict, optional):
+                List of dictionaries of names (and data or shapes) for each
+                extension that shall be initialized right away. Could look like
+                this:
+                [{'name': 'VAR', 'data': array},
+                 {'name': 'SUB', 'shape': (1024, 1024)}]
+                Default is None.
             header (fits.header, optional):
                 Header that will be used to initialize the new Primary HDU.
                 Default is None.
@@ -60,23 +64,23 @@ class Outfile(object):
 
         if shape is None or isinstance(shape, tuple):
             self.shape = shape
-        elif isinstance(shape, list):
-            self.shape = shape[0]
-            self.extshapes = shape[1:]
-            if len(self.extshapes) != len(extensions):
-                raise ValueError('Outfile received shape as list type, but the number of shapes does not match to the number of extensions!')
+        # elif isinstance(shape, list):
+        #     self.shape = shape[0]
+        #     self.extshapes = shape[1:]
+        #     if len(self.extshapes) != len(extensions):
+        #         raise ValueError('Outfile received shape as list type, but the number of shapes does not match to the number of extensions!')
         else:
             raise SpecklepyTypeError('Outfile', 'shape', type(shape), 'tuple')
 
         if shape is not None and data is not None:
             logger.info("Outfile instance ignores shape input as data is provided for initialization!")
 
-        if isinstance(extensions, str):
+        if isinstance(extensions, dict):
             self.extensions = [extensions]
         elif extensions is None or isinstance(extensions, list):
             self.extensions = extensions
         else:
-            raise SpecklepyTypeError('Outfile', 'extensions', type(extensions), 'list')
+            raise SpecklepyTypeError('Outfile', 'extensions', type(extensions), 'list of dict')
 
         if cards is None:
             self.cards = {}
@@ -120,24 +124,35 @@ class Outfile(object):
             hdu.data = np.zeros(self.shape)
         if data is not None:
             hdu.data = data
-        hdu.header.set('DATE', str(datetime.now()))
+        if 'DATE' not in hdu.header.keys():
+            hdu.header.set('DATE', str(datetime.now()))
 
-        # Create a HDU list with the primary and append extensions
+        # Create a HDU list with the primary and write to file
         hdulist = fits.HDUList([hdu])
+        if self.verbose:
+            logger.info("Initializing file {}".format(self.filepath))
+        hdulist.writeto(self.filepath, overwrite=True)
 
         if self.extensions is not None:
-            for index, extension in enumerate(self.extensions):
-                exthdu = fits.ImageHDU(name=extension)
-                if hasattr(self, 'extshapes'):
-                    exthdu.data = np.zeros(self.extshapes[index +1])
-                elif self.shape is not None:
-                    exthdu.data = np.zeros(self.shape)
-                hdulist.append(exthdu)
+            for extension in self.extensions:
+                if 'name' not in extension:
+                    raise SpecklepyValueError(f"Outfile initialization with extensions failed, because extension did not contain a name!")
+                else:
+                    name = extension['name']
+                if 'data' in extension:
+                    data = extension['data']
+                elif 'shape' in extension:
+                    data = np.empty(extension['shape'])
+                else:
+                    data = None
+                self.new_extension(name=name, data=data)
+                # exthdu = fits.ImageHDU(name=extension)
+                # if hasattr(self, 'extshapes'):
+                #     exthdu.data = np.zeros(self.extshapes[index +1])
+                # elif self.shape is not None:
+                #     exthdu.data = np.zeros(self.shape)
+                # hdulist.append(exthdu)
 
-        # Write HDU list to file
-        if self.verbose:
-            logger.info("Initializing file {}".format(self.filename))
-        hdulist.writeto(self.filename, overwrite=True)
 
 
     def time_stamp(self):
@@ -146,26 +161,34 @@ class Outfile(object):
 
 
     @property
+    def filepath(self):
+        if self.path is None:
+            return self.filename
+        else:
+            return os.path.join(self.path, self.filename)
+
+
+    @property
     def data(self):
-        return fits.getdata(self.filename)
+        return fits.getdata(self.filepath)
 
 
     @data.setter
     def data(self, data):
-        with fits.open(self.filename, mode='update') as hdulist:
+        with fits.open(self.filepath, mode='update') as hdulist:
             hdulist[0].data = data
             hdulist[0].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
         if self.verbose:
-            logger.info("Updating data in {}".format(self.filename))
+            logger.info("Updating data in {}".format(self.filepath))
 
 
     def __getitem__(self, extension):
-        return fits.getdata(self.filename, extension)#[index]
+        return fits.getdata(self.filepath, extension)#[index]
 
 
     def __setitem__(self, extension, data):
-        with fits.open(self.filename, mode='update') as hdulist:
+        with fits.open(self.filepath, mode='update') as hdulist:
             hdulist[extension].data = data
             hdulist[extension].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
@@ -174,7 +197,7 @@ class Outfile(object):
     def update_frame(self, frame_index, data, extension=None):
         if extension is None:
             extension = 0
-        with fits.open(self.filename, mode='update') as hdulist:
+        with fits.open(self.filepath, mode='update') as hdulist:
             hdulist[extension].data[frame_index] = data
             hdulist[extension].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
@@ -200,7 +223,7 @@ class Outfile(object):
                 HDUlist.
         """
 
-        with fits.open(self.filename, mode='update') as hdulist:
+        with fits.open(self.filepath, mode='update') as hdulist:
             hdu = fits.ImageHDU(data=data, name=name, header=header)
             if index is None:
                 hdulist.append(hdu=hdu)
