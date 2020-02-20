@@ -5,7 +5,7 @@ from datetime import datetime
 
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.io.outfile import Outfile
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 class ReductionFile(Outfile):

@@ -14,7 +14,7 @@ class TestSSAReconstruction(unittest.TestCase):
                   'specklepy/tests/files/synthetic/noao_200ms_\*.fits '
                   '-t specklepy/tests/files/tmp/ '
                   '-o specklepy/tests/files/example_cubes_ssa.fits '
-                  '-m full')
+                  '-m full -d')
 
     # def test_science_data(self):
     #     os.system('python specklepy/scripts/ssa_reconstruction.py \

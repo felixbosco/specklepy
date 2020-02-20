@@ -5,7 +5,7 @@ import astropy.units as u
 import astropy.constants as const
 from astropy.table import Table
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 
@@ -88,7 +88,7 @@ class Target(object):
             print("Caution: This function interpretes sky_background as in units of mag per arcsec**2.")
             self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / u.arcsec**2
         elif isinstance(sky_background, int) or isinstance(sky_background, float):
-            logging.warning("Interpreting float type sky_background as {}".format(sky_background * u.mag / u.arcsec**2))
+            logger.warning("Interpreting float type sky_background as {}".format(sky_background * u.mag / u.arcsec**2))
             self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.arcsec**2
         else:
             raise TypeError(self.typeerror.format('sky_background', type(sky_background), 'u.Quantity'))
@@ -204,7 +204,7 @@ class Target(object):
         elif isinstance (FoV, tuple):
             self.FoV = FoV
         elif isinstance(FoV, int) or isinstance(FoV, float):
-            logging.warning("Interpreting float type FoV as {}".format(FoV * u.arcsec))
+            logger.warning("Interpreting float type FoV as {}".format(FoV * u.arcsec))
             FoV = FoV * u.arcsec
             self.FoV = (FoV, FoV)
         else:
@@ -212,7 +212,7 @@ class Target(object):
         self.FoV = (self.FoV[0] * 1.1, self.FoV[1] * 1.1) # Add 10% FoV to avoid dark margins
 
         if isinstance(resolution, int) or isinstance(resolution, float):
-            logging.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
+            logger.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
             resolution = resolution * u.arcsec
         elif isinstance(resolution, u.Quantity):
             pass

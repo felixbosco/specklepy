@@ -8,7 +8,7 @@ import numpy as np
 from astropy.io import fits
 from matplotlib.colors import LogNorm
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.core.aperture import Aperture
 from specklepy.utils.plot import imshow, plot_simple
 
@@ -47,7 +47,7 @@ def main(options=None):
     if args.file is None:
         if args.Fourier_file is not None:
             start_with_Fourier_file = True
-            logging.info("Starting from Fourier file {}.".format(args.Fourier_file))
+            logger.info("Starting from Fourier file {}.".format(args.Fourier_file))
             args.file = args.Fourier_file
         else:
             raise IOError("At least one of --file or --Fourier_file have to be given!")
@@ -70,23 +70,23 @@ def main(options=None):
         if args.debug:
             imshow(aperture.data, title="Aperture in the integrated cube")
         if max == args.index:
-            logging.info("Index {} is identical with the maximum of the integrated cube image {}.".format(args.index, max))
+            logger.info("Index {} is identical with the maximum of the integrated cube image {}.".format(args.index, max))
         else:
-            logging.info("Index {} is not identical with the maximum of the integrated cube image {}.".format(args.index, max))
+            logger.info("Index {} is not identical with the maximum of the integrated cube image {}.".format(args.index, max))
             answer = input("Shall the index guess be replaced by the coordinates of the local maximum? (yes,no)")
             if answer.lower() == "yes":
-                logging.info("Replacing index {} by the maximum of the integrated cube image {}...".format(args.index, max))
+                logger.info("Replacing index {} by the maximum of the integrated cube image {}...".format(args.index, max))
                 args.index = max
                 aperture = Aperture(*args.index, args.radius, data=integrated_cube, mask=None, crop=True)
                 if answer and (answer.lower() == "yes" or answer == ''):
                     if args.debug:
                         imshow(aperture.data, title="Updated aperture")
             else:
-                logging.info("Continuing with the central index {}...".format(args.index))
+                logger.info("Continuing with the central index {}...".format(args.index))
 
         # Remove margins from aperture
         aperture.remove_margins()
-        logging.info("The aperture has shape {}.".format(aperture.data.shape))
+        logger.info("The aperture has shape {}.".format(aperture.data.shape))
         aperture.powerspec_to_file(args.file, args.Fourier_file)
         del aperture
 
@@ -108,7 +108,7 @@ def main(options=None):
     Fourier_var = np.ma.masked_array(Fourier_var, mask=Fourier_radius.mask)
 
     # Average azimuthally
-    logging.info("Averaging the Fourier plane azimuthally")
+    logger.info("Averaging the Fourier plane azimuthally")
     Fourier_radius = Fourier_radius.reshape((-1))
     Fourier_mean = Fourier_mean.reshape((-1))
     Fourier_var = Fourier_var.reshape((-1))
@@ -123,7 +123,7 @@ def main(options=None):
     edata = np.sqrt(edata)
 
     if args.pixel_scale is not None:
-        logging.warn("Handling the pixel scale is not implemented yet!")
+        logger.warn("Handling the pixel scale is not implemented yet!")
 
     if args.debug:
         plot_simple(xdata, ydata,
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

@@ -3,7 +3,7 @@ from os import path
 from astropy.io import fits
 from datetime import datetime
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
 
 
@@ -39,7 +39,7 @@ class Outfile(object):
             header_card_prefix (str, optional):
                 Prefix of header cards. Default is None.
             verbose (bool, optional):
-                Set to False to suppress logging output. Default is True.
+                Set to False to suppress logger output. Default is True.
         """
 
         # Input parameters
@@ -69,7 +69,7 @@ class Outfile(object):
             raise SpecklepyTypeError('Outfile', 'shape', type(shape), 'tuple')
 
         if shape is not None and data is not None:
-            logging.info("Outfile instance ignores shape input as data is provided for initialization!")
+            logger.info("Outfile instance ignores shape input as data is provided for initialization!")
 
         if isinstance(extensions, str):
             self.extensions = [extensions]
@@ -136,7 +136,7 @@ class Outfile(object):
 
         # Write HDU list to file
         if self.verbose:
-            logging.info("Initializing file {}".format(self.filename))
+            logger.info("Initializing file {}".format(self.filename))
         hdulist.writeto(self.filename, overwrite=True)
 
 
@@ -157,7 +157,7 @@ class Outfile(object):
             hdulist[0].header.set('UPDATED', str(datetime.now()))
             hdulist.flush()
         if self.verbose:
-            logging.info("Updating data in {}".format(self.filename))
+            logger.info("Updating data in {}".format(self.filename))
 
 
     def __getitem__(self, extension):

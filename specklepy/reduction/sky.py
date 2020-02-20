@@ -6,7 +6,7 @@ from astropy.table import Table
 from datetime import datetime
 
 from specklepy.io.outfile import Outfile
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.utils.plot import imshow
 
@@ -61,7 +61,7 @@ def identify_sequences(file_list, file_path='', ignore_time_stamps=False):
         else:
             pass
 
-    logging.info("Identified {} sequence(s)...".format(len(sequences)))
+    logger.info("Identified {} sequence(s)...".format(len(sequences)))
     return sequences
 
 
@@ -141,11 +141,11 @@ class Sequence(object):
             self.make_master_sky()
 
         for index, file in enumerate(self.science_files):
-            logging.info('Subtracting sky from file {:2}/{:2}) {}'.format(index+1, len(self.science_files), file))
+            logger.info('Subtracting sky from file {:2}/{:2}) {}'.format(index+1, len(self.science_files), file))
             with fits.open(os.path.join(self.file_path, file)) as hdulist:
                 hdulist[0].data = np.subtract(hdulist[0].data, self.master_sky)
                 hdulist[0].header.set('SKYSUB', self.time_stamp())
-                logging.info('Saving sky subtracted data to file {}'.format(os.path.join(saveto, filename_prefix + file)))
+                logger.info('Saving sky subtracted data to file {}'.format(os.path.join(saveto, filename_prefix + file)))
                 hdulist[0].writeto(os.path.join(saveto, filename_prefix + file))
 
 
@@ -164,7 +164,7 @@ def subtract_scalar_background(files, params, prefix=None, debug=False):
         if len(files) == 0:
             raise RuntimeError("Sky subtraction received an empty list of files!")
 
-    logging.info("Estimating scalar background and subtract...")
+    logger.info("Estimating scalar background and subtract...")
     for file_index, file in enumerate(files):
 
         image, header = fits.getdata(os.path.join(params.paths.filePath, file), header=True)
@@ -184,7 +184,7 @@ def subtract_scalar_background(files, params, prefix=None, debug=False):
             outfile.new_extension(name='VAR', data=image_var)
         elif image.ndim == 3:
             means, medians, stds = sigma_clipped_stats(image, sigma=params.sky.backgroundSigmaClip, axis=(1, 2))
-            logging.info(f"Sigma clipped stats:\t{np.mean(means):.2f} +- {np.mean(stds):.2f}")
+            logger.info(f"Sigma clipped stats:\t{np.mean(means):.2f} +- {np.mean(stds):.2f}")
             outfile.new_extension(name='VAR', data=np.zeros(image.shape))
             tmp_frame = np.ones(image[0].shape)
 
@@ -196,13 +196,13 @@ def subtract_scalar_background(files, params, prefix=None, debug=False):
         else:
             raise RuntimeError(f"Images are supposed to have 2 or 3 dimensions but this one has {image.ndim}!")
 
-    logging.info("Scalar background subtraction complete!")
+    logger.info("Scalar background subtraction complete!")
 
 
 
 def subtract(params, mode='constant', debug=False):
-    logging.info("Subtracting sky from files\n\t{}".format(params.scienceFiles))
-    logging.info("Sky files are\n\t{}".format(params.skyFiles))
+    logger.info("Subtracting sky from files\n\t{}".format(params.scienceFiles))
+    logger.info("Sky files are\n\t{}".format(params.skyFiles))
 
     if isinstance(params.skyFiles, str):
         skyFiles = [params.skyFiles]
@@ -220,7 +220,7 @@ def subtract(params, mode='constant', debug=False):
         # Create a copy
         skySubtractedScienceFile = os.path.basename(scienceFile)
         skySubtractedScienceFile = os.path.join(params.tmpDir, "s{}".format(skySubtractedScienceFile))
-        logging.info("Subtrcting sky and saving tmp file:\n\t{}".format(skySubtractedScienceFile))
+        logger.info("Subtrcting sky and saving tmp file:\n\t{}".format(skySubtractedScienceFile))
         os.system("cp {} {}".format(scienceFile, skySubtractedScienceFile))
 
         with fits.open(skySubtractedScienceFile, mode='update') as hdulist:

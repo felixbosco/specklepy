@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 class Window(QtWidgets.QMainWindow):
@@ -69,7 +69,7 @@ class Window(QtWidgets.QMainWindow):
                                             'Do you really want to close the application?',
                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
-            logging.info("Exiting application...")
+            logger.info("Exiting application...")
             sys.exit()
 
 

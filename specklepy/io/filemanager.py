@@ -5,7 +5,7 @@ import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.table import Table
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
 
 
@@ -33,23 +33,23 @@ class FileManager(object):
             if len(self.files) == 0:
                 raise FileNotFoundError("FileManager did not find any file matching to{!r}.".format(input))
             else:
-                logging.info("FileManager found {} file(s) matching to {!r}.".format(len(self.files), input))
+                logger.info("FileManager found {} file(s) matching to {!r}.".format(len(self.files), input))
 
             if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
-                logging.info("Input file is not fits type. FileManager assumes that input file {!r} contains file names.".format(self.files[0]))
+                logger.info("Input file is not fits type. FileManager assumes that input file {!r} contains file names.".format(self.files[0]))
                 self.extract_file_names(self.files[0])
 
         elif isinstance(input, list):
-            logging.info("FileManager received a list of files.")
+            logger.info("FileManager received a list of files.")
             self.files = input
 
         else:
             raise SpecklepyTypeError("FileManager", 'input', type(input), 'str')# received input of unexpected type ({}).".format(type(input)))
 
         # Log identified input files
-        logging.info("FileManager lists the following files:")
+        logger.info("FileManager lists the following files:")
         for f, file in enumerate(self.files):
-            logging.info("{:4d}: {}".format(f+1, file))
+            logger.info("{:4d}: {}".format(f+1, file))
 
         # Initialize the index for iteration
         self.index = 0
@@ -104,7 +104,7 @@ class FileManager(object):
             self.files = self.table[namekey].data
         except:
             self.files = []
-            logging.info("Reading file names from input file {}.".format(file))
+            logger.info("Reading file names from input file {}.".format(file))
             with open(file, 'r') as f:
                 for filename in f.readlines():
                     filename = filename.replace('\n', '')
@@ -145,11 +145,11 @@ class FileManager(object):
         if not isinstance(filenames, dict):
             raise SpecklepyTypeError('FileManager.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
 
-        logging.info('Updating file names:')
+        logger.info('Updating file names:')
         for outdated in filenames.keys():
             index = np.where(self.table['FILE'] == outdated)
             self.table['FILE'][index] = filenames[outdated]
-            logging.info(f"{outdated} > {filenames[outdated]}")
+            logger.info(f"{outdated} > {filenames[outdated]}")
 
 
     def identify_setups(self, keywords):
@@ -166,17 +166,17 @@ class FileManager(object):
             raise SpecklepyTypeError('identify_setups', 'keywords', type(keywords), 'list')
 
         # Identifying setups key-by-key
-        logging.info("Identifying distinct observational setups in the file list...")
+        logger.info("Identifying distinct observational setups in the file list...")
         self.table['Setup'] = [None] * len(self.table['FILE'])
 
         for key in keywords:
             try:
                 unique = np.unique(self.table[key].data)
             except KeyError:
-                logging.info(f"Key {key} is not available in the file table and will be ignored!")
+                logger.info(f"Key {key} is not available in the file table and will be ignored!")
                 continue
-            logging.info(f"Identified {len(unique)} setups by keyword {key}:")
-            logging.info(f"\t{unique}")
+            logger.info(f"Identified {len(unique)} setups by keyword {key}:")
+            logger.info(f"\t{unique}")
             if len(unique) == 1:
                 continue
 

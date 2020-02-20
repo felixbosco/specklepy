@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.io.filemanager import FileManager
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core.ssa import ssa

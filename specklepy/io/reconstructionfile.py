@@ -3,7 +3,7 @@ from os import path
 from astropy.io import fits
 from datetime import datetime
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.io.outfile import Outfile
 
 

@@ -5,7 +5,7 @@ from configparser import ConfigParser
 from astropy.io import fits
 import astropy.units as u
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.synthetic.target import Target
 from specklepy.synthetic.telescope import Telescope
 from specklepy.synthetic.detector import Detector
@@ -41,7 +41,7 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     # Compute number of files
     nfiles = nframes // nframes_limit
     nframes_left = nframes % nframes_limit
-    logging.info("Creating {} files with {} synthetic exposures and adding {} frames to an additional file.".format(nfiles, nframes_limit, nframes_left))
+    logger.info("Creating {} files with {} synthetic exposures and adding {} frames to an additional file.".format(nfiles, nframes_limit, nframes_left))
 
 
     # Add a time stamp to file name, if not None
@@ -158,7 +158,7 @@ def get_objects(parameterfile, debug=False):
     # Read parameter_file
     parser = ConfigParser(inline_comment_prefixes="#")
     parser.optionxform = str  # make option names case sensitive
-    logging.info("Reading parameter file {}".format(parameterfile))
+    logger.info("Reading parameter file {}".format(parameterfile))
     parser.read(parameterfile)
     for section in parser.sections():
         kwargs = {}

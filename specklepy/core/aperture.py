@@ -4,7 +4,7 @@ from copy import copy
 from astropy.io import fits
 from datetime import datetime
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.utils import transferfunctions as tf
 
 
@@ -77,7 +77,7 @@ class Aperture(object):
         # Handling data input
         if isinstance(data, str):
             if verbose:
-                logging.info("Aperture argument data '{}' is interpreted as file name.".format(data))
+                logger.info("Aperture argument data '{}' is interpreted as file name.".format(data))
             data = fits.getdata(data)
         if not (data.ndim == 2 or data.ndim == 3):
             raise ValueError("Data input of Aperture class must be of dimension 2 or 3, but was provided as data.ndim={}.".format(data.ndim))
@@ -166,7 +166,7 @@ class Aperture(object):
 
     def crop(self):
         if self.cropped:
-            logging.info("Margins are removed already from aperture instance.")
+            logger.info("Margins are removed already from aperture instance.")
         else:
             if self.data.ndim == 2:
                 self.data = copy(self.data[self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
@@ -200,7 +200,7 @@ class Aperture(object):
     def initialize_Fourier_file(self, infile, Fourier_file):
         self.infile = infile
         self.Fourier_file = Fourier_file
-        logging.info("Initializing Fourier file {}".format(self.Fourier_file))
+        logger.info("Initializing Fourier file {}".format(self.Fourier_file))
         header = fits.getheader(self.infile)
         header.set('HIERARCH specklepy TYPE', 'Fourier transform of an aperture')
         header.set('HIERARCH specklepy ORIGIN', self.infile)
@@ -209,7 +209,7 @@ class Aperture(object):
         header.set('UPDATED', str(datetime.now()))
         data = np.zeros(self.data.shape)
         fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
-        logging.info("Initialized {}".format(self.Fourier_file))
+        logger.info("Initialized {}".format(self.Fourier_file))
 
 
 
@@ -223,7 +223,7 @@ class Aperture(object):
                 hdulist[0].data[index] = tf.powerspec(frame)
                 hdulist.flush()
             print()
-        logging.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
+        logger.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
 
 
 
@@ -233,7 +233,7 @@ class Aperture(object):
             print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
             self.Fourier_data[index] = tf.powerspec(frame)
         print()
-        logging.info("Computed the Fourier transform of every frame.")
+        logger.info("Computed the Fourier transform of every frame.")
 
 
 
@@ -258,7 +258,7 @@ class Aperture(object):
             header = "radius_(pix) encircled_energy(data_unit)"
             data = np.concatenate(([rdata], [ydata]), axis=0).transpose()
             np.savetxt(saveto, data, header=header)
-            logging.info("Saved encircled energy data to file {}".format(saveto))
+            logger.info("Saved encircled energy data to file {}".format(saveto))
 
         return rdata, ydata
 

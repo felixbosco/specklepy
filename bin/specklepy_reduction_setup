@@ -4,7 +4,7 @@
 
 import os
 import sys
-from specklepy.logging import logging
+from specklepy.logging import logger
 import specklepy.scripts.setup_reduction as script
 
 if __name__ == '__main__':
@@ -12,7 +12,7 @@ if __name__ == '__main__':
     try:
         script.main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

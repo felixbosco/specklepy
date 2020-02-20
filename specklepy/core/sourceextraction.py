@@ -5,7 +5,7 @@ from astropy.stats import sigma_clipped_stats
 from photutils import DAOStarFinder, IRAFStarFinder
 
 from specklepy.exceptions import SpecklepyTypeError
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 def find_sources(image, noise_threshold, fwhm, starfinder='DAO', background_subtraction=True, writeto=None, verbose=True):
@@ -34,7 +34,7 @@ def find_sources(image, noise_threshold, fwhm, starfinder='DAO', background_subt
     # Input parameters
     if not isinstance(image, np.ndarray):
         if isinstance(image, str):
-            logging.info("The argument image '{}' is interpreted as file name.".format(image))
+            logger.info("The argument image '{}' is interpreted as file name.".format(image))
             filename = image
             image = fits.getdata(filename)
         else:
@@ -47,7 +47,7 @@ def find_sources(image, noise_threshold, fwhm, starfinder='DAO', background_subt
 
     # Prepare noise statistics
     mean, median, std = sigma_clipped_stats(image, sigma=3.0)
-    logging.info("Noise statistics for {}:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(filename, mean, median, std))
+    logger.info("Noise statistics for {}:\n\tMean = {:.3}\n\tMedian = {:.3}\n\tStdDev = {:.3}".format(filename, mean, median, std))
 
     # Instantiate starfinder object
     if not isinstance(starfinder, str):
@@ -66,9 +66,9 @@ def find_sources(image, noise_threshold, fwhm, starfinder='DAO', background_subt
     # Find stars
     # daofind = DAOStarFinder(fwhm=starfinder_fwhm, threshold=noise_threshold*std)
     if background_subtraction:
-        logging.info("Subtracting background...")
+        logger.info("Subtracting background...")
         image -= median
-    logging.info("Finding sources...")
+    logger.info("Finding sources...")
     sources = starfinder(image)
 
     # Reformatting sources table
@@ -79,13 +79,13 @@ def find_sources(image, noise_threshold, fwhm, starfinder='DAO', background_subt
     for col in sources.colnames:
         sources[col].info.format = '%.8g'  # for consistent table output
     if verbose:
-        logging.info("Found {} sources:\n{}".format(len(sources), sources))
+        logger.info("Found {} sources:\n{}".format(len(sources), sources))
     else:
-        logging.info("Found {} sources".format(len(sources)))
+        logger.info("Found {} sources".format(len(sources)))
 
     # Save sources table to file, if writeto is provided
     if writeto is not None:
-        logging.info("Writing list of sources to file {}".format(writeto))
+        logger.info("Writing list of sources to file {}".format(writeto))
         sources.write(writeto, format='ascii', overwrite=True)
 
     return sources

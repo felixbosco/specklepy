@@ -10,7 +10,7 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 
@@ -57,7 +57,7 @@ def main(options=None):
         try:
             instrument_header_cards[card]
         except:
-            logging.info(f"Dropping header card {card} from setup identification, as there is no description in the config file."
+            logger.info(f"Dropping header card {card} from setup identification, as there is no description in the config file."
                          f"\nCheck out {instrument_config_file} for details.")
             header_cards.remove(card)
 
@@ -66,7 +66,7 @@ def main(options=None):
         files = glob.glob(args.path)
     else:
         files = glob.glob(args.path + '*fits')
-    logging.info("Found {} file(s)".format(len(files)))
+    logger.info("Found {} file(s)".format(len(files)))
 
     # Prepare dictionary for collecting table data
     table_data = {'FILE': []}
@@ -75,7 +75,7 @@ def main(options=None):
 
     # Read data from files
     for file in files:
-        logging.info(f"Retrieving header information from file {file}")
+        logger.info(f"Retrieving header information from file {file}")
         try:
             hdr = fits.getheader(file)
         except (AstropyWarning, AstropyUserWarning):
@@ -85,7 +85,7 @@ def main(options=None):
             try:
                 table_data[card].append(hdr[instrument_header_cards[card]])
             except KeyError:
-                logging.info(f"Skipping file {os.path.basename(file)} due to missing header card ({instrument_header_cards[card]}).")
+                logger.info(f"Skipping file {os.path.basename(file)} due to missing header card ({instrument_header_cards[card]}).")
                 table_data[card].append("_" * 3)
 
     # Create table from dict and save
@@ -93,11 +93,11 @@ def main(options=None):
     table.sort('FILE')
     table.sort('OBSTYPE')
     table.sort(args.sortby)
-    logging.info("Writing data to {}".format(args.outfile))
+    logger.info("Writing data to {}".format(args.outfile))
     table.write(args.outfile, format='ascii.fixed_width', overwrite=True)
 
     # Write dummy parameter file for the reduction
-    logging.info("Creating default reduction INI file {}".format(args.parfile))
+    logger.info("Creating default reduction INI file {}".format(args.parfile))
     par_file_content = "[PATHS]"\
                        f"\nfilePath = {args.path}"\
                        f"\nfileList = {args.outfile}"\
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

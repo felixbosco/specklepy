@@ -3,7 +3,7 @@ import os
 from astropy.io import fits
 from datetime import datetime
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.io.outfile import Outfile
 
 
@@ -14,7 +14,7 @@ class PSFfile(Outfile):
 
         # Create PSF directory, if not existing yet
         if not os.path.exists(outDir):
-            logging.info('Creating PSF directory {}'.format(outDir))
+            logger.info('Creating PSF directory {}'.format(outDir))
             os.makedirs(outDir)
 
         # Adapt filename to form the name of the outfile

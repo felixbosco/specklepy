@@ -4,7 +4,7 @@ import numpy as np
 from scipy.ndimage import zoom
 from astropy import units as u
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 
 
@@ -64,7 +64,7 @@ class Detector(object):
 		if isinstance(pixel_scale, u.Quantity):
 			self.pixel_scale = pixel_scale
 		elif isinstance(pixel_scale, float) or isinstance(pixel_scale, int):
-			logging.warning("Interpreting float type pixel_scale as {}".format(pixel_scale * u.arcsec))
+			logger.warning("Interpreting float type pixel_scale as {}".format(pixel_scale * u.arcsec))
 			self.pixel_scale = pixel_scale * u.arcsec
 		else:
 			raise TypeError(self.typeerror.format('pixel_scale', type(pixel_scale), 'u.Quantity'))
@@ -77,7 +77,7 @@ class Detector(object):
 		if isinstance(quantum_efficiency, u.Quantity):
 			self.quantum_efficiency = quantum_efficiency
 		elif isinstance(quantum_efficiency, float) or isinstance(quantum_efficiency, int):
-			logging.warning("Interpreting float type quantum_efficiency as {}".format(quantum_efficiency * u.electron / u.ph))
+			logger.warning("Interpreting float type quantum_efficiency as {}".format(quantum_efficiency * u.electron / u.ph))
 			self.quantum_efficiency = quantum_efficiency * u.electron / u.ph
 		else:
 			raise TypeError(self.typeerror.format('quantum_efficiency', type(quantum_efficiency), 'u.Quantity'))
@@ -85,7 +85,7 @@ class Detector(object):
 		if isinstance(system_gain, u.Quantity):
 			self.system_gain = system_gain
 		elif isinstance(system_gain, float) or isinstance(system_gain, int):
-			logging.warning("Interpreting float type system_gain as {}".format(system_gain * u.electron / u.adu))
+			logger.warning("Interpreting float type system_gain as {}".format(system_gain * u.electron / u.adu))
 			self.system_gain = system_gain * u.electron / u.adu
 		else:
 			raise TypeError(self.typeerror.format('system_gain', type(system_gain), 'u.Quantity'))
@@ -93,7 +93,7 @@ class Detector(object):
 		if dark_current is None or isinstance(dark_current, u.Quantity):
 			self.dark_current = dark_current
 		elif isinstance(dark_current, float) or isinstance(dark_current, int):
-			logging.warning("Interpreting float type dark_current as {}".format(dark_current * u.electron / u.s))
+			logger.warning("Interpreting float type dark_current as {}".format(dark_current * u.electron / u.s))
 			self.dark_current = dark_current * u.electron / u.s
 		else:
 			raise TypeError(self.typeerror.format('dark_current', type(dark_current), 'u.Quantity'))
@@ -101,7 +101,7 @@ class Detector(object):
 		if readout_noise is None or isinstance(readout_noise, u.Quantity):
 			self.readout_noise = readout_noise
 		elif isinstance(readout_noise, float) or isinstance(readout_noise, int):
-			logging.warning("Interpreting float type readout_noise as {}".format(readout_noise * u.electron))
+			logger.warning("Interpreting float type readout_noise as {}".format(readout_noise * u.electron))
 			self.readout_noise = readout_noise * u.electron
 		else:
 			raise TypeError(self.typeerror.format('readout_noise', type(readout_noise), 'u.Quantity'))
@@ -109,7 +109,7 @@ class Detector(object):
 		if isinstance(saturation_level, u.Quantity) or saturation_level is None:
 			self.saturation_level = saturation_level
 		elif isinstance(saturation_level, float) or isinstance(saturation_level, int):
-			logging.warning("Interpreting float type saturation_level as {}".format(saturation_level * u.electron))
+			logger.warning("Interpreting float type saturation_level as {}".format(saturation_level * u.electron))
 			self.saturation_level = saturation_level * u.electron
 		else:
 			raise TypeError(self.typeerror.format('saturation_level', type(saturation_level), 'u.Quantity'))
@@ -218,19 +218,19 @@ class Detector(object):
 
 		# Input parameters
 		if isinstance(photon_rate, float) or isinstance(photon_rate, int):
-			logging.warning("Interpreting float type photon_rate as {}".format(photon_rate * u.ph / u.s))
+			logger.warning("Interpreting float type photon_rate as {}".format(photon_rate * u.ph / u.s))
 			photon_rate = photon_rate * u.ph / u.s
 		elif not isinstance(photon_rate, u.Quantity):
 			raise TypeError(self.typeerror.format('photon_rate', type(photon_rate), 'u.Quantity'))
 
 		if isinstance(integration_time, float) or isinstance(integration_time, int):
-			logging.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
+			logger.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
 			integration_time = integration_time * u.s
 		elif not isinstance(integration_time, u.Quantity):
 			raise TypeError(self.typeerror.format('integration_time', type(integration_time), 'u.Quantity'))
 
 		if isinstance(photon_rate_resolution, float) or isinstance(photon_rate_resolution, int):
-			logging.warning("Interpreting float type photon_rate_resolution as {}".format(photon_rate_resolution * u.arcsec))
+			logger.warning("Interpreting float type photon_rate_resolution as {}".format(photon_rate_resolution * u.arcsec))
 			photon_rate_resolution = photon_rate_resolution * u.arcsec
 		elif not isinstance(photon_rate_resolution, u.Quantity):
 			raise TypeError(self.typeerror.format('photon_rate_resolution', type(photon_rate_resolution), 'u.Quantity'))

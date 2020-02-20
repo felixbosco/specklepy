@@ -2,7 +2,7 @@ import numpy as np
 from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.logging import logging
+from specklepy.loging import logger
 from specklepy.utils.plot import imshow
 
 
@@ -67,7 +67,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
 
     # Skip computations if only one file is provided
     if lazy_mode and len(files) == 1:
-        logging.info("Only one data cube is provided, nothing to align.")
+        logger.info("Only one data cube is provided, nothing to align.")
         shifts = [(0, 0)]
         image_shape = fits.getdata(files[0]).shape
         image_shape = (image_shape[-2], image_shape[-1])
@@ -77,7 +77,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
         shifts = []
 
         # Identify reference file and Fourier transform the integrated image
-        logging.info(f"Computing relative shifts between data cubes. Reference file is {reference_file}")
+        logger.info(f"Computing relative shifts between data cubes. Reference file is {reference_file}")
         reference_image = fits.getdata(reference_file)
         if reference_image.ndim == 3:
             # Integrating over time axis if reference image is a cube
@@ -96,8 +96,8 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
                     image = np.sum(image, axis=0)
                 shift = get_shift(image, reference_image=Freference_image, is_Fourier_transformed=True, mode=mode, debug=debug)
             shifts.append(shift)
-            logging.info(f"Identified a shift of {shift} for file {file}")
-        logging.info(f"Identified the following shifts:\n\t{shifts}")
+            logger.info(f"Identified a shift of {shift} for file {file}")
+        logger.info(f"Identified the following shifts:\n\t{shifts}")
 
     if return_image_shape:
         return shifts, image_shape

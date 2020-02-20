@@ -7,7 +7,7 @@ from astropy.table import Table
 #from photutils.psf import extract_stars
 #from photutils import EPSFBuilder
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.io.parameterset import ParameterSet
 from specklepy.io.filemanager import FileManager
 from specklepy.io.psffile import PSFfile
@@ -79,7 +79,7 @@ class ReferenceStars(object):
         # Iterate over params.inFiless
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
-            logging.info("Extracting PSFs from file {}".format(file))
+            logger.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFfile(file, outDir=self.params.paths.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY ")
             self.params.psfFiles.append(psf_file.filename)
 
@@ -137,7 +137,7 @@ class ReferenceStars(object):
         # Iterate over params.inFiless
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
-            logging.info("Extracting PSFs from file {}".format(file))
+            logger.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFfile(file, outDir=self.params.paths.tmpDir, frame_shape=(self.box_size, self.box_size), header_prefix="HIERARCH SPECKLEPY")
             self.params.psfFiles.append(psf_file.filename)
 

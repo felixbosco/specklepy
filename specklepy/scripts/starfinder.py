@@ -12,7 +12,7 @@ from photutils import CircularAperture
 
 from specklepy.core.sourceextraction import find_sources
 from specklepy.io.parameterset import ParameterSet
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 
@@ -46,7 +46,7 @@ def main(options=None):
                             'starfinder': ['noiseThreshold', 'starfinderFwhm']}
 
     if args.file is None:
-        logging.error("No file or file list was provided! Use --help for instructions.")
+        logger.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
 
     # Read parameters from file
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

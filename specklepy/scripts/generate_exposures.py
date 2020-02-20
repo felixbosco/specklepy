@@ -5,7 +5,7 @@ import os
 import sys
 import warnings
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

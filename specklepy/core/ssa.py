@@ -1,14 +1,15 @@
+from astropy.io import fits
+import logging
+from datetime import datetime
+import glob
 import numpy as np
 import os
-import glob
-from datetime import datetime
-from astropy.io import fits
 
 from specklepy.core import alignment
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 
@@ -97,6 +98,11 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
     else:
         var_ext = 'VAR'
 
+    if debug:
+        logger.setLevel(logging.DEBUG)
+        logger.info("Set logging level to DEBUG")
+
+
     # Do not align just a single file
     if lazy_mode and len(files) == 1:
         with fits.open(files[0]) as hdulist:
@@ -114,18 +120,23 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         for index, file in enumerate(files):
             with fits.open(files[0]) as hdulist:
                 cube = hdulist[0].data
+
                 try:
                     var_cube = hdulist[var_ext].data
+                    logger.debug(f"Found variance extension {var_ext} in file {file}")
                     tmp, tmp_var = coadd_frames(cube, var_cube=var_cube)
                 except:
+                    logger.debug(f"Did not find variance extension {var_ext} in file {file}")
                     tmp = coadd_frames(cube)
             tmp_file = os.path.basename(file).replace(".fits", "_ssa.fits")
             tmp_file = os.path.join(tmp_dir, tmp_file)
-            logging.info("Saving interim SSA reconstruction of cube to {}".format(tmp_file))
-            tmp_file_object = Outfile(tmp_file, shape=tmp.shape, verbose=False)
-            tmp_file_object.data = tmp
+            logger.info("Saving interim SSA reconstruction of cube to {}".format(tmp_file))
+            tmp_file_object = Outfile(tmp_file, data=tmp, verbose=True)
+            # tmp_file_object = Outfile(tmp_file, shape=tmp.shape, verbose=False)
+            # tmp_file_object.data = tmp
             if 'tmp_var' in locals():
                 tmp_file_object.new_extension(var_ext, data=tmp_var)
+                del tmp_var
             # fits.writeto(tmp_file, tmp, overwrite=True)
             tmp_files.append(tmp_file)
 
@@ -154,7 +165,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
                 except:
                     pass
 
-    logging.info("Reconstruction finished...")
+    logger.info("Reconstruction finished...")
 
     # Save the result to an Outfile
     if outfile is not None:

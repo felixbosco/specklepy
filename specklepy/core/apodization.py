@@ -4,7 +4,7 @@ from astropy.modeling.models import AiryDisk2D
 
 from specklepy.utils.transferfunctions import otf
 from specklepy.utils.plot import imshow
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 
@@ -26,7 +26,7 @@ def apodize(object, function='gaussian', crop=False, **kwargs):
     if not isinstance(object, np.ndarray) and object.ndim != 2:
         raise ValueError("object must be a 2-dimensional np.ndarray!")
     if object.shape[0] != object.shape[1]:
-        logging.warn("specklepy.core.apodization.apodize received a non quadratic input image. This may cause some unpredictable results!")
+        logger.warn("specklepy.core.apodization.apodize received a non quadratic input image. This may cause some unpredictable results!")
 
 
 

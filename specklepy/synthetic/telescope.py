@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.modeling import models
 
 from specklepy.utils.plot import imshow
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 
@@ -53,7 +53,7 @@ class Telescope(object):
 		if isinstance(diameter, u.Quantity):
 			self.diameter = diameter
 		elif isinstance(diameter, float) or isinstance(diameter, int):
-			logging.warning("Interpreting float type diameter as {}".format(diameter * u.m))
+			logger.warning("Interpreting float type diameter as {}".format(diameter * u.m))
 			self.diameter = diameter * u.m
 		else:
 			raise TypeError(self.typeerror.format('diameter', type(diameter), 'u.Quantity'))
@@ -116,7 +116,7 @@ class Telescope(object):
 		if isinstance(radius, u.Quantity):
 			self.radius = radius
 		elif isinstance(radius, float) or isinstance(radius, int):
-			logging.warning("Interpreting float type radius as {}".format(radius * u.arcsec))
+			logger.warning("Interpreting float type radius as {}".format(radius * u.arcsec))
 			self.radius = radius * u.arcsec
 		else:
 			raise TypeError(self.typeerror.format('radius', type(radius), 'u.Quantity'))
@@ -124,7 +124,7 @@ class Telescope(object):
 		if isinstance(psf_resolution, u.Quantity):
 			self.psf_resolution = psf_resolution
 		elif isinstance(psf_resolution, float) or isinstance(psf_resolution, int):
-			logging.warning("Interpreting float type psf_resolution as {}".format(psf_resolution * u.arcsec))
+			logger.warning("Interpreting float type psf_resolution as {}".format(psf_resolution * u.arcsec))
 			self.psf_resolution = psf_resolution * u.arcsec
 		else:
 			raise TypeError(self.typeerror.format('psf_resolution', type(psf_resolution), 'u.Quantity'))
@@ -237,7 +237,7 @@ class Telescope(object):
 		if integration_time is None and hasattr(self, 'timestep'):
 			raise ValueError("If the PSF source of Telescope is non-static, the call function requires the integration_time.")
 		elif isinstance(integration_time, float) or isinstance(integration_time, int):
-			logging.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
+			logger.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
 			integration_time = integration_time * u.s
 		elif not isinstance(integration_time, u.Quantity):
 			raise TypeError(self.typeerror.format('integration_time', type(integration_time), 'u.Quantity'))
@@ -329,7 +329,7 @@ class Telescope(object):
 		"""
 
 		if isinstance(integration_time, int) or isinstance(integration_time, float):
-			logging.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
+			logger.warning("Interpreting float type integration_time as {}".format(integration_time * u.s))
 			integration_time = integration_time * u.s
 		elif not isinstance(integration_time, u.Quantity):
 			raise TypeError('integrate_psf received integration_time argument of type {}, but needs to be u.Quantity')

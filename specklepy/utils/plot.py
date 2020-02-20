@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as clrs
 import astropy.units as u
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.utils import transferfunctions as tf
 
 
@@ -111,7 +111,7 @@ def maximize_plot():
         try:
             mng.window.state('zoomed')
         except:
-            logging.warn("Could not maximize plot")
+            logger.warning("Could not maximize plot")
     else:
         raise RuntimeWarning("Maximizing plot is not possible with matplotlib backend {}".format(backend))
 
@@ -135,7 +135,7 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
         rgb_color = clrs.to_rgb(color)
         hsv_color = clrs.rgb_to_hsv(rgb_color)
     elif isinstance(color, tuple):
-        logging.info("Interpreting color tuple () as RGB values.")
+        logger.info("Interpreting color tuple () as RGB values.")
         hsv_color = clrs.rgb_to_hsv(color)
     else:
         raise TypeError("The function desaturate_color received color argument \

@@ -7,7 +7,7 @@ import warnings
 
 from specklepy.core.holography import holography
 from specklepy.io.parameterset import ParameterSet
-from specklepy.logging import logging
+from specklepy.logging import logger
 
 
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

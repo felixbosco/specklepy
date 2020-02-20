@@ -16,7 +16,7 @@ from specklepy.io.outfile import Outfile
 from specklepy.io.parameterset import ParameterSet
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 from specklepy.utils.transferfunctions import otf
 
@@ -45,9 +45,9 @@ def holography(params, mode='same', debug=False):
         image (np.ndarray): The image reconstruction.
     """
 
-    logging.info("Starting holographic reconstruction of {} files...".format(len(params.inFiles)))
+    logger.info("Starting holographic reconstruction of {} files...".format(len(params.inFiles)))
     if not isinstance(params, ParameterSet):
-        logging.warning(f"holography function received params argument of type {type(params)!r} instead of the expected type " \
+        logger.warning(f"holography function received params argument of type {type(params)!r} instead of the expected type " \
                         "specklepy.io.parameterset.ParameterSet. This may cause unforeseen errors.")
     if mode not in ['same', 'full', 'valid']:
         raise SpecklepyValueError('holography()', argname='mode', argvalue=mode, expected="either 'same', 'full', or 'valid'")
@@ -86,7 +86,7 @@ def holography(params, mode='same', debug=False):
             refStars.extract_epsfs(file_shifts=shifts, debug=debug)
         elif params.psfextraction.mode.lower() in ['mean', 'median', 'weighted_mean']:
             refStars.extract_psfs(file_shifts=shifts, mode=params.psfextraction.mode.lower(), debug=debug)
-        logging.info("Saved the extracted PSFs...")
+        logger.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
         for file in params.psfFiles:
@@ -113,7 +113,7 @@ def holography(params, mode='same', debug=False):
         Fobject = get_Fourier_object(params, shifts=shifts, mode=mode)
 
         # (x) Apodization
-        logging.info("Apodizing the object...")
+        logger.info("Apodizing the object...")
         Fobject = apodize(Fobject, params.apodization.apodizationType, radius=params.apodization.apodizationWidth)
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
@@ -188,7 +188,7 @@ def get_Fourier_object(params, shifts, mode='same'):
     """
 
     if not isinstance(params, ParameterSet):
-        logging.warn("specklepy.core.holography.get_Fourier_object received params argument \
+        logger.warn("specklepy.core.holography.get_Fourier_object received params argument \
                         of type <{}> instead of the expected type \
                         specklepy.io.parameterset.ParameterSet. This may cause \
                         unforeseen errors.".format(type(params)))
@@ -206,7 +206,7 @@ def get_Fourier_object(params, shifts, mode='same'):
         raise RuntimeError("The number of input files ({}) and PSF files ({}) do not match!".format(len(params.inFiles), len(params.psfFiles)))
 
     # Padding and Fourier transforming the images
-    logging.info("Padding the images and PSFs...")
+    logger.info("Padding the images and PSFs...")
     for file_index, image_file in enumerate(params.inFiles):
         # Initialization
         image_pad_vector = pad_vectors[file_index]

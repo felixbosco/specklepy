@@ -7,7 +7,7 @@ from astropy.stats import sigma_clip
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.masterfile import MasterFile
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 
 
@@ -53,11 +53,11 @@ class MasterFlat(object):
         else:
             raise SpecklepyTypeError('MasterFlat.combine()', argname='method', argtype=type(method), expected='str')
 
-        logging.info("Combining the following filelist to a master flat:")
+        logger.info("Combining the following filelist to a master flat:")
 
         # Read image frames from file
         for index, file in enumerate(self.files):
-            logging.info("{:4}: {}".format(index, file))
+            logger.info("{:4}: {}".format(index, file))
             data = fits.getdata(os.path.join(self.file_path, file))
 
             # Create a master flat
@@ -76,7 +76,7 @@ class MasterFlat(object):
         del flats
 
         # Normalize the master flat
-        logging.info(f"Normalizing master flat in {method} mode...")
+        logger.info(f"Normalizing master flat in {method} mode...")
         if method is 'median':
             norm = np.median(master_flat)
             master_flat_normed = np.divide(master_flat, norm)
@@ -133,7 +133,7 @@ class MasterFlat(object):
 
         flatfield_corrected_files = {}
         for file in filelist:
-            logging.info(f"Applying flat field correction on file {file}")
+            logger.info(f"Applying flat field correction on file {file}")
             # Create output file name
             corrected_file = prefix + file
             # if savedir is not None:

@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.io.parameterset import ParameterSet
 from specklepy.io.filemanager import FileManager
 from specklepy.reduction.flat import MasterFlat
@@ -55,7 +55,7 @@ def main(options=None):
 
     # Execute data reduction
     # (0) Read file list table
-    logging.info("Reading file list ...")
+    logger.info("Reading file list ...")
     inFiles = FileManager(params.paths.fileList)
     print(inFiles.table)
 
@@ -77,7 +77,7 @@ def main(options=None):
     # (...) Sky subtraction
     if not params.sky.skipSky:
         if hasattr(params.sky, 'fromImage') and params.sky.fromImage:
-            logging.info("Estimating background flux from the images...")
+            logger.info("Estimating background flux from the images...")
             science_files = inFiles.filter({'OBSTYPE': 'Science'})
             if params.sky.backgroundMethod is 'scalar':
                 sky.subtract_scalar_background(science_files, params=params, prefix=params.sky.skySubtractionPrefix, debug=args.debug)
@@ -85,7 +85,7 @@ def main(options=None):
                 # Todo implement subtraction of 2D background
                 pass
         else:
-            logging.info("Estimating background flux from sky frames...")
+            logger.info("Estimating background flux from sky frames...")
             sequences = sky.identify_sequences(inFiles.table, file_path=params.paths.filePath, ignore_time_stamps=params.sky.ignoreTimeStamps)
             for sequence in sequences:
                 sequence.subtract_master_sky(saveto=params.paths.tmpDir, filename_prefix=params.sky.skySubtractionPrefix)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

@@ -7,7 +7,7 @@ import warnings
 import numpy as np
 
 from specklepy.core.aperture import Aperture
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.utils.plot import imshow, encircled_energy_plot, maximize_plot
 
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:

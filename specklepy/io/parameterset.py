@@ -4,7 +4,7 @@ import configparser
 from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError
-from specklepy.logging import logging
+from specklepy.logging import logger
 from specklepy.io.filemanager import FileManager
 
 
@@ -65,7 +65,7 @@ class ParameterSet(object):
         if self.defaults_file is not None:
             defaults = configparser.ConfigParser(inline_comment_prefixes="#")
             defaults.optionxform = str  # make option names case sensitive
-            logging.info("Reading defaults file {}".format(self.defaults_file))
+            logger.info("Reading defaults file {}".format(self.defaults_file))
             defaults.read(self.defaults_file)
 
             for section in defaults.sections():
@@ -84,12 +84,12 @@ class ParameterSet(object):
             #                         setattr(self, key, value)
             #                     attr_set = True
             #         if not attr_set:
-            #             logging.warning("Essential parameter '{}' not found in parameter file or config file!".format(attr))
+            #             logger.warning("Essential parameter '{}' not found in parameter file or config file!".format(attr))
 
         # Overwrite attributes from parameter_file
         parser = configparser.ConfigParser(inline_comment_prefixes="#")
         parser.optionxform = str  # make option names case sensitive
-        logging.info("Reading parameter file {}".format(self.parameter_file))
+        logger.info("Reading parameter file {}".format(self.parameter_file))
         parser.read(self.parameter_file)
         for section in parser.sections():
             if not hasattr(self, section.lower()):
@@ -125,7 +125,7 @@ class ParameterSet(object):
         try:
             self.inFiles = FileManager(self.paths.inDir).files
         except AttributeError:
-            logging.warning("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in parameter file!")
+            logger.warning("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in parameter file!")
 
 
 
@@ -138,7 +138,7 @@ class ParameterSet(object):
             path = getattr(self.paths, key)
             path = os.path.dirname(path) + '/' # Cosmetics to allow for generic input for inDir
             if not os.path.exists(path):
-                logging.info('Creating {} directory {}'.format(key, path))
+                logger.info('Creating {} directory {}'.format(key, path))
                 os.makedirs(path)
 
 
