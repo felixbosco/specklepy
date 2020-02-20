@@ -12,7 +12,7 @@ class TestReductionFile(unittest.TestCase):
         self.parentFile = os.path.join(self.path, "reduction/MasterFlat.fits")
 
     def test_init(self):
-        ReductionFile(self.parentFile, prefix='rtest_', path=os.path.join(self.path, 'reduction/'), reduction='bkg')
+        ReductionFile(self.parentFile, prefix='rtest_', path=os.path.join(self.path, 'reduction/'), reduction='TESTCORR')
 
     def test_set_data(self):
         pass
