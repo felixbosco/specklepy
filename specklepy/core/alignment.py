@@ -2,7 +2,7 @@ import numpy as np
 from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.loging import logger
+from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 
 
