@@ -1,5 +1,5 @@
 import numpy as np
-from os import path
+import os
 from astropy.io import fits
 from datetime import datetime
 
@@ -89,7 +89,7 @@ class Outfile(object):
         else:
             raise SpecklepyTypeError('Outfile', 'cards', type(cards), 'dict')
 
-        if header is None or isinstance(header, fits.header):
+        if header is None or isinstance(header, fits.header.Header):
             pass
         else:
             raise SpecklepyTypeError('Outfile', 'header', type(header), 'fits.header')
