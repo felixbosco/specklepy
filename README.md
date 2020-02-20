@@ -52,7 +52,7 @@ If this step is not working properly, you can adopt the configuration file `spec
 
 The actual reduction is executed by calling the reduction script.
 ```bash
-specklepy_reduction -p your_parameter_file.par
+specklepy_reduction your_parameter_file.par
 ```
 
 [(top)](#table-of-contents)
@@ -66,13 +66,13 @@ Available reconstructions are the simple shift-and-add (SSA) algorithm and speck
 #### SSA reconstruction
 The SSA reconstruction does not take many parameters but reconstructs an image from the input files, specified with the `--file` flag. Temporary files are saved to the `--tmpDir` directory and the reconstruction is saved to the `--outfile`.
 ```
-specklepy_ssa -f your_files_*.fits -t tmp/ -o your_files_ssa.fits
+specklepy_ssa your_files_*.fits -t tmp/ -o your_files_ssa.fits
 ```
 
 #### Holographic reconstruction
 For a holographic reconstruction, you can gather all your parameters in a parameter file and execute the script from your working directory:
 ```
-specklepy_holography -p your_parameter_file.par
+specklepy_holography your_parameter_file.ini
 ```
 
 An example parameter file is following `INI` structure. Note that the inDir is guiding to a path and the bash `*` may be used to collect all files matching to the description.
@@ -111,7 +111,7 @@ A strong focus of the changes with respect to VegaPy was put on readability of t
 
 For generating exposures just execute the binary:
 ```bash
-generate_exposures -p your_parameter_file.par
+generate_exposures your_parameter_file.par
 ```
 
 The parameter files follow `INI` structure syntax and are interpreted by the package parameter file reader.
@@ -162,7 +162,7 @@ cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}
 These are the current To-Do items:
 * General:
   * **low priority:** Create general script with signature "specklepy holography -f ..."
-  * **low priority:** Make command line arguments to positional arguments for required args
+  * ~~**low priority:** Make command line arguments to positional arguments for required args~~
 * data reduction module:
   * Flatfield correction from flat frames
   * Extend scalar sky subtraction from the images to two-dimensional sky estimates (from sky frames)
@@ -172,7 +172,7 @@ These are the current To-Do items:
   * Propagation of uncertainties if provided
   * Measure "PSF quality" and implement a weighting scheme for frames
   * Reconstruction modes that return reconstructions that cover the 'same' field of view as a reference, the 'full' field of view covered by at least one exposure or (**low priority:**) 'valid' field of view that is covered by all exposures
-  * Secondary source subtraction for holography function 
+  * Secondary source subtraction for holography function
   * Bootstrap resampling for estimating the photo- and astrometric uncertainties
   * Add a call of starfinder after the last iteration of the scripts to save the results
   * **low priority:** Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
