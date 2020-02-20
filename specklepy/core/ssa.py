@@ -194,7 +194,7 @@ def coadd_frames(cube, var_cube=None):
 
     if var_cube is not None and not isinstance(var_cube, np.ndarray):
         raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube), expected='np.ndarray')
-    if var_cube.shape != cube.shape:
+    if var_cube is not None and var_cube.shape != cube.shape:
         raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=var_cube.shape, expected=str(cube.shape))
 
     # Compute shifts
