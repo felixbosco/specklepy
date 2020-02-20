@@ -10,7 +10,7 @@ from specklepy.io.outfile import Outfile
 
 class PSFfile(Outfile):
 
-    def __init__(self, inFile, outDir, frame_shape, cards=None, header_prefix=None):
+    def __init__(self, inFile, outDir, frame_shape, cards=None, header_card_prefix=None):
 
         # Create PSF directory, if not existing yet
         if not os.path.exists(outDir):
@@ -31,10 +31,10 @@ class PSFfile(Outfile):
         elif not isinstance(cards, dict):
             raise TypeError("PSFfile received cards argument of type {}, but needs to be dict type!".format(type(cards)))
 
-        if header_prefix is None:
-            header_prefix = ""
-        elif not isinstance(header_prefix, str):
-            raise TypeError("PSFfile received header_prefix argument of type {}, but needs to be str type!".format(type(header_prefix)))
+        if header_card_prefix is None:
+            header_card_prefix = ""
+        elif not isinstance(header_card_prefix, str):
+            raise TypeError("PSFfile received header_card_prefix argument of type {}, but needs to be str type!".format(type(header_card_prefix)))
 
         # Add name of parent file to header
         cards["FILE NAME"] = os.path.basename(inFile)
@@ -42,4 +42,4 @@ class PSFfile(Outfile):
         hdr_input = fits.getheader(inFile)
         shape = (hdr_input['NAXIS3'], frame_shape[0], frame_shape[1])
 
-        super().__init__(filename=outDir + outfile, shape=shape, cards=cards, hprefix=header_prefix)
+        super().__init__(filename=outDir + outfile, shape=shape, cards=cards, header_card_prefix=header_card_prefix)
