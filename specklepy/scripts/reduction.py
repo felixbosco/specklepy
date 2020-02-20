@@ -34,7 +34,7 @@ def main(options=None):
 
     # Default values
     defaults_file = os.path.join(os.path.dirname(__file__), '../config/reduction.cfg')
-    essential_attributes = {'paths': ['filePath', 'fileList', 'tmpDir'],
+    essential_attributes = {'paths': ['filePath', 'fileList', 'outDir', 'tmpDir', 'filePrefix'],
                             'setup': ['setupKeywords'],
                             'flat': ['skipFlat', 'flatCorrectionPrefix'],
                             'sky': ['skipSky', 'ignoreTimeStamps', 'skySubtractionPrefix', 'fromImage', 'backgroundMethod', 'backgroundSigmaClip']}
@@ -57,7 +57,14 @@ def main(options=None):
     # (0) Read file list table
     logger.info("Reading file list ...")
     inFiles = FileManager(params.paths.fileList)
+    # inFiles.table['PATH'] = [params.paths.filePath] * len(inFiles.table['FILE'])
+    # inFiles.table['CORRECTIONS'] = [''] * len(inFiles.table['FILE'])
     print(inFiles.table)
+    # last_correction = None
+
+    # (0) Make reduction files
+
+
 
     # (1) Flat fielding
     if not params.flat.skipFlat:
