@@ -76,7 +76,6 @@ class ReductionFile(Outfile):
         # Create file name
         self.filename = self.prefix + os.path.basename(self.parent_file) # Make sure to get rid of the path
 
-
         # Read header information and data from parent file
         with fits.open(self.parent_file) as hdulist:
             # Copy parent file data into extensions
@@ -105,19 +104,7 @@ class ReductionFile(Outfile):
                 primary_data = self._data
             del self._data
 
-        # parent_data, header = fits.getdata(self.parent_file, header=True)
-
-        # if self._data is None:
-        #     primary_hdu = fits.PrimaryHDU(data=parent_data, header=header)
-        # else:
-        #     primary_hdu = fits.PrimaryHDU(data=self._data, header=header)
-        # hdulist = fits.HDUList(hdus=[primary_hdu])
-        # parent_image_hdu = fits.ImageHDU(data=parent_data, name=self.last_reduction)
-        # hdulist.append(parent_image_hdu)
-        # hdulist.writeto(os.path.join(self.path, self.filename))
-
-
-        # todo check whether this is working in flat!
+        # Pass to OutFile class
         super().__init__(filename=self.filename,
                          path=self.path,
                          data=primary_data,
