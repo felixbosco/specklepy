@@ -82,7 +82,11 @@ class ReductionFile(Outfile):
             # Copy parent file data into extensions
             extensions = []
             for hdu in hdulist:
-                ext = {'name': hdu.name,
+                if hdu.name == 'PRIMARY':
+                    name = self.last_reduction
+                else:
+                    name = hdu.name
+                ext = {'name': name,
                        'data': hdu.data,
                        'header': hdu.header}
                 extensions.append(ext)
