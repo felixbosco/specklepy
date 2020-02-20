@@ -234,3 +234,8 @@ class Outfile(object):
             else:
                 hdulist.insert(index=index, hdu=hdu)
             hdulist.flush()
+
+
+    def has_extension(self, extname):
+        with fits.open(self.filepath) as hdulist:
+            return extname in hdulist
