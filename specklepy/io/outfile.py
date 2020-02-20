@@ -145,7 +145,11 @@ class Outfile(object):
                     data = np.empty(extension['shape'])
                 else:
                     data = None
-                self.new_extension(name=name, data=data)
+                if 'header' in extension:
+                    header = extension['header']
+                else:
+                    header = None
+                self.new_extension(name=name, data=data, header=header)
                 # exthdu = fits.ImageHDU(name=extension)
                 # if hasattr(self, 'extshapes'):
                 #     exthdu.data = np.zeros(self.extshapes[index +1])
