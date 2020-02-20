@@ -10,7 +10,7 @@ from specklepy.logging import logger
 
 class ReductionFile(Outfile):
 
-    def __init__(self, file, data=None, prefix=None, path=None, reduction=None, last_reduction=None, header_prefix="HIERARCH SPECKLEPY"):
+    def __init__(self, file, data=None, prefix=None, path=None, reduction=None, last_reduction=None, header_card_prefix="HIERARCH SPECKLEPY"):
         """Class that carries the link to a file for data reduction products.
 
         Args:
@@ -28,7 +28,7 @@ class ReductionFile(Outfile):
                 Current reduction step, will be stored to the file header.
             last_reduction (str, optional):
                 Last reduction step, will be used as a name for the new fits extension.
-            header_prefix (str, optional):
+            header_card_prefix (str, optional):
                 Default prefix for header cards.
         """
 
@@ -39,7 +39,7 @@ class ReductionFile(Outfile):
             raise SpecklepyTypeError('ReductionFile', argname='file', argtype=type(file), expected='str')
 
         if data is None or isinstance(data, np.ndarray):
-            self.data = data
+            self._data = data
         else:
             raise SpecklepyTypeError('ReductionFile', argname='data', argtype=type(data), expected='np.ndarray')
 
@@ -67,30 +67,58 @@ class ReductionFile(Outfile):
         else:
             raise SpecklepyTypeError('ReductionFile', argname='last_reduction', argtype=type(last_reduction), expected='str')
 
-        if header_prefix is None or isinstance(header_prefix, str):
-            self.header_prefix = header_prefix
+        if header_card_prefix is None or isinstance(header_card_prefix, str):
+            self.header_card_prefix = header_card_prefix
         else:
-            raise SpecklepyTypeError('ReductionFile', argname='header_prefix', argtype=type(header_prefix), expected='str')
+            raise SpecklepyTypeError('ReductionFile', argname='header_card_prefix', argtype=type(header_card_prefix), expected='str')
 
 
         # Create file name
         self.filename = self.prefix + os.path.basename(self.parent_file) # Make sure to get rid of the path
 
 
-        # Retrieve header information
-        parent_data, header = fits.getdata(self.parent_file, header=True)
-        if 'PIPELINE' not in header.keys():
-            # Parent file is not a ReductionFile
-            header.set('PIPELINE', 'SPECKLEPY')
+        # Read header information and data from parent file
+        with fits.open(self.parent_file) as hdulist:
+            # Copy parent file data into extensions
+            extensions = []
+            for hdu in hdulist:
+                ext = {'name': hdu.name,
+                       'data': hdu.data,
+                       'header': hdu.header}
+                extensions.append(ext)
+
+            # Construct primary HDU
+            header = hdulist[0].header
+
+            if 'PIPELINE' not in header.keys():
+                # Parent file is not a ReductionFile
+                header.set('PIPELINE', 'SPECKLEPY')
             header.set(reduction, str(datetime.now())) # Store the current reduction step
-        if self.data is None:
-            primary_hdu = fits.PrimaryHDU(data=parent_data, header=header)
-        else:
-            primary_hdu = fits.PrimaryHDU(data=self.data, header=header)
-        hdulist = fits.HDUList(hdus=[primary_hdu])
-        parent_image_hdu = fits.ImageHDU(data=parent_data, name=self.last_reduction)
-        hdulist.append(parent_image_hdu)
-        hdulist.writeto(os.path.join(self.path, self.filename))
+
+            if self._data is None:
+                primary_data = hdulist[0].data
+            else:
+                primary_data = self._data
+            del self._data
+
+        # parent_data, header = fits.getdata(self.parent_file, header=True)
+
+        # if self._data is None:
+        #     primary_hdu = fits.PrimaryHDU(data=parent_data, header=header)
+        # else:
+        #     primary_hdu = fits.PrimaryHDU(data=self._data, header=header)
+        # hdulist = fits.HDUList(hdus=[primary_hdu])
+        # parent_image_hdu = fits.ImageHDU(data=parent_data, name=self.last_reduction)
+        # hdulist.append(parent_image_hdu)
+        # hdulist.writeto(os.path.join(self.path, self.filename))
+
 
         # todo check whether this is working in flat!
-        # super().__init__(filename=self.filename, shape=None, extensions=None, cards=None, timestamp=False, hprefix=header_prefix)
+        super().__init__(filename=self.filename,
+                         path=self.path,
+                         data=primary_data,
+                         extensions=extensions,
+                         header=header,
+                         cards=None,
+                         timestamp=False,
+                         header_card_prefix=header_card_prefix)
