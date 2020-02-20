@@ -9,7 +9,7 @@ from specklepy.io.outfile import Outfile
 
 class MasterFile(Outfile):
 
-    def __init__(self, filename, files, shape=None, cards=None, header_prefix="HIERARCH SPECKLEPY"):
+    def __init__(self, filename, files, shape=None, cards=None, header_card_prefix="HIERARCH SPECKLEPY"):
 
         if cards is None:
             cards = {}
@@ -25,4 +25,4 @@ class MasterFile(Outfile):
             except KeyError:
                 shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
 
-        super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, hprefix=header_prefix)
+        super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, header_card_prefix=header_card_prefix)
