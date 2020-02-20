@@ -64,7 +64,7 @@ def holography(params, mode='same', debug=False):
                             debug=debug)
 
     # (iii) Compute SSA reconstruction
-    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.paths.tmpDir, variance_extension_name=params.uncertainties.varianceExtensionName)
+    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.paths.tmpDir, variance_extension_name=params.options.varianceExtensionName)
     if isinstance(image, tuple):
         # SSA returned a reconstruction image and a variance image
         image, image_var = image
