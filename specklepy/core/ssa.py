@@ -1,9 +1,11 @@
 from astropy.io import fits
-import logging
 from datetime import datetime
 import glob
+from IPython import embed
+import logging
 import numpy as np
 import os
+import sys
 
 from specklepy.core import alignment
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
@@ -100,6 +102,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
 
     if debug:
         logger.setLevel(logging.DEBUG)
+        logger.handlers[0].setLevel(logging.DEBUG)
         logger.info("Set logging level to DEBUG")
 
 
@@ -118,9 +121,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         # Compute temporary reconstructions of the individual cubes
         tmp_files = []
         for index, file in enumerate(files):
-            with fits.open(files[0]) as hdulist:
+            with fits.open(file) as hdulist:
                 cube = hdulist[0].data
-
                 try:
                     var_cube = hdulist[var_ext].data
                     logger.debug(f"Found variance extension {var_ext} in file {file}")
@@ -152,7 +154,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
                 except:
                     # No VAR extension in file
                     pass
-            if index is 0:
+            if 'reconstruction' in locals():
                 reconstruction = alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
                 try:
                     reconstruction_var = alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
