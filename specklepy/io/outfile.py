@@ -7,31 +7,36 @@ from specklepy.logging import logging
 from specklepy.exceptions import SpecklepyTypeError
 
 
-
 class Outfile(object):
 
-    def __init__(self, filename, shape=None, extensions=None, cards=None, header=None, timestamp=False, hprefix=None, verbose=True):
+    def __init__(self, filename, path=None, data=None, shape=None, extensions=None, header=None, cards=None, timestamp=False, header_card_prefix=None, verbose=True):
         """Instantiate a generic outfile.
 
         Args:
             filename (str):
                 Name of the file that is always referred to in the background.
+            path (str, optional):
+                Target path under which the new file will be stored.
+            data (np.ndarray, optional):
+                If provided, the file will be initialized with these data and
+                shape argument is ignored. Default is None.
             shape (tuple, dtype=int, optional):
                 If provided, the file will be initialized with an empty array
-                of this shape. Default is None.
+                of this shape. This argument will be ignored if data argument
+                is provided. Default is None.
             extensions (list of str, optional):
                 List of name(s) of extension(s) that will be initialized right
                 away. Default is None.
-            cards (dict, optional):
-                Dictionary of cards that will be added to the fits header.
-                Default is None.
             header (fits.header, optional):
                 Header that will be used to initialize the new Primary HDU.
+                Default is None.
+            cards (dict, optional):
+                Dictionary of cards that will be added to the fits header.
                 Default is None.
             timestamp (bool, optional):
                 Set to True to automatically add a time stamp to the file name.
                 Default is False.
-            hprefix (str, optional):
+            header_card_prefix (str, optional):
                 Prefix of header cards. Default is None.
             verbose (bool, optional):
                 Set to False to suppress logging output. Default is True.
@@ -43,6 +48,16 @@ class Outfile(object):
         else:
             self.filename = filename
 
+        if path is None or isinstance(path, str):
+            self.path = path
+        else:
+            raise SpecklepyTypeError('Outfile', argname='path', argtype=type(path), expected='str')
+
+        if data is None or isinstance(data, np.ndarray):
+            pass
+        else:
+            raise SpecklepyTypeError('Outfile', 'data', type(data), 'np.ndarray')
+
         if shape is None or isinstance(shape, tuple):
             self.shape = shape
         elif isinstance(shape, list):
@@ -52,6 +67,9 @@ class Outfile(object):
                 raise ValueError('Outfile received shape as list type, but the number of shapes does not match to the number of extensions!')
         else:
             raise SpecklepyTypeError('Outfile', 'shape', type(shape), 'tuple')
+
+        if shape is not None and data is not None:
+            logging.info("Outfile instance ignores shape input as data is provided for initialization!")
 
         if isinstance(extensions, str):
             self.extensions = [extensions]
@@ -78,15 +96,15 @@ class Outfile(object):
             if timestamp:
                 self.filename = filename.replace('.fits', '_{}.fits'.format(self.time_stamp()))
 
-        if hprefix is None:
-            self.hprefix = ""
-        elif isinstance(hprefix, str):
+        if header_card_prefix is None:
+            self.header_card_prefix = ""
+        elif isinstance(header_card_prefix, str):
             # Assert that there are gaps between prefix and card keywords
-            if hprefix[-1] != ' ':
-                hprefix = hprefix + ' '
-            self.hprefix = hprefix
+            if header_card_prefix[-1] != ' ':
+                header_card_prefix = header_card_prefix + ' '
+            self.header_card_prefix = header_card_prefix
         else:
-            raise SpecklepyTypeError('Outfile', 'hprefix', type(hprefix), 'str')
+            raise SpecklepyTypeError('Outfile', 'header_card_prefix', type(header_card_prefix), 'str')
 
         if isinstance(verbose, bool):
             self.verbose = verbose
@@ -97,9 +115,11 @@ class Outfile(object):
         # Initialize primary HDU
         hdu = fits.PrimaryHDU(header=header)
         for key in self.cards:
-            hdu.header.set(self.hprefix + key, self.cards[key])
-        if self.shape is not None:
+            hdu.header.set(self.header_card_prefix + key, self.cards[key])
+        if self.shape is not None and data is None:
             hdu.data = np.zeros(self.shape)
+        if data is not None:
+            hdu.data = data
         hdu.header.set('DATE', str(datetime.now()))
 
         # Create a HDU list with the primary and append extensions

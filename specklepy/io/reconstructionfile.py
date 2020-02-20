@@ -9,7 +9,7 @@ from specklepy.io.outfile import Outfile
 
 class ReconstructionFile(Outfile):
 
-    def __init__(self, filename, files, cards=None, header_prefix="HIERARCH SPECKLEPY"):
+    def __init__(self, filename, files, cards=None, header_card_prefix="HIERARCH SPECKLEPY"):
 
         if cards is None:
             cards = {}
@@ -22,4 +22,4 @@ class ReconstructionFile(Outfile):
         hdr_input = fits.getheader(files[0])
         shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
 
-        super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, hprefix=header_prefix)
+        super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, header_card_prefix=header_card_prefix)

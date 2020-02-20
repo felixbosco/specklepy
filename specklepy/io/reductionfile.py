@@ -92,3 +92,5 @@ class ReductionFile(Outfile):
         hdulist.append(parent_image_hdu)
         hdulist.writeto(os.path.join(self.path, self.filename))
 
+        # todo check whether this is working in flat!
+        # super().__init__(filename=self.filename, shape=None, extensions=None, cards=None, timestamp=False, hprefix=header_prefix)
