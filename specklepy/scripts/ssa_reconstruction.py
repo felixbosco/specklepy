@@ -37,7 +37,7 @@ def main(options=None):
     if args.file is not None:
         files = FileManager(args.file).files
     else:
-        logging.error("No file or file list was provided! Use --help for instructions.")
+        logger.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")
 
     if args.tmpdir is not None and not os.path.isdir(args.tmpdir):
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        logging.info('Interrupted by user...')
+        logger.info('Interrupted by user...')
         try:
             sys.exit(0)
         except SystemExit:
