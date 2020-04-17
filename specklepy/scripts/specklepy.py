@@ -44,7 +44,6 @@ def main():
         # Else start reduction following the parameter file
         pass
 
-
     elif args.command is 'ssa':
 
         # Prepare path information
@@ -58,8 +57,7 @@ def main():
     elif args.command is 'holography':
 
         # Default values
-        dir = os.path.dirname(__file__)
-        defaults_file = os.path.join(dir, '../config/holography.cfg')
+        defaults_file = os.path.join(os.path.dirname(__file__), '../config/holography.cfg')
         essential_attributes = {'paths': ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile'],
                                 'starfinder': ['starfinderFwhm', 'noiseThreshold'],
                                 'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin'],
