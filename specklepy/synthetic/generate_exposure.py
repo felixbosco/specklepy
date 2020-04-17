@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 from configparser import ConfigParser
 from astropy.io import fits
-import astropy.units as u
+from astropy.units import Quantity
 
 from specklepy.logging import logger
 from specklepy.synthetic.target import Target
@@ -77,8 +77,8 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
             if key in skip_attributes[object_name]:
                 continue
             card = "HIERARCH SPECKLEPY {} {}".format(object_name.upper(), key.upper())
-            if isinstance(dict[key], u.Quantity):
-                hdu.header.set(card, "{:.3e}".format(dict[key].value), dict[key].unit) # Appending the unit of a u.Quantity to the comment
+            if isinstance(dict[key], Quantity):
+                hdu.header.set(card, "{:.3e}".format(dict[key].value), dict[key].unit) # Appending the unit of a Quantity to the comment
             elif isinstance(dict[key], str):
                 hdu.header.set(card, os.path.basename(dict[key])) # Suppress (long) relative paths
             elif isinstance(dict[key], tuple):
@@ -166,6 +166,8 @@ def get_objects(parameterfile, debug=False):
             value = parser[section][key]
             try:
                 kwargs[key] = eval(value)
+            except SyntaxError:
+                kwargs[key] = Quantity(value)
             except:
                 kwargs[key] = value
             if debug:
