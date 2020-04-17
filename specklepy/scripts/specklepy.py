@@ -38,7 +38,7 @@ def main():
             steps.setup(files=args.files, instrument=args.instrument, sortby=args.sortby,
                         outfile=args.outfile, parfile=args.parfile)
 
-            # Quit program for interactiong with the new parameter file
+            # Quit program for interaction with the new parameter file
             return 0
 
         # Else start reduction following the parameter file
