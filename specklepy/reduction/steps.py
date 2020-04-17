@@ -10,6 +10,22 @@ from specklepy.logging import logger
 
 
 def setup(files, instrument, sortby, outfile, parfile):
+    """Sets up the data reduction parameter file and file list.
+
+    Args:
+        files (str):
+            Path to the files.
+        instrument:
+            Name of the instrument that took the data. This must be covered by config/instruments.cfg.
+        sortby:
+            Header card that is used for the sorting of files.
+        outfile:
+            Name of the file that contains all the files.
+        parfile:
+            Name of the parameter file.
+    """
+
+    # Defaults
     header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
     instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
