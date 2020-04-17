@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+import os
+
+from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
+from specklepy.io.filemanager import FileManager
 from specklepy.reduction import steps
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
@@ -39,7 +43,14 @@ def main():
 
 
     elif args.command is 'ssa':
-        pass
+
+        # Prepare path information
+        files = FileManager(args.files).files
+        if args.tmpdir is not None and not os.path.isdir(args.tmpdir):
+            os.mkdir(args.tmpdir)
+
+        # Execute reconstruction
+        ssa(files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
 
     elif args.command is 'holography':
         pass
