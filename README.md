@@ -21,15 +21,17 @@ The source code of Specklepy is available at github and can be downloaded by clo
 git clone https://github.com/felixbosco/specklepy.git
 ```
 
-It is recommended to install Specklepy with `pip`. If `pip` is not available to you, you can also execute the setup script. This should work in the same way but has not been tested extensively.
+It is recommended to install Specklepy with `pip`. If `pip` is not available to you, you can also execute the setup 
+script. This should work in the same way but has not been tested extensively.
 ```bash
 pip install .
 python setup.py install
 ```
 
-This installation also creates all the binary scripts that are described below. You may want to double check whether the installation was successful by calling one of the scripts with the `--help` flag:
+This installation also creates all the binary scripts that are described below. You may want to double check whether 
+the installation was successful by calling one of the scripts with the `--help` flag:
 ```bash
-specklepy_holography -h
+specklepy -h
 ```
 
 For updating your Specklepy to the latest version, just `git pull` and repeat `pip install .` or `python setup.py install`.
@@ -39,10 +41,10 @@ For updating your Specklepy to the latest version, just `git pull` and repeat `p
 
 
 ## Data reduction
-The data reduction with Specklepy is divided in two steps: Setup and execution.
-For setting up the files table and parameter file, execute the `specklepy_reduction_setup` script.
+The data reduction with Specklepy is divided in two steps: Setup and execution. For setting up the files table and 
+parameter file, execute the `specklepy reduce` command.
 ```bash
-specklepy_reduction_setup -i your_instrument -p path/to/your/files/ -o files.tab
+specklepy reduce --setup -i your_instrument -p path/to/your/files/ -o files.tab
 ```
 
 This gathers files located at `--path` and saves the list to the `--outfile`.
@@ -50,9 +52,9 @@ Note that this function already inspects the fits headers for information on the
 For reading in the file headers properly you have to provide the `--instrument`.
 If this step is not working properly, you can adopt the configuration file `specklepy/config/instruments/cfg`.
 
-The actual reduction is executed by calling the reduction script.
+The actual reduction is then executed by calling the reduction script.
 ```bash
-specklepy_reduction your_parameter_file.par
+specklepy reduce your_parameter_file.par
 ```
 
 [(top)](#table-of-contents)
@@ -64,18 +66,21 @@ The image reconstruction module is the core of Specklepy, thus referred to as `c
 Available reconstructions are the simple shift-and-add (SSA) algorithm and speckle holography.
 
 #### SSA reconstruction
-The SSA reconstruction does not take many parameters but reconstructs an image from the input files, specified with the `--file` flag. Temporary files are saved to the `--tmpDir` directory and the reconstruction is saved to the `--outfile`.
+The SSA reconstruction does not take many parameters but reconstructs an image from the input files, specified with the 
+`--file` flag. Temporary files are saved to the `--tmpDir` directory and the reconstruction is saved to the `--outfile`.
 ```
-specklepy_ssa your_files_*.fits -t tmp/ -o your_files_ssa.fits
+specklepy ssa your_files_*.fits -t tmp/ -o your_files_ssa.fits
 ```
 
 #### Holographic reconstruction
-For a holographic reconstruction, you can gather all your parameters in a parameter file and execute the script from your working directory:
+For a holographic reconstruction, you can gather all your parameters in a parameter file and execute the script from 
+your working directory:
 ```
-specklepy_holography your_parameter_file.ini
+specklepy holography your_parameter_file.ini
 ```
 
-An example parameter file is following `INI` structure. Note that the inDir is guiding to a path and the bash `*` may be used to collect all files matching to the description.
+An example parameter file is following `INI` structure. Note that the inDir is guiding to a path and the bash `*` may 
+be used to collect all files matching to the description.
 ```
 [PATHS]
 inDir = your_input_files_*.fits # May contain the bash *
@@ -94,10 +99,8 @@ noiseReferenceMargin = 3
 noiseThreshold = 1  # multiples of standard deviation
 
 [APODIZATION]
-# apodizationType = Airy # Gaussian or Airy
-# apodizationWidth = 4.777 # in pixels
-apodizationType = Gaussian
-apodizationWidth = 1.645
+apodizationType = Gaussian # Gaussian or Airy
+apodizationWidth = 1.645 # in pixels
 ```
 
 [(top)](#table-of-contents)
@@ -105,21 +108,21 @@ apodizationWidth = 1.645
 
 
 ## Synthetic image generator
-The `synthetic` module is capable of creating synthetic observations from parameter files and reference PSF data, especially short-exposure 'speckle' PSFs.
-The principle code is borrowed from VegaPy, the Virtual Exposure Generator for Astronomy in Python, but the code received multiple accelerations and features.
-A strong focus of the changes with respect to VegaPy was put on readability of the code and documentation.
+The `synthetic` module is capable of creating synthetic observations from parameter files and reference PSF data, 
+especially short-exposure 'speckle' PSFs. The principle code is borrowed from VegaPy, the Virtual Exposure Generator 
+for Astronomy in Python, but the code received multiple accelerations and features. A strong focus of the changes with 
+respect to VegaPy was put on readability of the code and documentation.
 
 For generating exposures just execute the binary:
 ```bash
-generate_exposures your_parameter_file.par
+specklepy generate your_parameter_file.par
 ```
 
-The parameter files follow `INI` structure syntax and are interpreted by the package parameter file reader.
-Units should be provided by adding `*u.` since the code is translated into `astropy.quantities`, using the `astropy.units` package.
-If no unit is provided, the objects usually interpret the values in default units.
-In the example below, the `sky_background = 14.4` will be interpreted in units mag / arcsec^2.
-We refer to the doc-strings in the code for further details.
-A parameter file could look like this:
+The parameter files follow `INI` structure syntax and are interpreted by the package parameter file reader. Quantities 
+can be provided with units and the code translates them into `astropy.quantities`, using the `astropy.units` package. 
+If no unit is provided, the objects usually interpret the values in default units. In the example below, the 
+`sky_background = 14.4` will be interpreted in units mag / arcsec^2. We refer to the doc-strings in the code for 
+further details. A parameter file could look like this:
 ```
 [TARGET]
 band = 'H'
@@ -127,25 +130,25 @@ star_table = your_star_table.dat
 sky_background = 14.4
 
 [TELESCOPE]
-diameter = 8.2*u.m
+diameter = 8.2 m
 central_obscuration = 0.14
 name = VLT Unit Telescope
 psf_source = AiryDisk
-psf_resolution = 20.5*u.mas
-radius = 50.6*u.mas
+psf_resolution = 20.5 mas
+radius = 50.6 mas
 
 [DETECTOR]
 shape = (1024, 1024)
-pixel_scale = 0.01*u.arcsec
-dark_current = 0.1*u.electron/u.s
-readout_noise = 35*u.electron
-system_gain = 17*u.electron/u.adu
+pixel_scale = 0.01 arcsec
+dark_current = 0.1 electron/ s
+readout_noise = 35 electron
+system_gain = 17 electron/ adu
 optics_transmission = 0.9
-quantum_efficiency = 0.9*u.electron/u.ph
-saturation_level = 60000*u.electron
+quantum_efficiency = 0.9 electron/ ph
+saturation_level = 60000 electron
 
 [KWARGS]
-DIT = 1.2*u.s
+DIT = 1.2 s
 nframes = 100
 nframes_limit = 100
 outfile = airy_1200ms.fits
