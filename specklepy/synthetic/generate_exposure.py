@@ -173,12 +173,6 @@ def get_objects(parameterfile, debug=False):
                     kwargs[key] = value
             except:
                 kwargs[key] = value
-                # try:
-            #     kwargs[key] = eval(value)
-            # except SyntaxError:
-            #     kwargs[key] = Quantity(value)
-            # except NameError:
-            #     kwargs[key] = value
             if debug:
                 print(key, type(kwargs[key]), kwargs[key])
 
