@@ -191,7 +191,8 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
-- *0.5.2dev*: Implement noise propagation during data reduction. The script `specklepy_reduction_setup` now creates a parameter file.
+- *0.5.2dev*: Implement calling with commands of a universal script. The reduction setup `specklepy reduce --setup` now 
+creates a parameter file. The synthetic exposure generator now accepts intuitive syntax ('5 km/ s') for quantities.
 - *0.5.1*: Implementation of the 'full' mode for reconstructions
 - *0.5.0*: The code is now easily installable, creates binary scripts to be used everywhere in the system. Extensive updates on the documentation.
 - *0.4.5*: Debugging the scripts and the logging scheme
