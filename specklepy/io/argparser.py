@@ -32,7 +32,16 @@ class GeneralArgParser(object):
         # Parser for reduction
         parser_reduction = subparsers.add_parser('reduce', help='Data reduction.')
         parser_reduction.set_defaults(command='reduce')
-        parser_reduction.add_argument('parfile', type=str, help='Path to a parameter file.')
+        parser_reduction.add_argument('parfile', type=str,
+                                      help='Path to a parameter file. This will be created if in setup mode')
+        parser_reduction.add_argument('--setup', action='store_true', help='Switch to setup mode.')
+        parser_reduction.add_argument('-f', '--files', type=str, default='./*',
+                                      help='Path to the files that will be listed in the outfile.')
+        parser_reduction.add_argument('-i', '--instrument', type=str, help='Name of the instrument.')
+        parser_reduction.add_argument('-o', '--outfile', type=str, default='specklepy_reduction_files.tab',
+                                      help="Name of the output file containing the file overview.")
+        parser_reduction.add_argument('-s', '--sortby', type=str, default='OBSTYPE',
+                                      help="Header card to sort the output table by.")
         parser_reduction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for SSA reconstruction
