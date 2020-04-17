@@ -4,25 +4,25 @@ star_table = specklepy/tests/files/example_star_table_arcsec.dat
 sky_background = 14.4
 
 [TELESCOPE]
-diameter = 8.2*u.m
+diameter = 8.2 m
 central_obscuration = 0.14
 name = VLT Unit Telescope
 psf_source = AiryDisk
-psf_resolution = 20.5013*u.mas
-radius = 50.635494509195034*u.mas
+psf_resolution = 20.5013 mas
+radius = 50.635494509195034 mas
 
 [DETECTOR]
 shape = (1024, 1024)
-pixel_scale = 0.0106*u.arcsec
-dark_current = 0.1*u.electron/u.s
-readout_noise = 35*u.electron
-system_gain = 17*u.electron/u.adu
+pixel_scale = 0.0106 arcsec
+dark_current = 0.1 electron/ s
+readout_noise = 35 electron
+system_gain = 17 electron/ adu
 optics_transmission = 0.0
-quantum_efficiency = 0.9*u.electron/u.ph
-saturation_level = 60000*u.electron
+quantum_efficiency = 0.9 electron/ ph
+saturation_level = 60000 electron
 
 [KWARGS]
-DIT = 0.6*u.s
+DIT = 0.6 s
 nframes = 10
 nframes_limit = 10
 outfile = specklepy/tests/files/synthetic/flat_600ms.fits

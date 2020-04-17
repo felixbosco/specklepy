@@ -4,23 +4,23 @@ star_table = specklepy/tests/files/example_star_table_arcsec.dat
 sky_background = 14.4
 
 [TELESCOPE]
-diameter = 8.2*u.m
+diameter = 8.2 m
 central_obscuration = 0.14
 name = VLT Unit Telescope
 psf_source = ../../simulations/glao_psf_10s.fits
 
 [DETECTOR]
 shape = (1024, 1024)
-pixel_scale = 0.0106*u.arcsec
-dark_current = 0.1*u.electron/u.s
-readout_noise = 35*u.electron
-system_gain = 17*u.electron/u.adu
+pixel_scale = 0.0106 arcsec
+dark_current = 0.1 electron/ s
+readout_noise = 35 electron
+system_gain = 17 electron/ adu
 optics_transmission = 0.9
-quantum_efficiency = 0.9*u.electron/u.ph
-saturation_level = 60000*u.electron
+quantum_efficiency = 0.9 electron/ ph
+saturation_level = 60000 electron
 
 [KWARGS]
-DIT = 0.2*u.s
+DIT = 0.2 s
 nframes = 800
 nframes_limit = 100
 outfile = specklepy/tests/files/synthetic/glao_200ms.fits
