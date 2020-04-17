@@ -14,16 +14,15 @@ def main():
     if args.command is 'generate':
 
         # Read parameters from file
-        if args.parfile is None:
-            raise RuntimeError("No parameter file was provided! Use --help for instructions.")
         objects = get_objects(args.parfile, debug=args.debug)
+        kwargs = objects['kwargs']
 
         # Generate exposures
         generate_exposure(target=objects['target'],
                           telescope=objects['telescope'],
                           detector=objects['detector'],
-                          **objects['kwargs'],
-                          debug=args.debug)
+                          debug=args.debug,
+                          **kwargs)
 
     elif args.command is 'reduce':
         pass
@@ -36,4 +35,3 @@ def main():
 
     elif args.command is 'aperture':
         pass
-    
