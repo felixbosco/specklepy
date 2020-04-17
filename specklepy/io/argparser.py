@@ -8,8 +8,8 @@ class GeneralArgParser(object):
     This argument parser defines argument parsing to the general script 'specklepy'.
 
     Methods:
-        parse_args (options):
-            Parse the command line input, considering the options.
+        parse_args(*args, **kwargs):
+            Parse the command line input.
     """
 
     def __init__(self):
@@ -21,7 +21,7 @@ class GeneralArgParser(object):
                         'Holography algorithm.',
             epilog="Execute 'specklepy <command> -h' for further information on the commands.")
         self.parser.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
-        subparsers = parser.add_subparsers(help='Available commands in Specklepy:')
+        subparsers = self.parser.add_subparsers(help='Available commands in Specklepy:')
 
         # Parser for generating synthetic images
         parser_generate = subparsers.add_parser('generate', help='Generate synthetic exposures.')
@@ -50,5 +50,17 @@ class GeneralArgParser(object):
         parser_aperture.add_argument('mode', choices=[], help='Modes for the aperture analysis')
 
 
-    def parse_args(self, options=None):
-        self.parser.parse_args(options=options)
+    def parse_args(self, *args, **kwargs):
+        """Parse command line arguments.
+
+        Args:
+            *args:
+                Parsed to self.parser.parse_args().
+            **kwargs:
+                Parsed to self.parser.parse_args().
+
+        Returns:
+            args (argparse.Namespace):
+                argparse.Namespace object that contains parsed arguments from self.parser.parse_args().
+        """
+        return self.parser.parse_args(*args, **kwargs)
