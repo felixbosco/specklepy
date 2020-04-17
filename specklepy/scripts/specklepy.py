@@ -2,9 +2,11 @@
 
 import os
 
+from specklepy.core.holography import holography
 from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io.filemanager import FileManager
+from specklepy.io.parameterset import ParameterSet
 from specklepy.reduction import steps
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
@@ -53,7 +55,23 @@ def main():
         ssa(files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
 
     elif args.command is 'holography':
-        pass
+
+        # Default values
+        dir = os.path.dirname(__file__)
+        defaults_file = os.path.join(dir, '../config/holography.cfg')
+        essential_attributes = {'paths': ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile'],
+                                'starfinder': ['starfinderFwhm', 'noiseThreshold'],
+                                'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin'],
+                                'apodization': ['apodizationWidth', 'apodizationType'],
+                                'options': ['reconstructionMode', 'varianceExtensionName']}
+        make_dirs = ['tmpDir']
+
+        # Read parameters from file
+        params = ParameterSet(parameter_file=args.parfile, defaults_file=defaults_file,
+                              essential_attributes=essential_attributes, make_dirs=make_dirs)
+
+        # Execute reconstruction
+        holography(params, mode=params.options.reconstructionMode, debug=args.debug)
 
     elif args.command is 'aperture':
         pass
