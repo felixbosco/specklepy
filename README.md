@@ -164,7 +164,7 @@ cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}
 ## Development:
 These are the current To-Do items:
 * General:
-  * **low priority:** Create general script with signature "specklepy holography -f ..."
+  * ~~**low priority:** Create general script with signature "specklepy holography -f ..."~~
   * ~~**low priority:** Make command line arguments to positional arguments for required args~~
 * data reduction module:
   * Flatfield correction from flat frames
@@ -191,6 +191,7 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
+- *0.5.3dev*: Working on the data reduction flow.
 - *0.5.3*: Implemented calling with commands of a universal script, a la `specklepy reduce --setup`. The synthetic 
 exposure generator now accepts intuitive syntax ('5 km/ s') for quantities.
 - *0.5.2*: Implement noise propagation during data reduction. The reduction setup `specklepy_reduction_setup` now 
