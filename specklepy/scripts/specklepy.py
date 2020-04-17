@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from specklepy.io.argparser import GeneralArgParser
+from specklepy.reduction import steps
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
 
@@ -25,7 +26,17 @@ def main():
                           **kwargs)
 
     elif args.command is 'reduce':
+
+        # In setup mode
+        if args.setup:
+            steps.setup(args)
+
+            # Quit program for interactiong with the new parameter file
+            return 0
+
+        # Else start reduction following the parameter file
         pass
+
 
     elif args.command is 'ssa':
         pass
