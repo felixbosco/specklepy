@@ -26,23 +26,31 @@ class GeneralArgParser(object):
         # Parser for generating synthetic images
         parser_generate = subparsers.add_parser('generate', help='Generate synthetic exposures.')
         parser_generate.set_defaults(command='generate')
-        parser_generate.add_argument('parfile', type=str, help='Path to a parameter file')
+        parser_generate.add_argument('parfile', type=str, help='Path to a parameter file.')
 
         # Parser for reduction
         parser_reduction = subparsers.add_parser('reduce', help='Data reduction.')
         parser_reduction.set_defaults(command='reduce')
-        parser_reduction.add_argument('parfile', type=str, help='Path to a parameter file')
+        parser_reduction.add_argument('parfile', type=str, help='Path to a parameter file.')
 
         # Parser for SSA reconstruction
         parser_ssa = subparsers.add_parser('ssa', help='Image reconstruction with the SSA algorithm.')
         parser_ssa.set_defaults(command='ssa')
-        parser_ssa.add_argument('parfile', type=str, help='Path to a parameter file')
+        parser_ssa.add_argument('files', type=str,
+                                help='Generic FITS file name or list of files to consider for the SSA reconstruction.')
+        parser_ssa.add_argument('-m', '--mode', type=str, default='same', choices=['same', 'full', 'valid'],
+                                help="The mode defines the final image size. In 'same' mode, the final image will have "
+                                     "the size of the first input image. In 'full' mode, every patch of the sky that "
+                                     "is covered by at least one exposure will be part of the output image. In 'valid' "
+                                     "mode, the output image will only cover the cross section of all exposures.")
+        parser_ssa.add_argument('-o', '--outfile', type=str, default='ssa.fits', help='Name of the output file.')
+        parser_ssa.add_argument('-t', '--tmpdir', type=str, default='tmp/', help='Path for saving temporary files.')
 
-        # Parser for SSA reconstruction
+        # Parser for holographic reconstruction
         parser_holography = subparsers.add_parser('holography',
                                                   help='Image reconstruction with the Holography algorithm.')
         parser_holography.set_defaults(command='holography')
-        parser_holography.add_argument('parfile', type=str, help='Path to a parameter file')
+        parser_holography.add_argument('parfile', type=str, help='Path to a parameter file.')
 
         # Parser for aperture analysis
         parser_aperture = subparsers.add_parser('aperture', help='Aperture analysis in the image data.')
