@@ -6,6 +6,10 @@ class GeneralArgParser(object):
     """General argument parser.
 
     This argument parser defines argument parsing to the general script 'specklepy'.
+
+    Methods:
+        parse_args (options):
+            Parse the command line input, considering the options.
     """
 
     def __init__(self):
