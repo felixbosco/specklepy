@@ -9,18 +9,18 @@ from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 from specklepy.logging import logger
 
 
-def setup(args):
+def setup(files, instrument, sortby, outfile, parfile):
     header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
     instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
     # Verification of args
-    if not os.path.isdir(os.path.dirname(args.files)):
-        raise RuntimeError("Path not found: {}".format(args.files))
+    if not os.path.isdir(os.path.dirname(files)):
+        raise RuntimeError("Path not found: {}".format(files))
 
     # Read config
     config = ConfigParser()
     config.read(instrument_config_file)
-    instrument = config['INSTRUMENTS'][args.instrument]
+    instrument = config['INSTRUMENTS'][instrument]
     instrument_header_cards = config[instrument]
 
     # Double check whether all aliases are defined
@@ -34,10 +34,10 @@ def setup(args):
             header_cards.remove(card)
 
     # Find files
-    if '*' in args.files:
-        files = glob.glob(args.files)
+    if '*' in files:
+        files = glob.glob(files)
     else:
-        files = glob.glob(args.files + '*fits')
+        files = glob.glob(files + '*fits')
     logger.info("Found {} file(s)".format(len(files)))
 
     # Prepare dictionary for collecting table data
@@ -65,15 +65,15 @@ def setup(args):
     table = Table([table_data[keyword] for keyword in table_data.keys()], names=table_data.keys())
     table.sort('FILE')
     table.sort('OBSTYPE')
-    table.sort(args.sortby)
-    logger.info("Writing data to {}".format(args.outfile))
-    table.write(args.outfile, format='ascii.fixed_width', overwrite=True)
+    table.sort(sortby)
+    logger.info("Writing data to {}".format(outfile))
+    table.write(outfile, format='ascii.fixed_width', overwrite=True)
 
     # Write dummy parameter file for the reduction
-    logger.info("Creating default reduction INI file {}".format(args.parfile))
+    logger.info("Creating default reduction INI file {}".format(parfile))
     par_file_content = "[PATHS]" \
-                       f"\nfilePath = {args.files}" \
-                       f"\nfileList = {args.outfile}" \
+                       f"\nfilePath = {files}" \
+                       f"\nfileList = {outfile}" \
                        "\ntmpDir = tmp/" \
                        "\n\n[FLAT]" \
                        "\nskipFlat = False" \
@@ -82,5 +82,5 @@ def setup(args):
                        "\n\n[SKY]" \
                        "\nskipSky = False" \
                        "\nskySubtractionPrefix = s"
-    with open(args.parfile, 'w+') as parfile:
+    with open(parfile, 'w+') as parfile:
         parfile.write(par_file_content)
