@@ -27,11 +27,13 @@ class GeneralArgParser(object):
         parser_generate = subparsers.add_parser('generate', help='Generate synthetic exposures.')
         parser_generate.set_defaults(command='generate')
         parser_generate.add_argument('parfile', type=str, help='Path to a parameter file.')
+        parser_generate.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for reduction
         parser_reduction = subparsers.add_parser('reduce', help='Data reduction.')
         parser_reduction.set_defaults(command='reduce')
         parser_reduction.add_argument('parfile', type=str, help='Path to a parameter file.')
+        parser_reduction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for SSA reconstruction
         parser_ssa = subparsers.add_parser('ssa', help='Image reconstruction with the SSA algorithm.')
@@ -45,17 +47,20 @@ class GeneralArgParser(object):
                                      "mode, the output image will only cover the cross section of all exposures.")
         parser_ssa.add_argument('-o', '--outfile', type=str, default='ssa.fits', help='Name of the output file.')
         parser_ssa.add_argument('-t', '--tmpdir', type=str, default='tmp/', help='Path for saving temporary files.')
+        parser_ssa.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for holographic reconstruction
         parser_holography = subparsers.add_parser('holography',
                                                   help='Image reconstruction with the Holography algorithm.')
         parser_holography.set_defaults(command='holography')
         parser_holography.add_argument('parfile', type=str, help='Path to a parameter file.')
+        parser_holography.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for aperture analysis
         parser_aperture = subparsers.add_parser('aperture', help='Aperture analysis in the image data.')
         parser_aperture.set_defaults(command='aperture')
         parser_aperture.add_argument('mode', choices=[], help='Modes for the aperture analysis')
+        parser_aperture.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
 
     def parse_args(self, *args, **kwargs):
