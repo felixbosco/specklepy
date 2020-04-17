@@ -10,13 +10,11 @@ from specklepy.utils import transferfunctions as tf
 
 
 # Define plotting defaults
-font = {
-    'family' : 'serif',
-    #'weight' : 'bold',
-    #'size'   : 'larger'
-    }
-
-plt.rc('font', **font)  # pass in the font dict as kwargs
+plt.rc('figure', figsize=(11.69, 8.27)) # A4 format in inches
+plt.rc('xtick', direction='in')
+plt.rc('ytick', direction='in')
+plt.rc('font', family='serif', size=14)
+DPI = 400
 
 
 
