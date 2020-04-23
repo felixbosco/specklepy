@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import os
+from astropy.utils import iers  # Suppress downloading from IERS
+iers.conf.auto_download = False  # Suppress downloading from IERS
 
 from specklepy.core.holography import holography
 from specklepy.core.ssa import ssa
