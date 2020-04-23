@@ -70,18 +70,18 @@ def setup(path, instrument, parfile, filelist, sortby=None):
     # Read data from files
     for file in files:
         logger.info(f"Retrieving header information from file {file}")
-        try:
-            hdr = fits.getheader(file)
-        except (AstropyWarning, AstropyUserWarning):
-            print("Caught")
+        # try:
+        hdr = fits.getheader(file)
+        # except (AstropyWarning, AstropyUserWarning):
+        #     print("Caught")
         table_data['FILE'].append(os.path.basename(file))
         for card in header_cards:
             try:
                 table_data[card].append(hdr[instrument_header_cards[card]])
             except KeyError:
-                logger.info(
-                    f"Skipping file {os.path.basename(file)} due to missing header card ({instrument_header_cards[card]}).")
-                table_data[card].append("_" * 3)
+                logger.info(f"Skipping file {os.path.basename(file)} due to missing header card "
+                            f"({instrument_header_cards[card]}).")
+                table_data[card].append("/" * 3)
 
     # Create table from dict and save
     table = Table([table_data[keyword] for keyword in table_data.keys()], names=table_data.keys())
