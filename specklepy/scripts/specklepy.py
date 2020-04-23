@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# TODO: Export all the steps into external functions to make this script short and concise
+
 import os
 from astropy.utils import iers  # Suppress downloading from IERS
 iers.conf.auto_download = False  # Suppress downloading from IERS
@@ -10,8 +12,7 @@ from specklepy.io.argparser import GeneralArgParser
 from specklepy.io.filemanager import FileManager
 from specklepy.io.parameterset import ParameterSet
 from specklepy.logging import logger
-from specklepy.reduction import setup
-from specklepy.reduction.flat import MasterFlat
+from specklepy.reduction import setup, run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
 
@@ -64,37 +65,8 @@ def main():
                               essential_attributes=essential_attributes,
                               make_dirs=['tmpDir'])
 
-        # (0) Read file list table
-        logger.info("Reading file list ...")
-        inFiles = FileManager(params.paths.fileList)
-        logger.info('\n' + str(inFiles.table))
+        run.all(params)
 
-        # (1) Initialize reduction files
-        # TODO: Implement a data model for the reduction files
-
-        # (2) Flat fielding
-        if not params.flat.skip:
-            flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
-            if len(flat_files) == 0:
-                logger.warning("Did not find any flat field observations. No flat field correction will be applied!")
-            else:
-                logger.info("Starting flat field correction...")
-                master_flat = MasterFlat(flat_files, filename=params.flat.masterFlatFile,
-                                         file_path=params.paths.filePath)
-                master_flat.combine()
-
-        # (3) Linearization
-        # TODO: Implement linearization
-
-        # (4) Sky subtraction
-        if not params.sky.skip:
-            sky_files = inFiles.filter({'OBSTYPE': 'SKY'})
-            if len(sky_files) == 0:
-                logger.warning("Did not find any sky observations. No sky subtraction will be applied!")
-            else:
-                logger.info("Starting sky subtraction...")
-                logger.info(f"Source of sky background measurement: {params.sky.source}")
-                print(sky_files)
 
     elif args.command is 'ssa':
 
