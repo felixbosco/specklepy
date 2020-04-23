@@ -98,11 +98,13 @@ class ParameterSet(object):
         self.makedirs(dir_list=make_dirs)
 
         # Create file lists
-        try:
+        if hasattr(self.paths, 'inDir'):
             self.inFiles = FileManager(self.paths.inDir).files
-        except AttributeError:
-            logger.warning("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in "
-                           "parameter file!")
+        # try:
+        #     self.inFiles = FileManager(self.paths.inDir).files
+        # except AttributeError:
+        #     logger.warning("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in "
+        #                    "parameter file!")
 
     def makedirs(self, dir_list):
         """
