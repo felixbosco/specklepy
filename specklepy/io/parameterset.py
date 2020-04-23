@@ -1,7 +1,5 @@
 import os
 import configparser
-# from configparser import ConfigParser
-from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logger
@@ -41,55 +39,41 @@ class ParameterSet(object):
         if isinstance(parameter_file, str):
             # Check whether file exist
             if not os.path.isfile(parameter_file):
-                raise FileNotFoundError("Parameter file {} not found!".format(parameter_file))
+                raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
             self.parameter_file = parameter_file
         else:
-            raise SpecklepyTypeError('ParameterSet', argname='parameter_file', argtype=type(parameter_file), expected='str')
+            raise SpecklepyTypeError('ParameterSet', argname='parameter_file',
+                                     argtype=type(parameter_file), expected='str')
 
         if isinstance(defaults_file, str):
             if not os.path.isfile(defaults_file):
-                raise FileNotFoundError("Defaults file {} not found!".format(defaults_file))
+                raise FileNotFoundError(f"Defaults file {defaults_file} not found!")
             self.defaults_file = defaults_file
         elif defaults_file is None:
             self.defaults_file = defaults_file
         else:
-            raise SpecklepyTypeError('ParameterSet', argname='defaults_file', argtype=type(defaults_file), expected='str')
+            raise SpecklepyTypeError('ParameterSet', argname='defaults_file',
+                                     argtype=type(defaults_file), expected='str')
 
         if essential_attributes is None:
             essential_attributes = {}
         if make_dirs is None:
             make_dirs = []
 
-
         # Create essential attributes from defaults file
         if self.defaults_file is not None:
             defaults = configparser.ConfigParser(inline_comment_prefixes="#")
             defaults.optionxform = str  # make option names case sensitive
-            logger.info("Reading defaults file {}".format(self.defaults_file))
+            logger.info(f"Reading defaults file {self.defaults_file}")
             defaults.read(self.defaults_file)
 
             for section in defaults.sections():
                 setattr(self, section.lower(), Section(defaults[section]))
-            # for attr in essential_attributes:
-            #     if not hasattr(self, attr):
-            #         attr_set = False
-            #         for section in defaults.sections():
-            #             for key in defaults[section]:
-            #                 if key == attr:
-            #                     value = defaults[section][key]
-            #                     # Interprete data type
-            #                     try:
-            #                         setattr(self, key, eval(value))
-            #                     except:
-            #                         setattr(self, key, value)
-            #                     attr_set = True
-            #         if not attr_set:
-            #             logger.warning("Essential parameter '{}' not found in parameter file or config file!".format(attr))
 
         # Overwrite attributes from parameter_file
         parser = configparser.ConfigParser(inline_comment_prefixes="#")
         parser.optionxform = str  # make option names case sensitive
-        logger.info("Reading parameter file {}".format(self.parameter_file))
+        logger.info(f"Reading parameter file {self.parameter_file}")
         parser.read(self.parameter_file)
         for section in parser.sections():
             if not hasattr(self, section.lower()):
@@ -101,13 +85,6 @@ class ParameterSet(object):
                         getattr(self, section.lower()).__setattr__(option, eval(value))
                     except:
                         getattr(self, section.lower()).__setattr__(option, value)
-            # for key in parser[section]:
-            #     value = parser[section][key]
-            #     # Interprete data type
-            #     try:
-            #         setattr(self, key, eval(value))
-            #     except:
-            #         setattr(self, key, value)
 
         # Check for the essential parameters
         for section in essential_attributes.keys():
@@ -117,7 +94,6 @@ class ParameterSet(object):
                 if not hasattr(getattr(self, section), attr):
                     raise AttributeError(f"ParameterSet.{section} does not have essential attribute {attr}!")
 
-
         # Create directories
         self.makedirs(dir_list=make_dirs)
 
@@ -125,9 +101,8 @@ class ParameterSet(object):
         try:
             self.inFiles = FileManager(self.paths.inDir).files
         except AttributeError:
-            logger.warning("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in parameter file!")
-
-
+            logger.warning("ParameterSet instance is not storing 'inFiles' due to missing entry 'inDir' parameter in "
+                           "parameter file!")
 
     def makedirs(self, dir_list):
         """
@@ -136,11 +111,10 @@ class ParameterSet(object):
 
         for key in dir_list:
             path = getattr(self.paths, key)
-            path = os.path.dirname(path) + '/' # Cosmetics to allow for generic input for inDir
+            path = os.path.dirname(path) + '/'  # Cosmetics to allow for generic input for inDir
             if not os.path.exists(path):
-                logger.info('Creating {} directory {}'.format(key, path))
+                logger.info(f"Creating {key} directory {path}")
                 os.makedirs(path)
-
 
 
 class Section(object):
