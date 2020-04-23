@@ -14,7 +14,7 @@ from specklepy.synthetic.detector import Detector
 
 def generate_exposure(target, telescope, detector, DIT,
                       nframes=1, nframes_limit=100, dithers=None,
-                      outfile='exposure.fits', time_stamp='end',
+                      outfile='exposure.fits', time_stamp=None,
                       debug=False, **kwargs):
     """Generate synthetic exposures from target, telescope and detector objects.
 
@@ -29,15 +29,27 @@ def generate_exposure(target, telescope, detector, DIT,
 
     Args:
         target (specklepy.synthetic.Target):
+            Target instance that will be 'observed'.
         telescope (specklepy.synthetic.Telescope):
+            Telescope instance that will 'observe'.
         detector (specklepy.synthetic.Detector):
+            Detector instance that will be 'exposed'.
         DIT (astropy.units.Quantity):
+            Discrete integration time for each exposure.
         nframes (int, optional):
+            Number of frames that will be generated. Default is 1.
         nframes_limit (int, optional):
+            Maximum number of frames per outfile. Default is 100.
         dithers (list, optional):
+            List of dither positions, offsets from the Target instance center. Default is None.
         outfile (str, optional):
+            Base name of the output file. If multiple files are requested, the index will be appended. Default is
+            'exposure.fits'.
         time_stamp (str, optional):
+            Time stamp that can be added to outfile. Can be either 'start', 'end' or None to suppress adding the time
+            stamp. Default is None.
         debug (bool, optional):
+            Show debugging information. Default is False.
     """
 
     # Compute number of files
