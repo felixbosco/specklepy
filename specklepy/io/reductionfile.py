@@ -5,12 +5,12 @@ from datetime import datetime
 
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.io.outfile import Outfile
-from specklepy.logging import logger
 
 
 class ReductionFile(Outfile):
 
-    def __init__(self, file, data=None, prefix=None, path=None, reduction=None, last_reduction=None, header_card_prefix="HIERARCH SPECKLEPY"):
+    def __init__(self, file, data=None, prefix=None, path=None, reduction=None, last_reduction=None,
+                 header_card_prefix="HIERARCH SPECKLEPY"):
         """Class that carries the link to a file for data reduction products.
 
         Args:
@@ -65,16 +65,18 @@ class ReductionFile(Outfile):
         elif isinstance(last_reduction, str):
             self.last_reduction = last_reduction
         else:
-            raise SpecklepyTypeError('ReductionFile', argname='last_reduction', argtype=type(last_reduction), expected='str')
+            raise SpecklepyTypeError('ReductionFile', argname='last_reduction', argtype=type(last_reduction),
+                                     expected='str')
 
         if header_card_prefix is None or isinstance(header_card_prefix, str):
             self.header_card_prefix = header_card_prefix
         else:
-            raise SpecklepyTypeError('ReductionFile', argname='header_card_prefix', argtype=type(header_card_prefix), expected='str')
+            raise SpecklepyTypeError('ReductionFile', argname='header_card_prefix', argtype=type(header_card_prefix),
+                                     expected='str')
 
 
         # Create file name
-        self.filename = self.prefix + os.path.basename(self.parent_file) # Make sure to get rid of the path
+        self.filename = self.prefix + os.path.basename(self.parent_file)  # Make sure to get rid of the path
 
         # Read header information and data from parent file
         with fits.open(self.parent_file) as hdulist:
@@ -96,7 +98,7 @@ class ReductionFile(Outfile):
             if 'PIPELINE' not in header.keys():
                 # Parent file is not a ReductionFile
                 header.set('PIPELINE', 'SPECKLEPY')
-            header.set(reduction, str(datetime.now())) # Store the current reduction step
+            header.set(reduction, str(datetime.now()))  # Store the current reduction step
 
             if self._data is None:
                 primary_data = hdulist[0].data
