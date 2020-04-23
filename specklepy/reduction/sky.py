@@ -11,7 +11,6 @@ from specklepy.exceptions import SpecklepyTypeError
 from specklepy.utils.plot import imshow
 
 
-
 def identify_sequences(file_list, file_path='', ignore_time_stamps=False):
 
     """Identify observational sequences for sky subtraction.
@@ -65,7 +64,6 @@ def identify_sequences(file_list, file_path='', ignore_time_stamps=False):
     return sequences
 
 
-
 class Sequence(object):
 
     def __init__(self, science_files, sky_files, file_path=None):
@@ -87,16 +85,12 @@ class Sequence(object):
         else:
             raise SpecklepyTypeError('Sequence', 'file_path', type(file_path), 'str')
 
-
     def __call__(self, outpath, filename_prefix=None):
         pass
-
-
 
     @property
     def files(self):
         return self.sky_files + self.science_files
-
 
     def make_master_sky(self):
 
@@ -131,7 +125,6 @@ class Sequence(object):
             self.master_sky = np.divide(np.sum(np.multiply(master_sky, master_sky_uncertainty), axis=0), np.sum(master_sky_uncertainty, axis=0))
             self.master_sky_std = np.sqrt(np.sum(np.square(master_sky_uncertainty), axis=0))
 
-
     def subtract_master_sky(self, saveto=None, filename_prefix=None):
 
         if filename_prefix is None:
@@ -148,11 +141,9 @@ class Sequence(object):
                 logger.info('Saving sky subtracted data to file {}'.format(os.path.join(saveto, filename_prefix + file)))
                 hdulist[0].writeto(os.path.join(saveto, filename_prefix + file))
 
-
     def time_stamp(self):
         """Return a time stamp str of format 'YYYYMMDD_HHMMSS'."""
         return datetime.now().strftime('%Y%m%d_%H%M%S')
-
 
 
 def subtract_scalar_background(files, params, prefix=None, debug=False):
@@ -199,7 +190,6 @@ def subtract_scalar_background(files, params, prefix=None, debug=False):
     logger.info("Scalar background subtraction complete!")
 
 
-
 def subtract(params, mode='constant', debug=False):
     logger.info("Subtracting sky from files\n\t{}".format(params.scienceFiles))
     logger.info("Sky files are\n\t{}".format(params.skyFiles))
@@ -227,3 +217,14 @@ def subtract(params, mode='constant', debug=False):
             for frame_index, frame in enumerate(hdulist[0].data):
                 hdulist[0].data[frame_index] -= median
                 hdulist.flush()
+
+
+def get_sky_background(file, path=None):
+    if path is not None:
+        file = os.path.join(path, file)
+    print(file)
+    data = fits.getdata(file)
+    if data.ndim is 3:
+        bkg, d_bkg = np.mean(data, axis=(1, 2)), np.std(data, axis=(1, 2))
+
+    print(bkg, d_bkg)
