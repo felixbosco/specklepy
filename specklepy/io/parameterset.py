@@ -40,7 +40,7 @@ class ParameterSet(object):
             # Check whether file exist
             if not os.path.isfile(parameter_file):
                 raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
-            self.parameter_file = parameter_file
+            self.parameter_file = os.path.abspath(parameter_file)
         else:
             raise SpecklepyTypeError('ParameterSet', argname='parameter_file',
                                      argtype=type(parameter_file), expected='str')
@@ -48,12 +48,13 @@ class ParameterSet(object):
         if isinstance(defaults_file, str):
             if not os.path.isfile(defaults_file):
                 raise FileNotFoundError(f"Defaults file {defaults_file} not found!")
-            self.defaults_file = defaults_file
+            self.defaults_file = os.path.abspath(defaults_file)
         elif defaults_file is None:
             self.defaults_file = defaults_file
         else:
             raise SpecklepyTypeError('ParameterSet', argname='defaults_file',
                                      argtype=type(defaults_file), expected='str')
+
 
         if essential_attributes is None:
             essential_attributes = {}
