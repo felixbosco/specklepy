@@ -47,9 +47,9 @@ class FileManager(object):
             raise SpecklepyTypeError("FileManager", 'input', type(input), 'str')# received input of unexpected type ({}).".format(type(input)))
 
         # Log identified input files
-        logger.info("FileManager lists the following files:")
+        logger.debug("FileManager lists the following files:")
         for f, file in enumerate(self.files):
-            logger.info("{:4d}: {}".format(f+1, file))
+            logger.debug("{:4d}: {}".format(f+1, file))
 
         # Initialize the index for iteration
         self.index = 0
