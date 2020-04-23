@@ -9,19 +9,19 @@ from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 from specklepy.logging import logger
 
 
-def setup(files, instrument, parfile, filelist, sortby):
+def setup(files, instrument, parfile, filelist, sortby=None):
     """Sets up the data reduction parameter file and file list.
 
     Args:
         files (str):
             Path to the files.
-        instrument:
+        instrument (str):
             Name of the instrument that took the data. This must be covered by config/instruments.cfg.
-        parfile:
+        parfile (str):
             Name of the parameter file.
-        filelist:
+        filelist (str):
             Name of the file that contains all the files.
-        sortby:
+        sortby (str, optional):
             Header card that is used for the sorting of files.
     """
 
@@ -81,7 +81,8 @@ def setup(files, instrument, parfile, filelist, sortby):
     table = Table([table_data[keyword] for keyword in table_data.keys()], names=table_data.keys())
     table.sort('FILE')
     table.sort('OBSTYPE')
-    table.sort(sortby)
+    if sortby:
+        table.sort(sortby)
     logger.info(f"Writing data to {filelist}")
     table.write(filelist, format='ascii.fixed_width', overwrite=True)
 
