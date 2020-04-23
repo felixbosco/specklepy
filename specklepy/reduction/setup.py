@@ -99,11 +99,9 @@ def setup(path, instrument, parfile, filelist, sortby=None):
                        f"\nfileList = {filelist}" \
                        "\ntmpDir = tmp/" \
                        "\n\n[FLAT]" \
-                       "\nskipFlat = False" \
                        "\nmasterFlatFile = MasterFlat.fits" \
                        "\nflatCorrectionPrefix = f_" \
                        "\n\n[SKY]" \
-                       "\nskipSky = False" \
                        "\nskySubtractionPrefix = s"
     with open(parfile, 'w+') as parfile:
         parfile.write(par_file_content)

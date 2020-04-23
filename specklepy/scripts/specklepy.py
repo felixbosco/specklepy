@@ -11,6 +11,7 @@ from specklepy.io.filemanager import FileManager
 from specklepy.io.parameterset import ParameterSet
 from specklepy.logging import logger
 from specklepy.reduction import setup
+from specklepy.reduction.flat import MasterFlat
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
 
@@ -48,7 +49,31 @@ def main():
             return 0
 
         # Else start reduction following the parameter file
-        pass
+        # Default values
+        defaults_file = os.path.join(os.path.dirname(__file__), '../config/reduction.cfg')
+        essential_attributes = {'paths': ['filePath', 'fileList', 'outDir', 'tmpDir', 'filePrefix'],
+                                'setup': ['setupKeywords'],
+                                'flat': ['skip', 'flatCorrectionPrefix'],
+                                'sky': ['skip', 'ignoreTimeStamps', 'skySubtractionPrefix', 'fromImage',
+                                        'backgroundMethod', 'backgroundSigmaClip']}
+
+        # Read parameters for parameter file
+        params = ParameterSet(parameter_file=args.parfile,
+                              defaults_file=defaults_file,
+                              essential_attributes=essential_attributes,
+                              make_dirs=['tmpDir'])
+
+        # Execute data reduction
+        # (0) Read file list table
+        logger.info("Reading file list ...")
+        inFiles = FileManager(params.paths.fileList)
+        logger.info('\n' + str(inFiles.table))
+
+        # (1) Flat fielding
+        if params.flat:
+            flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
+            master_flat = MasterFlat(flat_files, filename=params.flat.masterFlatFile, file_path=params.paths.filePath)
+            master_flat.combine()
 
     elif args.command is 'ssa':
 
