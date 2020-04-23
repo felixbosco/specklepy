@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 import numpy as np
 from configparser import ConfigParser
+
 from astropy.io import fits
 from astropy.units import Quantity
 
@@ -11,8 +12,10 @@ from specklepy.synthetic.telescope import Telescope
 from specklepy.synthetic.detector import Detector
 
 
-
-def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit=100, dithers=None, outdir=None, outfile='exposure.fits', time_stamp='end', debug=False, **kwargs):
+def generate_exposure(target, telescope, detector, DIT,
+                      nframes=1, nframes_limit=100, dithers=None,
+                      outfile='exposure.fits', time_stamp='end',
+                      debug=False, **kwargs):
     """Generate synthetic exposures from target, telescope and detector objects.
 
     The function generate_exposure() is the central function of the synthetic
@@ -32,7 +35,6 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
         nframes (int, optional):
         nframes_limit (int, optional):
         dithers (list, optional):
-        outdir (str, optional):
         outfile (str, optional):
         time_stamp (str, optional):
         debug (bool, optional):
@@ -41,28 +43,30 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     # Compute number of files
     nfiles = nframes // nframes_limit
     nframes_left = nframes % nframes_limit
-    logger.info("Creating {} files with {} synthetic exposures and adding {} frames to an additional file.".format(nfiles, nframes_limit, nframes_left))
-
+    if nframes_left:
+        logger.info(f"Creating {nfiles} files with {nframes_limit} synthetic exposures and adding {nframes_left} "
+                    f"frames to an additional file")
+    else:
+        logger.info(f"Creating {nfiles} files with {nframes_limit} synthetic exposures")
 
     # Add a time stamp to file name, if not None
     outdir, outfile = os.path.split(outfile)
     now = datetime.now()
     time_str = now.strftime('%Y%m%d_%H%M%S')
     if time_stamp == 'end':
-        outfile = outfile.replace('.fits', '_{}.fits'.format(time_str))
+        outfile = outfile.replace('.fits', f"_{time_str}.fits")
     elif time_stamp == 'start':
-        outfile =  '{}_{}'.format(time_str, outfile)
+        outfile = f"{time_str}_{outfile}"
     elif time_stamp is None:
         pass
     outfile = os.path.join(outdir, outfile)
-
 
     # Initialize fits header
     hdu = fits.PrimaryHDU()
     hdu.data = np.zeros((nframes_limit,) + detector.shape)
     hdu.header.set('DIT', DIT.value, DIT.unit)
     hdu.header.set('DATE', str(datetime.now()))
-    if 'cards' in  kwargs:
+    if 'cards' in kwargs:
         for key in kwargs['cards']:
             hdu.header.set(key, kwargs['cards'][key])
     # Add object attributes to header information
@@ -76,38 +80,35 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
         for key in dict:
             if key in skip_attributes[object_name]:
                 continue
-            card = "HIERARCH SPECKLEPY {} {}".format(object_name.upper(), key.upper())
+            card = f"HIERARCH SPECKLEPY {object_name.upper()} {key.upper()}"
             if isinstance(dict[key], Quantity):
-                hdu.header.set(card, "{:.3e}".format(dict[key].value), dict[key].unit) # Appending the unit of a Quantity to the comment
+                hdu.header.set(card, f"{dict[key].value:.3e}", dict[key].unit)  # Appending the unit of a Quantity to the comment
             elif isinstance(dict[key], str):
-                hdu.header.set(card, os.path.basename(dict[key])) # Suppress (long) relative paths
+                hdu.header.set(card, os.path.basename(dict[key]))  # Suppress (long) relative paths
             elif isinstance(dict[key], tuple):
-                _tuple = tuple([x.value for x in dict[key]]) # Separating tuple unit from values
+                _tuple = tuple([x.value for x in dict[key]])  # Separating tuple unit from values
                 hdu.header.set(card, str(_tuple), dict[key][0].unit)
             else:
                 hdu.header.set(card, dict[key])
 
-
     # Write header to one or more files, depending on 'nframes' and 'nframes_limit'
     outfiles = []
     for n in range(nfiles):
-        filename = outfile.replace('.fits', '_{}.fits'.format(n + 1))
+        filename = outfile.replace('.fits', f"_{n + 1}.fits")
         outfiles.append(filename)
         hdu.writeto(filename, overwrite=True)
     # Create file for the left over frames
     if nframes_left > 0:
-        filename = outfile.replace('.fits', '_{}.fits'.format(nfiles + 1))
+        filename = outfile.replace('.fits', f"_{nfiles + 1}.fits")
         outfiles.append(filename)
         hdu.data = np.zeros((nframes_left,) + detector.shape)
         hdu.writeto(filename, overwrite=True)
 
-
     # Initialize parameters for frame computation
-    if ('readout_time' in kwargs):
-        skip_frames = int( kwargs['readout_time'] / telescope.psf_timestep )
+    if 'readout_time' in kwargs:
+        skip_frames = int(kwargs['readout_time'] / telescope.psf_timestep)
     else:
         skip_frames = 0
-
 
     # Computation of frames
     frame_counter = 0
@@ -115,14 +116,20 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
         with fits.open(outfile, mode='update') as hdulist:
             # Get a new field of view for each file to enable dithering between files
             if dithers is not None:
-                dither = dithers[outfile_index]
+                try:
+                    dither = dithers[outfile_index]
+                except IndexError:
+                    raise RuntimeError(f"Expected {len(outfiles)} dither positions but received only {len(dithers)}!")
             else:
                 dither = None
-            photon_rate_density = target.get_photon_rate_density(FoV=detector.FoV, resolution=telescope.psf_resolution, dither=dither)
+            photon_rate_density = target.get_photon_rate_density(FoV=detector.FoV, resolution=telescope.psf_resolution,
+                                                                 dither=dither)
 
             for index in range(hdulist[0].header['NAXIS3']):
                 photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=DIT, debug=debug)
-                counts = detector.get_counts(photon_rate=photon_rate, integration_time=DIT, photon_rate_resolution=target.resolution, debug=debug)
+                counts = detector.get_counts(photon_rate=photon_rate,
+                                             integration_time=DIT,
+                                             photon_rate_resolution=target.resolution, debug=debug)
                 counts = counts.decompose()
                 hdulist[0].data[index] = counts.value
 
@@ -136,21 +143,23 @@ def generate_exposure(target, telescope, detector, DIT, nframes=1, nframes_limit
     print("")
 
 
-
 def get_objects(parameterfile, debug=False):
     """Get objects from parameter file.
 
     Args:
-        parameterfile (str): File from which the objects are instantiated.
+        parameterfile (str):
+            File from which the objects are instantiated.
+        debug (bool, optional):
+            Show debugging information.
 
     Returns:
-        objects (dict): Dict containing the parameter file section as a key word
-            and the objects (or kwargs dict) as values.
+        objects (dict):
+            Dict containing the parameter file section as a key word and the objects (or kwargs dict) as values.
     """
 
     # Check whether files exist
     if not os.path.isfile(parameterfile):
-        raise FileNotFoundError("Parameter file {} not found!".format(parameterfile))
+        raise FileNotFoundError(f"Parameter file {parameterfile} not found!")
 
     # Prepare objects list
     objects = {}
@@ -158,7 +167,7 @@ def get_objects(parameterfile, debug=False):
     # Read parameter_file
     parser = ConfigParser(inline_comment_prefixes="#")
     parser.optionxform = str  # make option names case sensitive
-    logger.info("Reading parameter file {}".format(parameterfile))
+    logger.info(f"Reading parameter file {parameterfile}")
     parser.read(parameterfile)
     for section in parser.sections():
         kwargs = {}
