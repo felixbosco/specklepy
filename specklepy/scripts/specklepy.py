@@ -7,7 +7,7 @@ from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io.filemanager import FileManager
 from specklepy.io.parameterset import ParameterSet
-from specklepy.reduction import steps
+from specklepy.reduction import setup
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
 
@@ -35,7 +35,7 @@ def main():
 
         # In setup mode
         if args.setup:
-            steps.setup(files=args.files, instrument=args.instrument, sortby=args.sortby,
+            setup.setup(files=args.files, instrument=args.instrument, sortby=args.sortby,
                         outfile=args.outfile, parfile=args.parfile)
 
             # Quit program for interaction with the new parameter file
