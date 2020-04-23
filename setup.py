@@ -43,7 +43,7 @@ setup(name='specklepy',
       license='MIT',
       install_requires=[
           'numpy',
-          'astropy==3.2.3',
+          'astropy',
           'photutils',
       ],
       packages=find_packages(),
