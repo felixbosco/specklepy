@@ -10,6 +10,7 @@ def long_description():
         long_description = f.read()
     return long_description
 
+
 def find_scripts():
     """Grab all the scripts in the bin directory."""
     scripts = []
@@ -17,9 +18,9 @@ def find_scripts():
         scripts = glob.glob(os.path.join('bin', '*'))
     return scripts
 
+
 def find_packages():
     return find_namespace_packages(exclude=['*build/*', '*data/*', '*deprecated/*'])
-
 
 
 setup(name='specklepy',
