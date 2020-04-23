@@ -40,6 +40,8 @@ def main():
 
     elif args.command is 'reduce':
 
+        # TODO: Export reduction steps into functions to shorten this section here.
+
         # In setup mode
         if args.setup:
             setup.setup(path=args.path, instrument=args.instrument, parfile=args.parfile,
@@ -53,9 +55,8 @@ def main():
         defaults_file = os.path.join(os.path.dirname(__file__), '../config/reduction.cfg')
         essential_attributes = {'paths': ['filePath', 'fileList', 'outDir', 'tmpDir', 'filePrefix'],
                                 'setup': ['setupKeywords'],
-                                'flat': ['skip', 'flatCorrectionPrefix'],
-                                'sky': ['skip', 'ignoreTimeStamps', 'skySubtractionPrefix', 'fromImage',
-                                        'backgroundMethod', 'backgroundSigmaClip']}
+                                'flat': ['skip', 'masterFlatFile'],
+                                'sky': ['skip', 'source', 'method', 'sigmaClip']}
 
         # Read parameters for parameter file
         params = ParameterSet(parameter_file=args.parfile,
@@ -63,17 +64,37 @@ def main():
                               essential_attributes=essential_attributes,
                               make_dirs=['tmpDir'])
 
-        # Execute data reduction
         # (0) Read file list table
         logger.info("Reading file list ...")
         inFiles = FileManager(params.paths.fileList)
         logger.info('\n' + str(inFiles.table))
 
-        # (1) Flat fielding
-        if params.flat:
+        # (1) Initialize reduction files
+        # TODO: Implement a data model for the reduction files
+
+        # (2) Flat fielding
+        if not params.flat.skip:
             flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
-            master_flat = MasterFlat(flat_files, filename=params.flat.masterFlatFile, file_path=params.paths.filePath)
-            master_flat.combine()
+            if len(flat_files) == 0:
+                logger.warning("Did not find any flat field observations. No flat field correction will be applied!")
+            else:
+                logger.info("Starting flat field correction...")
+                master_flat = MasterFlat(flat_files, filename=params.flat.masterFlatFile,
+                                         file_path=params.paths.filePath)
+                master_flat.combine()
+
+        # (3) Linearization
+        # TODO: Implement linearization
+
+        # (4) Sky subtraction
+        if not params.sky.skip:
+            sky_files = inFiles.filter({'OBSTYPE': 'SKY'})
+            if len(sky_files) == 0:
+                logger.warning("Did not find any sky observations. No sky subtraction will be applied!")
+            else:
+                logger.info("Starting sky subtraction...")
+                logger.info(f"Source of sky background measurement: {params.sky.source}")
+                print(sky_files)
 
     elif args.command is 'ssa':
 
