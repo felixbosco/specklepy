@@ -9,11 +9,11 @@ from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 from specklepy.logging import logger
 
 
-def setup(files, instrument, parfile, filelist, sortby=None):
+def setup(path, instrument, parfile, filelist, sortby=None):
     """Sets up the data reduction parameter file and file list.
 
     Args:
-        files (str):
+        path (str):
             Path to the files.
         instrument (str):
             Name of the instrument that took the data. This must be covered by config/instruments.cfg.
@@ -30,8 +30,10 @@ def setup(files, instrument, parfile, filelist, sortby=None):
     instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
     # Verification of args
-    if not os.path.isdir(os.path.dirname(files)):
-        raise RuntimeError(f"Path not found: {files}")
+    if path is None:
+        path = '.'
+    if not os.path.isdir(path):
+        raise RuntimeError(f"Path not found: {path}")
 
     # Read config
     config = ConfigParser()
@@ -50,11 +52,15 @@ def setup(files, instrument, parfile, filelist, sortby=None):
             header_cards.remove(card)
 
     # Find files
-    if '*' in files:
-        files = glob.glob(files)
+    if '*' in path:
+        files = glob.glob(path)
     else:
-        files = glob.glob(files + '*fits')
-    logger.info(f"Found {len(files)} file(s)")
+        files = glob.glob(os.path.join(path, '*fits'))
+    if len(files):
+        logger.info(f"Found {len(files)} file(s)")
+    else:
+        logger.error(f"Found no files in {path}!")
+        raise RuntimeError(f"Found no files in {path}!")
 
     # Prepare dictionary for collecting table data
     table_data = {'FILE': []}
@@ -83,13 +89,13 @@ def setup(files, instrument, parfile, filelist, sortby=None):
     table.sort('OBSTYPE')
     if sortby:
         table.sort(sortby)
-    logger.info(f"Writing data to {filelist}")
+    logger.info(f"Writing header information to {filelist}")
     table.write(filelist, format='ascii.fixed_width', overwrite=True)
 
     # Write dummy parameter file for the reduction
     logger.info(f"Creating default reduction INI file {parfile}")
     par_file_content = "[PATHS]" \
-                       f"\nfilePath = {files}" \
+                       f"\nfilePath = {path}" \
                        f"\nfileList = {filelist}" \
                        "\ntmpDir = tmp/" \
                        "\n\n[FLAT]" \
