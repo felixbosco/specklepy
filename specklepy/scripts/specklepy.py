@@ -9,6 +9,7 @@ from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io.filemanager import FileManager
 from specklepy.io.parameterset import ParameterSet
+from specklepy.logging import logger
 from specklepy.reduction import setup
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
@@ -18,6 +19,9 @@ def main():
     # Parse args
     parser = GeneralArgParser()
     args = parser.parse_args()
+
+    if args.debug:
+        logger.debug(args)
 
     # Execute the script of the corresponding command
     if args.command is 'generate':
@@ -37,8 +41,8 @@ def main():
 
         # In setup mode
         if args.setup:
-            setup.setup(files=args.files, instrument=args.instrument, parfile=args.parfile,
-                        filelist=args.outfile, sortby=args.sortby)
+            setup.setup(path=args.path, instrument=args.instrument, parfile=args.parfile,
+                        filelist=args.filelist, sortby=args.sortby)
 
             # Quit program for interaction with the new parameter file
             return 0

@@ -35,13 +35,14 @@ class GeneralArgParser(object):
         parser_reduction.add_argument('parfile', type=str,
                                       help='Path to a parameter file. This will be created if in setup mode')
         parser_reduction.add_argument('--setup', action='store_true', help='Switch to setup mode.')
-        parser_reduction.add_argument('-f', '--files', type=str, default='./*',
-                                      help='Path to the files that will be listed in the outfile.')
-        parser_reduction.add_argument('-i', '--instrument', type=str, help='Name of the instrument.')
-        parser_reduction.add_argument('-o', '--outfile', type=str, default='specklepy_reduction_files.tab',
-                                      help="Name of the output file containing the file overview.")
-        parser_reduction.add_argument('-s', '--sortby', type=str, default='OBSTYPE',
-                                      help="Header card to sort the output table by.")
+        parser_reduction.add_argument('-p', '--path', type=str, default=None,
+                                      help='Path to the files that will be listed in the outfile (in setup mode).')
+        parser_reduction.add_argument('-i', '--instrument', type=str,
+                                      help='Name of the instrument (for setup mode only).')
+        parser_reduction.add_argument('-f', '--filelist', type=str, default='specklepy_reduction_files.tab',
+                                      help="Name of the file containing the file names (for setup mode only).")
+        parser_reduction.add_argument('-s', '--sortby', type=str, default=None,
+                                      help="Header card to sort the output table by (for setup mode only).")
         parser_reduction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for SSA reconstruction
