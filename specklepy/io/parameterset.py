@@ -139,3 +139,35 @@ class Section(object):
                 setattr(self, key, eval(value))
             except:
                 setattr(self, key, value)
+
+
+class ReductionParameterSet(ParameterSet):
+
+    def __init__(self, parfile):
+        defaults_file = os.path.join(os.path.dirname(__file__), '../config/reduction.cfg')
+        essential_attributes = {'paths': ['filePath', 'fileList', 'outDir', 'tmpDir', 'filePrefix'],
+                                'setup': ['setupKeywords'],
+                                'flat': ['skip', 'masterFlatFile'],
+                                'sky': ['skip', 'source', 'method', 'sigmaClip']}
+
+        super().__init__(parameter_file=parfile,
+                              defaults_file=defaults_file,
+                              essential_attributes=essential_attributes,
+                              make_dirs=['tmpDir'])
+
+
+class HolographyParameterSet(ParameterSet):
+
+    def __init__(self, parfile):
+        # Default values
+        defaults_file = os.path.join(os.path.dirname(__file__), '../config/holography.cfg')
+        essential_attributes = {'paths': ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile'],
+                                'starfinder': ['starfinderFwhm', 'noiseThreshold'],
+                                'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin'],
+                                'apodization': ['apodizationWidth', 'apodizationType'],
+                                'options': ['reconstructionMode', 'varianceExtensionName']}
+        make_dirs = ['tmpDir']
+
+        # Read parameters from file
+        super().__init__(parameter_file=parfile, defaults_file=defaults_file,
+                              essential_attributes=essential_attributes, make_dirs=make_dirs)
