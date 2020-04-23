@@ -8,19 +8,23 @@ from specklepy.io.filemanager import FileManager
 
 class ParameterSet(object):
 
+    """Namespace class for storing parameters.
+
+    This class stores all the parameters. The values are provided by reading in a default/ config file first
+    (if a file is provided) and then reading in the actual parameter file to overwrite the default values. The
+    parameters are stored hierarchically following the sections of the defaults or parameter files to allow the same
+    names in multiple sections. The parameters are stored within Section class instances, see below, and are thereby
+    accessible via attribute calls.
+
+    In a second step this class is checking a list of essential parameters for existence and creates directories, if
+    the arguments are not None.
+
+    Attributes:
+        ...
+    """
+
     def __init__(self, parameter_file, defaults_file=None, essential_attributes=None, make_dirs=None):
-        """Class that carries parameters.
-
-        This class carries all the important parameters. The values are
-        provided by reading in a default/ config file first (if a file is
-        provided) and then reading in the actual parameter file to overwrite
-        the default values. The parameters are stored hierarchically following
-        the sections of the defaults or parameter files to allow the same names
-        in multiple sections. The parameters are stored within Section class
-        instances, see below, and are thereby accessible via attribute calls.
-
-        In a second step this class is checking a list of essential parameters
-        for existence and creates directories, if the arguments are not None.
+        """Create a ParameterSet instance.
 
         Args:
             parameter_file (str):
@@ -122,8 +126,14 @@ class ParameterSet(object):
 
 class Section(object):
 
+    """Namespace class that stores section options.
+
+    Attributes:
+        ...
+    """
+
     def __init__(self, options=None):
-        """Dummy object class that stores section options.
+        """Create a Section instance from an options dict.
 
         Args:
             options (configparser.SectionProxy, optional):
@@ -143,31 +153,63 @@ class Section(object):
 
 class ReductionParameterSet(ParameterSet):
 
+    """ParameterSet sub-class with default parameters.
+
+    This ParameterSet child class is created with some default values for data reduction.
+
+    Attributes:
+        See ParameterSet.
+    """
+
     def __init__(self, parfile):
+        """Create a ReductionParameterSet instance.
+
+        Args:
+            parfile (str):
+                Name of the parameter file to create the ParameterSet from.
+        """
         defaults_file = os.path.join(os.path.dirname(__file__), '../config/reduction.cfg')
+        defaults_file = os.path.abspath(defaults_file)
         essential_attributes = {'paths': ['filePath', 'fileList', 'outDir', 'tmpDir', 'filePrefix'],
                                 'setup': ['setupKeywords'],
                                 'flat': ['skip', 'masterFlatFile'],
                                 'sky': ['skip', 'source', 'method', 'sigmaClip']}
 
         super().__init__(parameter_file=parfile,
-                              defaults_file=defaults_file,
-                              essential_attributes=essential_attributes,
-                              make_dirs=['tmpDir'])
+                         defaults_file=defaults_file,
+                         essential_attributes=essential_attributes,
+                         make_dirs=['tmpDir'])
 
 
 class HolographyParameterSet(ParameterSet):
 
+    """ParameterSet sub-class with default parameters.
+
+    This ParameterSet child class is created with some default values for the holography algorithm.
+
+    Attributes:
+        See ParameterSet.
+    """
+
     def __init__(self, parfile):
+        """Create a HolographyParameterSet instance.
+
+        Args:
+            parfile (str):
+                Name of the parameter file to create the ParameterSet from.
+        """
+
         # Default values
         defaults_file = os.path.join(os.path.dirname(__file__), '../config/holography.cfg')
+        defaults_file = os.path.abspath(defaults_file)
         essential_attributes = {'paths': ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile'],
                                 'starfinder': ['starfinderFwhm', 'noiseThreshold'],
                                 'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin'],
                                 'apodization': ['apodizationWidth', 'apodizationType'],
                                 'options': ['reconstructionMode', 'varianceExtensionName']}
-        make_dirs = ['tmpDir']
 
         # Read parameters from file
-        super().__init__(parameter_file=parfile, defaults_file=defaults_file,
-                              essential_attributes=essential_attributes, make_dirs=make_dirs)
+        super().__init__(parameter_file=parfile,
+                         defaults_file=defaults_file,
+                         essential_attributes=essential_attributes,
+                         make_dirs=['tmpDir'])
