@@ -2,6 +2,7 @@ from specklepy.io.filemanager import FileManager
 from specklepy.logging import logger
 from specklepy.reduction import flat, sky
 
+
 def all(params):
     # (0) Read file list table
     logger.info("Reading file list ...")
