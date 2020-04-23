@@ -37,8 +37,8 @@ def main():
 
         # In setup mode
         if args.setup:
-            setup.setup(files=args.files, instrument=args.instrument, sortby=args.sortby,
-                        outfile=args.outfile, parfile=args.parfile)
+            setup.setup(files=args.files, instrument=args.instrument, parfile=args.parfile,
+                        filelist=args.outfile, sortby=args.sortby)
 
             # Quit program for interaction with the new parameter file
             return 0

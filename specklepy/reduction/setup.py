@@ -9,7 +9,7 @@ from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 from specklepy.logging import logger
 
 
-def setup(files, instrument, sortby, outfile, parfile):
+def setup(files, instrument, parfile, filelist, sortby):
     """Sets up the data reduction parameter file and file list.
 
     Args:
@@ -17,12 +17,12 @@ def setup(files, instrument, sortby, outfile, parfile):
             Path to the files.
         instrument:
             Name of the instrument that took the data. This must be covered by config/instruments.cfg.
-        sortby:
-            Header card that is used for the sorting of files.
-        outfile:
-            Name of the file that contains all the files.
         parfile:
             Name of the parameter file.
+        filelist:
+            Name of the file that contains all the files.
+        sortby:
+            Header card that is used for the sorting of files.
     """
 
     # Defaults
@@ -31,7 +31,7 @@ def setup(files, instrument, sortby, outfile, parfile):
 
     # Verification of args
     if not os.path.isdir(os.path.dirname(files)):
-        raise RuntimeError("Path not found: {}".format(files))
+        raise RuntimeError(f"Path not found: {files}")
 
     # Read config
     config = ConfigParser()
@@ -54,7 +54,7 @@ def setup(files, instrument, sortby, outfile, parfile):
         files = glob.glob(files)
     else:
         files = glob.glob(files + '*fits')
-    logger.info("Found {} file(s)".format(len(files)))
+    logger.info(f"Found {len(files)} file(s)")
 
     # Prepare dictionary for collecting table data
     table_data = {'FILE': []}
@@ -82,14 +82,14 @@ def setup(files, instrument, sortby, outfile, parfile):
     table.sort('FILE')
     table.sort('OBSTYPE')
     table.sort(sortby)
-    logger.info("Writing data to {}".format(outfile))
-    table.write(outfile, format='ascii.fixed_width', overwrite=True)
+    logger.info(f"Writing data to {filelist}")
+    table.write(filelist, format='ascii.fixed_width', overwrite=True)
 
     # Write dummy parameter file for the reduction
-    logger.info("Creating default reduction INI file {}".format(parfile))
+    logger.info(f"Creating default reduction INI file {parfile}")
     par_file_content = "[PATHS]" \
                        f"\nfilePath = {files}" \
-                       f"\nfileList = {outfile}" \
+                       f"\nfileList = {filelist}" \
                        "\ntmpDir = tmp/" \
                        "\n\n[FLAT]" \
                        "\nskipFlat = False" \
