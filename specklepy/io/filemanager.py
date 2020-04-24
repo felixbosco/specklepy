@@ -11,18 +11,22 @@ from specklepy.exceptions import SpecklepyTypeError
 
 class FileManager(object):
 
-    """
-    This class is handling the input files and is iterable.
+    """This class is handling the input files and is iterable.
+
+    Attributes:
+        input (str):
+            Path to list of files or generic file path.
+        ...
     """
 
     def __init__(self, input):
-        """Instantiate a FileManager object.
+        """Create a FileManager instance.
 
         Long description...
 
         Args:
-            input (str):
-
+            input (str, list):
+                Path to list of files or generic file path. Can also be provided as list type.
         """
 
         self.input = input
