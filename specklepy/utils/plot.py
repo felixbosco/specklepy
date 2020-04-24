@@ -5,17 +5,16 @@ import matplotlib.colors as clrs
 import astropy.units as u
 
 from specklepy.logging import logger
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.utils import transferfunctions as tf
 
 
-
 # Define plotting defaults
-plt.rc('figure', figsize=(11.69, 8.27)) # A4 format in inches
+plt.rc('figure', figsize=(11.69, 8.27))  # A4 format in inches
 plt.rc('xtick', direction='in')
 plt.rc('ytick', direction='in')
 plt.rc('font', family='serif', size=14)
 DPI = 400
-
 
 
 def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maximize=False):
@@ -39,15 +38,13 @@ def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maxim
 
     if isinstance(image, np.ndarray):
         if image.ndim != 2:
-            raise ValueError('The function imshow received image argument of \
-                            dimension {}, but needs to be 2!'.format(image.ndim))
+            raise SpecklepyValueError('imshow()', 'image.ndim', image.ndim, '2')
         if isinstance(image, u.Quantity):
             unit = image.unit
             colorbar_label = "({})".format(unit)
             image = image.value
     else:
-        raise TypeError('The function imshow received image argument of \
-                        type {}, but needs to be np.ndarray!'.format(type(image)))
+        raise SpecklepyTypeError('imshow()', 'image', type(image), 'np.ndarray')
 
     if norm == 'log':
         norm = clrs.LogNorm()
@@ -69,7 +66,6 @@ def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maxim
     plt.close()
 
 
-
 def plot_simple(xdata, ydata, title=None, xlabel=None, ylabel=None):
     plt.plot(xdata, ydata)
     plt.title(title)
@@ -77,7 +73,6 @@ def plot_simple(xdata, ydata, title=None, xlabel=None, ylabel=None):
     plt.ylabel(ylabel)
     plt.show()
     plt.close()
-
 
 
 def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
@@ -97,7 +92,6 @@ def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
     plt.close()
 
 
-
 def maximize_plot():
     mng = plt.get_current_fig_manager()
     backend = mpl.get_backend()
@@ -112,7 +106,6 @@ def maximize_plot():
             logger.warning("Could not maximize plot")
     else:
         raise RuntimeWarning("Maximizing plot is not possible with matplotlib backend {}".format(backend))
-
 
 
 def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.1):
@@ -136,27 +129,22 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
         logger.info("Interpreting color tuple () as RGB values.")
         hsv_color = clrs.rgb_to_hsv(color)
     else:
-        raise TypeError("The function desaturate_color received color argument \
-                        of type {}, but needs to be str!".format(type(color)))
+        raise SpecklepyTypeError('desaturate_color()', 'color', type(color), 'str')
 
     if not isinstance(ncolors, int):
-        raise TypeError("The function desaturate_color received ncolor argument\
-                        of type {}, but needs to be int!".format(type(ncolors)))
+        raise SpecklepyTypeError('desaturate_color()', 'ncolors', type(ncolors), 'int')
 
     if not isinstance(saturation_min, float):
-        raise TypeError("The function desaturate_color received saturation_min\
-                        argument of type {}, but needs to be float!".format(type(saturation_min)))
+        raise SpecklepyTypeError('desaturate_color()', 'saturation_min', type(saturation_min), 'float')
 
     if saturation_values is None:
         saturation_values = np.linspace(hsv_color[1], saturation_min, num=ncolors)
     elif isinstance(saturation_values, list):
-        pass # list is correct, nothing to adapt
+        pass  # list is correct, nothing to adapt
     elif isinstance(saturation_values, float):
         saturation_values = list(saturation_values)
     else:
-        raise TypeError("The function desaturate_color received \
-                        saturation_values argument of type {}, but needs to be list!".format(type(saturation_values)))
-
+        raise SpecklepyTypeError('desaturate_color()', 'saturation_values', type(saturation_values), 'list')
 
     # Create list of colors with varied saturation values
     colors = []
@@ -167,13 +155,16 @@ def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.
     return colors
 
 
-
 def psf_profile_plot(files, normalize=None, maximize=False):
     """Plots the psf profile data from a file.
 
     Args:
         files (str):
             Name of the file to extract the data from.
+        normalize (str, optional):
+            Normalization mode, can be None, 'peak' and 'last'. Default is None.
+        maximize (bool, optional:
+            Show plots on full screen. Default is False.
     """
 
     # Input parameters
@@ -181,7 +172,7 @@ def psf_profile_plot(files, normalize=None, maximize=False):
         plt.title(files)
         files = [files]
     if not isinstance(files, list):
-        raise TypeError(f"The function psf_profile_plot received a file argument of type {type(files)}, but needs to be list type!")
+        raise SpecklepyTypeError('psf_profile_plot()', 'files', type(files), 'list')
 
     for file in files:
         xdata, ydata = np.loadtxt(file).transpose()
@@ -203,13 +194,16 @@ def psf_profile_plot(files, normalize=None, maximize=False):
     plt.close()
 
 
-
 def encircled_energy_plot(files, normalize=None, maximize=False):
     """Plots the encircled energy data from a file.
 
     Args:
         files (str):
             Name of the file to extract the data from.
+        normalize (str, optional):
+            Normalization mode, can be None, 'peak' and 'last'. Default is None.
+        maximize (bool, optional:
+            Show plots on full screen. Default is False.
     """
 
     # Input parameters
@@ -217,7 +211,7 @@ def encircled_energy_plot(files, normalize=None, maximize=False):
         plt.title(files)
         files = [files]
     if not isinstance(files, list):
-        raise TypeError("The function encircled_energy_plot received a file argument of type {}, but needs to be list type!")
+        raise SpecklepyTypeError('encircled_energy_plot()', 'files', type(files), 'list')
 
     for file in files:
         xdata, ydata = np.loadtxt(file).transpose()
