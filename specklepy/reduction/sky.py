@@ -229,4 +229,4 @@ def get_sky_background(file, path=None):
     else:
         bkg, d_bkg = np.mean(data), np.std(data)
 
-    print(bkg, d_bkg)
+    return bkg, d_bkg
