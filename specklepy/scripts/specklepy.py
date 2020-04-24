@@ -47,7 +47,7 @@ def main():
 
         # Else start reduction following the parameter file
         params = ReductionParameterSet(args.parfile)
-        run.all(params)
+        run.all(params, debug=args.debug)
 
     elif args.command is 'ssa':
 
