@@ -57,13 +57,13 @@ def time_difference(t0, times):
 
     if isinstance(times, str):
         times = parser.parse(times)
-    elif isinstance(times, (datetime, list)):
+    elif isinstance(times, (datetime, list, np.ndarray)):
         pass
     else:
         raise SpecklepyTypeError('time_difference', 'times', type(times), 'str, datetime, or list')
 
     # Compute time deltas in units of seconds
-    if isinstance(times, list):
+    if isinstance(times, (list, np.ndarray)):
         timedeltas = np.empty((len(times)))
         for i, o in enumerate(times):
             if isinstance(o, str):
