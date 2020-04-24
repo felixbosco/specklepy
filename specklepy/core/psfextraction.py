@@ -9,10 +9,9 @@ from astropy.table import Table
 
 from specklepy.logging import logger
 from specklepy.io.parameterset import ParameterSet
-from specklepy.io.filemanager import FileManager
 from specklepy.io.psffile import PSFfile
 from specklepy.core.aperture import Aperture
-from specklepy.core.combine import weighted_mean
+from specklepy.utils.combine import weighted_mean
 from specklepy.utils.plot import imshow
 
 

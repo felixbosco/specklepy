@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from specklepy.core.combine import weighted_mean
+from specklepy.utils.combine import weighted_mean
 from specklepy.utils.plot import imshow
 
 
