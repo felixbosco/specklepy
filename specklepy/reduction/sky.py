@@ -224,9 +224,9 @@ def get_sky_background(file, path=None):
         file = os.path.join(path, file)
     print(file)
     data = fits.getdata(file)
-    if data.ndim is 3:
-        bkg, d_bkg = np.mean(data, axis=(1, 2)), np.std(data, axis=(1, 2))
-    else:
-        bkg, d_bkg = np.mean(data), np.std(data)
+    # if data.ndim is 3:
+    #     bkg, d_bkg = np.mean(data, axis=(1, 2)), np.std(data, axis=(1, 2))
+    # else:
+    bkg, d_bkg = np.mean(data), np.std(data)
 
     return bkg, d_bkg
