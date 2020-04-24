@@ -3,6 +3,7 @@ from scipy import ndimage
 from astropy.io import fits
 from astropy.table import Table
 
+from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logger
 from specklepy.io.parameterset import ParameterSet
 from specklepy.io.psffile import PSFfile
@@ -26,12 +27,13 @@ class ReferenceStars(object):
         """
 
         if not isinstance(params, ParameterSet):
-            raise TypeError("params argument of the PSFExtractor class must be instance of specklepy.io.parameterset.ParameterSet!")
-        self.params = params
-        self.radius = params.psfextraction.psfRadius
+            raise SpecklepyTypeError('ReferenceStars', 'params', params, 'ParameterSet')
 
-        # Extract stars out of params.refSourceFile
+        # Store attributes
+        self.radius = params.psfextraction.psfRadius
         self.star_table = Table.read(params.paths.refSourceFile, format='ascii')
+        self.in_files = params.inFiles
+        self.savedir = params.paths.tmpDir
 
     @property
     def box_size(self):
@@ -42,17 +44,23 @@ class ReferenceStars(object):
         for star in self.star_table:
             self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, mask='rectangular', crop=True, verbose=False))
 
-    def extract_psfs(self, file_shifts=None, mode='median', align=True, debug=False):
+    def extract_psfs(self, params, file_shifts=None, mode='median', align=True, debug=False):
         """Extract the PSF of the list of ReferenceStars frame by frame.
 
         Long description...
 
         Args:
-            mode (str, optional):
+            params (ParameterSet):
+                ParameterSet instance that will store the names of the PSF files.
             file_shifts (list, optional):
+                List of frame shifts for each of the files with respect to the reference file. These will be used to
+                adapt the reference star positions. Default is None.
+            mode (str, optional):
+                Combination mode for PSFs from different apertures.
+            align (bool, optional):
+                Execute sub-pixel alignments of apertures. Default is True.
             debug (bool, optional):
-                Shows the (integrated) apertures if set to True. Default is
-                False.
+                Shows the (integrated) apertures if set to True. Default is False.
         """
 
         # Input parameters
@@ -66,14 +74,15 @@ class ReferenceStars(object):
             raise ValueError('ReferenceStars received unknown mode for extract method ({}).'.format(mode))
 
         # Create a list of psf files and store it to params
-        self.params.psfFiles = []
+        params.psfFiles = []
 
-        # Iterate over params.inFiless
-        for file_index, file in enumerate(self.params.inFiles):
+        # Iterate over input files
+        for file_index, file in enumerate(self.in_files):
             # Initialize file by file
             logger.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.params.paths.tmpDir, frame_shape=(self.box_size, self.box_size), header_card_prefix="HIERARCH SPECKLEPY ")
-            self.params.psfFiles.append(psf_file.filename)
+            psf_file = PSFfile(file, outDir=self.savedir, frame_shape=(self.box_size, self.box_size),
+                               header_card_prefix="HIERARCH SPECKLEPY ")
+            params.psfFiles.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e.
             # the position of the aperture in the shifted cube
@@ -115,22 +124,30 @@ class ReferenceStars(object):
                 psf_file.update_frame(frame_index, psf)
             print('\r')
 
-    def extract_epsfs(self, file_shifts=None, oversampling=4, debug=False, **kwargs):
+    def extract_epsfs(self, params, file_shifts=None, oversampling=4, debug=False, **kwargs):
         """Extract effective PSFs following Anderson & King (2000).
 
         Args:
-            file_shifts
+            params (ParameterSet):
+                ParameterSet instance that will store the names of the PSF files.
+            file_shifts (list, optional):
+                List of frame shifts for each of the files with respect to the reference file. These will be used to
+                adapt the reference star positions. Default is None.
+            oversampling (int, optional):
+                Factor of oversampling the input pixel grid. Default is 4.
+            debug (bool, optional):
+                Shows the (integrated) apertures if set to True. Default is False.
 
         """
         # Create a list of psf files and store it to params
-        self.params.psfFiles = []
+        params.psfFiles = []
 
-        # Iterate over params.inFiles
-        for file_index, file in enumerate(self.params.inFiles):
+        # Iterate over input files
+        for file_index, file in enumerate(self.in_files):
             # Initialize file by file
             logger.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.params.paths.tmpDir, frame_shape=(self.box_size, self.box_size), header_card_prefix="HIERARCH SPECKLEPY")
-            self.params.psfFiles.append(psf_file.filename)
+            psf_file = PSFfile(file, outDir=self.savedir, frame_shape=(self.box_size, self.box_size), header_card_prefix="HIERARCH SPECKLEPY")
+            params.psfFiles.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e.
             # the position of the aperture in the shifted cube
@@ -188,7 +205,7 @@ class ReferenceStars(object):
             print('\r')
 
     # Deprecated old version of extract_epsfs()
-    # def extract_epsfs_deprecated(self, file_shifts=None, debug=False):
+    # def extract_epsfs_deprecated(self, params, file_shifts=None, debug=False):
     #     """Extract effective PSFs following Anderson & King (2000).
     #
     #     Args:
@@ -196,10 +213,10 @@ class ReferenceStars(object):
     #
     #     """
     #     # Create a list of psf files and store it to params
-    #     self.params.psfFiles = []
+    #     params.psfFiles = []
     #
-    #     # Iterate over params.inFiless
-    #     for file_index, file in enumerate(self.params.inFiles):
+    #     # Iterate over input files
+    #     for file_index, file in enumerate(self.in_files):
     #
     #         data = fits.getdata(file)
     #         if file_shifts is None:
