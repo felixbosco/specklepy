@@ -154,7 +154,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
                 except:
                     # No VAR extension in file
                     pass
-            if 'reconstruction' in locals():
+            if 'reconstruction' not in locals():
                 reconstruction = alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
                 try:
                     reconstruction_var = alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
