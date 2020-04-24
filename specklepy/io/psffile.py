@@ -1,16 +1,29 @@
-import numpy as np
 import os
 from astropy.io import fits
-from datetime import datetime
 
+from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logger
 from specklepy.io.outfile import Outfile
 
 
-
 class PSFfile(Outfile):
 
+    """Outfile with some default parameters and init behaviour for PSF files."""
+
     def __init__(self, inFile, outDir, frame_shape, cards=None, header_card_prefix=None):
+        """Create a PSFfile instance.
+
+        Args:
+            inFile (str):
+                Name of the parent file.
+            outDir (str):
+                Name of the directory that the file will be stored in.
+            frame_shape (tuple):
+                Shape of the PSF frames, which is the box size.
+            cards (dict):
+                Dictionary of header cards.
+            header_card_prefix (str, optional):
+        """
 
         # Create PSF directory, if not existing yet
         if not os.path.exists(outDir):
@@ -24,17 +37,17 @@ class PSFfile(Outfile):
 
         # Type assertion
         if not isinstance(frame_shape, tuple):
-            raise TypeError("frame_shape argument must have type tuple but was given as {}.".format(type(frame_shape)))
+            raise SpecklepyTypeError('PSFfile', 'frame_shape', type(frame_shape), 'tuple')
 
         if cards is None:
             cards = {}
         elif not isinstance(cards, dict):
-            raise TypeError("PSFfile received cards argument of type {}, but needs to be dict type!".format(type(cards)))
+            raise SpecklepyTypeError('PSFfile', 'cards', type(cards), 'dict')
 
         if header_card_prefix is None:
             header_card_prefix = ""
         elif not isinstance(header_card_prefix, str):
-            raise TypeError("PSFfile received header_card_prefix argument of type {}, but needs to be str type!".format(type(header_card_prefix)))
+            raise SpecklepyTypeError('PSFfile', 'header_card_prefix', type(header_card_prefix), 'str')
 
         # Add name of parent file to header
         cards["FILE NAME"] = os.path.basename(inFile)
@@ -42,4 +55,5 @@ class PSFfile(Outfile):
         hdr_input = fits.getheader(inFile)
         shape = (hdr_input['NAXIS3'], frame_shape[0], frame_shape[1])
 
-        super().__init__(filename=outDir + outfile, shape=shape, cards=cards, header_card_prefix=header_card_prefix)
+        super().__init__(filename=os.path.join(outDir, outfile), shape=shape, cards=cards,
+                         header_card_prefix=header_card_prefix)

@@ -2,10 +2,6 @@ import numpy as np
 from scipy import ndimage
 from astropy.io import fits
 from astropy.table import Table
-#from astropy.nddata import NDData
-#from astropy.stats import sigma_clipped_stats
-#from photutils.psf import extract_stars
-#from photutils import EPSFBuilder
 
 from specklepy.logging import logger
 from specklepy.io.parameterset import ParameterSet
@@ -37,17 +33,14 @@ class ReferenceStars(object):
         # Extract stars out of params.refSourceFile
         self.star_table = Table.read(params.paths.refSourceFile, format='ascii')
 
-
     @property
     def box_size(self):
         return self.radius * 2 + 1
-
 
     def init_apertures(self, filename, shift=(0, 0)):
         self.apertures = []
         for star in self.star_table:
             self.apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename, mask='rectangular', crop=True, verbose=False))
-
 
     def extract_psfs(self, file_shifts=None, mode='median', align=True, debug=False):
         """Extract the PSF of the list of ReferenceStars frame by frame.
@@ -122,7 +115,6 @@ class ReferenceStars(object):
                 psf_file.update_frame(frame_index, psf)
             print('\r')
 
-
     def extract_epsfs(self, file_shifts=None, oversampling=4, debug=False, **kwargs):
         """Extract effective PSFs following Anderson & King (2000).
 
@@ -133,7 +125,7 @@ class ReferenceStars(object):
         # Create a list of psf files and store it to params
         self.params.psfFiles = []
 
-        # Iterate over params.inFiless
+        # Iterate over params.inFiles
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
             logger.info("Extracting PSFs from file {}".format(file))
@@ -195,54 +187,54 @@ class ReferenceStars(object):
                 psf_file.update_frame(frame_index, epsf)
             print('\r')
 
-
-    def extract_epsfs_deprecated(self, file_shifts=None, debug=False):
-        """Extract effective PSFs following Anderson & King (2000).
-
-        Args:
-            file_shifts
-
-        """
-        # Create a list of psf files and store it to params
-        self.params.psfFiles = []
-
-        # Iterate over params.inFiless
-        for file_index, file in enumerate(self.params.inFiles):
-
-            data = fits.getdata(file)
-            if file_shifts is None:
-                shift = (0, 0)
-            else:
-                shift = file_shifts[file_index]
-            
-            x = self.star_table['x'] - shift[1]
-            y = self.star_table['y'] - shift[0]
-
-            mask = ((x > self.radius) & (x < (data.shape[-1] -1 - self.radius)) & (y > self.radius) & (y < (data.shape[-2] -1 - self.radius))) 
-
-            star_table = Table()
-            star_table['x'] = x[mask]  
-            star_table['y'] = y[mask]  
-
-            print(star_table)
-
-            data = np.sum(data, axis=0)
-            mean_val, median_val, std_val = sigma_clipped_stats(data, sigma=2.)  
-            data -= median_val 
-
-            nddata = NDData(data=data) 
-    
-            stars = extract_stars(nddata, star_table, size=self.box_size) 
-
-            if debug:
-                for i, star in enumerate(stars):
-                    imshow(star.data, title="ePSF star {}".format(i))
-
-            epsf_builder = EPSFBuilder(oversampling=4, maxiters=10, progress_bar=True) 
-
-            epsf, fitted_stars = epsf_builder(stars) 
-
-            if debug:
-                imshow(epsf.data, title="ePSF")
+    # Deprecated old version of extract_epsfs()
+    # def extract_epsfs_deprecated(self, file_shifts=None, debug=False):
+    #     """Extract effective PSFs following Anderson & King (2000).
+    #
+    #     Args:
+    #         file_shifts
+    #
+    #     """
+    #     # Create a list of psf files and store it to params
+    #     self.params.psfFiles = []
+    #
+    #     # Iterate over params.inFiless
+    #     for file_index, file in enumerate(self.params.inFiles):
+    #
+    #         data = fits.getdata(file)
+    #         if file_shifts is None:
+    #             shift = (0, 0)
+    #         else:
+    #             shift = file_shifts[file_index]
+    #
+    #         x = self.star_table['x'] - shift[1]
+    #         y = self.star_table['y'] - shift[0]
+    #
+    #         mask = ((x > self.radius) & (x < (data.shape[-1] -1 - self.radius)) & (y > self.radius) & (y < (data.shape[-2] -1 - self.radius)))
+    #
+    #         star_table = Table()
+    #         star_table['x'] = x[mask]
+    #         star_table['y'] = y[mask]
+    #
+    #         print(star_table)
+    #
+    #         data = np.sum(data, axis=0)
+    #         mean_val, median_val, std_val = sigma_clipped_stats(data, sigma=2.)
+    #         data -= median_val
+    #
+    #         nddata = NDData(data=data)
+    #
+    #         stars = extract_stars(nddata, star_table, size=self.box_size)
+    #
+    #         if debug:
+    #             for i, star in enumerate(stars):
+    #                 imshow(star.data, title="ePSF star {}".format(i))
+    #
+    #         epsf_builder = EPSFBuilder(oversampling=4, maxiters=10, progress_bar=True)
+    #
+    #         epsf, fitted_stars = epsf_builder(stars)
+    #
+    #         if debug:
+    #             imshow(epsf.data, title="ePSF")
 
 
