@@ -44,6 +44,7 @@ setup(name='specklepy',
       license='MIT',
       install_requires=[
           'numpy',
+          'matplotlib',
           'astropy',
           'photutils',
       ],
