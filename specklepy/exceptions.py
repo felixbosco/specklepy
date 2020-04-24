@@ -36,8 +36,8 @@ class SpecklepyTypeError(TypeError):
                 Name of the object/ function/ etc. that is raising the error.
             argname (str):
                 Name of the argument that received input of value.
-            argtype (str):
-                Type that was received.
+            argtype (str, type, any):
+                Type that was received by object. If not str or type, the type will be evaluated.
             expected (str):
                 Expected type for argument argname.
             *args:
@@ -45,6 +45,10 @@ class SpecklepyTypeError(TypeError):
             **kwargs:
                 Passed to TypeError.
         """
+
+        if not isinstance(argtype, (str, type)):
+            argtype = type(argtype)
+
         message = "{!r} received argument {!r} of type {!r}, but must be {!r} type!".format(objname, argname, argtype, expected)
         # super().__init__(message, *args, **kwargs)
         raise TypeError(message, *args, **kwargs)
