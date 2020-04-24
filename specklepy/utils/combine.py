@@ -72,3 +72,25 @@ def time_difference(t0, times):
         return timedeltas
     else:
         return (times - t0).total_seconds()
+
+
+def get_distance_weights(distances, norm=True):
+    """
+
+    Args:
+        distances (np.ndarray):
+            Spatial or time distances.
+        norm (bool):
+            Normalize to unity.
+
+    Returns:
+        weights (np.ndarray):
+            Weights, normed if requested.
+    """
+
+    weights = np.square(np.divide(1, distances))
+
+    if norm:
+        weights = np.divide(weights, np.sum(weights))
+
+    return weights
