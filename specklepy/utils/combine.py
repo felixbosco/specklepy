@@ -53,14 +53,14 @@ def time_difference(t0, times):
     elif isinstance(t0, datetime):
         pass
     else:
-        raise SpecklepyTypeError('distance', 'obj', type(t0), 'str or datetime')
+        raise SpecklepyTypeError('time_difference', 't0', type(t0), 'str or datetime')
 
     if isinstance(times, str):
         times = parser.parse(times)
     elif isinstance(times, (datetime, list)):
         pass
     else:
-        raise SpecklepyTypeError('distance', 'objs', type(times), 'str, datetime, or list')
+        raise SpecklepyTypeError('time_difference', 'times', type(times), 'str, datetime, or list')
 
     # Compute time deltas in units of seconds
     if isinstance(times, list):
