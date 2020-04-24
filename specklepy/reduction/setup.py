@@ -94,8 +94,8 @@ def setup(path, instrument, parfile, filelist, sortby=None):
 
     # Write dummy parameter file for the reduction
     logger.info(f"Creating default reduction INI file {parfile}")
-    par_file_content = "[PATHS]\nfilePath = {path}\nfileList = {filelist}\ntmpDir = tmp/" \
-                       "\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
-                       "\n\n[SKY]"
+    par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {filelist}\ntmpDir = tmp/" \
+                       f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
+                       f"\n\n[SKY]"
     with open(parfile, 'w+') as parfile:
         parfile.write(par_file_content)
