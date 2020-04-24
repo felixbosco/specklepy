@@ -30,6 +30,7 @@ def all(params):
     if not params.sky.skip:
         if params.sky.source == 'default':
             sky_files = inFiles.filter({'OBSTYPE': 'SKY'})
+            print(sky_files)
             if len(sky_files) == 0:
                 logger.warning("Did not find any sky observations. No sky subtraction will be applied!")
             else:
