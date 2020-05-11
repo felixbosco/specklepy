@@ -32,3 +32,68 @@ class Segmentation(object):
         elif len(image_shape) == 3:
             # First axis is assumed to be time axis.
             self.image_shape = tuple([image_shape[1], image_shape[2]])
+
+        # Compute widths of the segments
+        self.dx = self.image_shape[0] // self.nx
+        self.dy = self.image_shape[1] // self.ny
+
+        # Derive a list of field segments
+        self.segments = []
+        for ix in range(self.nx):
+            for iy in range(self.ny):
+                xmin = ix * self.image_shape[0] // self.nx
+                xmax = (ix+1) * self.image_shape[0] // self.nx - 1
+                ymin = iy * self.image_shape[1] // self.ny
+                ymax = (iy+1) * self.image_shape[1] // self.ny - 1
+
+                self.segments.append(Segment(xmin, xmax, ymin, ymax))
+
+    def __iter__(self):
+        self.index = 0
+        return self
+
+    def __next__(self):
+        try:
+            tmp = self.segments[self.index]
+        except IndexError:
+            raise StopIteration
+        self.index += 1
+        return tmp
+
+
+class Segment(object):
+
+    """Class for storing the properties of individual segments in an image segmentation.
+
+    Attributes:
+        xmin (int):
+            Minimum index of the segment within the parental field, along x-axis.
+        xmax (int):
+            Maximum index of the segment within the parental field, along x-axis.
+        ymin (int):
+            Minimum index of the segment within the parental field, along y-axis.
+        ymax (int):
+            Maximum index of the segment within the parental field, along y-axis.
+    """
+
+    def __init__(self, xmin, xmax, ymin, ymax):
+        """Create a Segment object.
+
+        Args:
+            xmin (int):
+                Minimum index of the segment within the parental field, along x-axis.
+            xmax (int):
+                Maximum index of the segment within the parental field, along x-axis.
+            ymin (int):
+                Minimum index of the segment within the parental field, along y-axis.
+            ymax (int):
+                Maximum index of the segment within the parental field, along y-axis.
+        """
+
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax
+
+    def __str__(self):
+        return f"Segment: [{self.xmin}:{self.xmax}, {self.ymin}:{self.ymax}]"
