@@ -24,6 +24,11 @@ class TestSegmentation(unittest.TestCase):
             _ = self.data[0, segment.xmin:segment.xmax, segment.ymin:segment.ymax]
             print(segment)
 
+    def test_call(self):
+        segmentation = Segmentation(3, 5, self.shape)
+        subarray = segmentation[0](self.data[0])
+        imshow(subarray)
+
 
 if __name__ == "__main__":
     unittest.main()

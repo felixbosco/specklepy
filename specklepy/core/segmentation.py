@@ -60,6 +60,9 @@ class Segmentation(object):
         self.index += 1
         return tmp
 
+    def __getitem__(self, item):
+        return self.segments[item]
+
 
 class Segment(object):
 
@@ -97,3 +100,12 @@ class Segment(object):
 
     def __str__(self):
         return f"Segment: [{self.xmin}:{self.xmax}, {self.ymin}:{self.ymax}]"
+
+    def __call__(self, array):
+        """Return the segment of an image array.
+
+        Args:
+            array (array_like):
+                Image array from which the segment shall be extracted.
+        """
+        return array[self.xmin:self.xmax, self.ymin:self.ymax]
