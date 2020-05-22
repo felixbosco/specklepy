@@ -349,7 +349,8 @@ class Telescope(object):
 			raise TypeError('integrate_psf received integration_time argument of type {}, but needs to be u.Quantity')
 
 		if integration_time < self.timestep:
-			raise ValueError("The integration time {} was chosen shorter than the time resolution of the psf source, of {}".format(integration_time, self.timestep))
+			raise ValueError(f"integrate_psf received integration time {integration_time} shorter than the time "
+							 f"resolution of the psf source ({self.timestep})!")
 
 		nframes = int(integration_time / self.timestep)
 
