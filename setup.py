@@ -43,6 +43,7 @@ setup(name='specklepy',
       author_email='bosco@mpia.de',
       license='MIT',
       install_requires=[
+          'scipy',
           'numpy',
           'matplotlib',
           'astropy',
