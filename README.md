@@ -133,9 +133,9 @@ sky_background = 14.4
 diameter = 8.2 m
 central_obscuration = 0.14
 name = VLT Unit Telescope
-psf_source = AiryDisk
+psf_source = AiryDisk  # Can be 'AiryDisk', 'Gaussian' or the name of a FITS file containing PSFs
 psf_resolution = 20.5 mas
-radius = 50.6 mas
+radius = 50.6 mas  # Radius of first zero of an AiryDisk or standard deviation of a 2D Gaussian
 
 [DETECTOR]
 shape = (1024, 1024)
@@ -148,9 +148,9 @@ quantum_efficiency = 0.9 electron/ ph
 saturation_level = 60000 electron
 
 [PARAMETERS]
-DIT = 1.2 s
-nframes = 100
-nframes_limit = 100
+DIT = 1.2 s  # Discrete integration time
+nframes = 100  # Number of frames to generate
+nframes_limit = 100  # Maximum number of frames per file
 outfile = airy_1200ms.fits
 time_stamp = None
 dithers = [(0, 0)]
