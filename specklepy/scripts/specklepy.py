@@ -30,7 +30,7 @@ def main():
 
         # Read parameters from file and generate exposures
         objects = get_objects(args.parfile, debug=args.debug)
-        kwargs = objects['kwargs']
+        kwargs = objects['parameters']
         generate_exposure(target=objects['target'],
                           telescope=objects['telescope'],
                           detector=objects['detector'],

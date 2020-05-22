@@ -203,7 +203,7 @@ def get_objects(parameterfile, debug=False):
             objects['telescope'] = Telescope(**kwargs)
         elif section.lower() == 'detector':
             objects['detector'] = Detector(**kwargs)
-        elif section.lower() == 'kwargs':
-            objects['kwargs'] = kwargs
+        elif section.lower() in ['params', 'parameters', 'kwargs']:
+            objects['parameters'] = kwargs
 
     return objects

@@ -147,7 +147,7 @@ optics_transmission = 0.9
 quantum_efficiency = 0.9 electron/ ph
 saturation_level = 60000 electron
 
-[KWARGS]
+[PARAMETERS]
 DIT = 1.2 s
 nframes = 100
 nframes_limit = 100
