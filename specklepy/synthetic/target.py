@@ -8,7 +8,6 @@ from astropy.table import Table
 from specklepy.logging import logger
 
 
-
 class Target(object):
 
     """ Class carrying information of an astronomical target.
@@ -32,33 +31,32 @@ class Target(object):
     __name__ = 'target'
     typeerror = 'Target received {} argument of {} type, but needs to be {}!'
     # Credit https://en.wikipedia.org/wiki/Photometric_system
-    photometry_dict =  {'U': {'wavelength': 0.36, 'FWHM': 0.15, 'Flux': 1810.0},
-                        'B': {'wavelength': 0.44, 'FWHM': 0.22, 'Flux': 4260.0},
-                        'V': {'wavelength': 0.55, 'FWHM': 0.16, 'Flux': 3640.0},
-                        'R': {'wavelength': 0.64, 'FWHM': 0.23, 'Flux': 3080.0},
-                        'I': {'wavelength': 0.79, 'FWHM': 0.19, 'Flux': 2550.0},
-                        'J': {'wavelength': 1.26, 'FWHM': 0.16, 'Flux': 1600.0},
-                        'H': {'wavelength': 1.6,  'FWHM': 0.23, 'Flux': 1080.0},
-                        'K': {'wavelength': 2.22, 'FWHM': 0.23, 'Flux': 670.0},
-                        'L': {'wavelength': 3.5,  'FWHM': np.nan, 'Flux': np.nan},
-                        'g': {'wavelength': 0.52, 'FWHM': 0.14, 'Flux': 3730.0},
-                        'r': {'wavelength': 0.67, 'FWHM': 0.14, 'Flux': 4490.0},
-                        'i': {'wavelength': 0.79, 'FWHM': 0.16, 'Flux': 4760.0},
-                        'z': {'wavelength': 0.91, 'FWHM': 0.13, 'Flux': 4810.0}}
-
-
+    photometry_dict = {'U': {'wavelength': 0.36, 'FWHM': 0.15, 'Flux': 1810.0},
+                       'B': {'wavelength': 0.44, 'FWHM': 0.22, 'Flux': 4260.0},
+                       'V': {'wavelength': 0.55, 'FWHM': 0.16, 'Flux': 3640.0},
+                       'R': {'wavelength': 0.64, 'FWHM': 0.23, 'Flux': 3080.0},
+                       'I': {'wavelength': 0.79, 'FWHM': 0.19, 'Flux': 2550.0},
+                       'J': {'wavelength': 1.26, 'FWHM': 0.16, 'Flux': 1600.0},
+                       'H': {'wavelength': 1.6,  'FWHM': 0.23, 'Flux': 1080.0},
+                       'K': {'wavelength': 2.22, 'FWHM': 0.23, 'Flux': 670.0},
+                       'L': {'wavelength': 3.5,  'FWHM': np.nan, 'Flux': np.nan},
+                       'g': {'wavelength': 0.52, 'FWHM': 0.14, 'Flux': 3730.0},
+                       'r': {'wavelength': 0.67, 'FWHM': 0.14, 'Flux': 4490.0},
+                       'i': {'wavelength': 0.79, 'FWHM': 0.16, 'Flux': 4760.0},
+                       'z': {'wavelength': 0.91, 'FWHM': 0.13, 'Flux': 4810.0}}
 
     def __init__(self, band, star_table=None, sky_background=None, photometry_file=None):
         """Instantiate Target class.
 
         Args:
-            band (str): Name of the band. Used for extracting the band specific
-                reference flux for magnitude 0.
-            star_table (str): Name of the file with the data of all stars.
-            sky_background (u.Quantity): Sky background. Int and float inputs
-                will be interpreted as mag / arcsec**2.
-            photometry_file (str, optional): Name of the file, from which the
-                band specific reference flux is extracted.
+            band (str):
+                Name of the band. Used for extracting the band specific reference flux for magnitude 0.
+            star_table (str, optional):
+                Name of the file with the data of all stars.
+            sky_background (u.Quantity, optional):
+                Sky background. Int and float inputs will be interpreted as mag / arcsec**2.
+            photometry_file (str, optional):
+                Name of the file, from which the band specific reference flux is extracted.
         """
 
         # Input parameters
@@ -84,7 +82,7 @@ class Target(object):
         if sky_background is None:
             self.sky_background_flux = 0.0 / u.arcsec**2
         elif isinstance(sky_background, u.Quantity):
-    		# Interpreting as mag / arcsec**2
+            # Interpreting as mag / arcsec**2
             print("Caution: This function interpretes sky_background as in units of mag per arcsec**2.")
             self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / u.arcsec**2
         elif isinstance(sky_background, int) or isinstance(sky_background, float):
@@ -93,40 +91,38 @@ class Target(object):
         else:
             raise TypeError(self.typeerror.format('sky_background', type(sky_background), 'u.Quantity'))
 
-
-
     def __call__(self, *args, **kwargs):
         return self.get_photon_rate_density(*args, **kwargs)
 
-
-
     def __str__(self):
-    	tmp = "Target:\n"
-    	for key in self.__dict__:
-    		if key == 'stars' or key == 'data':
-    			continue
-    		tmp += "{}: {}\n".format(key, self.__dict__[key])
-    	return tmp
-
-
+        tmp = "Target:\n"
+        for key in self.__dict__:
+            if key == 'stars' or key == 'data':
+                continue
+            tmp += "{}: {}\n".format(key, self.__dict__[key])
+        return tmp
 
     def get_reference_flux(self, photometry_file, band, format='ascii'):
         if photometry_file is None:
             fwhm = self.photometry_dict[band]['FWHM']
             flux = self.photometry_dict[band]['Flux'] * u.Jy
         else:
-        	table = Table.read(photometry_file, format=format)
-        	row_index = np.where(table["Band"] == band)
-        	fwhm = table['FWHM'][row_index][0]
-        	flux = table['Flux'][row_index][0] *u.Jy
+            table = Table.read(photometry_file, format=format)
+            row_index = np.where(table["Band"] == band)
+            fwhm = table['FWHM'][row_index][0]
+            flux = table['Flux'][row_index][0] *u.Jy
         return (flux / const.h * fwhm * u.ph).decompose()
-
 
     def magnitude_to_flux(self, magnitude):
         """Convert magnitudes to flux values.
 
         Args:
-            magnitude (int, float, or u.Quantity): Magnitude value
+            magnitude (int, float, or u.Quantity):
+                Magnitude value
+
+        Returns:
+            flux (u.Quantity):
+                Brightness converted into flux units.
         """
         if isinstance(magnitude, int) or isinstance(magnitude, float) or isinstance(magnitude, np.ndarray):
             return 10**(magnitude/-2.5) * self.band_reference_flux
@@ -138,19 +134,18 @@ class Target(object):
             else:
                 return 10**(magnitude.value/-2.5) * self.band_reference_flux
 
-
-
     def read_star_table(self, file, format='ascii', keywords=None):
         """Reads a table file and extracts the position and flux of stars.
 
         Args:
-            file (str): Name of the file to read in.
-            format (str, optional): Format of the file to read. Passed to
-                Table.read(). Default is 'ascii'.
-            keywords (dict, optional): Keyword dict for 'x' and 'y' position,
-                and 'flux'. Default is None and is replaced in the function.
+            file (str):
+                Name of the file to read in.
+            format (str, optional):
+                Format of the file to read. Passed to Table.read(). Default is 'ascii'.
+            keywords (dict, optional):
+                Keyword dict for 'x' and 'y' position, and 'flux'. Default is None and is replaced in the function.
 
-        To Do:
+        ToDo:
             * Implemented reading of tables with units.
             * Pass keywords from get_photon_rate_density call to this function.
         """
@@ -180,22 +175,20 @@ class Target(object):
 
         return Table([xx, yy, flux], names=['x', 'y', 'flux'])
 
-
-
     def get_photon_rate_density(self, FoV, resolution, dither=None):
         """Creates an image of the field of view.
 
         Args:
-            FoV (u.Quantity or tuple, dtype=u.Quantity): Size of the field of
-                view that is covered by the output image.
-            resolution (u.Quantity): Resolution of the image. Optimally, set it
-                to Telescope.psf_resolution to avoid resampling the image.
-            dither (tuple, optional): Dither position, relative to the (0, 0)
-                standard phase center.
+            FoV (u.Quantity or tuple, dtype=u.Quantity):
+                Size of the field of view that is covered by the output image.
+            resolution (u.Quantity):
+                Resolution of the image. Optimally, set it to Telescope.psf_resolution to avoid resampling the image.
+            dither (tuple, optional):
+                Dither position, relative to the (0, 0) standard phase center.
 
         Returns:
-            photon_rate_density (u.Quantity): 2D image of the photon rate
-                density towards the standard phase center or dithered position.
+            photon_rate_density (u.Quantity):
+                2D image of the photon rate density towards the standard phase center or dithered position.
         """
 
         # Input parameters
