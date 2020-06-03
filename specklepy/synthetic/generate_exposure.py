@@ -134,7 +134,7 @@ def generate_exposure(target, telescope, detector, DIT,
                     raise RuntimeError(f"Expected {len(outfiles)} dither positions but received only {len(dithers)}!")
             else:
                 dither = None
-            photon_rate_density = target.get_photon_rate_density(FoV=detector.FoV, resolution=telescope.psf_resolution,
+            photon_rate_density = target.get_photon_rate_density(field_of_view=detector.FoV, resolution=telescope.psf_resolution,
                                                                  dither=dither)
 
             for index in range(hdulist[0].header['NAXIS3']):

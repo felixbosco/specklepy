@@ -5,6 +5,7 @@ import astropy.units as u
 import astropy.constants as const
 from astropy.table import Table
 
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
 
 
@@ -63,7 +64,7 @@ class Target(object):
         if isinstance(band, str):
             self.band = band
         else:
-            raise TypeError(self.typeerror.format('band', type(band), 'str'))
+            raise SpecklepyTypeError('Target', 'band', type(band), 'str')
 
         if star_table is None:
             self.star_table = None
@@ -71,12 +72,12 @@ class Target(object):
             self.star_table = star_table
             # Read star table already here?
         else:
-            raise TypeError(self.typeerror.format('star_table', type(star_table), 'str'))
+            raise SpecklepyTypeError('Target', 'star_table', type(star_table), 'str')
 
         if photometry_file is None or isinstance(photometry_file, str):
             self.photometry_file = photometry_file
         else:
-            raise TypeError(self.typeerror.format('photometry_file', type(photometry_file), 'str'))
+            raise SpecklepyTypeError('Target', 'photometry_file', type(photometry_file), 'str')
         self.band_reference_flux = self.get_reference_flux(self.photometry_file, self.band)
 
         if sky_background is None:
@@ -89,7 +90,7 @@ class Target(object):
             logger.warning("Interpreting float type sky_background as {}".format(sky_background * u.mag / u.arcsec**2))
             self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.arcsec**2
         else:
-            raise TypeError(self.typeerror.format('sky_background', type(sky_background), 'u.Quantity'))
+            raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'u.Quantity')
 
     def __call__(self, *args, **kwargs):
         return self.get_photon_rate_density(*args, **kwargs)
@@ -128,13 +129,11 @@ class Target(object):
             return 10**(magnitude/-2.5) * self.band_reference_flux
         elif isinstance(magnitude, u.Quantity):
             if magnitude.unit != u.Unit('mag'):
-                raise ValueError("The function manitude_to_flux received \
-                                magnitude quantity of unit {}, but needs to be \
-                                'mag'!".format(magnitude.unit))
+                raise SpecklepyValueError('magnitude_to_flux()', 'magnitude unit', magnitude.unit, 'mag')
             else:
                 return 10**(magnitude.value/-2.5) * self.band_reference_flux
 
-    def read_star_table(self, file, format='ascii', keywords=None):
+    def read_star_table(self, file, format='ascii', table_keys=None):
         """Reads a table file and extracts the position and flux of stars.
 
         Args:
@@ -142,7 +141,7 @@ class Target(object):
                 Name of the file to read in.
             format (str, optional):
                 Format of the file to read. Passed to Table.read(). Default is 'ascii'.
-            keywords (dict, optional):
+            table_keys (dict, optional):
                 Keyword dict for 'x' and 'y' position, and 'flux'. Default is None and is replaced in the function.
 
         ToDo:
@@ -150,36 +149,37 @@ class Target(object):
             * Pass keywords from get_photon_rate_density call to this function.
         """
 
-        # Input parameters
-        if keywords is None:
-            keywords = {'x': 'x', 'y': 'y', 'flux': 'flux', 'mag': 'mag'}
+        # Apply fall bakc values
+        if table_keys is None:
+            table_keys = {'x': 'x', 'y': 'y', 'flux': 'flux', 'mag': 'mag'}
 
+        # Read table data
         table = Table.read(file, format=format)
 
         # Get data from table columns
-        xx = table[keywords['x']]
+        xx = table[table_keys['x']]
         if isinstance(xx, u.Quantity):
-            xx = xx.to(u.arcsec).value
+            xx = xx.to('arcsec').value
 
-        yy = table[keywords['y']]
+        yy = table[table_keys['y']]
         if isinstance(yy, u.Quantity):
-            yy = yy.to(u.arcsec).value
+            yy = yy.to('arcsec').value
 
-        if 'mag' in keywords.keys():
+        if 'mag' in table_keys.keys():
             # Take magnitudes and convert to flux
-            magnitudes = table[keywords['mag']]
+            magnitudes = table[table_keys['mag']]
             magnitudes = magnitudes.data
             flux = self.magnitude_to_flux(magnitudes)
         else:
-            flux = table[keywords['flux']]
+            flux = table[table_keys['flux']]
 
         return Table([xx, yy, flux], names=['x', 'y', 'flux'])
 
-    def get_photon_rate_density(self, FoV, resolution, dither=None):
+    def get_photon_rate_density(self, field_of_view, resolution, dither=None):
         """Creates an image of the field of view.
 
         Args:
-            FoV (u.Quantity or tuple, dtype=u.Quantity):
+            field_of_view (u.Quantity or tuple, dtype=u.Quantity):
                 Size of the field of view that is covered by the output image.
             resolution (u.Quantity):
                 Resolution of the image. Optimally, set it to Telescope.psf_resolution to avoid resampling the image.
@@ -192,25 +192,25 @@ class Target(object):
         """
 
         # Input parameters
-        if isinstance(FoV, u.Quantity):
-            self.FoV = (FoV, FoV)
-        elif isinstance (FoV, tuple):
-            self.FoV = FoV
-        elif isinstance(FoV, int) or isinstance(FoV, float):
-            logger.warning("Interpreting float type FoV as {}".format(FoV * u.arcsec))
-            FoV = FoV * u.arcsec
-            self.FoV = (FoV, FoV)
+        if isinstance(field_of_view, u.Quantity):
+            self.FoV = (field_of_view, field_of_view)
+        elif isinstance (field_of_view, tuple):
+            self.FoV = field_of_view
+        elif isinstance(field_of_view, int) or isinstance(field_of_view, float):
+            logger.warning("Interpreting float type FoV as {} arcsec".format(field_of_view))
+            field_of_view = field_of_view * u.Unit('arcsec')
+            self.FoV = (field_of_view, field_of_view)
         else:
-            return TypeError(self.typeerror.format('shape', type(shape), 'tuple'))
+            raise SpecklepyTypeError('get_photon_rate_density', 'field_of_view', type(field_of_view), 'tuple')
         self.FoV = (self.FoV[0] * 1.1, self.FoV[1] * 1.1) # Add 10% FoV to avoid dark margins
 
         if isinstance(resolution, int) or isinstance(resolution, float):
-            logger.warning("Interpreting float type resolution as {}".format(resolution * u.arcsec))
-            resolution = resolution * u.arcsec
+            logger.warning("Interpreting float type resolution as {} arcsec".format(resolution))
+            resolution = resolution * u.Unit('arcsec')
         elif isinstance(resolution, u.Quantity):
             pass
         else:
-            return TypeError(self.typeerror.format('resolution', type(resolution), 'u.Quantity'))
+            raise SpecklepyTypeError('get_photon_rate_density', 'resolution', type(resolution), 'u.Quantity')
         self.resolution = resolution
 
         if dither is None:
@@ -221,7 +221,7 @@ class Target(object):
             else:
                 phase_center = dither
         else:
-            return TypeError(self.typeerror.format('dither', type(dither), 'tuple'))
+            raise SpecklepyTypeError('get_photon_rate_density', 'dither', type(dither), 'tuple')
 
 
         # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
@@ -235,8 +235,8 @@ class Target(object):
         # Add stars from star_table to photon_rate_density
         self.stars = self.read_star_table(self.star_table)
         for row in self.stars:
-            position = (int(center[0] + (row['x'] - phase_center[0]) / self.resolution.to(u.arcsec).value),
-                        int(center[1] + (row['y'] - phase_center[1]) / self.resolution.to(u.arcsec).value))
+            position = (int(center[0] + (row['x'] - phase_center[0]) / self.resolution.to('arcsec').value),
+                        int(center[1] + (row['y'] - phase_center[1]) / self.resolution.to('arcsec').value))
             flux = row['flux']
             try:
                 photon_rate_density.value[position] = np.maximum(photon_rate_density.value[position], flux)
