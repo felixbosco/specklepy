@@ -81,7 +81,11 @@ class Telescope(object):
 		if psf_source.lower() in ['airydisk', 'gaussian']:
 			self.model_psf(psf_source, **kwargs)
 		else:
-			self.read_psf_file(psf_source)
+			psf, time_resolution, angular_resolution = self.read_psf_file(psf_source)
+			self.psf = psf
+			self.psf_resolution = angular_resolution
+			if time_resolution is not None:
+				self.timestep = time_resolution
 
 	def __call__(self, *args, **kwargs):
 		return self.get_photon_rate(*args, **kwargs)
@@ -151,40 +155,55 @@ class Telescope(object):
 		self.psf = model(x, y)
 		self.psf = self.normalize(self.psf)
 
-	def read_psf_file(self, filename, hdu_entry=0):
-		"""Read PSF information from file.
+	def read_psf_file(self, filename, hdu=None):
+		"""Read PSF information from a FITS file.
 
 		Args:
 			filename (str):
 				Name of the FITS file containing the PSF frames.
-			hdu_entry (int, str, optional:
+			hdu (int, str, optional):
 				Specification of the HDU to read from the file. Default is the first HDU.
-
-		Returns:
-
 		"""
 
+		# Set
+		psf = None
+		time_resolution = None
+		angular_resolution = None
+
 		# Extract header
-		header = fits.getheader(filename, hdu_entry)
+		header = fits.getheader(filename, hdu)
 
 		if header['NAXIS'] == 2:
-			self.psf = self.normalize(fits.getdata(self.psf_source, hdu_entry))
+			psf = self.normalize(fits.getdata(filename, hdu))
 		else:
+			# Iterate over list of known header cards containing the time resolution
 			for key in self.TIME_STEP_KEYS:
 				try:
-					self.timestep = self._get_value(header, key)
+					time_resolution = self.get_header_quantity(header, key)
 					break
-				except KeyError as e:
+				except KeyError:
 					continue
+
+			# Check whether time resolution was found in the header
+			if time_resolution is None:
+				raise RuntimeError("Function read_psf_file could failed extracting the PSF time resolution.")
+
+		# Iterate over list of known header cards containing the angular resolution
 		for key in self.RESOLUTION_KEYS:
 			try:
-				self.psf_resolution = self._get_value(header, key)
+				angular_resolution = self.get_header_quantity(header, key)
 				break
-			except KeyError as e:
+			except KeyError:
 				continue
-			raise IOError("No key from {} was found in file for the psf resolution.".format(self.RESOLUTION_KEYS))
 
-	def _get_value(self, header, key, aliases=None):
+		# Check whether angular resolution was found in the header
+		if angular_resolution is None:
+			raise RuntimeError("Function read_psf_file could failed extracting the PSF angular resolution.")
+
+		return psf, time_resolution, angular_resolution
+
+	@staticmethod
+	def get_header_quantity(header, key, aliases=None):
 		"""Extract unit quantities from FITS headers, based on the unit in the comment.
 
 		Args:
@@ -272,13 +291,16 @@ class Telescope(object):
 
 		# Resample photon_rate_density to psf resolution
 		if psf_resample_mode:
-			try:
-				ratio = float(photon_rate_density_resolution / self.psf_resolution)
-			except UnitConversionError as e:
-				raise UnitConversionError(f"The resolution values of the image ({photon_rate_density_resolution}) and "
-										  f"PSF ({self.psf_resolution}) have different units!")
 
-			#convolved = np.zeros(photon_rate.shape)
+			# Compute the zoom factor
+			ratio = float(photon_rate_density_resolution / self.psf_resolution)
+			# try:
+			# 	ratio = float(photon_rate_density_resolution / self.psf_resolution)
+			# except UnitConversionError as e:
+			# 	raise UnitConversionError(f"The resolution values of the image ({photon_rate_density_resolution}) and "
+			# 							  f"PSF ({self.psf_resolution}) have different units!")
+
+			# Zoom either the image or the PSF, depending on the zoom factor
 			with warnings.catch_warnings():
 				warnings.simplefilter('ignore')
 				if ratio < 1.0:
@@ -293,13 +315,12 @@ class Telescope(object):
 		convolved = fftconvolve(photon_rate, self.psf, mode='same') * photon_rate_unit
 
 		# Report on flux conservation
-		if debug:
-			print('Check of flux conservation during convolution:')
-			print('Before: ', total_flux)
-			print('After:  ', np.sum(convolved))
+		logger.debug(f"Flux conservation during convolution: {total_flux} > {np.sum(convolved)}")
+
 		return convolved.decompose()
 
-	def normalize(self, array, mode='sum_circular'):
+	@staticmethod
+	def normalize(array, mode='sum_circular'):
 		"""Normalizes the input array depending on the mode.
 
 		Args:
@@ -330,20 +351,20 @@ class Telescope(object):
 			x, y = array.shape
 			low_cut = array[0, int(y/2)]
 			array = np.maximum(array - low_cut, 0)
-			normalized = self.normalize(array, mode='sum')
+			normalized = array / np.sum(array)
 		else:
 			normalized = None
 
 		return normalized
 
-	def integrate_psf(self, integration_time, hdu_entry=0):
+	def integrate_psf(self, integration_time, hdu=None):
 		"""Integrates psf frames over the input time.
 
 		Args:
 			integration_time (u.Quantity):
-				This is used for computing the number of frames 'nframes', via floor division by the 'timestep'
+				This is used for computing the number of frames 'n_frames', via floor division by the 'timestep'
 				attribute.
-			hdu_entry (int):
+			hdu (int, str, optional):
 				Specifier of the HDU. Default is None for the first HDU.
 		"""
 
@@ -358,18 +379,18 @@ class Telescope(object):
 			raise ValueError(f"integrate_psf received integration time {integration_time} shorter than the time "
 							 f"resolution of the psf source ({self.timestep})!")
 
-		nframes = int(integration_time / self.timestep)
+		n_frames = int(integration_time / self.timestep)
 
 		# Read PSF frames from source file
-		data = fits.getdata(self.psf_source, hdu_entry)
+		data = fits.getdata(self.psf_source, hdu)
 
 		self.psf_frame += 1
-		if self.psf_frame + nframes < data.shape[0]:
-			self.psf = np.sum(data[self.psf_frame : self.psf_frame+nframes], axis=0)
+		if self.psf_frame + n_frames < data.shape[0]:
+			self.psf = np.sum(data[self.psf_frame : self.psf_frame+n_frames], axis=0)
 		else:
 			self.psf = np.sum(data[self.psf_frame : ], axis=0)
-			self.psf += np.sum(data[ : (self.psf_frame+nframes) % data.shape[0]], axis=0)
-		self.psf_frame += nframes - 1
+			self.psf += np.sum(data[ : (self.psf_frame+n_frames) % data.shape[0]], axis=0)
+		self.psf_frame += n_frames - 1
 		self.psf_frame = self.psf_frame % data.shape[0]
 
 		# Normalize the integrated PSF
