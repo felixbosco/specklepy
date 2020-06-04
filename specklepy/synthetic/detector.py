@@ -35,22 +35,30 @@ class Detector(object):
 	"""
 
 	__name__ = 'detector'
-	# typeerror = 'Detector received {} argument of {} type, but needs to be {}!'
 
-	def __init__(self, shape, pixel_scale, optics_transmission=1, quantum_efficiency=1, system_gain=1, readout_noise=None, dark_current=None, saturation_level=None):
+	def __init__(self, shape, pixel_scale, optics_transmission=1, quantum_efficiency=1, system_gain=1,
+				 readout_noise=None, dark_current=None, saturation_level=None):
 		"""Instantiate Detector class.
 
 		Args:
-			shape (tuple, dtype=int): Shape of the detector array, i.e. number
-				of pixels. If provided as int, then the detector will be square
-				shaped.
+			shape (tuple, dtype=int):
+				Number of the pixels of the detector along two axes. Integer values will create a square detector array
+				with the same number of pixels along both axes.
 			pixel_scale (u.Quantity):
-			optics_transmission (u.Quantity, optional):
-			quantum_efficiency (u.Quantity, optional):
-			system_gain (u.Quantity, optional):
-			readout_noise (u.Quantity, optional):
-			dark_current (u.Quantity, optional):
-			saturation_level (u.Quantity, optional):
+				Angular size of each pixel.
+			optics_transmission (float, optional):
+				Optical transmission coefficient, scaling between 0.0 and 1.0 (default).
+			quantum_efficiency (float, u.Quantity, optional):
+				Quantum efficiency of the detector. Scalar type values will be interpreted units of electrons per
+				photon.
+			system_gain (float, u.Quantity, optional):
+				System gain of the detector. Scalar type values will be interpreted units of electrons per ADU.
+			readout_noise (float, u.Quantity, optional):
+				Read noise of the detector. Scalar type values will be interpreted units of electrons.
+			dark_current (float, u.Quantity, optional):
+				Dark current of the detector. Scalar type values will be interpreted units of electrons per second.
+			saturation_level (float, u.Quantity, optional):
+				Saturation level of the detector. Scalar type values will be interpreted units of electrons.
 		"""
 
 		# Input parameters
@@ -116,7 +124,7 @@ class Detector(object):
 
 		# Derive secondary parameters
 		self.array = np.zeros(self.shape)
-		self.FoV = (self.shape[0] * self.pixel_scale, self.shape[1] * self.pixel_scale)
+		self.field_of_view = (self.shape[0] * self.pixel_scale, self.shape[1] * self.pixel_scale)
 
 	@property
 	def resolution(self):
@@ -141,17 +149,18 @@ class Detector(object):
 		"""Computes the counts array from the photon rate.
 
 		Args:
-			photon_rate (u.Quantity): Passed to expose() method.
-			integration_time (u.Quantity): Passed to expose() and readout()
-				methods.
-			photon_rate_resolution (u.Quantity): Angular resolution of the
-				photon_rate array, used for resampling this to the detectors
-				grid.
-			debug (bool, optional): Set True for debugging. Default is False.
+			photon_rate (u.Quantity):
+				Passed to expose() method.
+			integration_time (u.Quantity):
+				Passed to expose() and readout() methods.
+			photon_rate_resolution (u.Quantity):
+				Angular resolution of the photon_rate array, used for resampling this to the detectors grid.
+			debug (bool, optional):
+				Set True for debugging. Default is False.
 
 		Returns:
-			counts (u.Quantity): Array of the shape of the detector that
-				contains the counts measured within every pixel.
+			counts (u.Quantity):
+				Array of the shape of the detector that contains the counts measured within every pixel.
 		"""
 		self.expose(photon_rate=photon_rate, integration_time=integration_time,
 					photon_rate_resolution=photon_rate_resolution, debug=debug)
@@ -170,23 +179,25 @@ class Detector(object):
 		"""
 
 		# Assert that the photon_rate covers a larger field of view than the detector field of view
-		photon_rate_fieldofview = (photon_rate.shape[0] * photon_rate_resolution, photon_rate.shape[1] * photon_rate_resolution)
-		if photon_rate_fieldofview[0] < self.FoV[0] or photon_rate_fieldofview[1] < self.FoV[1]:
-			raise ValueError(f"The field of view of the photon rate image ({photon_rate_fieldofview}) is smaller than "
-							 f"that of the detector ({self.FoV}) in at least one dimension!")
+		photon_rate_field_of_view = (photon_rate.shape[0] * photon_rate_resolution,
+								   photon_rate.shape[1] * photon_rate_resolution)
+		if photon_rate_field_of_view[0] < self.field_of_view[0] or \
+				photon_rate_field_of_view[1] < self.field_of_view[1]:
+			raise ValueError(f"The field of view of the photon rate image ({photon_rate_field_of_view}) is smaller "
+							 f"than that of the detector ({self.field_of_view}) in at least one dimension!")
 
 		# Resample the photon_rate array to the detector resolution
 		zoom_ratio = float(photon_rate_resolution / self.resolution)
 		with warnings.catch_warnings():
 			warnings.simplefilter("ignore")
 			photon_rate_resampled = zoom(photon_rate, zoom_ratio, order=1) * photon_rate.unit
-			photon_rate_resampled = photon_rate_resampled / zoom_ratio**2 # This is necessary for flux conservation
+			photon_rate_resampled = photon_rate_resampled / zoom_ratio**2  # This is necessary for flux conservation
 
 		# Extract the central region of shape=Detector.shape
 		center = (int(photon_rate_resampled.shape[0] / 2), int(photon_rate_resampled.shape[1] / 2))
 		dx = int(self.shape[0] / 2)
 		dy = int(self.shape[1] / 2)
-		photon_rate_resampled_subset = photon_rate_resampled[center[0] - dx : center[0] + dx , center[1] - dy : center[1] + dy]
+		photon_rate_resampled_subset = photon_rate_resampled[center[0] - dx: center[0] + dx, center[1] - dy: center[1] + dy]
 
 		return photon_rate_resampled_subset
 
@@ -255,6 +266,7 @@ class Detector(object):
 
 		Args:
 			integration_time (u.Quantity):
+				Integration time of an individual exposure.
 			reset (bool, optional):
 				If set to True, then the electron count of every pixel is reset to zero for the next exposure. Default
 				is True.
@@ -269,9 +281,13 @@ class Detector(object):
 
 		# Apply dark_current and readout noise following Poisson or Gaussian statistics
 		if self.dark_current is not None:
-			electrons = electrons + np.round(np.random.poisson(self.dark_current.value, self.shape) )* self.dark_current.unit * integration_time
+			dark_current_electrons = np.round(np.random.poisson(self.dark_current.value, self.shape)) \
+									 * self.dark_current.unit * integration_time
+			electrons = electrons + dark_current_electrons
 		if self.readout_noise is not None:
-			electrons = electrons + np.round(np.random.normal(0.0, self.readout_noise.value, self.shape)) * self.readout_noise.unit
+			readout_electrons = np.round(np.random.normal(0.0, self.readout_noise.value, self.shape)) \
+								* self.readout_noise.unit
+			electrons = electrons + readout_electrons
 
 		# Convert into ADU
 		counts = electrons / self.system_gain
