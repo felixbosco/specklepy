@@ -10,7 +10,6 @@ from astropy.units import UnitConversionError
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
-from specklepy.utils.plot import imshow
 
 
 class Telescope(object):
@@ -19,16 +18,16 @@ class Telescope(object):
 
 	Attributes:
 		diameter (astropy.units.Quantity):
-		psf_source (str): Name of the PSF model or of the file, from which the
-			PSF frames are extracted.
-		psf_frame (int): Current frame of the PSF file.
+		psf_source (str):
+			Name of the PSF model or of the file, from which the PSF frames are extracted.
+		psf_frame (int):
+			Current frame of the PSF file.
 
 	Optional attributes:
 		central_obscuration (float, optional):
 	"""
 
 	__name__ = 'telescope'
-	typeerror = 'Telescope received {} argument of {} type, but needs to be {}!'
 	TIME_STEP_KEYS = ['TIMESTEP', 'INTTIME', 'CDELT3']
 	RESOLUTION_KEYS = ['PIXSIZE', 'CDELT1']
 
@@ -53,8 +52,8 @@ class Telescope(object):
 		# Input parameters
 		if isinstance(diameter, u.Quantity):
 			self.diameter = diameter
-		elif isinstance(diameter, float) or isinstance(diameter, int):
-			logger.warning(f"Interpreting float type diameter as {diameter} m")
+		elif isinstance(diameter, (int, float)):
+			logger.warning(f"Interpreting scalar type diameter as {diameter} m")
 			self.diameter = u.Quantity(f"{diameter} m")
 		else:
 			raise SpecklepyTypeError('Telescope', 'diameter', type(diameter), 'u.Quantity')
@@ -62,7 +61,7 @@ class Telescope(object):
 		if isinstance(psf_source, str):
 			self.psf_source = psf_source
 		else:
-			raise TypeError(self.typeerror.format('psf_source', type(psf_source), 'str'))
+			raise SpecklepyTypeError('Telescope', 'psf_source', type(psf_source), 'str')
 
 		if isinstance(central_obscuration, float) or central_obscuration is None:
 			self.central_obscuration = central_obscuration
@@ -120,7 +119,7 @@ class Telescope(object):
 		if isinstance(radius, u.Quantity):
 			self.radius = radius
 		elif isinstance(radius, (int, float)):
-			logger.warning(f"Interpreting float type radius as {radius} arcsec")
+			logger.warning(f"Interpreting scalar type radius as {radius} arcsec")
 			self.radius = u.Quantity(f"{radius} arcsec")
 		else:
 			raise SpecklepyTypeError('model_psf', 'radius', type(radius), 'u.Quantity')
@@ -128,7 +127,7 @@ class Telescope(object):
 		if isinstance(psf_resolution, u.Quantity):
 			self.psf_resolution = psf_resolution
 		elif isinstance(psf_resolution, (int, float)):
-			logger.warning(f"Interpreting float type psf_resolution as {psf_resolution} arcsec")
+			logger.warning(f"Interpreting scalar type psf_resolution as {psf_resolution} arcsec")
 			self.psf_resolution = u.Quantity(f"{psf_resolution} arcsec")
 		else:
 			raise SpecklepyTypeError('model_psf', 'psf_resolution', type(psf_resolution), 'u.Quantity')
@@ -240,15 +239,17 @@ class Telescope(object):
 
 		if photon_rate_density_resolution is not None:
 			if not isinstance(photon_rate_density_resolution, u.Quantity):
-				raise SpecklepyTypeError('get_photon_rate', 'photon_rate_density_resolution', type(photon_rate_density_resolution), 'u.Quantity')
+				raise SpecklepyTypeError('get_photon_rate', 'photon_rate_density_resolution',
+										 type(photon_rate_density_resolution), 'u.Quantity')
 			psf_resample_mode = True
 		else:
 			psf_resample_mode = False
 
 		if integration_time is None and hasattr(self, 'timestep'):
-			raise ValueError("If the PSF source of Telescope is non-static, the call function requires the integration_time.")
-		elif isinstance(integration_time, float) or isinstance(integration_time, int):
-			logger.warning(f"Interpreting float type integration_time as {integration_time} s")
+			raise ValueError("If the PSF source of Telescope is non-static, the call function requires the "
+							 "integration_time.")
+		elif isinstance(integration_time, (int, float)):
+			logger.warning(f"Interpreting scalar type integration_time as {integration_time} s")
 			integration_time = u.Quantity(f"{integration_time} s")
 		elif not isinstance(integration_time, u.Quantity):
 			raise SpecklepyTypeError('get_photon_rate', 'integration_time', type(integration_time), 'u.Quantity')
@@ -267,7 +268,8 @@ class Telescope(object):
 			try:
 				ratio = float(photon_rate_density_resolution / self.psf_resolution)
 			except UnitConversionError as e:
-				raise UnitConversionError("The resolution values of the image ({}) and PSF ({}) have different units!".format(photon_rate_density_resolution, self.psf_resolution))
+				raise UnitConversionError(f"The resolution values of the image ({photon_rate_density_resolution}) and "
+										  f"PSF ({self.psf_resolution}) have different units!")
 
 			#convolved = np.zeros(photon_rate.shape)
 			with warnings.catch_warnings():
@@ -309,7 +311,7 @@ class Telescope(object):
 		"""
 
 		if not isinstance(array, np.ndarray):
-			raise TypeError(self.typeerror.format('array', type(array), 'np.ndarray'))
+			raise SpecklepyTypeError('normalize', 'array', type(array), 'np.ndarray')
 		if np.sum(array) == 0:
 			raise ValueError("Normalize received an array of zeros!")
 
@@ -343,10 +345,10 @@ class Telescope(object):
 
 		# Check input parameters
 		if isinstance(integration_time, (int, float)):
-			logger.warning(f"Interpreting float type integration_time as {integration_time} s")
+			logger.warning(f"Interpreting scalar type integration_time as {integration_time} s")
 			integration_time = integration_time * u.s
 		elif not isinstance(integration_time, u.Quantity):
-			raise TypeError('integrate_psf received integration_time argument of type {}, but needs to be u.Quantity')
+			raise SpecklepyTypeError('integrate_psf', 'integration_time', type(integration_time), 'u.Quantity')
 
 		if integration_time < self.timestep:
 			raise ValueError(f"integrate_psf received integration time {integration_time} shorter than the time "
@@ -355,8 +357,6 @@ class Telescope(object):
 		nframes = int(integration_time / self.timestep)
 
 		# Read PSF frames from source file
-		# with fits.open(self.psf_source) as hdulist:
-		# 	data = hdulist[hdu_entry].data
 		data = fits.getdata(self.psf_source, hdu_entry)
 
 		self.psf_frame += 1
