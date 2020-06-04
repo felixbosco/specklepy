@@ -71,7 +71,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     # Initialize fits header
     hdu = fits.PrimaryHDU()
     hdu.data = np.zeros((n_frames_limit,) + detector.shape)
-    hdu.header.set('DIT', exposure_time.value, exposure_time.unit)
+    hdu.header.set('EXPTIME', exposure_time.value, exposure_time.unit)
     hdu.header.set('DATE', str(datetime.now()))
     if 'cards' in kwargs:
         for key in kwargs['cards']:
