@@ -1,5 +1,3 @@
-import os
-import sys
 import numpy as np
 import astropy.units as u
 import astropy.constants as const
@@ -19,7 +17,7 @@ class Target(object):
 
     Attributes:
         shape (tuple, dtype=int):
-        FoV (tuple, dtype=Astropy.units.Quantity):
+        FoV (tuple, dtype=astropy.units.Quantity):
         pixel_scale (astropy.Unit):
 
     Optional attributes:
@@ -30,7 +28,7 @@ class Target(object):
     """
 
     __name__ = 'target'
-    typeerror = 'Target received {} argument of {} type, but needs to be {}!'
+    # typeerror = 'Target received {} argument of {} type, but needs to be {}!'
     # Credit https://en.wikipedia.org/wiki/Photometric_system
     photometry_dict = {'U': {'wavelength': 0.36, 'FWHM': 0.15, 'Flux': 1810.0},
                        'B': {'wavelength': 0.44, 'FWHM': 0.22, 'Flux': 4260.0},
@@ -40,7 +38,7 @@ class Target(object):
                        'J': {'wavelength': 1.26, 'FWHM': 0.16, 'Flux': 1600.0},
                        'H': {'wavelength': 1.6,  'FWHM': 0.23, 'Flux': 1080.0},
                        'K': {'wavelength': 2.22, 'FWHM': 0.23, 'Flux': 670.0},
-                       'L': {'wavelength': 3.5,  'FWHM': np.nan, 'Flux': np.nan},
+                       # 'L': {'wavelength': 3.5,  'FWHM': np.nan, 'Flux': np.nan},
                        'g': {'wavelength': 0.52, 'FWHM': 0.14, 'Flux': 3730.0},
                        'r': {'wavelength': 0.67, 'FWHM': 0.14, 'Flux': 4490.0},
                        'i': {'wavelength': 0.79, 'FWHM': 0.16, 'Flux': 4760.0},
@@ -66,9 +64,7 @@ class Target(object):
         else:
             raise SpecklepyTypeError('Target', 'band', type(band), 'str')
 
-        if star_table is None:
-            self.star_table = None
-        elif isinstance(star_table, str):
+        if star_table is None or isinstance(star_table, str):
             self.star_table = star_table
             # Read star table already here?
         else:
@@ -84,10 +80,10 @@ class Target(object):
             self.sky_background_flux = 0.0 / u.arcsec**2
         elif isinstance(sky_background, u.Quantity):
             # Interpreting as mag / arcsec**2
-            print("Caution: This function interpretes sky_background as in units of mag per arcsec**2.")
+            logger.warning("Interpreting sky_background as in units of mag per arcsec**2.")
             self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / u.arcsec**2
-        elif isinstance(sky_background, int) or isinstance(sky_background, float):
-            logger.warning("Interpreting float type sky_background as {}".format(sky_background * u.mag / u.arcsec**2))
+        elif isinstance(sky_background, (int, float)):
+            logger.warning("Interpreting scalar type sky_background as {}".format(sky_background * u.mag / u.arcsec**2))
             self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.arcsec**2
         else:
             raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'u.Quantity')
@@ -125,7 +121,7 @@ class Target(object):
             flux (u.Quantity):
                 Brightness converted into flux units.
         """
-        if isinstance(magnitude, int) or isinstance(magnitude, float) or isinstance(magnitude, np.ndarray):
+        if isinstance(magnitude, (int, float, np.ndarray)):
             return 10**(magnitude/-2.5) * self.band_reference_flux
         elif isinstance(magnitude, u.Quantity):
             if magnitude.unit != u.Unit('mag'):
@@ -196,7 +192,7 @@ class Target(object):
             self.FoV = (field_of_view, field_of_view)
         elif isinstance (field_of_view, tuple):
             self.FoV = field_of_view
-        elif isinstance(field_of_view, int) or isinstance(field_of_view, float):
+        elif isinstance(field_of_view, (int, float)):
             logger.warning("Interpreting float type FoV as {} arcsec".format(field_of_view))
             field_of_view = field_of_view * u.Unit('arcsec')
             self.FoV = (field_of_view, field_of_view)
@@ -204,7 +200,7 @@ class Target(object):
             raise SpecklepyTypeError('get_photon_rate_density', 'field_of_view', type(field_of_view), 'tuple')
         self.FoV = (self.FoV[0] * 1.1, self.FoV[1] * 1.1) # Add 10% FoV to avoid dark margins
 
-        if isinstance(resolution, int) or isinstance(resolution, float):
+        if isinstance(resolution, (int, float)):
             logger.warning("Interpreting float type resolution as {} arcsec".format(resolution))
             resolution = resolution * u.Unit('arcsec')
         elif isinstance(resolution, u.Quantity):
@@ -216,14 +212,14 @@ class Target(object):
         if dither is None:
             phase_center = (0, 0)
         elif isinstance(dither, tuple) or isinstance(dither, list):
-            if not (isinstance(dither[0], int) or isinstance(dither[0], float)):
+            if not (isinstance(dither[0], (int, float))):
                 raise TypeError("Dithers should be provided as int or float. These are then interpreted as arcsecconds.")
             else:
                 phase_center = dither
         else:
             raise SpecklepyTypeError('get_photon_rate_density', 'dither', type(dither), 'tuple')
 
-
+        # Derive the array shape
         # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
         shape = (int(self.FoV[0] / self.resolution), int(self.FoV[1] / self.resolution))
         center = (shape[0] / 2, shape[1] / 2)
