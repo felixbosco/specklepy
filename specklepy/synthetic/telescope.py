@@ -13,7 +13,6 @@ from specklepy.logging import logger
 
 
 class Telescope(object):
-
 	"""Class carrying the parameters of a telescope.
 
 	Attributes:
@@ -185,32 +184,40 @@ class Telescope(object):
 				continue
 			raise IOError("No key from {} was found in file for the psf resolution.".format(self.RESOLUTION_KEYS))
 
-	def _get_value(self, header, key, alias_dict={'sec': 's', 'milliarcsec': 'mas', 'microns': 'micron'}, debug=False):
-		"""
-		The alias_dict dictionary is used as a mapping from
-		unvalid unit strings for u.Unit(str). Feel free to
-		add new aliases.
+	def _get_value(self, header, key, aliases=None):
+		"""Extract unit quantities from FITS headers, based on the unit in the comment.
+
+		Args:
+			header:
+				Header of the FITS file.
+			key (str):
+				Key or name of the FITS header card.
+			aliases (dict, optional):
+				The aliases dictionary maps unit strings such that they are understood by u.Unit(str).
+
+		Returns:
+			quantity (u.Quantity):
+				Quantity derived from the combination of the FITS header card value and comment.
 		"""
 
+		# Read header card
 		value = header[key]
-		unit_str = header.comments[key]
+		comment = header.comments[key]
 
-		if unit_str == '':
-			if debug:
-				print("Function 'get_value()' did not find a unit in the comment string.")
+		# Handle empty comment
+		if not comment:
+			logger.warning("Function 'get_value()' received an empty comment string and returns scalar value.")
 			return value
-		else:
-			try:
-				unit = u.Unit(unit_str)
-			except ValueError as e:
-				if debug:
-					print("ValueError:", e)
-					print("Trying aliases from alias_dict...")
-				try:
-					unit = u.Unit(alias_dict[unit_str])
-				except:
-					raise IOError("Found no matching key in the alias_dict. You may add the corresponding entry.")
-			return value * unit
+
+		# Apply fall back values
+		if aliases is None:
+			aliases = {'sec': 's', 'milliarcsec': 'mas', 'microns': 'micron'}
+
+		# Replace comment entries that are not understood by astropy.units by corresponding aliases
+		if comment in aliases.keys():
+			comment = aliases[comment]
+
+		return value * u.Unit(comment)
 
 	def get_photon_rate(self, photon_rate_density, photon_rate_density_resolution=None, integration_time=None,
 						debug=False):
@@ -281,14 +288,11 @@ class Telescope(object):
 					memory_sum = np.sum(photon_rate)
 					photon_rate = zoom(photon_rate, ratio, order=1) / ratio**2
 					photon_rate = photon_rate / np.sum(photon_rate) * memory_sum
-			# if photon_rate.shape[0] > 2048+512 or self.psf.shape[0] > 512+256:
-			# 	print('With these sizes (image: {} and PSF: {}), the computation will be very expensive. It is suggested to adapt the resolution of the objects.'.format(photon_rate.shape, self.psf.shape))
-			# 	user_input = input('Do you still want to continue? [Y/N]')
-			# 	if user_input in ['Y', 'y', 'Yes', 'yes']:
-			# 		pass
-			# 	else:
-			# 		raise Exception('Program aborted, re-define the resolution of the objects.')
+
+		# Convolve the array with the PSF
 		convolved = fftconvolve(photon_rate, self.psf, mode='same') * photon_rate_unit
+
+		# Report on flux conservation
 		if debug:
 			print('Check of flux conservation during convolution:')
 			print('Before: ', total_flux)
