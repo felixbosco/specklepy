@@ -11,10 +11,6 @@ from specklepy.logging import logger
 from specklepy.reduction import setup, run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 
-# Suppress downloading from IERS
-from astropy.utils import iers
-iers.conf.auto_download = False
-
 
 def main():
 
@@ -23,6 +19,7 @@ def main():
     args = parser.parse_args()
 
     if args.debug:
+        logger.setLevel('DEBUG')
         logger.debug(args)
 
     # Execute the script of the corresponding command

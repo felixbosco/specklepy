@@ -17,7 +17,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     """Generate synthetic exposures from target, telescope and detector objects.
 
     The function generate_exposure() is the central function of the synthetic module. It takes one instance each  of
-    the classes Target, Telescope, and Detector and the discrete exposure time DIT. Then, it creates a number of files
+    the classes Target, Telescope, and Detector and the discrete exposure time. Then, it creates a number of files
     depending on the number of requested frames ('n_frames') and frame limit per file ('n_frames_limit'). To distribute
     the synthetic exposures to multiple files, for instance if the size of the individual file would become too large,
     just set 'n_frames_limit' to a smaller value (default is 100).
@@ -48,16 +48,16 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     """
 
     # Compute number of files
-    nfiles = n_frames // n_frames_limit
-    nframes_left = n_frames % n_frames_limit
-    if nframes_left:
-        logger.info(f"Creating {nfiles} files with {n_frames_limit} synthetic exposures and adding {nframes_left} "
+    n_files = n_frames // n_frames_limit
+    n_frames_left = n_frames % n_frames_limit
+    if n_frames_left:
+        logger.info(f"Creating {n_files} files with {n_frames_limit} synthetic exposures and adding {n_frames_left} "
                     f"frames to an additional file")
     else:
-        logger.info(f"Creating {nfiles} files with {n_frames_limit} synthetic exposures")
+        logger.info(f"Creating {n_files} files with {n_frames_limit} synthetic exposures")
 
     # Add a time stamp to file name, if not None
-    outdir, outfile = os.path.split(outfile)
+    out_dir, outfile = os.path.split(outfile)
     now = datetime.now()
     time_str = now.strftime('%Y%m%d_%H%M%S')
     if time_stamp == 'end':
@@ -66,7 +66,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
         outfile = f"{time_str}_{outfile}"
     elif time_stamp is None:
         pass
-    outfile = os.path.join(outdir, outfile)
+    outfile = os.path.join(out_dir, outfile)
 
     # Initialize fits header
     hdu = fits.PrimaryHDU()
@@ -80,35 +80,36 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     skip_attributes = {'target': ['data', 'stars'],
                        'telescope': ['psf', 'psf_frame'],
                        'detector': ['shape', 'array']}
-    for object in [target, telescope, detector]:
-        dict = object.__dict__
-        object_name = object.__name__
+    for _object in [target, telescope, detector]:
+        object_dict = _object.__dict__
+        object_name = _object.__name__
 
-        for key in dict:
+        for key in object_dict:
             if key in skip_attributes[object_name]:
                 continue
             card = f"HIERARCH SPECKLEPY {object_name.upper()} {key.upper()}"
-            if isinstance(dict[key], Quantity):
-                hdu.header.set(card, f"{dict[key].value:.3e}", dict[key].unit)  # Appending the unit of a Quantity to the comment
-            elif isinstance(dict[key], str):
-                hdu.header.set(card, os.path.basename(dict[key]))  # Suppress (long) relative paths
-            elif isinstance(dict[key], tuple):
-                _tuple = tuple([x.value for x in dict[key]])  # Separating tuple unit from values
-                hdu.header.set(card, str(_tuple), dict[key][0].unit)
+            if isinstance(object_dict[key], Quantity):
+                # Appending the unit of a Quantity to the comment
+                hdu.header.set(card, f"{object_dict[key].value:.3e}", object_dict[key].unit)
+            elif isinstance(object_dict[key], str):
+                hdu.header.set(card, os.path.basename(object_dict[key]))  # Suppress (long) relative paths
+            elif isinstance(object_dict[key], tuple):
+                _tuple = tuple([x.value for x in object_dict[key]])  # Separating tuple unit from values
+                hdu.header.set(card, str(_tuple), object_dict[key][0].unit)
             else:
-                hdu.header.set(card, dict[key])
+                hdu.header.set(card, object_dict[key])
 
     # Write header to one or more files, depending on 'n_frames' and 'n_frames_limit'
     outfiles = []
-    for n in range(nfiles):
+    for n in range(n_files):
         filename = outfile.replace('.fits', f"_{n + 1}.fits")
         outfiles.append(filename)
         hdu.writeto(filename, overwrite=True)
     # Create file for the left over frames
-    if nframes_left > 0:
-        filename = outfile.replace('.fits', f"_{nfiles + 1}.fits")
+    if n_frames_left > 0:
+        filename = outfile.replace('.fits', f"_{n_files + 1}.fits")
         outfiles.append(filename)
-        hdu.data = np.zeros((nframes_left,) + detector.shape)
+        hdu.data = np.zeros((n_frames_left,) + detector.shape)
         hdu.writeto(filename, overwrite=True)
 
     # Initialize parameters for frame computation
@@ -191,8 +192,7 @@ def get_objects(parameter_file, debug=False):
                     kwargs[key] = value
             except:
                 kwargs[key] = value
-            if debug:
-                print(key, type(kwargs[key]), kwargs[key])
+            logger.debug(f"{key} ({type(kwargs[key])}): {kwargs[key]}")
 
         if section.lower() == 'target':
             objects['target'] = Target(**kwargs)
