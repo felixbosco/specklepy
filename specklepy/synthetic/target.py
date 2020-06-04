@@ -83,7 +83,7 @@ class Target(object):
             logger.warning("Interpreting sky_background as in units of mag per arcsec**2.")
             self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / u.arcsec**2
         elif isinstance(sky_background, (int, float)):
-            logger.warning("Interpreting scalar type sky_background as {}".format(sky_background * u.mag / u.arcsec**2))
+            logger.warning(f"Interpreting scalar type sky_background as {sky_background * u.mag / u.arcsec**2}")
             self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.arcsec**2
         else:
             raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'u.Quantity')
@@ -92,11 +92,11 @@ class Target(object):
         return self.get_photon_rate_density(*args, **kwargs)
 
     def __str__(self):
-        tmp = "Target:\n"
+        tmp = "Target:"
         for key in self.__dict__:
             if key == 'stars' or key == 'data':
                 continue
-            tmp += "{}: {}\n".format(key, self.__dict__[key])
+            tmp += f"\n{key}: {self.__dict__[key]}"
         return tmp
 
     def get_reference_flux(self, photometry_file, band, format='ascii'):
@@ -193,7 +193,7 @@ class Target(object):
         elif isinstance (field_of_view, tuple):
             self.FoV = field_of_view
         elif isinstance(field_of_view, (int, float)):
-            logger.warning("Interpreting float type FoV as {} arcsec".format(field_of_view))
+            logger.warning(f"Interpreting float type FoV as {field_of_view} arcsec")
             field_of_view = field_of_view * u.Unit('arcsec')
             self.FoV = (field_of_view, field_of_view)
         else:
@@ -201,7 +201,7 @@ class Target(object):
         self.FoV = (self.FoV[0] * 1.1, self.FoV[1] * 1.1) # Add 10% FoV to avoid dark margins
 
         if isinstance(resolution, (int, float)):
-            logger.warning("Interpreting float type resolution as {} arcsec".format(resolution))
+            logger.warning(f"Interpreting float type resolution as {resolution} arcsec")
             resolution = resolution * u.Unit('arcsec')
         elif isinstance(resolution, u.Quantity):
             pass
