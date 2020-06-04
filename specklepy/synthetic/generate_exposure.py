@@ -12,20 +12,15 @@ from specklepy.synthetic.telescope import Telescope
 from specklepy.synthetic.detector import Detector
 
 
-def generate_exposure(target, telescope, detector, DIT,
-                      nframes=1, nframes_limit=100, dithers=None,
-                      outfile='exposure.fits', time_stamp=None,
-                      debug=False, **kwargs):
+def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_frames_limit=100, dithers=None,
+                      outfile='exposure.fits', time_stamp=None, debug=False, **kwargs):
     """Generate synthetic exposures from target, telescope and detector objects.
 
-    The function generate_exposure() is the central function of the synthetic
-    module. It takes one instance each  of the classes Target, Telescope, and
-    Detector and the discrete exposure time DIT. Then, it creates a number of
-    files depending on the number of requested frames ('nframes') and frame
-    limit per file ('nframes_limit').
-    To distribute the synthetic exposures to multiple files, for instance if the
-    size of the individual file would become too large, just set
-    'nframes_limit' to a smaller value (default is 100).
+    The function generate_exposure() is the central function of the synthetic module. It takes one instance each  of
+    the classes Target, Telescope, and Detector and the discrete exposure time DIT. Then, it creates a number of files
+    depending on the number of requested frames ('n_frames') and frame limit per file ('n_frames_limit'). To distribute
+    the synthetic exposures to multiple files, for instance if the size of the individual file would become too large,
+    just set 'n_frames_limit' to a smaller value (default is 100).
 
     Args:
         target (specklepy.synthetic.Target):
@@ -34,11 +29,11 @@ def generate_exposure(target, telescope, detector, DIT,
             Telescope instance that will 'observe'.
         detector (specklepy.synthetic.Detector):
             Detector instance that will be 'exposed'.
-        DIT (astropy.units.Quantity):
+        exposure_time (astropy.units.Quantity):
             Discrete integration time for each exposure.
-        nframes (int, optional):
+        n_frames (int, optional):
             Number of frames that will be generated. Default is 1.
-        nframes_limit (int, optional):
+        n_frames_limit (int, optional):
             Maximum number of frames per outfile. Default is 100.
         dithers (list, optional):
             List of dither positions, offsets from the Target instance center. Default is None.
@@ -53,13 +48,13 @@ def generate_exposure(target, telescope, detector, DIT,
     """
 
     # Compute number of files
-    nfiles = nframes // nframes_limit
-    nframes_left = nframes % nframes_limit
+    nfiles = n_frames // n_frames_limit
+    nframes_left = n_frames % n_frames_limit
     if nframes_left:
-        logger.info(f"Creating {nfiles} files with {nframes_limit} synthetic exposures and adding {nframes_left} "
+        logger.info(f"Creating {nfiles} files with {n_frames_limit} synthetic exposures and adding {nframes_left} "
                     f"frames to an additional file")
     else:
-        logger.info(f"Creating {nfiles} files with {nframes_limit} synthetic exposures")
+        logger.info(f"Creating {nfiles} files with {n_frames_limit} synthetic exposures")
 
     # Add a time stamp to file name, if not None
     outdir, outfile = os.path.split(outfile)
@@ -75,8 +70,8 @@ def generate_exposure(target, telescope, detector, DIT,
 
     # Initialize fits header
     hdu = fits.PrimaryHDU()
-    hdu.data = np.zeros((nframes_limit,) + detector.shape)
-    hdu.header.set('DIT', DIT.value, DIT.unit)
+    hdu.data = np.zeros((n_frames_limit,) + detector.shape)
+    hdu.header.set('DIT', exposure_time.value, exposure_time.unit)
     hdu.header.set('DATE', str(datetime.now()))
     if 'cards' in kwargs:
         for key in kwargs['cards']:
@@ -103,7 +98,7 @@ def generate_exposure(target, telescope, detector, DIT,
             else:
                 hdu.header.set(card, dict[key])
 
-    # Write header to one or more files, depending on 'nframes' and 'nframes_limit'
+    # Write header to one or more files, depending on 'n_frames' and 'n_frames_limit'
     outfiles = []
     for n in range(nfiles):
         filename = outfile.replace('.fits', f"_{n + 1}.fits")
@@ -125,7 +120,7 @@ def generate_exposure(target, telescope, detector, DIT,
     # Computation of frames
     frame_counter = 0
     for outfile_index, outfile in enumerate(outfiles):
-        with fits.open(outfile, mode='update') as hdulist:
+        with fits.open(outfile, mode='update') as hdu_list:
             # Get a new field of view for each file to enable dithering between files
             if dithers is not None:
                 try:
@@ -134,16 +129,18 @@ def generate_exposure(target, telescope, detector, DIT,
                     raise RuntimeError(f"Expected {len(outfiles)} dither positions but received only {len(dithers)}!")
             else:
                 dither = None
-            photon_rate_density = target.get_photon_rate_density(field_of_view=detector.field_of_view, resolution=telescope.psf_resolution,
+            photon_rate_density = target.get_photon_rate_density(field_of_view=detector.field_of_view,
+                                                                 resolution=telescope.psf_resolution,
                                                                  dither=dither)
 
-            for index in range(hdulist[0].header['NAXIS3']):
-                photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=DIT, debug=debug)
+            for index in range(hdu_list[0].header['NAXIS3']):
+                photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=exposure_time,
+                                                        debug=debug)
                 counts = detector.get_counts(photon_rate=photon_rate,
-                                             integration_time=DIT,
+                                             integration_time=exposure_time,
                                              photon_rate_resolution=target.resolution, debug=debug)
                 counts = counts.decompose()
-                hdulist[0].data[index] = counts.value
+                hdu_list[0].data[index] = counts.value
 
                 try:
                     telescope.psf_frame += skip_frames
@@ -151,15 +148,15 @@ def generate_exposure(target, telescope, detector, DIT,
                     pass
 
                 frame_counter += 1
-                print("\rSaving exposure {:4}/{:4} to file {}...".format(frame_counter, nframes, outfile), end='')
+                print("\rSaving exposure {:4}/{:4} to file {}...".format(frame_counter, n_frames, outfile), end='')
     print("")
 
 
-def get_objects(parameterfile, debug=False):
+def get_objects(parameter_file, debug=False):
     """Get objects from parameter file.
 
     Args:
-        parameterfile (str):
+        parameter_file (str):
             File from which the objects are instantiated.
         debug (bool, optional):
             Show debugging information.
@@ -170,8 +167,8 @@ def get_objects(parameterfile, debug=False):
     """
 
     # Check whether files exist
-    if not os.path.isfile(parameterfile):
-        raise FileNotFoundError(f"Parameter file {parameterfile} not found!")
+    if not os.path.isfile(parameter_file):
+        raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
 
     # Prepare objects list
     objects = {}
@@ -179,8 +176,8 @@ def get_objects(parameterfile, debug=False):
     # Read parameter_file
     parser = ConfigParser(inline_comment_prefixes="#")
     parser.optionxform = str  # make option names case sensitive
-    logger.info(f"Reading parameter file {parameterfile}")
-    parser.read(parameterfile)
+    logger.info(f"Reading parameter file {parameter_file}")
+    parser.read(parameter_file)
     for section in parser.sections():
         kwargs = {}
         for key in parser[section]:
