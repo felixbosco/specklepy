@@ -26,7 +26,8 @@ class ParameterSet(object):
         ...
     """
 
-    def __init__(self, parameter_file, defaults_file=None, essential_attributes=None, make_dirs=None):
+    def __init__(self, parameter_file, defaults_file=None, essential_attributes=None, make_dirs=None,
+                 store_mode='attr'):
         """Create a ParameterSet instance.
 
         Args:
@@ -40,6 +41,9 @@ class ParameterSet(object):
                 Absent parameters cause exceptions.
             make_dirs (list, optional):
                 List of directory paths to create, if they are not existing yet.
+            store_mode (str, optional):
+                Mode of storing the parsed parameters. In 'attr' mode, all values are stored inside Section instances.
+                In 'dict' mode, the parameters are stored as nested dictionaries.
         """
 
         # Check input parameters
@@ -79,9 +83,17 @@ class ParameterSet(object):
         logger.info(f"Reading parameter file {self.parameter_file}")
         parser.read(parameter_file)  # Overwrite defaults
 
-        # Store parser attributes into ParameterSet Sections
-        for section in parser.sections():
-            setattr(self, section.lower(), Section(parser[section]))
+        # Store parser attributes
+        if store_mode == 'attr':
+            # ... into ParameterSet Sections
+            for section in parser.sections():
+                setattr(self, section.lower(), Section(parser[section]))
+        elif store_mode == 'dict':
+            # TODO: Implement this properly
+            for section in parser.sections():
+                setattr(self, section.lower(), dict(parser[section]))
+        else:
+            raise RuntimeError(f"Storing mode {store_mode} is unknown!")
 
         # Check for the essential parameters
         for section in essential_attributes.keys():
