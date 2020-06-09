@@ -4,6 +4,9 @@ import configparser
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logger
 from specklepy.io.filemanager import FileManager
+from specklepy.synthetic.target import Target
+from specklepy.synthetic.telescope import Telescope
+from specklepy.synthetic.detector import Detector
 
 
 class ParameterSet(object):
@@ -42,16 +45,16 @@ class ParameterSet(object):
         # Check input parameters
         if isinstance(parameter_file, str):
             # Check whether file exist
-            if not os.path.isfile(parameter_file):
-                raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
+            # if not os.path.isfile(parameter_file):
+            #     raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
             self.parameter_file = os.path.abspath(parameter_file)
         else:
             raise SpecklepyTypeError('ParameterSet', argname='parameter_file',
                                      argtype=type(parameter_file), expected='str')
 
         if isinstance(defaults_file, str):
-            if not os.path.isfile(defaults_file):
-                raise FileNotFoundError(f"Defaults file {defaults_file} not found!")
+            # if not os.path.isfile(defaults_file):
+            #     raise FileNotFoundError(f"Defaults file {defaults_file} not found!")
             self.defaults_file = os.path.abspath(defaults_file)
         elif defaults_file is None:
             self.defaults_file = defaults_file
@@ -65,31 +68,20 @@ class ParameterSet(object):
         if make_dirs is None:
             make_dirs = []
 
-        # Create essential attributes from defaults file
-        if self.defaults_file is not None:
-            defaults = configparser.ConfigParser(inline_comment_prefixes="#")
-            defaults.optionxform = str  # make option names case sensitive
-            logger.info(f"Reading defaults file {self.defaults_file}")
-            defaults.read(self.defaults_file)
-
-            for section in defaults.sections():
-                setattr(self, section.lower(), Section(defaults[section]))
-
-        # Overwrite attributes from parameter_file
-        parser = configparser.ConfigParser(inline_comment_prefixes="#")
+        # Set up config parser
+        parser = configparser.ConfigParser(inline_comment_prefixes='#')
         parser.optionxform = str  # make option names case sensitive
+
+        # Read in config files
+        if self.defaults_file:
+            logger.info(f"Reading defaults file {self.defaults_file}")
+            parser.read(self.defaults_file)
         logger.info(f"Reading parameter file {self.parameter_file}")
-        parser.read(self.parameter_file)
+        parser.read(parameter_file)  # Overwrite defaults
+
+        # Store parser attributes into ParameterSet Sections
         for section in parser.sections():
-            if not hasattr(self, section.lower()):
-                setattr(self, section.lower(), Section(parser[section]))
-            else:
-                for option in parser[section]:
-                    value = parser[section][option]
-                    try:
-                        getattr(self, section.lower()).__setattr__(option, eval(value))
-                    except:
-                        getattr(self, section.lower()).__setattr__(option, value)
+            setattr(self, section.lower(), Section(parser[section]))
 
         # Check for the essential parameters
         for section in essential_attributes.keys():
@@ -103,8 +95,9 @@ class ParameterSet(object):
         self.makedirs(dir_list=make_dirs)
 
         # Create file lists
-        if hasattr(self.paths, 'inDir'):
-            self.inFiles = FileManager(self.paths.inDir).files
+        if hasattr(self, 'paths'):
+            if hasattr(self.paths, 'inDir'):
+                self.inFiles = FileManager(self.paths.inDir).files
         # try:
         #     self.inFiles = FileManager(self.paths.inDir).files
         # except AttributeError:
@@ -213,3 +206,22 @@ class HolographyParameterSet(ParameterSet):
                          defaults_file=defaults_file,
                          essential_attributes=essential_attributes,
                          make_dirs=['tmpDir'])
+
+
+class GeneratorParameterSet(ParameterSet):
+
+    def __init__(self, parfile):
+
+        essential_attributes = {'target': ['band'],
+                                'telescope': ['diameter', 'psf_source'],
+                                'detector': ['shape', 'pixel_scale'],
+                                'parameters': ['exposure_time', 'n_frames']}
+
+        super().__init__(parfile, defaults_file=None, essential_attributes=essential_attributes)
+
+        from IPython import embed
+        embed()
+
+        self.target = Target(**self.target)
+        self.telescope = Target(**self.telescope)
+        self.detector = Target(**self.detector)
