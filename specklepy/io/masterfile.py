@@ -1,9 +1,6 @@
-import numpy as np
 from os import path
 from astropy.io import fits
-from datetime import datetime
 
-from specklepy.logging import logger
 from specklepy.io.outfile import Outfile
 
 
@@ -25,4 +22,5 @@ class MasterFile(Outfile):
             except KeyError:
                 shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
 
-        super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, header_card_prefix=header_card_prefix)
+        super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False,
+                         header_card_prefix=header_card_prefix)
