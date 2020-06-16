@@ -21,8 +21,8 @@ saturation_level = 60000 electron
 
 [KWARGS]
 exposure_time = 0.6 s
-nframes = 800
-nframes_limit = 100
+n_frames = 800
+n_frames_limit = 100
 outfile = specklepy/tests/files/synthetic/glao_600ms.fits
 time_stamp = None
 dithers = [[0, 0], [-0.07076381,  0.39284687], [ 0.06677676, -0.58862834], [ 0.19091716, -0.07010549], [ 0.08940329, -0.60859351], [-0.70222277,  0.50141262], [ 0.98970495,  0.4181025 ], [ 0.33994158, -0.15549552], [-0.55528554, -0.65049679], [ 0.6059739 ,  0.49964013], [-0.18552312, -0.36058627]] # np.random.uniform(-1, 1, (10, 2))

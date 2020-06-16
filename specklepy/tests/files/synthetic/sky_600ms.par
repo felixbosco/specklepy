@@ -21,8 +21,8 @@ saturation_level = 60000 electron
 
 [KWARGS]
 exposure_time = 0.6 s
-nframes = 10
-nframes_limit = 10
+n_frames = 10
+n_frames_limit = 10
 outfile = specklepy/tests/files/synthetic/sky_600ms.fits
 time_stamp=None
 dithers = [(60, 60)]
