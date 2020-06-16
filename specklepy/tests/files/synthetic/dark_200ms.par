@@ -22,7 +22,7 @@ quantum_efficiency = 0.9 electron/ ph
 saturation_level = 60000 electron
 
 [KWARGS]
-DIT = 0.2 s
+exposure_time = 0.2 s
 nframes = 10
 nframes_limit = 10
 outfile = specklepy/tests/files/synthetic/dark_200ms.fits

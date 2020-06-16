@@ -23,7 +23,7 @@ quantum_efficiency = 0.9 electron/ ph
 # saturation_level = 60000 electron
 
 [KWARGS]
-DIT = 800*1.2 s
+exposure_time = 800*1.2 s
 nframes = 1
 nframes_limit = 1
 outfile = specklepy/tests/files/synthetic/airy_1200ms.fits
