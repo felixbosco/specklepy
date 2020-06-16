@@ -15,13 +15,11 @@ class ReductionFile(Outfile):
 
         Args:
             file (str):
-                Input file that will be serve as a source for the header and
-                raw data.
+                Input file that will be serve as a source for the header and raw data.
             data (np.ndarray, optional):
                 Data that will be stored as the new PrimaryHDU.
             prefix (str, optional):
-                Prefix that will combined with the 'file' argument to the name
-                of the new file.
+                Prefix that will combined with the 'file' argument to the name of the new file.
             path (str, optional):
                 Target path under which the new file will be stored.
             reduction (str, optional):
@@ -74,15 +72,14 @@ class ReductionFile(Outfile):
             raise SpecklepyTypeError('ReductionFile', argname='header_card_prefix', argtype=type(header_card_prefix),
                                      expected='str')
 
-
         # Create file name
         self.filename = self.prefix + os.path.basename(self.parent_file)  # Make sure to get rid of the path
 
         # Read header information and data from parent file
-        with fits.open(self.parent_file) as hdulist:
+        with fits.open(self.parent_file) as hdu_list:
             # Copy parent file data into extensions
             extensions = []
-            for hdu in hdulist:
+            for hdu in hdu_list:
                 if hdu.name == 'PRIMARY':
                     name = self.last_reduction
                 else:
@@ -93,7 +90,7 @@ class ReductionFile(Outfile):
                 extensions.append(ext)
 
             # Construct primary HDU
-            header = hdulist[0].header
+            header = hdu_list[0].header
 
             if 'PIPELINE' not in header.keys():
                 # Parent file is not a ReductionFile
@@ -101,7 +98,7 @@ class ReductionFile(Outfile):
             header.set(reduction, str(datetime.now()))  # Store the current reduction step
 
             if self._data is None:
-                primary_data = hdulist[0].data
+                primary_data = hdu_list[0].data
             else:
                 primary_data = self._data
             del self._data
