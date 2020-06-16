@@ -10,7 +10,7 @@ from astropy.table import Table
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
 from specklepy.io.filemanager import FileManager
-from specklepy.io.psffile import PSFfile
+from specklepy.io.psffile import PSFFile
 from specklepy.core.aperture import Aperture
 from specklepy.utils.plot import imshow
 
@@ -55,7 +55,7 @@ class PSFExtraction(object):
         for file_index, file in enumerate(self.params.inFiles):
             # Initialize file by file
             logging.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
+            psf_file = PSFFile(file, out_dir=self.params.tmpDir, frame_shape=(self.box_size, self.box_size))
             self.params.psfFiles.append(psf_file.filename)
             if file_shifts is None:
                 file_shift = (0, 0)

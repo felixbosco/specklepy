@@ -2,7 +2,7 @@ import unittest
 import os
 from numpy.random import rand
 
-from specklepy.io.psffile import PSFfile
+from specklepy.io.psffile import PSFFile
 
 
 
@@ -15,10 +15,10 @@ class TestPSFfile(unittest.TestCase):
         self.tmpdir = os.path.join(self.path, 'tmp/')
 
     def test_init(self):
-        PSFfile(inFile=self.file, outDir=self.tmpdir, frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"}, header_card_prefix="HIERARCH SPECKLEPY ")
+        PSFFile(in_file=self.file, out_dir=self.tmpdir, frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"}, header_card_prefix="HIERARCH SPECKLEPY ")
 
     def test_set_data(self):
-        psf_file = PSFfile(inFile=self.file, outDir=self.tmpdir, frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"}, header_card_prefix="HIERARCH SPECKLEPY ")
+        psf_file = PSFFile(in_file=self.file, out_dir=self.tmpdir, frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"}, header_card_prefix="HIERARCH SPECKLEPY ")
         psf_file.update_frame(3, rand(*self.frame_shape))
 
 

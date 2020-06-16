@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 from specklepy.logging import logger
-from specklepy.io.psffile import PSFfile
+from specklepy.io.psffile import PSFFile
 from specklepy.core.aperture import Aperture
 from specklepy.utils.combine import weighted_mean
 from specklepy.utils.plot import imshow
@@ -86,7 +86,7 @@ class ReferenceStars(object):
         for file_index, file in enumerate(self.in_files):
             # Initialize file by file
             logger.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.save_dir, frame_shape=(self.box_size, self.box_size),
+            psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=(self.box_size, self.box_size),
                                header_card_prefix="HIERARCH SPECKLEPY ")
             psf_files.append(psf_file.filename)
 
@@ -153,7 +153,7 @@ class ReferenceStars(object):
         for file_index, file in enumerate(self.in_files):
             # Initialize file by file
             logger.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFfile(file, outDir=self.save_dir, frame_shape=(self.box_size, self.box_size),
+            psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=(self.box_size, self.box_size),
                                header_card_prefix="HIERARCH SPECKLEPY")
             psf_files.append(psf_file.filename)
 
