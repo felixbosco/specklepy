@@ -80,7 +80,7 @@ def holography(params, mode='same', debug=False):
         # (vi) PSF extraction
         ref_stars = ReferenceStars(psf_radius=params.psfextraction.psfRadius,
                                    reference_source_file=params.paths.refSourceFile, in_files=params.inFiles,
-                                   tmp_dir=params.paths.tmpDir)
+                                   save_dir=params.paths.tmpDir)
         if params.psfextraction.mode.lower() == 'epsf':
             params.psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
         elif params.psfextraction.mode.lower() in ['mean', 'median', 'weighted_mean']:
