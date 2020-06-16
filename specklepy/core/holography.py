@@ -103,7 +103,7 @@ def holography(params, mode='same', debug=False):
                     if np.sum(update) == 0.0:
                         raise ValueError("After background subtraction and noise thresholding, no signal is leftover. "
                                          "Please reduce the noiseThreshold!")
-                    update = update / np.sum(update) # Flux sum of order unity
+                    update = update / np.sum(update)  # Flux sum of order unity
                     hdu_list[0].data[index] = update
                     hdu_list.flush()
 
@@ -112,17 +112,14 @@ def holography(params, mode='same', debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        f_object = get_fourier_object(params.inFiles, params.psf_files, shifts=shifts, mode=mode)
+        f_object = FourierObject(params.inFiles, params.psf_files, shifts=shifts, mode=mode)
+        f_object.coadd_fft()
 
         # (x) Apodization
-        logger.info("Apodizing the object...")
-        f_object = apodize(f_object, params.apodization.apodizationType, radius=params.apodization.apodizationWidth)
+        f_object.apodize(params.apodization.apodizationType, params.apodization.apodizationWidth)
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
-        image = ifft2(f_object)
-        image = np.abs(image)
-        image_scale = total_flux / np.sum(image)
-        image = np.multiply(image, image_scale)  # assert flux conservation
+        image = f_object.ifft(total_flux=total_flux)
 
         # Inspect the latest reconstruction
         if debug:
@@ -269,3 +266,133 @@ def get_fourier_object(in_files, psf_files, shifts, mode='same'):
     f_object = np.divide(enumerator, denominator)
 
     return f_object
+
+
+class FourierObject(object):
+
+    """Reconstruction of the Fourier transformed object.
+
+    This class computes the Fourier transformed object information, as defined in Eq. 1 (Schoedel et al., 2013).
+    Therefore it estimates the padding of the PSF and image frames.
+    """
+
+    def __init__(self, in_files, psf_files, shifts, mode='same'):
+        """ Initialize a FourierObject instance.
+
+        Args:
+            in_files (list):
+                List of paths of the input files.
+            psf_files (list):
+                List of paths of the PSF files.
+            shifts (list):
+                List of integer shifts between the files.
+            mode (str, optional):
+                Define the size of the output image as 'same' to the reference image or expanding to include the 'full'
+                covered field. Default is 'same'.
+        """
+
+        # Assert that there are the same number of inFiles and psfFiles, which should be the case after running the
+        # holography function.
+        if not len(in_files) == len(psf_files):
+            raise ValueError(f"The number of input files ({len(in_files)}) and PSF files ({len(psf_files)}) do not "\
+                               "match!")
+        self.in_files = in_files
+        self.psf_files = psf_files
+        self.shifts = shifts
+
+        # Check whether mode is supported
+        if mode not in ['same', 'full', 'valid']:
+            raise SpecklepyValueError('FourierObject', argname='mode', argvalue=mode,
+                                      expected="either 'same', 'full', or 'valid'")
+        self.mode = mode
+
+        # Extract padding vectors for images and reference image
+        logger.info("Initializing padding vectors")
+        files_contain_data_cubes = fits.getdata(in_files[0]).ndim == 3
+        self.pad_vectors, self.reference_image_pad_vector = get_pad_vectors(shifts=shifts,
+                                                                            cube_mode=files_contain_data_cubes,
+                                                                            return_reference_image_pad_vector=True)
+        file_index = 0
+        image_pad_vector = self.pad_vectors[file_index]
+        image_pad_vector.pop(0)
+
+        # Get example image frame, used as final image size
+        image_file = in_files[file_index]
+        logger.info(f"\tUsing example image frame from {image_file}")
+        img = fits.getdata(image_file)[0]  # Remove time axis padding
+        img = pad_array(array=img, pad_vector=image_pad_vector, mode=mode,
+                        reference_image_pad_vector=self.reference_image_pad_vector)
+        logger.info(f"\tShift: {shifts[file_index]}")
+        logger.info(f"\tShape: {img.shape}")
+
+        # Get example PSF frame
+        psf_file = psf_files[file_index]
+        logger.info(f"\tUsing example PSF frame from {psf_file}")
+        psf = fits.getdata(psf_file)[0]
+        logger.info(f"\tShape: {psf.shape}")
+
+        # Estimate the padding vector for the f_psf frames to have the same xy-extent as f_img
+        dx = img.shape[0] - psf.shape[0]
+        dy = img.shape[1] - psf.shape[1]
+        psf_pad_vector = ((dx // 2, int(np.ceil(dx / 2))), (dy // 2, int(np.ceil(dy / 2))))
+        logger.info(f"\tPad_width for PSFs: {psf_pad_vector}")
+
+        # Apply padding to PSF frame
+        psf = np.pad(psf, psf_pad_vector, mode='constant', )
+        if not img.shape == psf.shape:
+            raise ValueError(f"The Fourier transformed images and PSFs have different shape, {img.shape} and "
+                             f"{psf.shape}. Something went wrong with the padding!")
+        self.psf_pad_vector = psf_pad_vector
+
+        # Initialize the enumerator, denominator and Fourier object attributes
+        self.enumerator = np.zeros(img.shape, dtype='complex128')
+        self.denominator = np.zeros(img.shape, dtype='complex128')
+        self.fourier_image = np.zeros(img.shape, dtype='complex128')
+
+    def coadd_fft(self):
+        # Padding and Fourier transforming the images
+        logger.info("Padding the images and PSFs...")
+        for file_index, image_file in enumerate(self.in_files):
+            # Initialization
+            image_pad_vector = self.pad_vectors[file_index]
+            image_pad_vector.pop(0)  # Open PSF file
+
+            print(f"\r\tFourier transforming image and PSF file {file_index + 1:4}/{len(self.in_files):4}", end='')
+            psf_cube = fits.getdata(self.psf_files[file_index])
+            for frame_index, frame in enumerate(fits.getdata(image_file)):
+                # Padding and transforming the image
+                img = pad_array(array=frame,
+                                pad_vector=self.pad_vectors[file_index],
+                                mode=self.mode,
+                                reference_image_pad_vector=self.reference_image_pad_vector)
+                f_img = fftshift(fft2(img))
+
+                # Padding and Fourier transforming PSF
+                psf = psf_cube[frame_index]
+                psf = np.pad(psf, self.psf_pad_vector, mode='constant',)
+                f_psf = fftshift(fft2(psf))
+
+                # Co-adding for the average
+                self.enumerator += np.multiply(f_img, np.conjugate(f_psf))
+                self.denominator += np.abs(np.square(f_psf))
+
+        # Compute the object:
+        # Note that by this division implicitly does averaging. By this implicit summing up of enumerator and
+        # denominator, this computation is cheaper in terms of memory usage
+        self.fourier_image = np.divide(self.enumerator, self.denominator)
+
+        return self.fourier_image
+
+    def apodize(self, type, width):
+        logger.info("Apodizing the object...")
+        self.fourier_image = apodize(self.fourier_image, type, radius=width)
+        return self.fourier_image
+
+    def ifft(self, total_flux=None):
+        logger.info("Inverse Fourier transformation of the object...")
+        image = ifft2(self.fourier_image)
+        image = np.abs(image)
+        if total_flux is not None:
+            image_scale = total_flux / np.sum(image)
+            image = np.multiply(image, image_scale)
+        return image
