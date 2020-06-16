@@ -1,5 +1,7 @@
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift
+from tqdm import trange
+
 from astropy.io import fits
 
 from specklepy.core.alignment import get_shifts, get_pad_vectors, pad_array
@@ -162,112 +164,6 @@ def get_noise_mask(frame, noise_reference_margin):
     return annulus_mask
 
 
-def get_fourier_object(in_files, psf_files, shifts, mode='same'):
-    """Reconstruction of the Fourier transformed object.
-
-    This function computes the Fourier transformed object information, as defined in Eq. 1 (Schoedel et al., 2013).
-
-    Args:
-        in_files (list):
-            List of paths of the input files.
-        psf_files (list):
-            List of paths of the PSF files.
-        shifts (list):
-            List of integer shifts between the files.
-        mode (str, optional):
-            Define the size of the output image as 'same' to the reference image or expanding to include the 'full'
-            covered field. Default is 'same'.
-
-    Returns:
-        f_object (np.ndarray, dtype=complex128):
-            Fourier transformed object as a complex128 np.ndarray.
-    """
-
-    if mode not in ['same', 'full', 'valid']:
-        raise SpecklepyValueError('get_Fourier_object()', argname='mode', argvalue=mode,
-                                  expected="either 'same', 'full', or 'valid'")
-
-    files_contain_data_cubes = fits.getdata(in_files[0]).ndim == 3
-    pad_vectors, reference_image_pad_vector = get_pad_vectors(shifts=shifts, cube_mode=files_contain_data_cubes,
-                                                              return_reference_image_pad_vector=True)
-
-    # Assert that there are the same number of inFiles and psfFiles, which
-    # should be the case after running the holography function.
-    if not len(in_files) == len(psf_files):
-        raise RuntimeError(f"The number of input files ({len(in_files)}) and PSF files ({len(psf_files)}) "
-                           f"do not match!")
-
-    # Padding and Fourier transforming the images
-    logger.info("Padding the images and PSFs...")
-    for file_index, image_file in enumerate(in_files):
-        # Initialization
-        image_pad_vector = pad_vectors[file_index]
-        image_pad_vector.pop(0)
-        if file_index == 0:
-            # Get final image size
-            img = fits.getdata(image_file)[0] # Remove time axis padding
-            print(f"\tPadding data from {image_file}")
-            img = pad_array(array=img,
-                            pad_vector=image_pad_vector,
-                            mode=mode,
-                            reference_image_pad_vector=reference_image_pad_vector)
-            print('\tShift:', shifts[file_index])
-            print('\tShape:', img.shape)
-
-            # Get pad vector for PSFs
-            psf_file = psf_files[file_index]
-            psf = fits.getdata(psf_file)[0]
-            # Pad the f_psf cube to have the same xz-extent as f_img
-            print(f"\tPadding data from {psf_file}")
-            print('\tImage shape:', img.shape)
-            print('\tPSF shape:', psf.shape)
-            dx = img.shape[0] - psf.shape[0]
-            dy = img.shape[1] - psf.shape[1]
-
-            psf_pad_vector = ((dx // 2, int(np.ceil(dx/2))), (dy // 2, int(np.ceil(dy/2))))
-            print('\tPad_width:', psf_pad_vector)
-            psf = np.pad(psf, psf_pad_vector, mode='constant',)
-            try:
-                assert img.shape == psf.shape
-            except:
-                raise ValueError(f"The Fourier transformed images and psfs have different shape, {img.shape} and "
-                                 f"{psf.shape}. Something went wrong with the padding!")
-
-            # Initialize the enumerator and denominator
-            enumerator = np.zeros(img.shape, dtype='complex128')
-            denominator = np.zeros(img.shape, dtype='complex128')
-
-        # Open PSF file
-        print(f"\r\tFourier transforming image and PSF file {file_index + 1:4}/{len(in_files):4}", end='')
-        psf_cube = fits.getdata(psf_files[file_index])
-        for frame_index, frame in enumerate(fits.getdata(image_file)):
-            # Padding and transforming the image
-            img = pad_array(array=frame,
-                            pad_vector=pad_vectors[file_index],
-                            mode=mode,
-                            reference_image_pad_vector=reference_image_pad_vector)
-            f_img = fftshift(fft2(img))
-
-            # Padding and Fourier transforming PSF
-            psf = psf_cube[frame_index]
-            psf = np.pad(psf, psf_pad_vector, mode='constant',)
-            f_psf = fftshift(fft2(psf))
-
-            # Adding for the average
-            enumerator += np.multiply(f_img, np.conjugate(f_psf))
-            denominator += np.abs(np.square(f_psf))
-
-    print()
-
-    # Compute the object.
-    # Note that by this division implicitly does averaging. By this implicit
-    # summing up of enumerator and denominator, this computation is cheaper
-    # in terms of memory usage
-    f_object = np.divide(enumerator, denominator)
-
-    return f_object
-
-
 class FourierObject(object):
 
     """Reconstruction of the Fourier transformed object.
@@ -350,18 +246,25 @@ class FourierObject(object):
         self.fourier_image = np.zeros(img.shape, dtype='complex128')
 
     def coadd_fft(self):
+
         # Padding and Fourier transforming the images
         logger.info("Padding the images and PSFs...")
-        for file_index, image_file in enumerate(self.in_files):
-            # Initialization
-            image_pad_vector = self.pad_vectors[file_index]
-            image_pad_vector.pop(0)  # Open PSF file
 
-            print(f"\r\tFourier transforming image and PSF file {file_index + 1:4}/{len(self.in_files):4}", end='')
+        for file_index in trange(len(self.in_files), desc="Processing files"):
+
+            # Initialization
+            # image_pad_vector = self.pad_vectors[file_index]
+            # image_pad_vector.pop(0)
+
+            # Open PSF and image files
             psf_cube = fits.getdata(self.psf_files[file_index])
-            for frame_index, frame in enumerate(fits.getdata(image_file)):
+            image_cube = fits.getdata(self.in_files[file_index])
+            dimt = image_cube.shape[0]
+
+            for frame_index in trange(dimt, desc="Fourier transforming frames"):
+
                 # Padding and transforming the image
-                img = pad_array(array=frame,
+                img = pad_array(array=image_cube[frame_index],
                                 pad_vector=self.pad_vectors[file_index],
                                 mode=self.mode,
                                 reference_image_pad_vector=self.reference_image_pad_vector)
