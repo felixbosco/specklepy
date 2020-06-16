@@ -112,7 +112,7 @@ def holography(params, mode='same', debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        f_object = get_fourier_object(params, shifts=shifts, mode=mode)
+        f_object = get_fourier_object(params.inFiles, params.psf_files, shifts=shifts, mode=mode)
 
         # (x) Apodization
         logger.info("Apodizing the object...")
@@ -165,14 +165,16 @@ def get_noise_mask(frame, noise_reference_margin):
     return annulus_mask
 
 
-def get_fourier_object(params, shifts, mode='same'):
+def get_fourier_object(in_files, psf_files, shifts, mode='same'):
     """Reconstruction of the Fourier transformed object.
 
     This function computes the Fourier transformed object information, as defined in Eq. 1 (Schoedel et al., 2013).
 
     Args:
-        params (specklepy.io.parameterset.ParameterSet):
-            Class instance that carries all important parameters.
+        in_files (list):
+            List of paths of the input files.
+        psf_files (list):
+            List of paths of the PSF files.
         shifts (list):
             List of integer shifts between the files.
         mode (str, optional):
@@ -184,27 +186,23 @@ def get_fourier_object(params, shifts, mode='same'):
             Fourier transformed object as a complex128 np.ndarray.
     """
 
-    if not isinstance(params, ParameterSet):
-        logger.warn(f"specklepy.core.holography.get_Fourier_object received params argument of type <{type(params)}> "
-                    f"instead of the expected type specklepy.io.parameterset.ParameterSet. This may cause unforeseen "
-                    f"errors.")
     if mode not in ['same', 'full', 'valid']:
         raise SpecklepyValueError('get_Fourier_object()', argname='mode', argvalue=mode,
                                   expected="either 'same', 'full', or 'valid'")
 
-    files_contain_data_cubes = fits.getdata(params.inFiles[0]).ndim == 3
+    files_contain_data_cubes = fits.getdata(in_files[0]).ndim == 3
     pad_vectors, reference_image_pad_vector = get_pad_vectors(shifts=shifts, cube_mode=files_contain_data_cubes,
                                                               return_reference_image_pad_vector=True)
 
     # Assert that there are the same number of inFiles and psfFiles, which
     # should be the case after running the holography function.
-    if not len(params.inFiles) == len(params.psf_files):
-        raise RuntimeError(f"The number of input files ({len(params.inFiles)}) and PSF files ({len(params.psf_files)}) "
+    if not len(in_files) == len(psf_files):
+        raise RuntimeError(f"The number of input files ({len(in_files)}) and PSF files ({len(psf_files)}) "
                            f"do not match!")
 
     # Padding and Fourier transforming the images
     logger.info("Padding the images and PSFs...")
-    for file_index, image_file in enumerate(params.inFiles):
+    for file_index, image_file in enumerate(in_files):
         # Initialization
         image_pad_vector = pad_vectors[file_index]
         image_pad_vector.pop(0)
@@ -220,7 +218,7 @@ def get_fourier_object(params, shifts, mode='same'):
             print('\tShape:', img.shape)
 
             # Get pad vector for PSFs
-            psf_file = params.psf_files[file_index]
+            psf_file = psf_files[file_index]
             psf = fits.getdata(psf_file)[0]
             # Pad the f_psf cube to have the same xz-extent as f_img
             print(f"\tPadding data from {psf_file}")
@@ -243,8 +241,8 @@ def get_fourier_object(params, shifts, mode='same'):
             denominator = np.zeros(img.shape, dtype='complex128')
 
         # Open PSF file
-        print(f"\r\tFourier transforming image and PSF file {file_index + 1:4}/{len(params.inFiles):4}", end='')
-        psf_cube = fits.getdata(params.psf_files[file_index])
+        print(f"\r\tFourier transforming image and PSF file {file_index + 1:4}/{len(in_files):4}", end='')
+        psf_cube = fits.getdata(psf_files[file_index])
         for frame_index, frame in enumerate(fits.getdata(image_file)):
             # Padding and transforming the image
             img = pad_array(array=frame,
