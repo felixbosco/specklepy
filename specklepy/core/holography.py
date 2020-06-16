@@ -190,8 +190,8 @@ class FourierObject(object):
         # Assert that there are the same number of inFiles and psfFiles, which should be the case after running the
         # holography function.
         if not len(in_files) == len(psf_files):
-            raise ValueError(f"The number of input files ({len(in_files)}) and PSF files ({len(psf_files)}) do not "\
-                               "match!")
+            raise ValueError(f"The number of input files ({len(in_files)}) and PSF files ({len(psf_files)}) do not "
+                             f"match!")
         self.in_files = in_files
         self.psf_files = psf_files
         self.shifts = shifts
@@ -246,6 +246,12 @@ class FourierObject(object):
         self.fourier_image = np.zeros(img.shape, dtype='complex128')
 
     def coadd_fft(self):
+        """Co-add the Fourier transforms of the image and PSF frames.
+
+        Returns:
+            fourier_image (np.ndarray, dtype=np.comlex128):
+                Fourier-transformed object reconstruction.
+        """
 
         # Padding and Fourier transforming the images
         logger.info("Padding the images and PSFs...")
@@ -286,12 +292,36 @@ class FourierObject(object):
 
         return self.fourier_image
 
-    def apodize(self, type, width):
+    def apodize(self, type, radius):
+        """Apodize the Fourier object with a Gaussian kernel.
+        
+        Args:
+            type (str):
+                Type of the apodization. Can be either `Gaussian` or `Airy`. See specklepy.core.apodization for details. 
+            radius (float):
+                Radius of the apodization kernel. This is the standard deviation of a Gaussian kernel or the radius of
+                first zero in the case of an Airy function.
+
+        Returns:
+            apodized (np.array, dtype=np.complex128):
+                Apodized Fourier-plane image.
+        """
+
         logger.info("Apodizing the object...")
-        self.fourier_image = apodize(self.fourier_image, type, radius=width)
+        self.fourier_image = apodize(self.fourier_image, type, radius=radius)
         return self.fourier_image
 
     def ifft(self, total_flux=None):
+        """Compute the image by an inverse Fourier transformation of the Fourier-plane image.
+
+        Args:
+            total_flux (float, optional):
+                Total flux value. The image will be rescaled to obey the total flux, if provided.
+
+        Returns:
+            image (np.ndarray):
+                Image-plane image.
+        """
         logger.info("Inverse Fourier transformation of the object...")
         image = ifft2(self.fourier_image)
         image = np.abs(image)
