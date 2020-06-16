@@ -1,5 +1,6 @@
 [PATHS]
-inDir = specklepy/tests/files/example_cube.fits
+# inDir = specklepy/tests/files/example_cube.fits
+inDir = ../phd/sowat/tests/synthetic/noao_200ms_1.fits
 outFile = specklepy/tests/files/example_cube_holo.fits
 tmpDir = specklepy/tests/files/tmp/
 allStarsFile = specklepy/tests/files/example_all_sources.dat
