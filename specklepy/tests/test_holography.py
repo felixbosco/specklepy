@@ -19,7 +19,7 @@ class TestHolography(unittest.TestCase):
 
     def test_errors(self):
         with self.assertRaises(ValueError):
-            holo.get_Fourier_object(self.params, shifts=self.shifts, mode='Nonsense')
+            holo.get_fourier_object(self.params, shifts=self.shifts, mode='Nonsense')
 
 if __name__ == "__main__":
     unittest.main()

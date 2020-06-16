@@ -18,10 +18,9 @@ from specklepy.utils.plot import imshow
 def holography(params, mode='same', debug=False):
     """Execute the holographic image reconstruction.
 
-    The holographic image reconstruction is an algorithm as outlined, eg. by
-    Schoedel et al (2013, Section 3). This function follows that algorithm, see
-    comments in the code. Most of the important functions are imported from
-    other modules of specklepy.
+    The holographic image reconstruction is an algorithm as outlined, eg. by Schoedel et al (2013, Section 3). This
+    function follows that algorithm, see comments in the code. Most of the important functions are imported from other
+    modules of specklepy.
 
     Args:
         params (specklepy.io.parameterset.ParameterSet):
@@ -46,17 +45,13 @@ def holography(params, mode='same', debug=False):
         raise SpecklepyValueError('holography()', argname='mode', argvalue=mode,
                                   expected="either 'same', 'full', or 'valid'")
 
-
     # Initialize the outfile
     params.outFile = ReconstructionFile(filename=params.paths.outFile, files=params.inFiles,
                                         cards={"RECONSTRUCTION": "Holography"})
 
     # (i-ii) Align cubes
-    shifts = get_shifts(files=params.inFiles,
-                            reference_file=params.paths.alignmentReferenceFile,
-                            lazy_mode=True,
-                            return_image_shape=False,
-                            debug=debug)
+    shifts = get_shifts(files=params.inFiles, reference_file=params.paths.alignmentReferenceFile,
+                        lazy_mode=True, return_image_shape=False, debug=debug)
 
     # (iii) Compute SSA reconstruction
     image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.paths.tmpDir,
@@ -64,7 +59,7 @@ def holography(params, mode='same', debug=False):
     if isinstance(image, tuple):
         # SSA returned a reconstruction image and a variance image
         image, image_var = image
-    total_flux = np.sum(image) # Stored for flux conservation
+    total_flux = np.sum(image)  # Stored for flux conservation
 
     # Start iteration from steps (iv) through (xi)
     while True:
@@ -81,55 +76,55 @@ def holography(params, mode='same', debug=False):
         input("\tWhen you are done, just hit a key.")
 
         # (vi) PSF extraction
-        refStars = ReferenceStars(psf_radius=params.psfextraction.psfRadius,
-                                  reference_source_file=params.paths.refSourceFile,
-                                  in_files=params.inFiles,
-                                  tmp_dir=params.paths.tmpDir)
+        ref_stars = ReferenceStars(psf_radius=params.psfextraction.psfRadius,
+                                   reference_source_file=params.paths.refSourceFile, in_files=params.inFiles,
+                                   tmp_dir=params.paths.tmpDir)
         if params.psfextraction.mode.lower() == 'epsf':
-            params.psf_files = refStars.extract_epsfs(file_shifts=shifts, debug=debug)
+            params.psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
         elif params.psfextraction.mode.lower() in ['mean', 'median', 'weighted_mean']:
-            params.psf_files = refStars.extract_psfs(file_shifts=shifts,
-                                                     mode=params.psfextraction.mode.lower(), debug=debug)
+            params.psf_files = ref_stars.extract_psfs(file_shifts=shifts,
+                                                      mode=params.psfextraction.mode.lower(), debug=debug)
         logger.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
         for file in params.psf_files:
-            with fits.open(file, mode='update') as hdulist:
-                numberFrames = hdulist[0].header['NAXIS3']
+            with fits.open(file, mode='update') as hdu_list:
+                n_frames = hdu_list[0].header['NAXIS3']
                 if not hasattr(params, 'psfNoiseMask'):
-                    params.psfNoiseMask = get_noise_mask(hdulist[0].data[0],
-                                                         noise_reference_margin=params.psfextraction.noiseReferenceMargin)
-                for index in range(numberFrames):
-                    reference = np.ma.masked_array(hdulist[0].data[index], mask=params.psfNoiseMask)
+                    params.psfNoiseMask = get_noise_mask(hdu_list[0].data[0],
+                                                         noise_reference_margin=
+                                                         params.psfextraction.noiseReferenceMargin)
+                for index in range(n_frames):
+                    reference = np.ma.masked_array(hdu_list[0].data[index], mask=params.psfNoiseMask)
                     background = np.mean(reference)
                     noise = np.std(reference)
-                    update = np.maximum(hdulist[0].data[index] - background - params.psfextraction.noiseThreshold * noise, 0.0)
+                    update = np.maximum(hdu_list[0].data[index] - background -
+                                        params.psfextraction.noiseThreshold * noise, 0.0)
                     if np.sum(update) == 0.0:
                         raise ValueError("After background subtraction and noise thresholding, no signal is leftover. "
                                          "Please reduce the noiseThreshold!")
                     update = update / np.sum(update) # Flux sum of order unity
-                    hdulist[0].data[index] = update
-                    hdulist.flush()
+                    hdu_list[0].data[index] = update
+                    hdu_list.flush()
 
         # (viii) Subtraction of secondary sources within the reference apertures
         # TODO: Implement Secondary source subtraction
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        Fobject = get_Fourier_object(params, shifts=shifts, mode=mode)
+        f_object = get_fourier_object(params, shifts=shifts, mode=mode)
 
         # (x) Apodization
         logger.info("Apodizing the object...")
-        Fobject = apodize(Fobject, params.apodization.apodizationType, radius=params.apodization.apodizationWidth)
+        f_object = apodize(f_object, params.apodization.apodizationType, radius=params.apodization.apodizationWidth)
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
-        image = ifft2(Fobject)
+        image = ifft2(f_object)
         image = np.abs(image)
         image_scale = total_flux / np.sum(image)
-        image = np.multiply(image, image_scale) # assert flux conservation
+        image = np.multiply(image, image_scale)  # assert flux conservation
 
-
-        # Inspect the latest reconstrction
+        # Inspect the latest reconstruction
         if debug:
             imshow(image)
 
@@ -147,7 +142,6 @@ def holography(params, mode='same', debug=False):
 
     # Finally return the image
     return image
-
 
 
 def get_noise_mask(frame, noise_reference_margin):
@@ -171,12 +165,10 @@ def get_noise_mask(frame, noise_reference_margin):
     return annulus_mask
 
 
-
-def get_Fourier_object(params, shifts, mode='same'):
+def get_fourier_object(params, shifts, mode='same'):
     """Reconstruction of the Fourier transformed object.
 
-    This function computes the Fourier transformed object information, as
-    defined in Eq. 1 (Schoedel et al., 2013).
+    This function computes the Fourier transformed object information, as defined in Eq. 1 (Schoedel et al., 2013).
 
     Args:
         params (specklepy.io.parameterset.ParameterSet):
@@ -188,7 +180,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             covered field. Default is 'same'.
 
     Returns:
-        Fobject (np.ndarray, dtype=complex128):
+        f_object (np.ndarray, dtype=complex128):
             Fourier transformed object as a complex128 np.ndarray.
     """
 
@@ -201,9 +193,8 @@ def get_Fourier_object(params, shifts, mode='same'):
                                   expected="either 'same', 'full', or 'valid'")
 
     files_contain_data_cubes = fits.getdata(params.inFiles[0]).ndim == 3
-    pad_vectors, reference_image_pad_vector = get_pad_vectors(shifts=shifts,
-                                                            cube_mode=files_contain_data_cubes,
-                                                            return_reference_image_pad_vector=True)
+    pad_vectors, reference_image_pad_vector = get_pad_vectors(shifts=shifts, cube_mode=files_contain_data_cubes,
+                                                              return_reference_image_pad_vector=True)
 
     # Assert that there are the same number of inFiles and psfFiles, which
     # should be the case after running the holography function.
@@ -231,7 +222,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             # Get pad vector for PSFs
             psf_file = params.psf_files[file_index]
             psf = fits.getdata(psf_file)[0]
-            # Pad the Fpsf cube to have the same xz-extent as Fimg
+            # Pad the f_psf cube to have the same xz-extent as f_img
             print(f"\tPadding data from {psf_file}")
             print('\tImage shape:', img.shape)
             print('\tPSF shape:', psf.shape)
@@ -260,16 +251,16 @@ def get_Fourier_object(params, shifts, mode='same'):
                             pad_vector=pad_vectors[file_index],
                             mode=mode,
                             reference_image_pad_vector=reference_image_pad_vector)
-            Fimg = fftshift(fft2(img))
+            f_img = fftshift(fft2(img))
 
             # Padding and Fourier transforming PSF
             psf = psf_cube[frame_index]
             psf = np.pad(psf, psf_pad_vector, mode='constant',)
-            Fpsf = fftshift(fft2(psf))
+            f_psf = fftshift(fft2(psf))
 
             # Adding for the average
-            enumerator += np.multiply(Fimg, np.conjugate(Fpsf))
-            denominator += np.abs(np.square(Fpsf))
+            enumerator += np.multiply(f_img, np.conjugate(f_psf))
+            denominator += np.abs(np.square(f_psf))
 
     print()
 
@@ -277,6 +268,6 @@ def get_Fourier_object(params, shifts, mode='same'):
     # Note that by this division implicitly does averaging. By this implicit
     # summing up of enumerator and denominator, this computation is cheaper
     # in terms of memory usage
-    Fobject = np.divide(enumerator, denominator)
+    f_object = np.divide(enumerator, denominator)
 
-    return Fobject
+    return f_object
