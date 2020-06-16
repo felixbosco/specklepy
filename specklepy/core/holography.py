@@ -81,15 +81,19 @@ def holography(params, mode='same', debug=False):
         input("\tWhen you are done, just hit a key.")
 
         # (vi) PSF extraction
-        refStars = ReferenceStars(params)
+        refStars = ReferenceStars(psf_radius=params.psfextraction.psfRadius,
+                                  reference_source_file=params.paths.refSourceFile,
+                                  in_files=params.inFiles,
+                                  tmp_dir=params.paths.tmpDir)
         if params.psfextraction.mode.lower() == 'epsf':
-            refStars.extract_epsfs(params, file_shifts=shifts, debug=debug)
+            params.psf_files = refStars.extract_epsfs(file_shifts=shifts, debug=debug)
         elif params.psfextraction.mode.lower() in ['mean', 'median', 'weighted_mean']:
-            refStars.extract_psfs(params, file_shifts=shifts, mode=params.psfextraction.mode.lower(), debug=debug)
+            params.psf_files = refStars.extract_psfs(file_shifts=shifts,
+                                                     mode=params.psfextraction.mode.lower(), debug=debug)
         logger.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
-        for file in params.psfFiles:
+        for file in params.psf_files:
             with fits.open(file, mode='update') as hdulist:
                 numberFrames = hdulist[0].header['NAXIS3']
                 if not hasattr(params, 'psfNoiseMask'):
@@ -203,8 +207,8 @@ def get_Fourier_object(params, shifts, mode='same'):
 
     # Assert that there are the same number of inFiles and psfFiles, which
     # should be the case after running the holography function.
-    if not len(params.inFiles) == len(params.psfFiles):
-        raise RuntimeError(f"The number of input files ({len(params.inFiles)}) and PSF files ({len(params.psfFiles)}) "
+    if not len(params.inFiles) == len(params.psf_files):
+        raise RuntimeError(f"The number of input files ({len(params.inFiles)}) and PSF files ({len(params.psf_files)}) "
                            f"do not match!")
 
     # Padding and Fourier transforming the images
@@ -225,7 +229,7 @@ def get_Fourier_object(params, shifts, mode='same'):
             print('\tShape:', img.shape)
 
             # Get pad vector for PSFs
-            psf_file = params.psfFiles[file_index]
+            psf_file = params.psf_files[file_index]
             psf = fits.getdata(psf_file)[0]
             # Pad the Fpsf cube to have the same xz-extent as Fimg
             print(f"\tPadding data from {psf_file}")
@@ -249,7 +253,7 @@ def get_Fourier_object(params, shifts, mode='same'):
 
         # Open PSF file
         print(f"\r\tFourier transforming image and PSF file {file_index + 1:4}/{len(params.inFiles):4}", end='')
-        psf_cube = fits.getdata(params.psfFiles[file_index])
+        psf_cube = fits.getdata(params.psf_files[file_index])
         for frame_index, frame in enumerate(fits.getdata(image_file)):
             # Padding and transforming the image
             img = pad_array(array=frame,
