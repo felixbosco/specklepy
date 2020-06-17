@@ -209,7 +209,8 @@ class HolographyParameterSet(ParameterSet):
         defaults_file = os.path.abspath(defaults_file)
         essential_attributes = {'paths': ['inDir', 'tmpDir', 'outFile', 'alignmentReferenceFile', 'refSourceFile'],
                                 'starfinder': ['starfinderFwhm', 'noiseThreshold'],
-                                'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin'],
+                                'psfextraction': ['mode', 'psfRadius', 'noiseThreshold', 'noiseReferenceMargin',
+                                                  'fieldSegmentation'],
                                 'apodization': ['apodizationWidth', 'apodizationType'],
                                 'options': ['reconstructionMode', 'varianceExtensionName']}
 
