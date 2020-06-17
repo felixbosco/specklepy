@@ -3,10 +3,13 @@
 """Execute Specklepy and call the scripts."""
 
 import sys
+from specklepy.logging import logger
 import specklepy.scripts.specklepy as script
 
 if __name__ == '__main__':
     try:
         script.main()
     except KeyboardInterrupt:
-        sys.exit("Interrupted by user...")
+        print()
+        logger.info("Interrupted by user...")
+        sys.exit()
