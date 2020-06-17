@@ -1,4 +1,5 @@
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.logging import logger
 
 
 class Reconstruction(object):
@@ -8,6 +9,8 @@ class Reconstruction(object):
     This class stores the principle parameters of the reconstructed image. In the future, the functions `ssa` and
     `holography` may become child classes of this one.
     """
+
+    supported_modes = ['full', 'same', 'valid']
 
     def __init__(self, in_files, mode='full', outfile=None, reference_image=None):
         """Create a Reconstruction instance.
@@ -30,7 +33,7 @@ class Reconstruction(object):
                 The index in the `in_files` list or the name of the image serving as reference in 'same' mode.
         """
 
-        # Check input parameters
+        # Check input parameter types
         if not isinstance(in_files, list):
             raise SpecklepyTypeError('Reconstruction', 'in_files', type(in_files), 'list')
         if not isinstance(mode, str):
@@ -40,6 +43,14 @@ class Reconstruction(object):
         if reference_image is not None and not isinstance(reference_image, (int, str)):
             raise SpecklepyTypeError('Reconstruction', 'reference_image', type(reference_image), 'int or str')
 
+        # Check input parameter values
+        if mode not in self.supported_modes:
+            raise SpecklepyValueError('Reconstruction', 'mode', mode, f"in {self.supported_modes}")
+        if mode is 'same' and reference_image is None:
+            logger.warning("Reconstruction requires a reference image if run in `same` mode! The first image will "
+                           "be used as reference field.")
+            reference_image = 0
+
         # Store input data
         self.in_files = in_files
         self.mode = mode
@@ -47,11 +58,4 @@ class Reconstruction(object):
         self.reference_image = reference_image
 
         # Initialize image
-        if self.mode == 'full':
-            pass
-        elif self.mode == 'same':
-            pass
-        elif self.mode == 'valid':
-            pass
-        else:
-            raise SpecklepyValueError('Reconstruction', 'mode', mode, '`full`, `same` or `valid`')
+        pass
