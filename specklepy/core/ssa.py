@@ -1,18 +1,14 @@
-from astropy.io import fits
-from datetime import datetime
-import glob
-from IPython import embed
-import logging
+from logging import DEBUG
 import numpy as np
 import os
-import sys
+
+from astropy.io import fits
 
 from specklepy.core import alignment
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
-
 
 
 def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
@@ -58,7 +54,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             The image reconstruction. The size depends on the mode argument.
     """
 
-    logging.info("Starting SSA reconstruction...")
+    logger.info("Starting SSA reconstruction...")
     # Check parameters
     if not isinstance(files, list):
         if isinstance(files, str):
@@ -101,10 +97,9 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         var_ext = 'VAR'
 
     if debug:
-        logger.setLevel(logging.DEBUG)
-        logger.handlers[0].setLevel(logging.DEBUG)
+        logger.setLevel(DEBUG)
+        logger.handlers[0].setLevel(DEBUG)
         logger.info("Set logging level to DEBUG")
-
 
     # Do not align just a single file
     if lazy_mode and len(files) == 1:
@@ -181,7 +176,6 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
     return reconstruction
 
 
-
 def coadd_frames(cube, var_cube=None):
     """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
 
@@ -214,7 +208,6 @@ def coadd_frames(cube, var_cube=None):
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
         peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
-
 
     # Compute shifts from indizes
     peak_indizes = peak_indizes.transpose()
