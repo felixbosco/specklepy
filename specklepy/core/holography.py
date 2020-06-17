@@ -86,6 +86,8 @@ def holography(params, mode='same', debug=False):
         elif params.psfextraction.mode.lower() in ['mean', 'median', 'weighted_mean']:
             params.psf_files = ref_stars.extract_psfs(file_shifts=shifts,
                                                       mode=params.psfextraction.mode.lower(), debug=debug)
+        else:
+            raise RuntimeError(f"PSF extraction mode '{params.psfextraction.mode}' is not understood!")
         logger.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
