@@ -14,40 +14,33 @@ from specklepy.logging import logger
 def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
-    The simple shift-and-add (SSA) algorithm makes use of the structure of
-    typical speckle patterns, i.e. short-exposure point-spread functions (PSFs).
-    These show multiple peaks resembling the diffraction-limited PSF of coherent
-    fractions within the telescope aperture. Under good conditions or on small
-    telescopes, there is typically one largest coherent atmospheric cell and
-    therefore, speckle PSFs typically show one major intensity peak. The
-    algorithm makes use of this fact and identifies the emission peak in a given
-    observation frame, assuming that this always belongs to the same star, and
-    aligns all frames on the coordinate of the emission peak.
+    The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
+    short-exposure point-spread functions (PSFs). These show multiple peaks resembling the diffraction-limited PSF of
+    coherent fractions within the telescope aperture. Under good conditions or on small telescopes, there is typically
+    one largest coherent atmospheric cell and therefore, speckle PSFs typically show one major intensity peak. The
+    algorithm makes use of this fact and identifies the emission peak in a given observation frame, assuming that this
+    always belongs to the same star, and aligns all frames on the coordinate of the emission peak.
 
     See Bates & Cady (1980) for references.
 
     Args:
         files (list):
-            List of complete paths to the fits files that shall be considered
-            for the SSA reconstruction.
+            List of complete paths to the fits files that shall be considered for the SSA reconstruction.
         mode (str):
-            Name of the reconstruction mode: In 'same' mode, the reconstruction
-            covers the same field of view of the reference file. In 'full' mode,
-            every patch of the sky that is covered by at least one frame will be
+            Name of the reconstruction mode: In 'same' mode, the reconstruction covers the same field of view of the
+            reference file. In 'full' mode, every patch of the sky that is covered by at least one frame will be
             contained in the final reconstruction.
         reference_file (str, int, optional):
-            Path to a reference file or index of the file in files, relative to
-            which the shifts are computed. See
+            Path to a reference file or index of the file in files, relative to which the shifts are computed. See
             specklepy.core.aligment.get_shifts for details. Default is 0.
-        outfile (specklepy.io.recfile, optional): Object to write the result to,
-            if provided.
+        outfile (specklepy.io.recfile, optional):
+            Object to write the result to, if provided.
         tmp_dir (str, optional):
             Path of a directory in which the temporary results are stored in.
         lazy_mode (bool, optional):
-            Set to False, to enforce the alignment of a single file with respect
-            to the reference file. Default is True.
-        debug (bool, optional): Set to True to inspect intermediate results.
-            Default is False.
+            Set to False, to enforce the alignment of a single file with respect to the reference file. Default is True.
+        debug (bool, optional):
+            Show debugging information. Default is False.
 
     Returns:
         reconstruction (np.ndarray):
@@ -63,7 +56,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             raise SpecklepyTypeError('ssa()', argname='files', argtype=type(files), expected='list')
 
     if isinstance(mode, str):
-        if not mode in ['same', 'full', 'valid']:
+        if mode not in ['same', 'full', 'valid']:
             raise SpecklepyValueError('ssa()', argname='mode', argvalue=mode, expected="'same', 'full' or 'valid'")
     else:
         raise SpecklepyTypeError('ssa()', argname='mode', argtype=type(mode), expected='str')
@@ -138,8 +131,10 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             tmp_files.append(tmp_file)
 
         # Align tmp reconstructions and add up
-        file_shifts, image_shape = alignment.get_shifts(tmp_files, reference_file=reference_file, return_image_shape=True, lazy_mode=True)
-        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, cube_mode=(len(image_shape) == 3), return_reference_image_pad_vector=True)
+        file_shifts, image_shape = alignment.get_shifts(tmp_files, reference_file=reference_file,
+                                                        return_image_shape=True, lazy_mode=True)
+        pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, cube_mode=(len(image_shape) == 3),
+                                                                return_reference_image_pad_vector=True)
         # reconstruction = np.zeros(image_shape)
         for index, file in enumerate(tmp_files):
             with fits.open(file) as hdulist:
@@ -150,15 +145,19 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
                     # No VAR extension in file
                     pass
             if 'reconstruction' not in locals():
-                reconstruction = alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                reconstruction = alignment.pad_array(tmp_image, pad_vectors[index], mode=mode,
+                                                     reference_image_pad_vector=ref_pad_vector)
                 try:
-                    reconstruction_var = alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                    reconstruction_var = alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode,
+                                                             reference_image_pad_vector=ref_pad_vector)
                 except:
                     pass
             else:
-                reconstruction += alignment.pad_array(tmp_image, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                reconstruction += alignment.pad_array(tmp_image, pad_vectors[index], mode=mode,
+                                                      reference_image_pad_vector=ref_pad_vector)
                 try:
-                    reconstruction_var += alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode, reference_image_pad_vector=ref_pad_vector)
+                    reconstruction_var += alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode,
+                                                              reference_image_pad_vector=ref_pad_vector)
                 except:
                     pass
 
@@ -179,16 +178,15 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
 def coadd_frames(cube, var_cube=None):
     """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
 
-    This function uses the SSA algorithm to coadd frames of a cube. If
-    provided, this function coadds the variances within a var cube considering
-    the exact same shifts.
+    This function uses the SSA algorithm to coadd frames of a cube. If provided, this function coadds the variances
+    within a var cube considering the exact same shifts.
 
     Args:
         cube (np.ndarray, ndim=3):
             Data cube which is integrated along the zero-th axis.
         var_cube (np.ndarray, ndim=3, optional):
-            Data cube of variances which is integrated along the zero-th axis
-            with the same shifts as the cube.
+            Data cube of variances which is integrated along the zero-th axis with the same shifts as the cube.
+
     Returns:
         coadded (np.ndarray, ndim=2):
             SSA-integrated frames of the input cube.
@@ -202,7 +200,8 @@ def coadd_frames(cube, var_cube=None):
     if var_cube is not None and not isinstance(var_cube, np.ndarray):
         raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube), expected='np.ndarray')
     if var_cube is not None and var_cube.shape != cube.shape:
-        raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=var_cube.shape, expected=str(cube.shape))
+        raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=var_cube.shape,
+                                  expected=str(cube.shape))
 
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
@@ -219,15 +218,17 @@ def coadd_frames(cube, var_cube=None):
 
     # Shift frames and add to coadded
     coadded = np.zeros(cube[0].shape)
-    pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=True)
+    pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube_mode=False,
+                                                            return_reference_image_pad_vector=True)
     for index, frame in enumerate(cube):
-        coadded += alignment.pad_array(frame, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
+        coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
+                                       reference_image_pad_vector=ref_pad_vector)
 
     if var_cube is not None:
         var_coadded = np.zeros(coadded.shape)
         for index, frame in enumerate(var_cube):
-            var_coadded += alignment.pad_array(frame, pad_vectors[index], mode='same', reference_image_pad_vector=ref_pad_vector)
+            var_coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
+                                               reference_image_pad_vector=ref_pad_vector)
         return coadded, var_coadded
 
     return coadded
-
