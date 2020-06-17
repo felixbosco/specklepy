@@ -1,3 +1,6 @@
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+
+
 class Reconstruction(object):
 
     """Base class for image reconstructions.
@@ -27,6 +30,16 @@ class Reconstruction(object):
                 The index in the `in_files` list or the name of the image serving as reference in 'same' mode.
         """
 
+        # Check input parameters
+        if not isinstance(in_files, list):
+            raise SpecklepyTypeError('Reconstruction', 'in_files', type(in_files), 'list')
+        if not isinstance(mode, str):
+            raise SpecklepyTypeError('Reconstruction', 'mode', type(mode), 'str')
+        if outfile is not None and not isinstance(outfile, str):
+            raise SpecklepyTypeError('Reconstruction', 'outfile', type(outfile), 'str')
+        if reference_image is not None and not isinstance(reference_image, (int, str)):
+            raise SpecklepyTypeError('Reconstruction', 'reference_image', type(reference_image), 'int or str')
+
         # Store input data
         self.in_files = in_files
         self.mode = mode
@@ -34,4 +47,11 @@ class Reconstruction(object):
         self.reference_image = reference_image
 
         # Initialize image
-        pass
+        if self.mode == 'full':
+            pass
+        elif self.mode == 'same':
+            pass
+        elif self.mode == 'valid':
+            pass
+        else:
+            raise SpecklepyValueError('Reconstruction', 'mode', mode, '`full`, `same` or `valid`')
