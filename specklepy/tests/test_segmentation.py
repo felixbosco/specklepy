@@ -34,6 +34,16 @@ class TestSegmentation(unittest.TestCase):
         test_pos = (1, 1)
         self.assertIn(test_pos, segmentation[0])
 
+    def test_all_covered(self):
+        np.random.seed(123)
+        segmentation = Segmentation(3, 5, self.shape)
+        positions = []
+        for seg in segmentation.segments:
+            pos = (np.random.randint(seg.xmin, seg.xmax), np.random.randint(seg.ymin, seg.ymax))
+            positions.append(pos)
+        self.assertTrue(segmentation.all_covered(positions=positions))
+
+
 
 if __name__ == "__main__":
     unittest.main()

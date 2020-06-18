@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Segmentation(object):
 
     """Segmentation of fields of view.
@@ -63,6 +66,26 @@ class Segmentation(object):
     def __getitem__(self, item):
         return self.segments[item]
 
+    def all_covered(self, positions):
+        """Are all segments in this Segmentation covered by at least one member of a position list?
+
+        Args:
+            positions (list of tuple):
+                List of 2-tuples of positions.
+
+        Returns:
+            all_covered (bool):
+                True, if each segment is covered by at least one element of positions.
+        """
+
+        covered = np.zeros(len(self.segments), dtype=bool)
+
+        for pos in positions:
+            for s, seg in enumerate(self.segments):
+                covered[s] |= pos in seg
+
+        return covered.all()
+
 
 class Segment(object):
 
@@ -121,4 +144,4 @@ class Segment(object):
             in (bool):
                 True if pos lies within segment limits.
         """
-        return self.xmin < pos[0] < self.xmax and self.ymin < pos[1] < self.ymax
+        return self.xmin <= pos[0] <= self.xmax and self.ymin <= pos[1] <= self.ymax
