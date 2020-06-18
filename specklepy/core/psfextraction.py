@@ -16,7 +16,7 @@ class ReferenceStars(object):
 
     """Class that holds a list of reference stars and can extract the PSFs on their positions."""
 
-    def __init__(self, psf_radius, reference_source_file, in_files, save_dir):
+    def __init__(self, psf_radius, reference_source_file, in_files, save_dir, field_segmentation=None):
         """
 
         Args:
@@ -29,6 +29,8 @@ class ReferenceStars(object):
                 List of input files.
             save_dir (str):
                 Directory where the PSF estimates will be stored.
+            field_segmentation (any):
+                Segmentation of the image into field segments with their own PSF.
         """
 
         # Store attributes
