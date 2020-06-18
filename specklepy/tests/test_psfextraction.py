@@ -11,11 +11,12 @@ class TestPSFExtraction(unittest.TestCase):
         self.in_files = ["specklepy/tests/files/synthetic/airy_200ms_1.fits",
                          "specklepy/tests/files/synthetic/airy_200ms_2.fits"]
         self.tmp_dir = "specklepy/tests/files/tmp/"
-        self.params = {'psf_radius':self.psf_radius, 'reference_source_file':self.reference_source_file,
-                       'in_files':self.in_files, 'tmp_dir':self.tmp_dir}
+        self.params = {'psf_radius': self.psf_radius, 'reference_source_file': self.reference_source_file,
+                       'in_files': self.in_files, 'save_dir': self.tmp_dir}
 
     def test_init(self):
         ReferenceStars(**self.params)
+        ReferenceStars(**self.params, field_segmentation=[2, 2])
 
     def test_initialize_apertures(self):
         ref_stars = ReferenceStars(**self.params)

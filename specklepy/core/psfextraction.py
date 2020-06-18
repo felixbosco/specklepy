@@ -5,9 +5,10 @@ from tqdm import trange
 from astropy.io import fits
 from astropy.table import Table
 
+from specklepy.core.aperture import Aperture
+from specklepy.core.segmentation import Segmentation
 from specklepy.logging import logger
 from specklepy.io.psffile import PSFFile
-from specklepy.core.aperture import Aperture
 from specklepy.utils.combine import weighted_mean
 from specklepy.utils.plot import imshow
 
@@ -29,7 +30,7 @@ class ReferenceStars(object):
                 List of input files.
             save_dir (str):
                 Directory where the PSF estimates will be stored.
-            field_segmentation (any):
+            field_segmentation (list):
                 Segmentation of the image into field segments with their own PSF.
         """
 
@@ -38,6 +39,16 @@ class ReferenceStars(object):
         self.star_table = Table.read(reference_source_file, format='ascii')
         self.in_files = in_files
         self.save_dir = save_dir
+
+        if field_segmentation:
+            example_image_shape = fits.getdata(self.in_files[0])[0].shape
+            segmentation = Segmentation(*field_segmentation, image_shape=example_image_shape)
+            star_positions = []
+            for row in self.star_table:
+                star_positions.append((row['x'], row['y']))
+            if not segmentation.all_covered(positions=star_positions):
+                raise RuntimeError("fff")
+            self.field_segmentation = segmentation
 
     @property
     def box_size(self):
