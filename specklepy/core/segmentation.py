@@ -109,3 +109,16 @@ class Segment(object):
                 Image array from which the segment shall be extracted.
         """
         return array[self.xmin:self.xmax, self.ymin:self.ymax]
+
+    def __contains__(self, pos):
+        """Return bool of whether a position tuple lies within the segment boundaries.
+
+        Args:
+            pos (tuple):
+                Position tuple of (x, y) coordinates.
+
+        Returns:
+            in (bool):
+                True if pos lies within segment limits.
+        """
+        return self.xmin < pos[0] < self.xmax and self.ymin < pos[1] < self.ymax

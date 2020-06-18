@@ -27,7 +27,12 @@ class TestSegmentation(unittest.TestCase):
     def test_call(self):
         segmentation = Segmentation(3, 5, self.shape)
         subarray = segmentation[0](self.data[0])
-        imshow(subarray)
+        # imshow(subarray)
+
+    def test_contain(self):
+        segmentation = Segmentation(3, 5, self.shape)
+        test_pos = (1, 1)
+        self.assertIn(test_pos, segmentation[0])
 
 
 if __name__ == "__main__":
