@@ -16,7 +16,7 @@ class TestPSFExtraction(unittest.TestCase):
 
     def test_init(self):
         ReferenceStars(**self.params)
-        ReferenceStars(**self.params, field_segmentation=[2, 2])
+        ReferenceStars(**self.params, field_segmentation=[2, 1])
 
     def test_initialize_apertures(self):
         ref_stars = ReferenceStars(**self.params)
