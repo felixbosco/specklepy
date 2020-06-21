@@ -57,7 +57,11 @@ class ReferenceStars(object):
     def box_size(self):
         return self.radius * 2 + 1
 
-    def init_apertures(self, filename, shift=(0, 0)):
+    def init_apertures(self, filename, shift=None):
+
+        if shift is None:
+            shift = (0, 0)
+
         apertures = []
         for star in self.star_table:
             apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename,
@@ -109,10 +113,11 @@ class ReferenceStars(object):
             # Consider alignment of cubes when initializing the apertures, i.e.
             # the position of the aperture in the shifted cube
             if file_shifts is None:
-                file_shift = (0, 0)
+                apertures = self.init_apertures(file)
             else:
-                file_shift = file_shifts[file_index]
-            apertures = self.init_apertures(file, shift=file_shift)
+                apertures = self.init_apertures(file, shift=file_shifts[file_index])
+
+            # Extract the number of frames in the FITS file from the header
             frame_number = fits.getheader(file)['NAXIS3']
 
             # Check apertures visually
@@ -176,11 +181,11 @@ class ReferenceStars(object):
             # Consider alignment of cubes when initializing the apertures, i.e.
             # the position of the aperture in the shifted cube
             if file_shifts is None:
-                file_shift = (0, 0)
+                apertures = self.init_apertures(file)
             else:
-                file_shift = file_shifts[file_index]
-            apertures = self.init_apertures(file, shift=file_shift)
+                apertures = self.init_apertures(file, shift=file_shifts[file_index])
 
+            # Extract the number of frames in the FITS file from the header
             frame_number = fits.getheader(file)['NAXIS3']
 
             # Extract the PSF by combining the aperture frames in the desired mode
