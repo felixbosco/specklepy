@@ -66,12 +66,15 @@ class Segmentation(object):
     def __getitem__(self, item):
         return self.segments[item]
 
-    def all_covered(self, positions):
+    def all_covered(self, positions, return_all=False):
         """Are all segments in this Segmentation covered by at least one member of a position list?
 
         Args:
             positions (list of tuple):
                 List of 2-tuples of positions.
+            return_all (bool, optional):
+                Set true to receive an array of boolean values, one for each segment. By default returns a scalar
+                boolean value, indicating whether all segments are covered.
 
         Returns:
             all_covered (bool):
@@ -83,6 +86,9 @@ class Segmentation(object):
         for pos in positions:
             for s, seg in enumerate(self.segments):
                 covered[s] |= pos in seg
+
+        if return_all:
+            return covered.reshape((self.ny, self.nx))
 
         return covered.all()
 
