@@ -47,7 +47,10 @@ class ReferenceStars(object):
             for row in self.star_table:
                 star_positions.append((row['x'], row['y']))
             if not segmentation.all_covered(positions=star_positions):
-                raise RuntimeError("fff")
+                covering = segmentation.all_covered(positions=star_positions, return_all=True)
+                raise RuntimeError(f"Image segmentation into ({field_segmentation}) segments requested, but not all "
+                                   f"image segments contain reference stars:\n{covering}\nPlease select more reference "
+                                   f"or reduce the field segmentation.")
             self.field_segmentation = segmentation
 
     @property
