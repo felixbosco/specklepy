@@ -191,7 +191,7 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
-- *0.5.3dev*: Working on the data reduction flow.
+- *0.5.3dev*: Working on the extraction of multiple PSFs.
 - *0.5.3*: Implemented calling with commands of a universal script, a la `specklepy reduce --setup`. The synthetic 
 exposure generator now accepts intuitive syntax ('5 km/ s') for quantities.
 - *0.5.2*: Implement noise propagation during data reduction. The reduction setup `specklepy_reduction_setup` now 
