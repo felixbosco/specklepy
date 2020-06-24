@@ -20,7 +20,7 @@ class GeneralArgParser(object):
                         'algorithms are implemented for image reconstruction: the SSA and '
                         'Holography algorithm.',
             epilog="Execute 'specklepy <command> -h' for further information on the commands.")
-        self.parser.add_argument('--gui', action='store_true', help='Start the graphical user interface (GUI).')
+        # self.parser.add_argument('--gui', action='store_true', help='Start the graphical user interface (GUI).')
         self.parser.add_argument('-d', '--debug', action='store_true', help='Show debugging information.')
         subparsers = self.parser.add_subparsers(help='Available commands in Specklepy:')
 
