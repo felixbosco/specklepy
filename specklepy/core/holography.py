@@ -207,13 +207,12 @@ class FourierObject(object):
 
         # Extract padding vectors for images and reference image
         logger.info("Initializing padding vectors")
-        files_contain_data_cubes = fits.getdata(in_files[0]).ndim == 3
+        # files_contain_data_cubes = fits.getdata(in_files[0]).ndim == 3
         self.pad_vectors, self.reference_image_pad_vector = get_pad_vectors(shifts=shifts,
-                                                                            cube_mode=files_contain_data_cubes,
+                                                                            cube_mode=False,
                                                                             return_reference_image_pad_vector=True)
         file_index = 0
         image_pad_vector = self.pad_vectors[file_index]
-        image_pad_vector.pop(0)
 
         # Get example image frame, used as final image size
         image_file = in_files[file_index]
@@ -261,16 +260,12 @@ class FourierObject(object):
 
         for file_index in trange(len(self.in_files), desc="Processing files"):
 
-            # Initialization
-            # image_pad_vector = self.pad_vectors[file_index]
-            # image_pad_vector.pop(0)
-
             # Open PSF and image files
             psf_cube = fits.getdata(self.psf_files[file_index])
             image_cube = fits.getdata(self.in_files[file_index])
-            dimt = image_cube.shape[0]
+            n_frames = image_cube.shape[0]
 
-            for frame_index in trange(dimt, desc="Fourier transforming frames"):
+            for frame_index in trange(n_frames, desc="Fourier transforming frames"):
 
                 # Padding and transforming the image
                 img = pad_array(array=image_cube[frame_index],
