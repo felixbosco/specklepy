@@ -1,4 +1,5 @@
 import numpy as np
+
 from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
@@ -6,35 +7,28 @@ from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 
 
-
 def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
-    This function iterates over a list of files and uses the module function
-    get_shift in 'correlation' mode to compute the relative shifts of files with
-    respect to a reference file.
+    This function iterates over a list of files and uses the module function get_shift in 'correlation' mode to compute
+    the relative shifts of files with respect to a reference file.
 
     Args:
         files (list):
             List of files to align.
         reference_file (str, int, optional):
-            Path to a reference file or index of the file in files, relative to
-            which the shifts are computed. Default is 0.
+            Path to a reference file or index of the file in files, relative to which the shifts are computed. Default
+            is 0.
         mode (str, optional):
-            Mode of the shift estimate. In 'correlation' mode, a 2D correlation
-            is used to estimate the shift of the array. This is computationally
-            much more expensive than the identical 'maximum' or 'peak' modes,
-            which simply identify the coordinates of the emission peaks and
-            return the difference. Though these modes may be fooled by reference
-            sources of similar brightness. Passed to get_shift() function.
-            Default is 'correlation'.
+            Mode of the shift estimate. In 'correlation' mode, a 2D correlation is used to estimate the shift of the
+            array. This is computationally much more expensive than the identical 'maximum' or 'peak' modes, which
+            simply identify the coordinates of the emission peaks and return the difference. Though these modes may be
+            fooled by reference sources of similar brightness. Passed to get_shift() function. Default is 'correlation'.
         lazy_mode (bool, optional):
-            Set to False, to enforce the alignment of a single file with respect
-            to the reference file. Default is True.
+            Set to False, to enforce the alignment of a single file with respect to the reference file. Default is True.
         return_image_shape (bool, optional):
-            Set to True for for returning the shape of the anticipated output
-            image. Default is False.
+            Set to True for for returning the shape of the anticipated output image. Default is False.
         debug (bool, optional):
             If set to True, it shows the 2D correlation.
 
@@ -57,13 +51,15 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
         raise SpecklepyTypeError('get_shifts()', argname='reference_file', argtype=type(reference_file), expected='str')
     if isinstance(mode, str):
         if mode not in ['correlation', 'maximum', 'peak']:
-            raise SpecklepyValueError('get_shifts()', argname='mode', argvalue=mode, expected="'correlation', 'maximum' or 'peak'")
+            raise SpecklepyValueError('get_shifts()', argname='mode', argvalue=mode,
+                                      expected="'correlation', 'maximum' or 'peak'")
     else:
         raise SpecklepyTypeError('get_shifts()', argname='mode', argtype=type(mode), expected='str')
     if not isinstance(lazy_mode, bool):
         raise SpecklepyTypeError('get_shifts()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
     if not isinstance(return_image_shape, bool):
-        raise SpecklepyTypeError('get_shifts()', argname='return_image_shape', argtype=type(return_image_shape), expected='bool')
+        raise SpecklepyTypeError('get_shifts()', argname='return_image_shape', argtype=type(return_image_shape),
+                                 expected='bool')
 
     # Skip computations if only one file is provided
     if lazy_mode and len(files) == 1:
@@ -82,7 +78,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
         if reference_image.ndim == 3:
             # Integrating over time axis if reference image is a cube
             reference_image = np.sum(reference_image, axis=0)
-        Freference_image = np.fft.fft2(reference_image)
+        f_reference_image = np.fft.fft2(reference_image)
         image_shape = reference_image.shape
         del reference_image
 
@@ -94,7 +90,8 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
                 image = fits.getdata(file)
                 if image.ndim == 3:
                     image = np.sum(image, axis=0)
-                shift = get_shift(image, reference_image=Freference_image, is_Fourier_transformed=True, mode=mode, debug=debug)
+                shift = get_shift(image, reference_image=f_reference_image, is_fourier_transformed=True, mode=mode,
+                                  debug=debug)
             shifts.append(shift)
             logger.info(f"Identified a shift of {shift} for file {file}")
         logger.info(f"Identified the following shifts:\n\t{shifts}")
@@ -105,36 +102,31 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
         return shifts
 
 
-
-def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='correlation', debug=False):
+def get_shift(image, reference_image=None, is_fourier_transformed=False, mode='correlation', debug=False):
     """Estimate the shift between an image and a reference image.
 
-    Estimate the relative shift between an image and a reference image by means
-    of a 2D correlation ('correlation' mode) or by comparison of the emission
-    peaks ('peak' or 'maximum' modes).
+    Estimate the relative shift between an image and a reference image by means of a 2D correlation
+    ('correlation' mode) or by comparison of the emission peaks ('peak' or 'maximum' modes).
 
     Args:
         image (np.ndarray):
             2D array of the image to be shifted.
         reference_image (np.ndarray):
             2D array of the reference image of the shift.
-        is_Fourier_transformed (bool):
-            Indicate whether the reference image is already Fourier transformed.
-            This is implemented to save computation by computing that transform
-            only once.
+        is_fourier_transformed (bool):
+            Indicate whether the reference image is already Fourier transformed. This is implemented to save
+            computation by computing that transform only once.
         mode (str, optional):
-            Mode of the shift estimate. In 'correlation' mode, a 2D correlation
-            is used to estimate the shift of the array. This is computationally
-            much more expensive than the identical 'maximum' or 'peak' modes,
-            which simply identify the coordinates of the emission peaks and
-            return the difference. Though these modes may be fooled by reference
-            sources of similar brightness. Default is 'correlation'.
+            Mode of the shift estimate. In 'correlation' mode, a 2D correlation is used to estimate the shift of the
+            array. This is computationally much more expensive than the identical 'maximum' or 'peak' modes, which
+            simply identify the coordinates of the emission peaks and return the difference. Though these modes may be
+            fooled by reference sources of similar brightness. Default is 'correlation'.
         debug (bool, optional):
             Set to True to inspect intermediate results. Default is False.
 
     Returns:
         shift (tuple):
-            Tuple of shift indizes for each axis.
+            Tuple of shift indices for each axis.
     """
 
     # Check input parameters
@@ -142,11 +134,13 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
         raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(image)}")
     if not isinstance(reference_image, np.ndarray) or image.ndim is not 2:
         raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(reference_image)}")
-    if not isinstance(is_Fourier_transformed, bool):
-        raise SpecklepyTypeError('get_shift()', argname='is_Fourier_transformed', argtype=type(is_Fourier_transformed), expected='bool')
+    if not isinstance(is_fourier_transformed, bool):
+        raise SpecklepyTypeError('get_shift()', argname='is_Fourier_transformed', argtype=type(is_fourier_transformed),
+                                 expected='bool')
     if isinstance(mode, str):
         if mode not in ['correlation', 'maximum', 'peak']:
-            raise SpecklepyValueError('get_shift()', argname='mode', argvalue=mode, expected="'correlation', 'maximum' or 'peak'")
+            raise SpecklepyValueError('get_shift()', argname='mode', argvalue=mode,
+                                      expected="'correlation', 'maximum' or 'peak'")
     else:
         raise SpecklepyTypeError('get_shift()', argname='mode', argtype=type(mode), expected='str')
 
@@ -154,29 +148,29 @@ def get_shift(image, reference_image=None, is_Fourier_transformed=False, mode='c
     if mode == 'maximum' or mode == 'peak':
         peak_image = np.unravel_index(np.argmax(image, axis=None), image.shape)
         peak_ref_image = np.unravel_index(np.argmax(reference_image, axis=None), reference_image.shape)
-        return (peak_ref_image[0] - peak_image[0] , peak_ref_image[1] - peak_image[1])
+        return peak_ref_image[0] - peak_image[0], peak_ref_image[1] - peak_image[1]
 
     # Using correlation of the two images
     elif mode == 'correlation':
-        if not is_Fourier_transformed:
-            Freference_image = np.fft.fft2(reference_image)
+        # Get the Fourier transformed reference image for cross-correlation
+        if not is_fourier_transformed:
+            f_reference_image = np.fft.fft2(reference_image)
         else:
-            Freference_image = reference_image
-        # if reference_image is not None and Freference_image is None:
-        #     Freference_image = np.fft.fft2(reference_image)
-        # elif Freference_image is not None and reference_image is None:
-        #     pass
-        # else:
-        #     raise ValueError("Exactly one of reference_image or Freference_image needs be provided to get_shift!")
-        Fimage = np.conjugate(np.fft.fft2(image))
-        correlation = np.fft.ifft2(np.multiply(Freference_image, Fimage))
+            f_reference_image = reference_image
+
+        # Fourier transform the image
+        f_image = np.conjugate(np.fft.fft2(image))
+
+        # Compute the 2-dimensional correlation
+        correlation = np.fft.ifft2(np.multiply(f_reference_image, f_image))
         correlation = np.fft.fftshift(correlation)
         if debug:
             imshow(np.abs(correlation), title='FFT shifted correlation')
+
+        # Derive the shift from the correlation
         shift = np.unravel_index(np.argmax(correlation), correlation.shape)
         shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
         return shift
-
 
 
 def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=False):
@@ -184,14 +178,13 @@ def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=F
 
     Args:
         shifts (list):
-            Shifts between files, relative to a reference image. See get_shifts
-            function for details.
+            Shifts between files, relative to a reference image. See get_shifts function for details.
         cube_mode (bool, optional):
-            If image is a cube, the estimated pad vectors will obtain pad_vector
-            entries of (0, 0) for the zeroth axis. Default is False.
+            If image is a cube, the estimated pad vectors will obtain pad_vector entries of (0, 0) for the zeroth axis.
+            Default is False.
         return_reference_image_pad_vector (bool, optional):
-            In 'same' mode, pad_array needs also the pad vector of the reference
-            image. This is returned if this arg is set True. Default is False.
+            In 'same' mode, pad_array needs also the pad vector of the reference image. This is returned if this arg is
+            set True. Default is False.
 
     Returns:
         pad_vectors (list):
@@ -211,7 +204,8 @@ def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=F
     if not isinstance(cube_mode, bool):
         raise SpecklepyTypeError('get_pad_vectors()', argname='cube_mode', argtype=type(cube_mode), expected='bool')
     if not isinstance(return_reference_image_pad_vector, bool):
-        raise SpecklepyTypeError('get_pad_vectors()', argname='return_reference_image_pad_vector', argtype=type(return_reference_image_pad_vector), expected='bool')
+        raise SpecklepyTypeError('get_pad_vectors()', argname='return_reference_image_pad_vector',
+                                 argtype=type(return_reference_image_pad_vector), expected='bool')
 
     # Initialize list
     pad_vectors = []
@@ -228,8 +222,8 @@ def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=F
         else:
             pad_vector = []
 
-        pad_vector.append( (shift[0] - xmin, xmax - shift[0]) )
-        pad_vector.append( (shift[1] - ymin, ymax - shift[1]) )
+        pad_vector.append((shift[0] - xmin, xmax - shift[0]))
+        pad_vector.append((shift[1] - ymin, ymax - shift[1]))
 
         pad_vectors.append(pad_vector)
 
@@ -241,24 +235,23 @@ def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=F
         return pad_vectors
 
 
-
 def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     """Pads an array according to the pad_vector and crops the image given the
     mode.
 
-    Pads an array with zeros to match a desired field size. Intermediately, it
-    always creates a 'full' image and only in 'same' mode it crops the edges
-    such that the returned array covers only the field of the reference image.
+    Pads an array with zeros to match a desired field size. Intermediately, it always creates a 'full' image and only
+    in 'same' mode it crops the edges such that the returned array covers only the field of the reference image.
 
     Args:
         array (np.ndarray):
-            Input array that shall be padded to match the 'full' or 'same'
-            fields.
+            Input array that shall be padded to match the 'full' or 'same' fields.
         pad_vector (list):
             List of padding vectors, as obtained from get_pad_vectors().
         mode (str, optional):
-            Define the size of the output image as 'same' to the reference image
-            or expanding to include the 'full' covered field.
+            Define the size of the output image as 'same' to the reference image or expanding to include the 'full'
+            covered field.
+        reference_image_pad_vector (tuple or list, optional):
+            Used in `same` mode to estimate the position of the reference image and crop beyond.
 
     Returns:
         padded (np.ndarray):
@@ -273,9 +266,7 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     else:
         raise SpecklepyTypeError('pad_array()', argname='array', argtype=type(array), expected='np.ndarray')
 
-
-
-
+    #
     padded = np.pad(array, pad_vector, mode='constant')
 
     # Crop the image according to the desired mode
@@ -284,9 +275,9 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
         _r = reference_image_pad_vector
         # Pick only those pixels, covered by the reference image
         if array.ndim == 2:
-            padded = padded[_r[0][0] : _adapt_max_coordinate(_r[0][1]) , _r[1][0] : _adapt_max_coordinate(_r[1][1])]
+            padded = padded[_r[0][0]: _adapt_max_coordinate(_r[0][1]), _r[1][0]: _adapt_max_coordinate(_r[1][1])]
         else:
-            padded = padded[: , _r[0][0] : _adapt_max_coordinate(_r[0][1]) , _r[1][0] : _adapt_max_coordinate(_r[1][1])]
+            padded = padded[:, _r[0][0]: _adapt_max_coordinate(_r[0][1]), _r[1][0]: _adapt_max_coordinate(_r[1][1])]
 
     elif mode is 'full':
         # There is nothing to crop in 'full' mode
@@ -296,7 +287,6 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
         raise NotImplementedError("specklepy.core.alignment.pad_array does not support the 'valid' mode yet!")
 
     return padded
-
 
 
 def _adapt_max_coordinate(index):
