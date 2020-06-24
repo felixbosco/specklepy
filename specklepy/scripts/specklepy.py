@@ -9,6 +9,7 @@ from specklepy.io.parameterset import ReductionParameterSet, HolographyParameter
 from specklepy.logging import logger
 from specklepy.reduction import setup, run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
+from specklepy.gui.window import start
 
 
 def main():
@@ -20,6 +21,9 @@ def main():
     if args.debug:
         logger.setLevel('DEBUG')
         logger.debug(args)
+
+    if args.gui:
+        start()
 
     # Execute the script of the corresponding command
     if args.command is 'generate':
