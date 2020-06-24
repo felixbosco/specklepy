@@ -5,7 +5,6 @@ import os
 from specklepy.core.holography import holography
 from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
-from specklepy.io.filemanager import FileManager
 from specklepy.io.parameterset import ReductionParameterSet, HolographyParameterSet
 from specklepy.logging import logger
 from specklepy.reduction import setup, run
@@ -49,10 +48,9 @@ def main():
     elif args.command is 'ssa':
 
         # Prepare path information and execute reconstruction
-        files = FileManager(args.files).files
         if args.tmpdir is not None and not os.path.isdir(args.tmpdir):
             os.mkdir(args.tmpdir)
-        ssa(files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
+        ssa(args.files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
 
     elif args.command is 'holography':
 

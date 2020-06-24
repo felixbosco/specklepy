@@ -48,7 +48,7 @@ class GeneralArgParser(object):
         # Parser for SSA reconstruction
         parser_ssa = subparsers.add_parser('ssa', help='Image reconstruction with the SSA algorithm.')
         parser_ssa.set_defaults(command='ssa')
-        parser_ssa.add_argument('files', type=str,
+        parser_ssa.add_argument('files', nargs='+',
                                 help='Generic FITS file name or list of files to consider for the SSA reconstruction.')
         parser_ssa.add_argument('-m', '--mode', type=str, default='same', choices=['same', 'full', 'valid'],
                                 help="The mode defines the final image size. In 'same' mode, the final image will have "
