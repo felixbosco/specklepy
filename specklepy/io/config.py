@@ -16,6 +16,10 @@ def read(par_file):
             Dictionary of config parameters.
     """
 
+    # Check whether file exists
+    if not os.path.exists(par_file):
+        raise FileNotFoundError(f"Parameter file {par_file} not found!")
+
     # Identify type of file
     root, ext = os.path.splitext(par_file)
 
