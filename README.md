@@ -166,6 +166,7 @@ These are the current To-Do items:
 * General:
   * ~~**low priority:** Create general script with signature "specklepy holography -f ..."~~
   * ~~**low priority:** Make command line arguments to positional arguments for required args~~
+  * Transform config parameter sets into multilevel dictionaries
 * data reduction module:
   * Flatfield correction from flat frames
   * Extend scalar sky subtraction from the images to two-dimensional sky estimates (from sky frames)
