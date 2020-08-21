@@ -3,8 +3,6 @@ import os
 import sys
 import yaml
 
-from specklepy.logging import logger
-
 
 def read(par_file):
     """Read parameter dictionary from a config file.
@@ -17,8 +15,6 @@ def read(par_file):
         config (dict):
             Dictionary of config parameters.
     """
-
-    logger.info(f"Reading parameter file {par_file}")
 
     # Identify type of file
     root, ext = os.path.splitext(par_file)
@@ -91,7 +87,6 @@ def update_from_file(params, par_file):
     """
 
     # Read config parameters to update from
-    logger.info(f"Updating from parameter file {par_file}")
     update = read(par_file=par_file)
 
     # Overwrite entries in the input dictionary
