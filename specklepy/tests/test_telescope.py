@@ -11,6 +11,7 @@ class TestTelescope(unittest.TestCase):
         self.visual = 1
         self.scao_long_exposure_psf_file = 'specklepy/tests/files/psf_long_exposure.fits'
         self.scao_short_exposure_psfs_file = 'specklepy/tests/files/psf_short_exposures.fits'
+        self.par_file = 'specklepy/tests/files/synthetic/airy_200ms.par'
 
     def test_init(self):
         telescope_static_psf = Telescope(8.0*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.scao_long_exposure_psf_file )
@@ -24,6 +25,9 @@ class TestTelescope(unittest.TestCase):
         telescope_airydisk_psf = Telescope(8.2*u.m, psf_source='AiryDisk', radius=0.4777*u.arcsec, psf_resolution=0.0106*u.arcsec)
         if self.visual > 0:
             imshow(telescope_airydisk_psf.psf, title="Test 'AiryDisk' model")
+
+    def test_from_file(self):
+        Telescope.from_file(self.par_file)
 
     # def test_init_static(self):
     #     telescope_static_psf = Telescope(8.0*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.scao_long_exposure_psf_file )
@@ -42,7 +46,6 @@ class TestTelescope(unittest.TestCase):
 
     def test_call(self):
         pass
-
 
 
 if __name__ == "__main__":

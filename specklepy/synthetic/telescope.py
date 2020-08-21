@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.units import UnitConversionError
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io import config
 from specklepy.logging import logger
 
 
@@ -54,6 +55,8 @@ class Telescope(object):
 		elif isinstance(diameter, (int, float)):
 			logger.warning(f"Interpreting scalar type diameter as {diameter} m")
 			self.diameter = u.Quantity(f"{diameter} m")
+		elif isinstance(diameter, str):
+			self.diameter = u.Quantity(diameter)
 		else:
 			raise SpecklepyTypeError('Telescope', 'diameter', type(diameter), 'u.Quantity')
 
@@ -64,6 +67,8 @@ class Telescope(object):
 
 		if isinstance(central_obscuration, float) or central_obscuration is None:
 			self.central_obscuration = central_obscuration
+		elif isinstance(central_obscuration, str):
+			self.central_obscuration = float(central_obscuration)
 		else:
 			raise SpecklepyTypeError('Telescope', 'central_obscuration', type(central_obscuration), 'float')
 
@@ -86,6 +91,22 @@ class Telescope(object):
 			self.psf_resolution = angular_resolution
 			if time_resolution is not None:
 				self.timestep = time_resolution
+
+	@staticmethod
+	def from_file(par_file):
+		params = config.read(par_file)
+
+		# Try known first-level keys
+		for key in ['TELESCOPE', 'Telescope', 'telescope']:
+			if key in params.keys():
+				return Telescope(**params[key])
+
+		# Try full parameter set
+		try:
+			return Telescope(**params)
+		except TypeError:
+			raise RuntimeError(f"Could not identify parameters for initializing a Telescope instance in parameter "
+							   f"file {par_file}")
 
 	def __call__(self, *args, **kwargs):
 		return self.get_photon_rate(*args, **kwargs)
@@ -124,6 +145,8 @@ class Telescope(object):
 		elif isinstance(radius, (int, float)):
 			logger.warning(f"Interpreting scalar type radius as {radius} arcsec")
 			self.radius = u.Quantity(f"{radius} arcsec")
+		elif isinstance(radius, str):
+			self.radius = u.Quantity(radius)
 		else:
 			raise SpecklepyTypeError('model_psf', 'radius', type(radius), 'u.Quantity')
 
@@ -132,6 +155,8 @@ class Telescope(object):
 		elif isinstance(psf_resolution, (int, float)):
 			logger.warning(f"Interpreting scalar type psf_resolution as {psf_resolution} arcsec")
 			self.psf_resolution = u.Quantity(f"{psf_resolution} arcsec")
+		elif isinstance(psf_resolution, str):
+			self.psf_resolution = u.Quantity(psf_resolution)
 		else:
 			raise SpecklepyTypeError('model_psf', 'psf_resolution', type(psf_resolution), 'u.Quantity')
 

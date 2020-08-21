@@ -8,6 +8,7 @@ class TestDetector(unittest.TestCase):
 
     def setUp(self):
         self.photon_rate_array = np.ones((128, 128)) * u.ph / u.s
+        self.par_file = 'specklepy/tests/files/synthetic/airy_200ms.par'
 
     def test_init(self):
         det = Detector((64, 64), pixel_scale=0.01*u.arcsec)
@@ -18,6 +19,8 @@ class TestDetector(unittest.TestCase):
         det(self.photon_rate_array, integration_time=200*u.ms, photon_rate_resolution=det.pixel_scale)
         det(self.photon_rate_array, integration_time=200*u.ms, photon_rate_resolution=det.pixel_scale / 2)
 
+    def test_from_file(self):
+        Detector.from_file(self.par_file)
 
 
 if __name__ == "__main__":

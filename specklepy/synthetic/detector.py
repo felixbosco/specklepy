@@ -5,6 +5,7 @@ import warnings
 from astropy import units as u
 
 from specklepy.exceptions import SpecklepyTypeError
+from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 
@@ -62,6 +63,8 @@ class Detector(object):
 		"""
 
 		# Input parameters
+		if isinstance(shape, str):
+			shape = eval(shape)
 		if isinstance(shape, tuple):
 			self.shape = shape
 		elif isinstance(shape, int):
@@ -74,11 +77,15 @@ class Detector(object):
 		elif isinstance(pixel_scale, (int, float)):
 			logger.warning(f"Interpreting float type pixel_scale as {pixel_scale} arcsec")
 			self.pixel_scale = pixel_scale * u.arcsec
+		elif isinstance(pixel_scale, str):
+			self.pixel_scale = u.Quantity(pixel_scale)
 		else:
 			raise SpecklepyTypeError('Detector', 'pixel_scale', type(pixel_scale), 'u.Quantity')
 
 		if isinstance(optics_transmission, (int, float)):
 			self.optics_transmission = optics_transmission
+		elif isinstance(optics_transmission, str):
+			self.optics_transmission = float(optics_transmission)
 		else:
 			raise SpecklepyTypeError('Detector', 'optics_transmission', type(optics_transmission), 'float')
 
@@ -87,6 +94,8 @@ class Detector(object):
 		elif isinstance(quantum_efficiency, (int, float)):
 			logger.warning(f"Interpreting scalar type quantum_efficiency as {quantum_efficiency} electron/ photon")
 			self.quantum_efficiency = quantum_efficiency * u.electron / u.ph
+		elif isinstance(quantum_efficiency, str):
+			self.quantum_efficiency = u.Quantity(quantum_efficiency)
 		else:
 			raise SpecklepyTypeError('Detector', 'quantum_efficiency', type(quantum_efficiency), 'u.Quantity')
 
@@ -95,6 +104,8 @@ class Detector(object):
 		elif isinstance(system_gain, (int, float)):
 			logger.warning(f"Interpreting scalar type system_gain as {system_gain} electron/ ADU")
 			self.system_gain = system_gain * u.electron / u.adu
+		elif isinstance(system_gain, str):
+			self.system_gain = u.Quantity(system_gain)
 		else:
 			raise SpecklepyTypeError('Detector', 'system_gain', type(system_gain), 'u.Quantity')
 
@@ -103,6 +114,8 @@ class Detector(object):
 		elif isinstance(dark_current, (int, float)):
 			logger.warning(f"Interpreting scalar type dark_current as {dark_current} electron/ s")
 			self.dark_current = dark_current * u.electron / u.s
+		elif isinstance(dark_current, str):
+			self.dark_current = u.Quantity(dark_current)
 		else:
 			raise SpecklepyTypeError('Detector', 'dark_current', type(dark_current), 'u.Quantity')
 
@@ -111,6 +124,8 @@ class Detector(object):
 		elif isinstance(readout_noise, (int, float)):
 			logger.warning(f"Interpreting scalar type readout_noise as {readout_noise} electron")
 			self.readout_noise = readout_noise * u.electron
+		elif isinstance(readout_noise, str):
+			self.readout_noise = u.Quantity(readout_noise)
 		else:
 			raise SpecklepyTypeError('Detector', 'readout_noise', type(readout_noise), 'u.Quantity')
 
@@ -119,12 +134,30 @@ class Detector(object):
 		elif isinstance(saturation_level, (int, float)):
 			logger.warning(f"Interpreting scalar type saturation_level as {saturation_level} electron")
 			self.saturation_level = saturation_level * u.electron
+		elif isinstance(saturation_level, str):
+			self.saturation_level = u.Quantity(saturation_level)
 		else:
 			raise SpecklepyTypeError('Detector', 'saturation_level', type(saturation_level), 'u.Quantity')
 
 		# Derive secondary parameters
 		self.array = np.zeros(self.shape)
 		self.field_of_view = (self.shape[0] * self.pixel_scale, self.shape[1] * self.pixel_scale)
+
+	@staticmethod
+	def from_file(par_file):
+		params = config.read(par_file)
+
+		# Try known first-level keys
+		for key in ['DETECTOR', 'Detector', 'detector']:
+			if key in params.keys():
+				return Detector(**params[key])
+
+		# Try full parameter set
+		try:
+			return Detector(**params)
+		except TypeError:
+			raise RuntimeError(f"Could not identify parameters for initializing a Detector instance in parameter "
+							   f"file {par_file}")
 
 	@property
 	def resolution(self):

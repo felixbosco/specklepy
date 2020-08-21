@@ -4,6 +4,7 @@ import astropy.constants as const
 from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io import config
 from specklepy.logging import logger
 
 
@@ -59,7 +60,10 @@ class Target(object):
 
         # Input parameters
         if isinstance(band, str):
-            self.band = band
+            try:
+                self.band = eval(band)
+            except NameError:
+                self.band = band
         else:
             raise SpecklepyTypeError('Target', 'band', type(band), 'str')
 
@@ -75,6 +79,8 @@ class Target(object):
             raise SpecklepyTypeError('Target', 'photometry_file', type(photometry_file), 'str')
         self.band_reference_flux = self.get_reference_flux(self.photometry_file, self.band)
 
+        if isinstance(sky_background, str):
+            sky_background = eval(sky_background)
         if sky_background is None:
             self.sky_background_flux = 0.0 / u.arcsec**2
         elif isinstance(sky_background, u.Quantity):
@@ -86,6 +92,22 @@ class Target(object):
             self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.arcsec**2
         else:
             raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'u.Quantity')
+
+    @staticmethod
+    def from_file(par_file):
+        params = config.read(par_file)
+
+        # Try known first-level keys
+        for key in ['TARGET', 'Target', 'target']:
+            if key in params.keys():
+                return Target(**params[key])
+
+        # Try full parameter set
+        try:
+            return Target(**params)
+        except TypeError:
+            raise RuntimeError(f"Could not identify parameters for initializing a Target instance in parameter "
+                               f"file {par_file}")
 
     def __call__(self, *args, **kwargs):
         return self.get_photon_rate_density(*args, **kwargs)
