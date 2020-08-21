@@ -7,6 +7,16 @@ from specklepy.logging import logger
 
 
 def read(par_file):
+    """Read parameter dictionary from a config file.
+
+    Args:
+        par_file (str):
+            Name of the parameter file to read from.
+
+    Returns:
+        config (dict):
+            Dictionary of config parameters.
+    """
 
     logger.info(f"Reading parameter file {par_file}")
 
@@ -20,6 +30,18 @@ def read(par_file):
 
 
 def read_ini(par_file):
+    """Read parameter dictionary from a config file in INI-format.
+
+    Args:
+        par_file (str):
+            Name of the parameter file to read from.
+
+    Returns:
+        config (dict):
+            Dictionary of config parameters.
+    """
+
+    # Set up the config parser
     parser = configparser.ConfigParser(inline_comment_prefixes='#')
     parser.optionxform = str  # make option names case sensitive
 
@@ -34,6 +56,17 @@ def read_ini(par_file):
 
 
 def read_yaml(par_file):
+    """Read parameter dictionary from a config file in YAML-format.
+
+    Args:
+        par_file (str):
+            Name of the parameter file to read from.
+
+    Returns:
+        config (dict):
+            Dictionary of config parameters.
+    """
+
     with open(par_file, "r") as yaml_file:
         try:
             config = yaml.load(yaml_file, Loader=yaml.loader.FullLoader)
@@ -44,6 +77,18 @@ def read_yaml(par_file):
 
 
 def update_from_file(params, par_file):
+    """Update the config dictionary params from file.
+
+    Args:
+        params (dict):
+            Dictionary holding the to-be-updated values.
+        par_file (str):
+            Name of the parameter file with the update values.
+
+    Returns:
+        params (dict):
+            Updated dictionary of config parameters.
+    """
 
     # Read config parameters to update from
     logger.info(f"Updating from parameter file {par_file}")
