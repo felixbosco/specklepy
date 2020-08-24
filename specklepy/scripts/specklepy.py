@@ -40,7 +40,7 @@ def main():
     elif args.command is 'reduce':
 
         # In setup mode
-        if args.gather_header_information:
+        if args.setup:
             setup.gather_header_information(path=args.path, instrument=args.instrument, par_file=args.parfile,
                                             list_file=args.filelist, sort_by=args.sortby)
             return 0  # Quit program for interaction with the new parameter file
