@@ -53,7 +53,7 @@ def full_reduction(params, debug=False):
         logger.info('Skipping sky background subtraction as requested from parameter file...')
     else:
         logger.info("Starting sky subtraction...")
-        logger.info(f"Source of sky background measurement: {params['SKY']['method']}")
+        logger.info(f"Sky background subtraction method: {params['SKY']['method']}")
 
         # Identify source files and time stamps
         sky_files = in_files.filter({'OBSTYPE': 'SKY'})
@@ -66,6 +66,7 @@ def full_reduction(params, debug=False):
             logger.warning("Did not find any sky observations. No sky subtraction will be applied!")
         else:
             if params['SKY']['method'] is None or params['SKY']['method'] == 'scalar':
+
                 # Start extracting sky fluxes
                 sky_fluxes = np.zeros(sky_times.shape)
                 sky_flux_uncertainties = np.zeros(sky_times.shape)
