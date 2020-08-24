@@ -21,6 +21,7 @@ class GeneralArgParser(object):
                         'Holography algorithm.',
             epilog="Execute 'specklepy <command> -h' for further information on the commands.")
         # self.parser.add_argument('--gui', action='store_true', help='Start the graphical user interface (GUI).')
+        self.parser.set_defaults(gui=False)
         self.parser.add_argument('-d', '--debug', action='store_true', help='Show debugging information.')
         subparsers = self.parser.add_subparsers(help='Available commands in Specklepy:')
 
@@ -72,7 +73,6 @@ class GeneralArgParser(object):
         parser_aperture.set_defaults(command='aperture')
         parser_aperture.add_argument('mode', choices=[], help='Modes for the aperture analysis')
         parser_aperture.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
-
 
     def parse_args(self, *args, **kwargs):
         """Parse command line arguments.
