@@ -8,7 +8,7 @@ from specklepy.io import config
 from specklepy.logging import logger
 
 
-def setup(path, instrument, parfile=None, filelist=None, sortby=None):
+def gather_header_information(path, instrument, par_file=None, list_file=None, sort_by=None):
     """Sets up the data reduction parameter file and file list.
 
     Args:
@@ -16,11 +16,11 @@ def setup(path, instrument, parfile=None, filelist=None, sortby=None):
             Path to the files.
         instrument (str):
             Name of the instrument that took the data. This must be covered by config/instruments.cfg.
-        parfile (str, optional):
+        par_file (str, optional):
             Name of the output default parameter file for the reduction.
-        filelist (str):
+        list_file (str):
             Name of the output file that contains all the file names and header information.
-        sortby (str, optional):
+        sort_by (str, optional):
             Header card that is used for the sorting of files.
     """
 
@@ -47,10 +47,10 @@ def setup(path, instrument, parfile=None, filelist=None, sortby=None):
     # Apply fall back values
     if path is None:
         path = '.'
-    if filelist is None:
-        filelist = 'files.tab'
-    if parfile is None:
-        parfile = 'reduction.par'
+    if list_file is None:
+        list_file = 'files.tab'
+    if par_file is None:
+        par_file = 'reduction.par'
 
     # Find files
     if '*' in path:
@@ -85,17 +85,17 @@ def setup(path, instrument, parfile=None, filelist=None, sortby=None):
     # Sort table entries by default properties and user request
     table.sort('FILE')
     table.sort('OBSTYPE')
-    if sortby:
-        table.sort(sortby)
+    if sort_by:
+        table.sort(sort_by)
 
     # Save table
-    logger.info(f"Writing header information to {filelist}")
-    table.write(filelist, format='ascii.fixed_width', overwrite=True)
+    logger.info(f"Writing header information to {list_file}")
+    table.write(list_file, format='ascii.fixed_width', overwrite=True)
 
     # Write dummy parameter file for the reduction
-    logger.info(f"Creating default reduction INI file {parfile}")
-    par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {filelist}\ntmpDir = tmp/" \
+    logger.info(f"Creating default reduction INI file {par_file}")
+    par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {list_file}\ntmpDir = tmp/" \
                        f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
                        f"\n\n[SKY]"
-    with open(parfile, 'w+') as parfile:
-        parfile.write(par_file_content)
+    with open(par_file, 'w+') as par_file:
+        par_file.write(par_file_content)
