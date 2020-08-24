@@ -7,6 +7,8 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 
+from photutils import make_source_mask
+
 from specklepy.io.outfile import Outfile
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
@@ -14,7 +16,7 @@ from specklepy.utils import combine
 from specklepy.utils.plot import imshow
 
 
-def subtract_sky_background(method='scalar', source='sky', in_files=None, file_path=None):
+def subtract_sky_background(in_files, method='scalar', source='sky', mask_sources=False, file_path=None):
 
     # Apply fall back values
     if method is None:
@@ -47,11 +49,10 @@ def subtract_sky_background(method='scalar', source='sky', in_files=None, file_p
             sky_fluxes = np.zeros(sky_times.shape)
             sky_flux_uncertainties = np.zeros(sky_times.shape)
             for i, file in enumerate(sky_files):
-                bkg, d_bkg = get_sky_background(file, path=file_path)
+                bkg, d_bkg = estimate_sky_background(file, method=method, mask_sources=mask_sources, path=file_path)
                 sky_fluxes[i] = bkg
                 sky_flux_uncertainties[i] = d_bkg
-            logger.debug(
-                f"Shapes:\nT: {sky_times.shape}\nF: {sky_fluxes.shape}\ndF: {sky_flux_uncertainties.shape}")
+            logger.debug(f"Shapes:\nT: {sky_times.shape}\nF: {sky_fluxes.shape}\ndF: {sky_flux_uncertainties.shape}")
 
             # Extract time stamps and names of science files
             science_files = in_files.filter({'OBSTYPE': 'SCIENCE'})
@@ -319,3 +320,31 @@ def get_sky_background(file, path=None):
     bkg, d_bkg = np.mean(data), np.std(data)
 
     return bkg, d_bkg
+
+
+def estimate_sky_background(data, method='scalar', mask_sources=True, path=None):
+
+    # Handle str type data
+    if isinstance(data, str):
+        file = data
+        if path is not None:
+            file = os.path.join(path, file)
+        data = fits.getdata(filename=file)
+
+    # Create source mask
+    if mask_sources:
+        if data.ndim == 3:
+            mask = make_source_mask(np.sum(data, axis=0), nsigma=2, npixels=5, dilate_size=11)
+            mask = np.repeat(np.expand_dims(mask, 0), data.shape[0], axis=0)
+        else:
+            mask = make_source_mask(data, nsigma=2, npixels=5, dilate_size=11)
+    else:
+        mask = None
+
+    # Derive statistics
+    if method == 'scalar':
+        mean, _, std = sigma_clipped_stats(data, sigma=3.0, mask=mask)
+    else:
+        raise NotImplementedError(f"Method {method} is not implemented yet for sky background estimation!")
+
+    return mean, std
