@@ -50,7 +50,7 @@ def gather_header_information(path, instrument, par_file=None, list_file=None, s
     if list_file is None:
         list_file = 'files.tab'
     if par_file is None:
-        par_file = 'reduction.par'
+        par_file = 'reduction.yaml'
 
     # Find files
     if '*' in path:
@@ -93,9 +93,16 @@ def gather_header_information(path, instrument, par_file=None, list_file=None, s
     table.write(list_file, format='ascii.fixed_width', overwrite=True)
 
     # Write dummy parameter file for the reduction
-    logger.info(f"Creating default reduction INI file {par_file}")
-    par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {list_file}\ntmpDir = tmp/" \
-                       f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
-                       f"\n\n[SKY]"
+    _, ext = os.path.splitext(par_file)
+    if 'yaml' in ext:
+        logger.info(f"Creating default reduction YAML parameter file {par_file}")
+        par_file_content = f"PATHS:\n  filePath: {path}\n  fileList: {list_file}\n  tmpDir: tmp/" \
+                           f"\n\nFLAT:\n  masterFlatFile: MasterFlat.fits" \
+                           f"\n\nSKY:"
+    else:
+        logger.info(f"Creating default reduction INI parameter file {par_file}")
+        par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {list_file}\ntmpDir = tmp/" \
+                           f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
+                           f"\n\n[SKY]"
     with open(par_file, 'w+') as par_file:
         par_file.write(par_file_content)
