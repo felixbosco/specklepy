@@ -5,6 +5,7 @@ import os
 from specklepy.core.holography import holography
 from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
+from specklepy.io import config
 from specklepy.io.parameterset import ReductionParameterSet, HolographyParameterSet
 from specklepy.logging import logger
 from specklepy.reduction import setup, run
@@ -46,8 +47,9 @@ def main():
             return 0  # Quit program for interaction with the new parameter file
 
         # Else start reduction following the parameter file
-        params = ReductionParameterSet(args.parfile)
-        run.all(params, debug=args.debug)
+        # params = ReductionParameterSet(args.parfile)
+        params = config.read(args.parfile)
+        run.full_reduction(params, debug=args.debug)
 
     elif args.command is 'ssa':
 

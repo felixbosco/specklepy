@@ -7,48 +7,47 @@ from specklepy.logging import logger
 from specklepy.reduction import flat, sky
 from specklepy.utils import combine
 
-# Suppress downloading from IERS
-from astropy.utils import iers
-iers.conf.auto_download = False
-
 # TODO: Split this function into the parts and sort into the other modules
 
 
-def all(params, debug=False):
+def full_reduction(params, debug=False):
+
+    embed()
+
     # (0) Read file list table
     logger.info("Reading file list ...")
-    inFiles = FileManager(params.paths.fileList)
-    logger.info('\n' + str(inFiles.table))
+    in_files = FileManager(params['PATHS']['fileList'])
+    logger.info('\n' + str(in_files.table))
 
     # (1) Initialize reduction files
     # TODO: Implement a data model for the reduction files
 
     # (2) Flat fielding
-    if not params.flat.skip:
-        flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
+    if not params['FLAT']['skip']:
+        flat_files = in_files.filter({'OBSTYPE': 'FLAT'})
         if len(flat_files) == 0:
             logger.warning("Did not find any flat field observations. No flat field correction will be applied!")
         else:
             logger.info("Starting flat field correction...")
-            master_flat = flat.MasterFlat(flat_files, filename=params.flat.masterFlatFile,
-                                          file_path=params.paths.filePath)
+            master_flat = flat.MasterFlat(flat_files, filename=params['FLAT']['masterFlatFile'],
+                                          file_path=params['PATHS']['filePath'])
             master_flat.combine()
 
     # (3) Linearization
     # TODO: Implement linearization
 
     # (4) Sky subtraction
-    if not params.sky.skip:
+    if not params['SKY']['skip']:
 
         logger.info("Starting sky subtraction...")
-        logger.info(f"Source of sky background measurement: {params.sky.source}")
+        logger.info(f"Source of sky background measurement: {params['SKY']['source']}")
 
         # Identify source files and time stamps
         sky_files = []
         sky_times = []
-        if params.sky.source == 'default':
-            sky_files = inFiles.filter({'OBSTYPE': 'SKY'})
-            sky_timestamps = inFiles.filter({'OBSTYPE': 'SKY'}, namekey='DATE')
+        if params['SKY']['source'] == 'default':
+            sky_files = in_files.filter({'OBSTYPE': 'SKY'})
+            sky_timestamps = in_files.filter({'OBSTYPE': 'SKY'}, namekey='DATE')
             sky_times = combine.time_difference(sky_timestamps[0], list(sky_timestamps))
             if debug:
                 print("Sky files are:", sky_files)
@@ -57,7 +56,7 @@ def all(params, debug=False):
                 logger.warning("Did not find any sky observations. No sky subtraction will be applied!")
                 # TODO: Implement proper abortion of sky subtraction
 
-        elif params.sky.source in ['image', 'frame']:
+        elif params['SKY']['source'] in ['image', 'frame']:
             # TODO: Implement sky subtraction from image
             pass
 
@@ -65,15 +64,15 @@ def all(params, debug=False):
         sky_fluxes = np.zeros(sky_times.shape)
         sky_flux_uncertainties = np.zeros(sky_times.shape)
         for i, file in enumerate(sky_files):
-            bkg, d_bkg = sky.get_sky_background(file, path=params.paths.filePath)
+            bkg, d_bkg = sky.get_sky_background(file, path=params['PATHS']['filePath'])
             sky_fluxes[i] = bkg
             sky_flux_uncertainties[i] = d_bkg
         if debug:
             print(f"Shapes:\nT: {sky_times.shape}\nF: {sky_fluxes.shape}\ndF: {sky_flux_uncertainties.shape}")
 
         # Extract time stamps and names of science files
-        science_files = inFiles.filter({'OBSTYPE': 'SCIENCE'})
-        science_timestamps = inFiles.filter({'OBSTYPE': 'SCIENCE'}, namekey='DATE')
+        science_files = in_files.filter({'OBSTYPE': 'SCIENCE'})
+        science_timestamps = in_files.filter({'OBSTYPE': 'SCIENCE'}, namekey='DATE')
         science_times = combine.time_difference(sky_timestamps[0], list(science_timestamps))
 
         # Compute weighted sky background for each file
