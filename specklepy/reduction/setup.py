@@ -1,8 +1,10 @@
 import glob
+from IPython import embed
+import numpy as np
 import os
 
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Column, Table
 
 from specklepy.io import config
 from specklepy.logging import logger
@@ -88,6 +90,10 @@ def gather_header_information(path, instrument, par_file=None, list_file=None, s
     if sort_by:
         table.sort(sort_by)
 
+    # Identify instrument setups
+    setups = identify_instrument_setups(table)
+    table.add_column(setups)
+
     # Save table
     logger.info(f"Writing header information to {list_file}")
     table.write(list_file, format='ascii.fixed_width', overwrite=True)
@@ -106,3 +112,26 @@ def gather_header_information(path, instrument, par_file=None, list_file=None, s
                            f"\n\n[SKY]\nmethod = scalar"
     with open(par_file, 'w+') as par_file:
         par_file.write(par_file_content)
+
+
+def identify_instrument_setups(table, keys=None):
+
+    # Apply fall back values
+    columns = ['FILTER', 'EXPTIME']
+    if keys:
+        columns = columns + keys
+
+    settings = {}
+    n_setups = 1
+    for column in columns:
+        settings[column] = np.unique(table[column].data)
+
+        # if len(settings[column]) == 1:
+        #     columns.pop(column)
+
+        n_setups *= len(settings[column])
+
+    if n_setups == 1:
+        return Column(data=np.ones(len(table), dtype=int), name='SETUP', dtype=int)
+    else:
+        raise NotImplementedError(f"Creating a SETUP table column is not implemented for multiple different setups!")
