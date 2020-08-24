@@ -102,12 +102,12 @@ def gather_header_information(path, instrument, par_file=None, list_file=None, s
     _, ext = os.path.splitext(par_file)
     if 'yaml' in ext:
         logger.info(f"Creating default reduction YAML parameter file {par_file}")
-        par_file_content = f"PATHS:\n  filePath: {path}\n  fileList: {list_file}\n  tmpDir: tmp/" \
+        par_file_content = f"PATHS:\n  filePath: {path}\n  fileList: {list_file}\n  outDir: Science/\n  tmpDir: tmp/" \
                            f"\n\nFLAT:\n  masterFlatFile: MasterFlat.fits" \
                            f"\n\nSKY:\n  method: scalar"
     else:
         logger.info(f"Creating default reduction INI parameter file {par_file}")
-        par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {list_file}\ntmpDir = tmp/" \
+        par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {list_file}\noutDir = Science/\ntmpDir = tmp/" \
                            f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
                            f"\n\n[SKY]\nmethod = scalar"
     with open(par_file, 'w+') as par_file:
