@@ -1,6 +1,10 @@
+from datetime import datetime
 from IPython import embed
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
+from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.io.filemanager import FileManager
@@ -30,7 +34,16 @@ def full_reduction(params, debug=False):
     logger.info('\n' + str(in_files.table))
 
     # (1) Initialize reduction files
-    # TODO: Implement a data model for the reduction files
+    if not os.path.isdir(params['PATHS']['outDir']):
+        os.makedirs(params['PATHS']['outDir'])
+    for file in in_files.filter({'OBSTYPE': 'SCIENCE'}):
+        src = os.path.join(params['PATHS']['filePath'], file)
+        dest = os.path.join(params['PATHS']['outDir'], 'r'+file)
+        logger.info(f"Initializing data product file {dest}")
+        os.system(f"cp {src} {dest}")
+        with fits.open(dest) as hdu_list:
+            hdu_list[0].header.set('PIPELINE', 'Specklepy')
+            hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
 
     # (2) Flat fielding
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:
