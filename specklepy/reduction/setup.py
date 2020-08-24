@@ -98,11 +98,11 @@ def gather_header_information(path, instrument, par_file=None, list_file=None, s
         logger.info(f"Creating default reduction YAML parameter file {par_file}")
         par_file_content = f"PATHS:\n  filePath: {path}\n  fileList: {list_file}\n  tmpDir: tmp/" \
                            f"\n\nFLAT:\n  masterFlatFile: MasterFlat.fits" \
-                           f"\n\nSKY:"
+                           f"\n\nSKY:\n  method: scalar"
     else:
         logger.info(f"Creating default reduction INI parameter file {par_file}")
         par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {list_file}\ntmpDir = tmp/" \
                            f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
-                           f"\n\n[SKY]"
+                           f"\n\n[SKY]\nmethod = scalar"
     with open(par_file, 'w+') as par_file:
         par_file.write(par_file_content)
