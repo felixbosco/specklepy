@@ -95,7 +95,7 @@ def main(options=None):
             logger.info("Estimating background flux from sky frames...")
             sequences = sky.identify_sequences(inFiles.table, file_path=params.paths.filePath, ignore_time_stamps=params.sky.ignoreTimeStamps)
             for sequence in sequences:
-                sequence.subtract_master_sky(saveto=params.paths.tmpDir, filename_prefix=params.sky.skySubtractionPrefix)
+                sequence.subtract_master_sky(save_to=params.paths.tmpDir, filename_prefix=params.sky.skySubtractionPrefix)
 
 
 

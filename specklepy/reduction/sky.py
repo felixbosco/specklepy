@@ -11,7 +11,7 @@ from specklepy.exceptions import SpecklepyTypeError
 from specklepy.utils.plot import imshow
 
 
-def identify_sequences(file_list, file_path='', ignore_time_stamps=False):
+def identify_sequences(file_list, file_path=None, ignore_time_stamps=False):
 
     """Identify observational sequences for sky subtraction.
 
@@ -21,13 +21,12 @@ def identify_sequences(file_list, file_path='', ignore_time_stamps=False):
 
     Args:
         file_list (astropy.table.Table):
-        shape (tuple, dtype=int, optional):
-        cards (dict, optional):
-        timestamp (bool, optional):
-            Set to True to automatically add a time stamp to the file name.
-            Default is False.
-        hprefix (str, optional):
-            Prefix of header cards. Default is None.
+            Table with header information, especially with the observational setup ID.
+        file_path (str, optional):
+            Relative path to the data files.
+        ignore_time_stamps (bool, optional):
+            Set `True` to ignore the time stamps and create one sequence for all frames. This is used for development
+            purposes only.
     """
 
     # Check input parameters
@@ -60,7 +59,7 @@ def identify_sequences(file_list, file_path='', ignore_time_stamps=False):
         else:
             pass
 
-    logger.info("Identified {} sequence(s)...".format(len(sequences)))
+    logger.info(f"Identified {len(sequences)} sequence(s)...")
     return sequences
 
 
@@ -84,9 +83,6 @@ class Sequence(object):
             self.file_path = file_path
         else:
             raise SpecklepyTypeError('Sequence', 'file_path', type(file_path), 'str')
-
-    def __call__(self, outpath, filename_prefix=None):
-        pass
 
     @property
     def files(self):
@@ -122,10 +118,11 @@ class Sequence(object):
                 master_sky_uncertainty[index] = std
 
             # Collapse cubes
-            self.master_sky = np.divide(np.sum(np.multiply(master_sky, master_sky_uncertainty), axis=0), np.sum(master_sky_uncertainty, axis=0))
+            self.master_sky = np.divide(np.sum(np.multiply(master_sky, master_sky_uncertainty), axis=0),
+                                        np.sum(master_sky_uncertainty, axis=0))
             self.master_sky_std = np.sqrt(np.sum(np.square(master_sky_uncertainty), axis=0))
 
-    def subtract_master_sky(self, saveto=None, filename_prefix=None):
+    def subtract_master_sky(self, save_to=None, filename_prefix=None):
 
         if filename_prefix is None:
             filename_prefix = ''
@@ -138,8 +135,8 @@ class Sequence(object):
             with fits.open(os.path.join(self.file_path, file)) as hdulist:
                 hdulist[0].data = np.subtract(hdulist[0].data, self.master_sky)
                 hdulist[0].header.set('SKYSUB', self.time_stamp())
-                logger.info('Saving sky subtracted data to file {}'.format(os.path.join(saveto, filename_prefix + file)))
-                hdulist[0].writeto(os.path.join(saveto, filename_prefix + file))
+                logger.info(f"Saving sky subtracted data to file {os.path.join(save_to, filename_prefix + file)}")
+                hdulist[0].writeto(os.path.join(save_to, filename_prefix + file))
 
     def time_stamp(self):
         """Return a time stamp str of format 'YYYYMMDD_HHMMSS'."""
@@ -182,7 +179,8 @@ def subtract_scalar_background(files, params, prefix=None, debug=False):
             for frame_index, frame in enumerate(image):
                 print(f"\r\tUpdating frame {frame_index+1:3}...", end='')
                 outfile.update_frame(frame_index=frame_index, data=np.subtract(frame, means[frame_index]))
-                outfile.update_frame(frame_index=frame_index, data=tmp_frame * np.square(stds[frame_index]), extension='VAR')
+                outfile.update_frame(frame_index=frame_index, data=tmp_frame * np.square(stds[frame_index]),
+                                     extension='VAR')
             print()
         else:
             raise RuntimeError(f"Images are supposed to have 2 or 3 dimensions but this one has {image.ndim}!")
