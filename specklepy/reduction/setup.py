@@ -1,15 +1,14 @@
-from configparser import ConfigParser
 import glob
 import os
 
 from astropy.io import fits
 from astropy.table import Table
-from astropy.utils.exceptions import AstropyWarning, AstropyUserWarning
 
+from specklepy.io import config
 from specklepy.logging import logger
 
 
-def setup(path, instrument, parfile, filelist, sortby=None):
+def setup(path, instrument, parfile=None, filelist=None, sortby=None):
     """Sets up the data reduction parameter file and file list.
 
     Args:
@@ -17,39 +16,41 @@ def setup(path, instrument, parfile, filelist, sortby=None):
             Path to the files.
         instrument (str):
             Name of the instrument that took the data. This must be covered by config/instruments.cfg.
-        parfile (str):
-            Name of the parameter file.
+        parfile (str, optional):
+            Name of the output default parameter file for the reduction.
         filelist (str):
-            Name of the file that contains all the files.
+            Name of the output file that contains all the file names and header information.
         sortby (str, optional):
             Header card that is used for the sorting of files.
     """
 
     # Defaults
     header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
+    dtypes = [str, str, str, float, int, str]
     instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
-    # Verification of args
-    if path is None:
-        path = '.'
-    if not os.path.isdir(path):
-        raise RuntimeError(f"Path not found: {path}")
-
     # Read config
-    config = ConfigParser()
-    config.read(instrument_config_file)
-    instrument = config['INSTRUMENTS'][instrument]
-    instrument_header_cards = config[instrument]
+    configs = config.read(instrument_config_file)
+    instrument = configs['INSTRUMENTS'][instrument]
+    instrument_header_cards = configs[instrument]
 
     # Double check whether all aliases are defined
     for card in header_cards:
         try:
             instrument_header_cards[card]
-        except:
+        except KeyError:
             logger.info(
                 f"Dropping header card {card} from setup identification, as there is no description in the config file."
                 f"\nCheck out {instrument_config_file} for details.")
             header_cards.remove(card)
+
+    # Apply fall back values
+    if path is None:
+        path = '.'
+    if filelist is None:
+        filelist = 'files.tab'
+    if parfile is None:
+        parfile = 'reduction.par'
 
     # Find files
     if '*' in path:
@@ -58,37 +59,36 @@ def setup(path, instrument, parfile, filelist, sortby=None):
         files = glob.glob(os.path.join(path, '*fits'))
     if len(files):
         logger.info(f"Found {len(files)} file(s)")
+        files.sort()
     else:
         logger.error(f"Found no files in {path}!")
         raise RuntimeError(f"Found no files in {path}!")
 
-    # Prepare dictionary for collecting table data
-    table_data = {'FILE': []}
-    for card in header_cards:
-        table_data[card] = []
+    # Initialize output file information table
+    table = Table(names=['FILE']+header_cards, dtype=[str]+dtypes)
 
     # Read data from files
     for file in files:
         logger.info(f"Retrieving header information from file {file}")
-        # try:
         hdr = fits.getheader(file)
-        # except (AstropyWarning, AstropyUserWarning):
-        #     print("Caught")
-        table_data['FILE'].append(os.path.basename(file))
+        new_row = [os.path.basename(file)]
         for card in header_cards:
             try:
-                table_data[card].append(hdr[instrument_header_cards[card]])
+                new_row.append(hdr[instrument_header_cards[card]])
             except KeyError:
-                logger.info(f"Skipping file {os.path.basename(file)} due to missing header card "
+                logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header card "
                             f"({instrument_header_cards[card]}).")
-                table_data[card].append("/" * 3)
+                break
+        if len(new_row) == len(table.columns):
+            table.add_row(new_row)
 
-    # Create table from dict and save
-    table = Table([table_data[keyword] for keyword in table_data.keys()], names=table_data.keys())
+    # Sort table entries by default properties and user request
     table.sort('FILE')
     table.sort('OBSTYPE')
     if sortby:
         table.sort(sortby)
+
+    # Save table
     logger.info(f"Writing header information to {filelist}")
     table.write(filelist, format='ascii.fixed_width', overwrite=True)
 
