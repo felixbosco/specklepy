@@ -12,7 +12,9 @@ from specklepy.utils import combine
 
 def full_reduction(params, debug=False):
 
-    embed()
+    # Set logging level
+    if debug:
+        logger.setLevel('DEBUG')
 
     # (0) Read file list table
     logger.info("Reading file list ...")
@@ -23,7 +25,9 @@ def full_reduction(params, debug=False):
     # TODO: Implement a data model for the reduction files
 
     # (2) Flat fielding
-    if not params['FLAT']['skip']:
+    if 'skip' in params['FLAT'] and params['FLAT']['skip']:
+        logger.info('Skipping flat fielding as requested from parameter file...')
+    else:
         flat_files = in_files.filter({'OBSTYPE': 'FLAT'})
         if len(flat_files) == 0:
             logger.warning("Did not find any flat field observations. No flat field correction will be applied!")
@@ -37,28 +41,29 @@ def full_reduction(params, debug=False):
     # TODO: Implement linearization
 
     # (4) Sky subtraction
-    if not params['SKY']['skip']:
-
+    if 'skip' in params['SKY'] and params['SKY']['skip']:
+        logger.info('Skipping sky background subtraction as requested from parameter file...')
+    else:
         logger.info("Starting sky subtraction...")
-        logger.info(f"Source of sky background measurement: {params['SKY']['source']}")
+        logger.info(f"Source of sky background measurement: {params['SKY']['method']}")
 
         # Identify source files and time stamps
         sky_files = []
         sky_times = []
-        if params['SKY']['source'] == 'default':
+        if params['SKY']['method'] == 'scalar':
             sky_files = in_files.filter({'OBSTYPE': 'SKY'})
             sky_timestamps = in_files.filter({'OBSTYPE': 'SKY'}, namekey='DATE')
             sky_times = combine.time_difference(sky_timestamps[0], list(sky_timestamps))
-            if debug:
-                print("Sky files are:", sky_files)
-                print("Sky time stamps are:", sky_times)
+
+            logger.debug("Sky files are:", sky_files)
+            logger.debug("Sky time stamps are:", sky_times)
             if len(sky_files) == 0:
                 logger.warning("Did not find any sky observations. No sky subtraction will be applied!")
                 # TODO: Implement proper abortion of sky subtraction
 
-        elif params['SKY']['source'] in ['image', 'frame']:
+        elif params['SKY']['method'] in ['image', 'frame']:
             # TODO: Implement sky subtraction from image
-            pass
+            raise NotImplementedError("Sky subtraction in image mode is not implemented yet!")
 
         # Start extracting sky fluxes
         sky_fluxes = np.zeros(sky_times.shape)
@@ -67,8 +72,7 @@ def full_reduction(params, debug=False):
             bkg, d_bkg = sky.get_sky_background(file, path=params['PATHS']['filePath'])
             sky_fluxes[i] = bkg
             sky_flux_uncertainties[i] = d_bkg
-        if debug:
-            print(f"Shapes:\nT: {sky_times.shape}\nF: {sky_fluxes.shape}\ndF: {sky_flux_uncertainties.shape}")
+        logger.debug(f"Shapes:\nT: {sky_times.shape}\nF: {sky_fluxes.shape}\ndF: {sky_flux_uncertainties.shape}")
 
         # Extract time stamps and names of science files
         science_files = in_files.filter({'OBSTYPE': 'SCIENCE'})
@@ -82,18 +86,16 @@ def full_reduction(params, debug=False):
             t0 = science_timestamps[i]
             dt = combine.time_difference(t0, sky_timestamps)
             weights = combine.get_distance_weights(dt)
-            if debug:
-                print('Time differences:', dt)
-                print('Time weights:', weights)
+            logger.debug('Time differences:', dt)
+            logger.debug('Time weights:', weights)
 
             wbkg, dwbkg = combine.weighted_mean(sky_fluxes, vars=np.square(sky_flux_uncertainties), weights=weights)
 
             science_sky_fluxes[i] = wbkg
             science_sky_flux_uncertainties[i] = dwbkg
 
-        if debug:
-            print('Science sky fluxes:', science_sky_fluxes)
-            print('Science sky flux uncertainties:', science_sky_flux_uncertainties)
+        logger.debug('Science sky fluxes:', science_sky_fluxes)
+        logger.debug('Science sky flux uncertainties:', science_sky_flux_uncertainties)
 
         # Plot sky flux estimates
         for i, file in enumerate(sky_files):
@@ -111,3 +113,6 @@ def full_reduction(params, debug=False):
         plt.legend()
         plt.show()
         plt.close()
+
+    # Close reduction
+    logger.info("Reduction finished...")
