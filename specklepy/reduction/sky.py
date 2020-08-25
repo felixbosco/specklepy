@@ -332,20 +332,28 @@ def subtract(params, mode='constant', debug=False):
                 hdulist.flush()
 
 
-def get_sky_background(file, path=None):
-    if path is not None:
-        file = os.path.join(path, file)
-    print(file)
-    data = fits.getdata(file)
-    # if data.ndim is 3:
-    #     bkg, d_bkg = np.mean(data, axis=(1, 2)), np.std(data, axis=(1, 2))
-    # else:
-    bkg, d_bkg = np.mean(data), np.std(data)
-
-    return bkg, d_bkg
-
-
 def estimate_sky_background(data, method='scalar', mask_sources=True, path=None):
+    
+    """Estimate a scalar or image sky background with uncertainties.
+
+    Args:
+        data (np.array or str):
+            Image or data cube with sky observations used to extract the sky background mean and uncertainty. Str type
+            input is interpreted as a file name to read the data from.
+        method (str, optional):
+            Can be `scalar` or `image` for setting the shape of the output.
+        mask_sources (bool, optional):
+            Creates a source mask to exclude sources from the measurement. This should not be set if working in `image`
+            mode.
+        path (str, optional):
+            Path to the data files. This is used only if data is provided as a file name.
+
+    Returns:
+        mean (float or np.array):
+            Mean sky background as a scalar or image, depending on the method parameter.
+        std (float or np.array):
+            Uncertainty on the sky background estimate as a scalar or image, depending on the method parameter.
+    """
 
     # Handle str type data
     if isinstance(data, str):
