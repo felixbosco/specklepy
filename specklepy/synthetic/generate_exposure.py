@@ -6,6 +6,7 @@ from configparser import ConfigParser
 from astropy.io import fits
 from astropy.units import Quantity
 
+from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.synthetic.target import Target
 from specklepy.synthetic.telescope import Telescope
@@ -156,6 +157,8 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
 def get_objects(parameter_file, debug=False):
     """Get objects from parameter file.
 
+    TODO: Implement more flexibility in the section names
+
     Args:
         parameter_file (str):
             File from which the objects are instantiated.
@@ -167,40 +170,35 @@ def get_objects(parameter_file, debug=False):
             Dict containing the parameter file section as a key word and the objects (or kwargs dict) as values.
     """
 
+    # Set logger level
+    if debug:
+        logger.setLevel('DEBUG')
+
     # Check whether files exist
     if not os.path.isfile(parameter_file):
         raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
 
-    # Prepare objects list
-    objects = {}
+    # Read parameter file
+    params = config.read(parameter_file)
 
-    # Read parameter_file
-    parser = ConfigParser(inline_comment_prefixes="#")
-    parser.optionxform = str  # make option names case sensitive
-    logger.info(f"Reading parameter file {parameter_file}")
-    parser.read(parameter_file)
-    for section in parser.sections():
-        kwargs = {}
-        for key in parser[section]:
-            value = parser[section][key]
-            try:
-                kwargs[key] = eval(value)
-            except SyntaxError:
-                try:
-                    kwargs[key] = Quantity(value)
-                except:
-                    kwargs[key] = value
-            except:
-                kwargs[key] = value
-            logger.debug(f"{key} ({type(kwargs[key])}): {kwargs[key]}")
+    # Create objects from the parameters
+    target = Target(**params['TARGET'])
+    logger.debug(f"Initialized Target instance:\n{target}")
+    telescope = Telescope(**params['TELESCOPE'])
+    logger.debug(f"Initialized Telescope instance:\n{telescope}")
+    detector = Detector(**params['DETECTOR'])
+    logger.debug(f"Initialized Detector instance:\n{detector}")
+    kwargs = params['KWARGS']
 
-        if section.lower() == 'target':
-            objects['target'] = Target(**kwargs)
-        elif section.lower() == 'telescope':
-            objects['telescope'] = Telescope(**kwargs)
-        elif section.lower() == 'detector':
-            objects['detector'] = Detector(**kwargs)
-        elif section.lower() in ['params', 'parameters', 'kwargs']:
-            objects['parameters'] = kwargs
+    # Interpret types of key word arguments
+    for key in kwargs.keys():
+        try:
+            kwargs[key] = eval(kwargs[key])
+            logger.debug(f"Kwarg {key} evaluated as {kwargs[key]} ({type(kwargs[key])})")
+        except SyntaxError:
+            kwargs[key] = Quantity(kwargs[key])
+            logger.debug(f"Kwarg {key} evaluated as {kwargs[key]} ({type(kwargs[key])})")
+        except NameError:
+            logger.debug(f"Kwarg {key} not evaluated {kwargs[key]} ({type(kwargs[key])})")
 
-    return objects
+    return target, telescope, detector, kwargs

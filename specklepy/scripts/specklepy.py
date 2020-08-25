@@ -30,13 +30,8 @@ def main():
     if args.command is 'generate':
 
         # Read parameters from file and generate exposures
-        objects = get_objects(args.parfile, debug=args.debug)
-        kwargs = objects['parameters']
-        generate_exposure(target=objects['target'],
-                          telescope=objects['telescope'],
-                          detector=objects['detector'],
-                          debug=args.debug,
-                          **kwargs)
+        target, telescope, detector, kwargs = get_objects(args.parfile, debug=args.debug)
+        generate_exposure(target=target, telescope=telescope, detector=detector, debug=args.debug, **kwargs)
 
     elif args.command is 'reduce':
 
@@ -47,7 +42,6 @@ def main():
             return 0  # Quit program for interaction with the new parameter file
 
         # Else start reduction following the parameter file
-        # params = ReductionParameterSet(args.parfile)
         params = config.read(args.parfile)
         run.full_reduction(params, debug=args.debug)
 
