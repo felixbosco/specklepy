@@ -32,6 +32,7 @@ def full_reduction(params, debug=False):
     # (1) Initialize reduction files
     if not os.path.isdir(params['PATHS']['outDir']):
         os.makedirs(params['PATHS']['outDir'])
+    product_files = []
     for file in in_files.filter({'OBSTYPE': 'SCIENCE'}):
         src = os.path.join(params['PATHS']['filePath'], file)
         dest = os.path.join(params['PATHS']['outDir'], 'r'+file)
@@ -40,6 +41,9 @@ def full_reduction(params, debug=False):
         with fits.open(dest) as hdu_list:
             hdu_list[0].header.set('PIPELINE', 'Specklepy')
             hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+
+        # Store new file in the list of product files
+        product_files.append(dest)
 
     # (2) Flat fielding
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:
@@ -50,9 +54,10 @@ def full_reduction(params, debug=False):
             logger.warning("Did not find any flat field observations. No flat field correction will be applied!")
         else:
             logger.info("Starting flat field correction...")
-            master_flat = flat.MasterFlat(flat_files, filename=params['FLAT']['masterFlatFile'],
+            master_flat = flat.MasterFlat(flat_files, file_name=params['FLAT']['masterFlatFile'],
                                           file_path=params['PATHS']['filePath'])
             master_flat.combine()
+            master_flat.run_correction(file_list=product_files, file_path=None)
 
     # (3) Linearization
     # TODO: Implement linearization

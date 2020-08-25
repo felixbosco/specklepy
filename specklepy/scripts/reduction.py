@@ -69,7 +69,7 @@ def main(options=None):
     # (1) Flat fielding
     if not params.flat.skipFlat:
         flat_files = inFiles.filter({'OBSTYPE': 'FLAT'})
-        master_flat = MasterFlat(flat_files, filename=params.flat.masterFlatFile, file_path=params.paths.filePath)
+        master_flat = MasterFlat(flat_files, file_name=params.flat.masterFlatFile, file_path=params.paths.filePath)
         master_flat.combine()
         to_be_flatfield_corrected = inFiles.filter({'OBSTYPE': ['SCIENCE', 'SKY']})
         flatfield_corrected = master_flat.run_correction(to_be_flatfield_corrected, prefix=params.flat.flatCorrectionPrefix)#, savedir=params.paths.tmpDir)
