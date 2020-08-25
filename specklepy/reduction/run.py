@@ -1,21 +1,17 @@
 from datetime import datetime
-from IPython import embed
-import matplotlib.pyplot as plt
-import numpy as np
 import os
 
 from astropy.io import fits
 
-from specklepy.exceptions import SpecklepyValueError
 from specklepy.io.filemanager import FileManager
 from specklepy.logging import logger
 from specklepy.reduction import flat, sky
 
-# TODO: Split this function into the parts and sort into the other modules
-
 
 def full_reduction(params, debug=False):
     """Execute a full reduction following the parameters in the `params` dictionary.
+
+    TODO: Split this function into the parts and sort into the other modules
 
     Args:
         params (dict):
