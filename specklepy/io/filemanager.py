@@ -1,7 +1,9 @@
 import glob
+import numpy as np
 import os
 import string
-import numpy as np
+import sys
+
 from astropy.io.registry import IORegistryError
 from astropy.table import Table
 
@@ -35,12 +37,14 @@ class FileManager(object):
             self.files = glob.glob(self.input)
             self.files.sort()
             if len(self.files) == 0:
+                sys.tracebacklimit = 0
                 raise FileNotFoundError("FileManager did not find any file matching to{!r}.".format(input))
             else:
                 logger.info("FileManager found {} file(s) matching to {!r}.".format(len(self.files), input))
 
             if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
-                logger.info("Input file is not fits type. FileManager assumes that input file {!r} contains file names.".format(self.files[0]))
+                logger.info("Input file is not fits type. FileManager assumes that input file {!r} contains file "
+                            "names.".format(self.files[0]))
                 self.extract_file_names(self.files[0])
 
         elif isinstance(input, list):
@@ -48,7 +52,7 @@ class FileManager(object):
             self.files = input
 
         else:
-            raise SpecklepyTypeError("FileManager", 'input', type(input), 'str')# received input of unexpected type ({}).".format(type(input)))
+            raise SpecklepyTypeError("FileManager", 'input', type(input), 'str')
 
         # Log identified input files
         logger.debug("FileManager lists the following files:")
@@ -57,7 +61,6 @@ class FileManager(object):
 
         # Initialize the index for iteration
         self.index = 0
-
 
     def __iter__(self):
         return self
@@ -89,16 +92,12 @@ class FileManager(object):
     def __len__(self):
         return len(self.files)
 
-
     def is_fits_file(self, filename):
         _, extension = os.path.splitext(filename)
         return extension == '.fits'
 
-
     def extract_file_names(self, file, namekey='FILE'):
-        """
-        Interpretes text in a file input.
-        """
+        """Interprets text in a file input."""
 
         try:
             self.table = Table.read(file)
@@ -119,7 +118,6 @@ class FileManager(object):
         file_column = np.array(self.table[namekey], dtype=object)
         self.table[namekey] = file_column
 
-
     def filter(self, filter_dict, namekey='FILE'):
 
         if not isinstance(filter_dict, dict):
@@ -137,7 +135,6 @@ class FileManager(object):
 
         return self.table[namekey][mask].data
 
-
     def update_filenames(self, filenames):
         """Updates the file names in the files table.
 
@@ -154,7 +151,6 @@ class FileManager(object):
             index = np.where(self.table['FILE'] == outdated)
             self.table['FILE'][index] = filenames[outdated]
             logger.info(f"{outdated} > {filenames[outdated]}")
-
 
     def identify_setups(self, keywords):
         """Identify distinct observational setups in a list of files.
