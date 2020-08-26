@@ -48,7 +48,7 @@ def gather_header_information(path, instrument, par_file=None, list_file=None, s
 
     # Apply fall back values
     if path is None:
-        path = '.'
+        path = '../reduction'
     if list_file is None:
         list_file = 'files.tab'
     if par_file is None:

@@ -6,9 +6,9 @@ from specklepy.core.holography import holography
 from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
-from specklepy.io.parameterset import ReductionParameterSet, HolographyParameterSet
+from specklepy.io.parameterset import HolographyParameterSet
 from specklepy.logging import logger
-from specklepy.reduction import setup, run
+from specklepy.reduction import run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 from specklepy.gui.window import start
 
