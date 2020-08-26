@@ -32,18 +32,8 @@ def full_reduction(params, debug=False):
     # (1) Initialize reduction files
     if not os.path.isdir(params['PATHS']['outDir']):
         os.makedirs(params['PATHS']['outDir'])
-    product_files = []
-    for file in in_files.filter({'OBSTYPE': 'SCIENCE'}):
-        src = os.path.join(params['PATHS']['filePath'], file)
-        dest = os.path.join(params['PATHS']['outDir'], 'r'+file)
-        logger.info(f"Initializing data product file {dest}")
-        os.system(f"cp {src} {dest}")
-        with fits.open(dest) as hdu_list:
-            hdu_list[0].header.set('PIPELINE', 'Specklepy')
-            hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
-
-        # Store new file in the list of product files
-        product_files.append(dest)
+    product_files = in_files.initialize_product_files(raw_files=params['PATHS']['filePath'],
+                                                      out_dir=params['PATHS']['outDir'])
 
     # (2) Flat fielding
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:

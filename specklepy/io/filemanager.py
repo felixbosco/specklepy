@@ -1,9 +1,11 @@
+from datetime import datetime
 import glob
 import numpy as np
 import os
 import string
 import sys
 
+from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table
 
@@ -196,3 +198,25 @@ class FileManager(object):
         for index, combination in enumerate(combinations):
             row_indizes = np.where(self.table['Setup'].data == combination)
             self.table['Setup'][row_indizes] = string.ascii_uppercase[index]
+
+    def initialize_product_files(self, raw_files=None, out_dir=None, prefix='r'):
+        product_files = []
+        for file in self.filter({'OBSTYPE': 'SCIENCE'}):
+            if raw_files is None:
+                src = file
+            else:
+                src = os.path.join(raw_files, file)
+            if out_dir is None:
+                dest = prefix + file
+            else:
+                dest = os.path.join(out_dir, prefix + file)
+            logger.info(f"Initializing data product file {dest}")
+            os.system(f"cp {src} {dest}")
+            with fits.open(dest) as hdu_list:
+                hdu_list[0].header.set('PIPELINE', 'Specklepy')
+                hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+
+            # Store new file in the list of product files
+            product_files.append(dest)
+
+        return product_files
