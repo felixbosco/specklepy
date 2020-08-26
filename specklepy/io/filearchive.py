@@ -1,5 +1,6 @@
 from datetime import datetime
 import glob
+from IPython import embed
 import numpy as np
 import os
 import string
@@ -24,7 +25,7 @@ class FileArchive(object):
         ...
     """
 
-    def __init__(self, file_list, in_dir=None, out_dir=None):
+    def __init__(self, file_list, in_dir=None, out_dir=None, **kwargs):
         """Create a FileArchive instance.
 
         Long description...
@@ -62,19 +63,21 @@ class FileArchive(object):
             if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
                 logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
                             "names.".format(self.files[0]))
-                self.read_table_file(self.files[0])
+                self.table = self.read_table_file(self.files[0])
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
-            self.files = file_list
+            # self.files = file_list
+            self.table = self.gather_table_from_list(files=file_list, **kwargs)
 
         else:
             raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'str')
 
         # Log identified input files
         logger.debug("FileArchive lists the following files:")
-        for f, file in enumerate(self.files):
-            logger.debug("{:4d}: {}".format(f+1, file))
+        # for f, file in enumerate(self.files):
+        #     logger.debug("{:4d}: {}".format(f+1, file))
+        logger.debug(str(self.table))
 
         # Initialize the index for iteration
         self.index = 0
@@ -135,51 +138,41 @@ class FileArchive(object):
         self.table[namekey] = file_column
 
     @staticmethod
-    def gather_table_from_list(instrument, files):
+    def gather_table_from_list(files, cards, dtypes, names=None):
         """Gather file header information to fill the table
 
         Args:
-            instrument:
-            files:
+            files (list):
+                .
+            cards (list):
+                .
+            dtypes (list):
+                .
+            names (list):
+                .
 
         Returns:
-
+            table (astropy.Table):
+                .
         """
 
-        # Defaults
-        header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
-        dtypes = [str, str, str, float, int, str]
-        instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
-
-        # Read config
-        configs = config.read(instrument_config_file)
-        instrument = configs['INSTRUMENTS'][instrument]
-        instrument_header_cards = configs[instrument]
-
-        # Double check whether all aliases are defined
-        for card in header_cards:
-            try:
-                instrument_header_cards[card]
-            except KeyError:
-                logger.info(
-                    f"Dropping header card {card} from setup identification, as there is no description in the config "
-                    f"file.\nCheck out {instrument_config_file} for details.")
-                header_cards.remove(card)
-
         # Initialize output file information table
-        table = Table(names=['FILE']+header_cards, dtype=[str]+dtypes)
+        if names is None:
+            table = Table(names=['FILE']+cards, dtype=[str]+dtypes)
+        else:
+            table = Table(names=['FILE']+names, dtype=[str]+dtypes)
 
         # Read data from files
         for file in files:
             logger.info(f"Retrieving header information from file {file}")
             hdr = fits.getheader(file)
             new_row = [os.path.basename(file)]
-            for card in header_cards:
+            for card in cards:
                 try:
-                    new_row.append(hdr[instrument_header_cards[card]])
+                    new_row.append(hdr[card])
                 except KeyError:
-                    logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header card "
-                                f"({instrument_header_cards[card]}).")
+                    logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header "
+                                f"card ({card}).")
                     break
             if len(new_row) == len(table.columns):
                 table.add_row(new_row)
@@ -242,35 +235,30 @@ class FileArchive(object):
 
         # Identifying setups key-by-key
         logger.info("Identifying distinct observational setups in the file list...")
-        self.table['Setup'] = [None] * len(self.table['FILE'])
+        self.table['Setup'] = [None] * len(self.table)
 
+        # Iterate over keywords and identify unique settings per key
         for key in keywords:
             try:
                 unique = np.unique(self.table[key].data)
             except KeyError:
                 logger.info(f"Key {key} is not available in the file table and will be ignored!")
                 continue
-            logger.info(f"Identified {len(unique)} setups by keyword {key}:")
-            logger.info(f"\t{unique}")
-            if len(unique) == 1:
-                continue
+            logger.info(f"Identified {len(unique)} setups by keyword {key}:\t{unique}")
 
             for index, setup in enumerate(unique):
                 for row in self.table:
                     if row[key] == setup:
                         if row['Setup'] is None:
-                            row['Setup'] = [str(index)]
+                            row['Setup'] = str(index)
                         else:
-                            row['Setup'].append(str(index))
-
-        for row in self.table:
-            row['Setup'] = ''.join(row['Setup'])
+                            row['Setup'] + str(index)
 
         # Overwrite setup keys by length-1 string
         combinations = np.unique(self.table['Setup'].data)
         for index, combination in enumerate(combinations):
-            row_indizes = np.where(self.table['Setup'].data == combination)
-            self.table['Setup'][row_indizes] = string.ascii_uppercase[index]
+            row_indexes = np.where(self.table['Setup'].data == combination)
+            self.table['Setup'][row_indexes] = string.ascii_uppercase[index]
 
     def initialize_product_files(self, prefix='r'):
         product_files = []
