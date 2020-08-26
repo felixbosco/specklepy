@@ -150,23 +150,26 @@ class FileArchive(object):
                 mask &= (filter_dict[key] == self.table[key])
 
         return self.table[namekey][mask].data
+    
+    def get_flats(self):
+        return self.filter({'OBSTYPE': 'FLAT'})
 
-    def update_filenames(self, filenames):
-        """Updates the file names in the files table.
-
-        Args:
-            filenames (dict):
-                Dictionary mapping the current file names onto new ones.
-        """
-
-        if not isinstance(filenames, dict):
-            raise SpecklepyTypeError('FileManager.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
-
-        logger.info('Updating file names:')
-        for outdated in filenames.keys():
-            index = np.where(self.table['FILE'] == outdated)
-            self.table['FILE'][index] = filenames[outdated]
-            logger.info(f"{outdated} > {filenames[outdated]}")
+    # def update_filenames(self, filenames):
+    #     """Updates the file names in the files table.
+    #
+    #     Args:
+    #         filenames (dict):
+    #             Dictionary mapping the current file names onto new ones.
+    #     """
+    #
+    #     if not isinstance(filenames, dict):
+    #         raise SpecklepyTypeError('FileManager.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
+    #
+    #     logger.info('Updating file names:')
+    #     for outdated in filenames.keys():
+    #         index = np.where(self.table['FILE'] == outdated)
+    #         self.table['FILE'][index] = filenames[outdated]
+    #         logger.info(f"{outdated} > {filenames[outdated]}")
 
     def identify_setups(self, keywords):
         """Identify distinct observational setups in a list of files.

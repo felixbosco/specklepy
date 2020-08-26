@@ -40,7 +40,7 @@ def full_reduction(params, debug=False):
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:
         logger.info('Skipping flat fielding as requested from parameter file...')
     else:
-        flat_files = in_files.filter({'OBSTYPE': 'FLAT'})
+        flat_files = in_files.get_flats()
         if len(flat_files) == 0:
             logger.warning("Did not find any flat field observations. No flat field correction will be applied!")
         else:
