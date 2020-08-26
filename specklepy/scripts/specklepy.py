@@ -37,15 +37,12 @@ def main():
 
         # In setup mode
         if args.setup:
-            # setup.gather_header_information(path=args.path, instrument=args.instrument, par_file=args.parfile,
-            #                                 list_file=args.filelist, sort_by=args.sortby)
             run.setup(path=args.path, instrument=args.instrument, par_file=args.parfile, list_file=args.filelist,
                       sort_by=args.sortby)
-            return 0  # Quit program for interaction with the new parameter file
-
         # Else start reduction following the parameter file
-        params = config.read(args.parfile)
-        run.full_reduction(params, debug=args.debug)
+        else:
+            params = config.read(args.parfile)
+            run.full_reduction(params, debug=args.debug)
 
     elif args.command is 'ssa':
 

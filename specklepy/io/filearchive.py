@@ -58,7 +58,7 @@ class FileArchive(object):
                 sys.tracebacklimit = 0
                 raise FileNotFoundError("FileArchive did not find any file matching to{!r}.".format(file_list))
             else:
-                logger.info("FileArchive found {} file(s) matching to {!r}.".format(len(self.files), file_list))
+                logger.info("FileArchive found {} file(s) matching to {!r}.".format(len(files), file_list))
 
             if len(files) == 1 and not self.is_fits_file(files[0]):
                 logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
@@ -67,7 +67,6 @@ class FileArchive(object):
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
-            # self.files = file_list
             self.table = self.gather_table_from_list(files=file_list, **kwargs)
 
         else:
@@ -75,8 +74,6 @@ class FileArchive(object):
 
         # Log identified input files
         logger.debug("FileArchive lists the following files:")
-        # for f, file in enumerate(self.files):
-        #     logger.debug("{:4d}: {}".format(f+1, file))
         logger.debug(str(self.table))
 
         # Initialize the index for iteration
@@ -135,10 +132,6 @@ class FileArchive(object):
                     filename = filename.replace('\n', '')
                     files.append(filename)
             table = Table(data=[files], names=['FILE'], dtype=[object])
-
-        # Replace finite length strings of file names by object type for file names of arbitrary lengths
-        # file_column = np.array(self.table[namekey], dtype=object)
-        # table[namekey] = file_column
 
         return table
 

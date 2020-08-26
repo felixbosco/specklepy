@@ -71,39 +71,6 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
     # Initialize a file archive
     raw_files = FileArchive(files, cards=cards, dtypes=dtypes, names=header_cards)
     raw_files.identify_setups(['FILTER', 'EXPTIME'])
-    # table = raw_files.table
-
-    # # Initialize output file information table
-    # table = Table(names=['FILE'] + header_cards, dtype=[str] + dtypes)
-    #
-    # # Read data from files
-    # for file in files:
-    #     logger.info(f"Retrieving header information from file {file}")
-    #     hdr = fits.getheader(file)
-    #     new_row = [os.path.basename(file)]
-    #     for card in header_cards:
-    #         try:
-    #             new_row.append(hdr[instrument_header_cards[card]])
-    #         except KeyError:
-    #             logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header card "
-    #                         f"({instrument_header_cards[card]}).")
-    #             break
-    #     if len(new_row) == len(table.columns):
-    #         table.add_row(new_row)
-    #
-    # # Sort table entries by default properties and user request
-    # table.sort('FILE')
-    # table.sort('OBSTYPE')
-    # if sort_by:
-    #     table.sort(sort_by)
-    #
-    # # Identify instrument setups
-    # setups = identify_instrument_setups(table)
-    # table.add_column(setups)
-    #
-    # # Save table
-    # logger.info(f"Writing header information to {list_file}")
-    # table.write(list_file, format='ascii.fixed_width', overwrite=True)
     raw_files.write_table(file_name=list_file)
 
     # Write dummy parameter file for the reduction
