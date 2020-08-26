@@ -9,6 +9,7 @@ from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table
 
+from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
 
@@ -61,7 +62,7 @@ class FileArchive(object):
             if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
                 logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
                             "names.".format(self.files[0]))
-                self.extract_file_names(self.files[0])
+                self.read_table_file(self.files[0])
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
@@ -111,7 +112,7 @@ class FileArchive(object):
         _, extension = os.path.splitext(filename)
         return extension == '.fits'
 
-    def extract_file_names(self, file, namekey='FILE'):
+    def read_table_file(self, file, namekey='FILE'):
         """Interprets text in a file input."""
 
         try:
@@ -132,6 +133,62 @@ class FileArchive(object):
         # file names of arbitrary lengths
         file_column = np.array(self.table[namekey], dtype=object)
         self.table[namekey] = file_column
+
+    @staticmethod
+    def gather_table_from_list(instrument, files):
+        """Gather file header information to fill the table
+
+        Args:
+            instrument:
+            files:
+
+        Returns:
+
+        """
+
+        # Defaults
+        header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
+        dtypes = [str, str, str, float, int, str]
+        instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
+
+        # Read config
+        configs = config.read(instrument_config_file)
+        instrument = configs['INSTRUMENTS'][instrument]
+        instrument_header_cards = configs[instrument]
+
+        # Double check whether all aliases are defined
+        for card in header_cards:
+            try:
+                instrument_header_cards[card]
+            except KeyError:
+                logger.info(
+                    f"Dropping header card {card} from setup identification, as there is no description in the config "
+                    f"file.\nCheck out {instrument_config_file} for details.")
+                header_cards.remove(card)
+
+        # Initialize output file information table
+        table = Table(names=['FILE']+header_cards, dtype=[str]+dtypes)
+
+        # Read data from files
+        for file in files:
+            logger.info(f"Retrieving header information from file {file}")
+            hdr = fits.getheader(file)
+            new_row = [os.path.basename(file)]
+            for card in header_cards:
+                try:
+                    new_row.append(hdr[instrument_header_cards[card]])
+                except KeyError:
+                    logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header card "
+                                f"({instrument_header_cards[card]}).")
+                    break
+            if len(new_row) == len(table.columns):
+                table.add_row(new_row)
+
+        return table
+
+    def write_table(self, file_name):
+        logger.info(f"Writing file information to {file_name}")
+        self.table.write(file_name, format='ascii.fixed_width', overwrite=True)
 
     def filter(self, filter_dict, namekey='FILE'):
 
