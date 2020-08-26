@@ -6,7 +6,7 @@ import sys
 
 from specklepy.logging import logger
 from specklepy.io.parameterset import ParameterSet
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.reduction.flat import MasterFlat
 from specklepy.reduction import sky
 
@@ -56,7 +56,7 @@ def main(options=None):
     # Execute data reduction
     # (0) Read file list table
     logger.info("Reading file list ...")
-    inFiles = FileManager(params.paths.fileList)
+    inFiles = FileArchive(params.paths.fileList)
     # inFiles.table['PATH'] = [params.paths.filePath] * len(inFiles.table['FILE'])
     # inFiles.table['CORRECTIONS'] = [''] * len(inFiles.table['FILE'])
     print(inFiles.table)

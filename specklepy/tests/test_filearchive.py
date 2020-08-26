@@ -1,23 +1,23 @@
 import unittest
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 
 
-class TestFileManager(unittest.TestCase):
+class TestFileArchive(unittest.TestCase):
 
     def setUp(self):
         self.filename = "specklepy/tests/files/example_cube.fits"
         self.filelist = "specklepy/tests/files/reduction/test_file_list.tab"
 
     def test_init(self):
-        FileManager(self.filename)
-        FileManager(self.filelist)
+        FileArchive(self.filename)
+        FileArchive(self.filelist)
 
     def test_str(self):
-        fh = FileManager(self.filename)
+        fh = FileArchive(self.filename)
         print(fh)
 
     def test_iter(self):
-        fh = FileManager(self.filename)
+        fh = FileArchive(self.filename)
         for file in fh:
             print(type(file), file)
 

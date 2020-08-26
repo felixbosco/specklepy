@@ -1,7 +1,7 @@
 import unittest
 import os
 import numpy as np
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.io.reductionfile import ReductionFile
 
 

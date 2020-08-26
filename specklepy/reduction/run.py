@@ -3,7 +3,7 @@ import os
 
 from astropy.io import fits
 
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.logging import logger
 from specklepy.reduction import flat, sky
 
@@ -26,7 +26,7 @@ def full_reduction(params, debug=False):
 
     # (0) Read file list table
     logger.info("Reading file list ...")
-    in_files = FileManager(params['PATHS']['fileList'])
+    in_files = FileArchive(params['PATHS']['fileList'])
     logger.info('\n' + str(in_files.table))
 
     # (1) Initialize reduction files

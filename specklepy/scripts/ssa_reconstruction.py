@@ -5,7 +5,7 @@ import os
 import sys
 
 from specklepy.logging import logger
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core.ssa import ssa
 
@@ -35,7 +35,7 @@ def main(options=None):
     args = parser(options=options)
 
     if args.file is not None:
-        files = FileManager(args.file).files
+        files = FileArchive(args.file).files
     else:
         logger.error("No file or file list was provided! Use --help for instructions.")
         raise RuntimeError("No file or file list was provided! Use --help for instructions.")

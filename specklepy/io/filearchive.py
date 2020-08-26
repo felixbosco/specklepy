@@ -13,7 +13,7 @@ from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
 
 
-class FileManager(object):
+class FileArchive(object):
 
     """This class is handling the input files and is iterable.
 

@@ -9,7 +9,7 @@ from astropy.table import Table
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.io.psffile import PSFFile
 from specklepy.core.aperture import Aperture
 from specklepy.utils.plot import imshow

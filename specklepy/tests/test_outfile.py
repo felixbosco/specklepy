@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.io.outfile import Outfile
 
 

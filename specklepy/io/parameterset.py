@@ -3,7 +3,7 @@ import configparser
 
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logger
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.synthetic.target import Target
 from specklepy.synthetic.telescope import Telescope
 from specklepy.synthetic.detector import Detector
@@ -109,7 +109,7 @@ class ParameterSet(object):
         # Create file lists
         if hasattr(self, 'paths'):
             if hasattr(self.paths, 'inDir'):
-                self.inFiles = FileManager(self.paths.inDir).files
+                self.inFiles = FileArchive(self.paths.inDir).files
         # try:
         #     self.inFiles = FileManager(self.paths.inDir).files
         # except AttributeError:

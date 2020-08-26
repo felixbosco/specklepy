@@ -1,13 +1,13 @@
 import unittest
 import numpy as np
-from specklepy.io.filemanager import FileManager
+from specklepy.io.filearchive import FileArchive
 from specklepy.io.reconstructionfile import ReconstructionFile
 
 
 class TestReconstructionFile(unittest.TestCase):
 
     def setUp(self):
-        self.FileManager = FileManager("specklepy/tests/files/example_cube.fits")
+        self.FileManager = FileArchive("specklepy/tests/files/example_cube.fits")
 
     def test_init(self):
         ReconstructionFile(filename="specklepy/tests/files/test_reconstructionfile.fits", files=self.FileManager.files, cards={"RECONSTRUCTION": "Test"})
