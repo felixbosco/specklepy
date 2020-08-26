@@ -11,22 +11,32 @@ class Sequence(object):
 
     def __init__(self, science_files, sky_files, file_path=None):
 
-        if isinstance(science_files, list):
+        if isinstance(science_files, (list, np.ndarray)):
             self.science_files = science_files
         else:
             raise SpecklepyTypeError('Sequence', 'science_files', type(science_files), 'list')
 
-        if isinstance(sky_files, list):
+        if isinstance(sky_files, (list, np.ndarray)):
             self.sky_files = sky_files
         else:
             raise SpecklepyTypeError('Sequence', 'sky_files', type(sky_files), 'list')
 
         if file_path is None:
-            self.file_path = ''
+            self.file_path = './'
         elif isinstance(file_path, str):
             self.file_path = file_path
         else:
             raise SpecklepyTypeError('Sequence', 'file_path', type(file_path), 'str')
+
+    def __str__(self):
+        s = str(type(self)) + "\n"
+        s += 'Science files:\n'
+        for file in self.science_files:
+            s += "> {}\n".format(file)
+        s += 'Sky files:\n'
+        for file in self.sky_files:
+            s += "> {}\n".format(file)
+        return s
 
     @property
     def files(self):
