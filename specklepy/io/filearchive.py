@@ -149,7 +149,7 @@ class FileArchive(object):
         return table
 
     @staticmethod
-    def gather_table_from_list(files, cards, dtypes, names=None):
+    def gather_table_from_list(files, cards, dtypes, names=None, sort_by=None):
         """Gather file header information to fill the table
 
         Args:
@@ -161,6 +161,8 @@ class FileArchive(object):
                 Expected data types of values.
             names (list):
                 Names of the output table columns. If provided this overwrites the column names based on `cards`.
+            sort_by (str, optional):
+                Header card that is used for the sorting of files.
 
         Returns:
             table (astropy.Table):
@@ -187,6 +189,12 @@ class FileArchive(object):
                     break
             if len(new_row) == len(table.columns):
                 table.add_row(new_row)
+
+        # Sort table entries by default properties and user request
+        table.sort('FILE')
+        table.sort('OBSTYPE')
+        if sort_by:
+            table.sort(sort_by)
 
         return table
 

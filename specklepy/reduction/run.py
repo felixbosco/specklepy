@@ -69,7 +69,7 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
         raise RuntimeError(f"Found no files in {path}!")
 
     # Initialize a file archive
-    raw_files = FileArchive(files, cards=cards, dtypes=dtypes, names=header_cards)
+    raw_files = FileArchive(files, cards=cards, dtypes=dtypes, names=header_cards, sort_by=sort_by)
     raw_files.identify_setups(['FILTER', 'EXPTIME'])
     raw_files.write_table(file_name=list_file)
 
