@@ -52,18 +52,18 @@ class FileArchive(object):
         # Interpret the file list input
         if isinstance(file_list, str):
             # Search for files
-            self.files = glob.glob(file_list)
-            self.files.sort()
-            if len(self.files) == 0:
+            files = glob.glob(file_list)
+            files.sort()
+            if len(files) == 0:
                 sys.tracebacklimit = 0
                 raise FileNotFoundError("FileArchive did not find any file matching to{!r}.".format(file_list))
             else:
                 logger.info("FileArchive found {} file(s) matching to {!r}.".format(len(self.files), file_list))
 
-            if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
+            if len(files) == 1 and not self.is_fits_file(files[0]):
                 logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
-                            "names.".format(self.files[0]))
-                self.table = self.read_table_file(self.files[0])
+                            "names.".format(files[0]))
+                self.table = self.read_table_file(files[0])
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
@@ -111,7 +111,12 @@ class FileArchive(object):
     def __len__(self):
         return len(self.files)
 
-    def is_fits_file(self, filename):
+    @property
+    def files(self):
+        return self.table['FILE'].data
+
+    @staticmethod
+    def is_fits_file(filename):
         _, extension = os.path.splitext(filename)
         return extension == '.fits'
 
@@ -119,23 +124,23 @@ class FileArchive(object):
         """Interprets text in a file input."""
 
         try:
-            self.table = Table.read(file)
-            self.files = self.table[namekey].data
+            table = Table.read(file)
         except IORegistryError:
-            self.table = Table.read(file, format='ascii.fixed_width')
-            self.files = self.table[namekey].data
+            table = Table.read(file, format='ascii.fixed_width')
         except:
-            self.files = []
+            files = []
             logger.info("Reading file names from input file {}.".format(file))
             with open(file, 'r') as f:
                 for filename in f.readlines():
                     filename = filename.replace('\n', '')
-                    self.files.append(filename)
+                    files.append(filename)
+            table = Table(data=[files], names=['FILE'], dtype=[object])
 
-        # Replace finite length strings of file names by object type for
-        # file names of arbitrary lengths
-        file_column = np.array(self.table[namekey], dtype=object)
-        self.table[namekey] = file_column
+        # Replace finite length strings of file names by object type for file names of arbitrary lengths
+        # file_column = np.array(self.table[namekey], dtype=object)
+        # table[namekey] = file_column
+
+        return table
 
     @staticmethod
     def gather_table_from_list(files, cards, dtypes, names=None):
@@ -203,23 +208,6 @@ class FileArchive(object):
     def get_flats(self):
         return self.filter({'OBSTYPE': 'FLAT'})
 
-    # def update_filenames(self, filenames):
-    #     """Updates the file names in the files table.
-    #
-    #     Args:
-    #         filenames (dict):
-    #             Dictionary mapping the current file names onto new ones.
-    #     """
-    #
-    #     if not isinstance(filenames, dict):
-    #         raise SpecklepyTypeError('FileArchive.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
-    #
-    #     logger.info('Updating file names:')
-    #     for outdated in filenames.keys():
-    #         index = np.where(self.table['FILE'] == outdated)
-    #         self.table['FILE'][index] = filenames[outdated]
-    #         logger.info(f"{outdated} > {filenames[outdated]}")
-
     def identify_setups(self, keywords):
         """Identify distinct observational setups in a list of files.
 
@@ -235,7 +223,7 @@ class FileArchive(object):
 
         # Identifying setups key-by-key
         logger.info("Identifying distinct observational setups in the file list...")
-        self.table['Setup'] = [None] * len(self.table)
+        self.table['SETUP'] = [None] * len(self.table)
 
         # Iterate over keywords and identify unique settings per key
         for key in keywords:
@@ -249,16 +237,16 @@ class FileArchive(object):
             for index, setup in enumerate(unique):
                 for row in self.table:
                     if row[key] == setup:
-                        if row['Setup'] is None:
-                            row['Setup'] = str(index)
+                        if row['SETUP'] is None:
+                            row['SETUP'] = str(index)
                         else:
-                            row['Setup'] + str(index)
+                            row['SETUP'] + str(index)
 
         # Overwrite setup keys by length-1 string
-        combinations = np.unique(self.table['Setup'].data)
+        combinations = np.unique(self.table['SETUP'].data)
         for index, combination in enumerate(combinations):
-            row_indexes = np.where(self.table['Setup'].data == combination)
-            self.table['Setup'][row_indexes] = string.ascii_uppercase[index]
+            row_indexes = np.where(self.table['SETUP'].data == combination)
+            self.table['SETUP'][row_indexes] = string.ascii_uppercase[index]
 
     def initialize_product_files(self, prefix='r'):
         product_files = []
