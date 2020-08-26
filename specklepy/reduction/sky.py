@@ -53,6 +53,11 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
         source = 'sky'
     logger.info(f"Sky background subtraction source: {source}")
 
+    sequences = in_files.identify_sequences()
+    for sequence in sequences:
+        weights = sequence.compute_weights()
+        # TODO continue here!
+
     # Identify source files and time stamps
     if source == 'sky':
         sky_files = in_files.filter({'OBSTYPE': 'SKY'})
@@ -63,7 +68,6 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
     else:
         raise SpecklepyValueError('full_reduction', argname='source', argvalue=source,
                                   expected="'sky' or 'science'")
-    embed()
     sky_times = combine.time_difference(sky_timestamps[0], list(sky_timestamps))
     logger.debug(f"Sky files are: {sky_files}")
     logger.debug(f"Sky time stamps are: {sky_times}")
@@ -132,56 +136,56 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
         raise ValueError(f"Sky subtraction method {method} is not understood!")
 
 
-def identify_sequences(file_list, file_path=None, ignore_time_stamps=False):
-
-    """Identify observational sequences for sky subtraction.
-
-    Typically, observations are organized in sequences such as 'object-sky-object' for optimizing the required
-    telescope time. This function now identifies (blocks of) sky files and afterwards allocates science or object files
-    to these blocks by choosing estimating the minimum time delay to one of the sky files.
-
-    Args:
-        file_list (astropy.table.Table):
-            Table with header information, especially with the observational setup ID.
-        file_path (str, optional):
-            Relative path to the data files.
-        ignore_time_stamps (bool, optional):
-            Set `True` to ignore the time stamps and create one sequence for all frames. This is used for development
-            purposes only.
-    """
-
-    # Check input parameters
-    if not isinstance(file_list, Table):
-        raise SpecklepyTypeError('identify_sequences', 'file_list', type(file_list), 'astropy.table.Table')
-
-    # Iterate over observational setups and assign files to sequences
-    sequences = []
-    observation_setups = np.unique(file_list['Setup'])
-    for setup in observation_setups:
-
-        # Check for setup
-        is_in_setup = file_list['Setup'] == setup
-
-        # Check for science or sky type
-        is_science_file = file_list['OBSTYPE'] == 'SCIENCE'
-        is_science_file &= is_in_setup
-        science_files = list(file_list['FILE'][is_science_file])
-        is_sky_file = file_list['OBSTYPE'] == 'SKY'
-        is_sky_file &= is_in_setup
-        sky_files = list(file_list['FILE'][is_sky_file])
-
-        # Check whether there are sky files
-        if len(sky_files) is 0:
-            raise RuntimeError("There are no sky files in the list!")
-
-        # Assigning sky files to science files
-        if ignore_time_stamps:
-            sequences.append(Sequence(science_files=science_files, sky_files=sky_files, file_path=file_path))
-        else:
-            pass
-
-    logger.info(f"Identified {len(sequences)} sequence(s)...")
-    return sequences
+# def identify_sequences(file_list, file_path=None, ignore_time_stamps=False):
+#
+#     """Identify observational sequences for sky subtraction.
+#
+#     Typically, observations are organized in sequences such as 'object-sky-object' for optimizing the required
+#     telescope time. This function now identifies (blocks of) sky files and afterwards allocates science or object files
+#     to these blocks by choosing estimating the minimum time delay to one of the sky files.
+#
+#     Args:
+#         file_list (astropy.table.Table):
+#             Table with header information, especially with the observational setup ID.
+#         file_path (str, optional):
+#             Relative path to the data files.
+#         ignore_time_stamps (bool, optional):
+#             Set `True` to ignore the time stamps and create one sequence for all frames. This is used for development
+#             purposes only.
+#     """
+#
+#     # Check input parameters
+#     if not isinstance(file_list, Table):
+#         raise SpecklepyTypeError('identify_sequences', 'file_list', type(file_list), 'astropy.table.Table')
+#
+#     # Iterate over observational setups and assign files to sequences
+#     sequences = []
+#     observation_setups = np.unique(file_list['Setup'])
+#     for setup in observation_setups:
+#
+#         # Check for setup
+#         is_in_setup = file_list['Setup'] == setup
+#
+#         # Check for science or sky type
+#         is_science_file = file_list['OBSTYPE'] == 'SCIENCE'
+#         is_science_file &= is_in_setup
+#         science_files = list(file_list['FILE'][is_science_file])
+#         is_sky_file = file_list['OBSTYPE'] == 'SKY'
+#         is_sky_file &= is_in_setup
+#         sky_files = list(file_list['FILE'][is_sky_file])
+#
+#         # Check whether there are sky files
+#         if len(sky_files) is 0:
+#             raise RuntimeError("There are no sky files in the list!")
+#
+#         # Assigning sky files to science files
+#         if ignore_time_stamps:
+#             sequences.append(Sequence(science_files=science_files, sky_files=sky_files, file_path=file_path))
+#         else:
+#             pass
+#
+#     logger.info(f"Identified {len(sequences)} sequence(s)...")
+#     return sequences
 
 
 def subtract_scalar_background(files, params, prefix=None, debug=False):
