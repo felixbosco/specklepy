@@ -18,18 +18,18 @@ class FileArchive(object):
     """This class is handling the input files and is iterable.
 
     Attributes:
-        input (str):
+        file_list (str):
             Path to list of files or generic file path.
         ...
     """
 
-    def __init__(self, input, in_dir=None, out_dir=None):
-        """Create a FileManager instance.
+    def __init__(self, file_list, in_dir=None, out_dir=None):
+        """Create a FileArchive instance.
 
         Long description...
 
         Args:
-            input (str, list):
+            file_list (str, list):
                 Path to list of files or generic file path. Can also be provided as list type.
             in_dir (str, optional):
                 Path to the raw/ input data.
@@ -47,31 +47,31 @@ class FileArchive(object):
         else:
             self.out_dir = out_dir
 
-        self.input = input
-        if isinstance(self.input, str):
+        # Interpret the file list input
+        if isinstance(file_list, str):
             # Search for files
-            self.files = glob.glob(self.input)
+            self.files = glob.glob(file_list)
             self.files.sort()
             if len(self.files) == 0:
                 sys.tracebacklimit = 0
-                raise FileNotFoundError("FileManager did not find any file matching to{!r}.".format(input))
+                raise FileNotFoundError("FileArchive did not find any file matching to{!r}.".format(file_list))
             else:
-                logger.info("FileManager found {} file(s) matching to {!r}.".format(len(self.files), input))
+                logger.info("FileArchive found {} file(s) matching to {!r}.".format(len(self.files), file_list))
 
             if len(self.files) == 1 and not self.is_fits_file(self.files[0]):
-                logger.info("Input file is not fits type. FileManager assumes that input file {!r} contains file "
+                logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
                             "names.".format(self.files[0]))
                 self.extract_file_names(self.files[0])
 
-        elif isinstance(input, list):
-            logger.info("FileManager received a list of files.")
-            self.files = input
+        elif isinstance(file_list, list):
+            logger.info("FileArchive received a list of files.")
+            self.files = file_list
 
         else:
-            raise SpecklepyTypeError("FileManager", 'input', type(input), 'str')
+            raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'str')
 
         # Log identified input files
-        logger.debug("FileManager lists the following files:")
+        logger.debug("FileArchive lists the following files:")
         for f, file in enumerate(self.files):
             logger.debug("{:4d}: {}".format(f+1, file))
 
@@ -96,8 +96,7 @@ class FileArchive(object):
         self.files[index] = value
 
     def __str__(self):
-        s = "<specklepy.io.filemanager.FileManager object>\n"
-        s += "> List of files:\n"
+        s = str(type(self)) + "\n"
         for file in self.files:
             s += "> {}\n".format(file)
         return s
@@ -137,7 +136,7 @@ class FileArchive(object):
     def filter(self, filter_dict, namekey='FILE'):
 
         if not isinstance(filter_dict, dict):
-            raise SpecklepyTypeError('FileManager.filter', 'filter_dict', type(filter_dict), 'dict')
+            raise SpecklepyTypeError('FileArchive.filter', 'filter_dict', type(filter_dict), 'dict')
 
         mask = [True] * len(self.table[namekey])
         for index, key in enumerate(filter_dict.keys()):
@@ -150,7 +149,7 @@ class FileArchive(object):
                 mask &= (filter_dict[key] == self.table[key])
 
         return self.table[namekey][mask].data
-    
+
     def get_flats(self):
         return self.filter({'OBSTYPE': 'FLAT'})
 
@@ -163,7 +162,7 @@ class FileArchive(object):
     #     """
     #
     #     if not isinstance(filenames, dict):
-    #         raise SpecklepyTypeError('FileManager.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
+    #         raise SpecklepyTypeError('FileArchive.update_filenames', argname='filenames', argtype=type(filenames), expected='dict')
     #
     #     logger.info('Updating file names:')
     #     for outdated in filenames.keys():
