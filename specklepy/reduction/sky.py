@@ -40,6 +40,10 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
             Show debugging information.
     """
 
+    # Set logging level
+    if debug:
+        logger.setLevel('DEBUG')
+
     # Apply fall back values
     if method is None:
         method = 'scalar'
@@ -59,8 +63,8 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
         raise SpecklepyValueError('full_reduction', argname='source', argvalue=source,
                                   expected="'sky' or 'science'")
     sky_times = combine.time_difference(sky_timestamps[0], list(sky_timestamps))
-    logger.debug("Sky files are:", sky_files)
-    logger.debug("Sky time stamps are:", sky_times)
+    logger.debug(f"Sky files are: {sky_files}")
+    logger.debug(f"Sky time stamps are: {sky_times}")
 
     # Test the number of source files
     if len(sky_files) == 0:
@@ -90,8 +94,8 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
             t0 = science_timestamps[i]
             dt = combine.time_difference(t0, sky_timestamps)
             weights = combine.get_distance_weights(dt)
-            logger.debug('Time differences:', dt)
-            logger.debug('Time weights:', weights)
+            logger.debug(f"Time differences: {dt}")
+            logger.debug(f"Time weights: {weights}")
 
             wbkg, dwbkg = combine.weighted_mean(sky_fluxes, vars=np.square(sky_flux_uncertainties),
                                                 weights=weights)
@@ -99,8 +103,8 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
             science_sky_fluxes[i] = wbkg
             science_sky_flux_uncertainties[i] = dwbkg
 
-        logger.debug('Science sky fluxes:', science_sky_fluxes)
-        logger.debug('Science sky flux uncertainties:', science_sky_flux_uncertainties)
+        logger.debug(f"Science sky fluxes: {science_sky_fluxes}")
+        logger.debug(f"Science sky flux uncertainties: {science_sky_flux_uncertainties}")
 
         # Plot sky flux estimates
         for i, file in enumerate(sky_files):
