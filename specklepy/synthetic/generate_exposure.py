@@ -151,6 +151,9 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
 
                 frame_counter += 1
                 print("\rSaving exposure {:4}/{:4} to file {}...".format(frame_counter, n_frames, outfile), end='')
+
+            # Update header entry date
+            hdu_list[0].header.set('DATE', str(datetime.now()))
     print("")
 
 
