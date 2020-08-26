@@ -1,3 +1,4 @@
+from IPython import embed
 import numpy as np
 import os
 
@@ -5,6 +6,7 @@ from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logger
+from specklepy.utils import combine
 
 
 class Sequence(object):
@@ -50,9 +52,26 @@ class Sequence(object):
 
     @property
     def files(self):
-        return self.sky_files + self.science_files
+        return np.concatenate((self.sky_files, self.science_files))
 
-    def
+    @property
+    def time_stamps(self):
+        return np.concatenate((self.sky_time_stamps, self.science_time_stamps))
+
+    def relative_time_stamps(self):
+
+        # Check whether time stamps free from offset (equivalent to float type)
+        if isinstance(self.time_stamps[0], float):
+            return 0
+
+        # Find first time stamp
+        time_stamps = self.time_stamps
+        time_stamps.sort()
+        start = time_stamps[0]
+
+        # Remove time offset
+        self.sky_time_stamps = combine.time_difference(start, self.sky_time_stamps)
+        self.science_time_stamps = combine.time_difference(start, self.science_time_stamps)
 
     # def make_master_sky(self):
     #
