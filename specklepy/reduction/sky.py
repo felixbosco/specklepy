@@ -1,4 +1,5 @@
 from datetime import datetime
+from IPython import embed
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -12,8 +13,8 @@ from photutils import make_source_mask
 from specklepy.io.outfile import Outfile
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.reduction.sequence import Sequence
 from specklepy.utils import combine
-from specklepy.utils.plot import imshow
 
 
 def subtract_sky_background(in_files, method='scalar', source='sky', mask_sources=False, file_path=None, debug=False):
@@ -62,6 +63,7 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
     else:
         raise SpecklepyValueError('full_reduction', argname='source', argvalue=source,
                                   expected="'sky' or 'science'")
+    embed()
     sky_times = combine.time_difference(sky_timestamps[0], list(sky_timestamps))
     logger.debug(f"Sky files are: {sky_files}")
     logger.debug(f"Sky time stamps are: {sky_times}")
@@ -180,86 +182,6 @@ def identify_sequences(file_list, file_path=None, ignore_time_stamps=False):
 
     logger.info(f"Identified {len(sequences)} sequence(s)...")
     return sequences
-
-
-class Sequence(object):
-
-    def __init__(self, science_files, sky_files, file_path=None):
-
-        if isinstance(science_files, list):
-            self.science_files = science_files
-        else:
-            raise SpecklepyTypeError('Sequence', 'science_files', type(science_files), 'list')
-
-        if isinstance(sky_files, list):
-            self.sky_files = sky_files
-        else:
-            raise SpecklepyTypeError('Sequence', 'sky_files', type(sky_files), 'list')
-
-        if file_path is None:
-            self.file_path = ''
-        elif isinstance(file_path, str):
-            self.file_path = file_path
-        else:
-            raise SpecklepyTypeError('Sequence', 'file_path', type(file_path), 'str')
-
-    @property
-    def files(self):
-        return self.sky_files + self.science_files
-
-    def make_master_sky(self):
-
-        if len(self.sky_files) == 1:
-            data = fits.getdata(os.path.join(self.file_path, self.sky_files[0]))
-            if data.ndim == 3:
-                std = np.std(data, axis=0)
-                data = np.mean(data, axis=0)
-            else:
-                std = np.zeros(data.shape)
-            self.master_sky = data
-            self.master_sky_std = std
-
-        else:
-            for index, file in enumerate(self.sky_files):
-                data = fits.getdata(os.path.join(self.file_path, file))
-                if data.ndim == 3:
-                    std = np.std(data, axis=0)
-                    data = np.mean(data, axis=0)
-                else:
-                    std = np.zeros(data.shape)
-
-                if index == 0:
-                    shape = (len(self.sky_files)) + data.shape
-                    master_sky = np.zeros(shape)
-                    master_sky_uncertainty = np.zeros(shape)
-
-                master_sky[index] = data
-                master_sky_uncertainty[index] = std
-
-            # Collapse cubes
-            self.master_sky = np.divide(np.sum(np.multiply(master_sky, master_sky_uncertainty), axis=0),
-                                        np.sum(master_sky_uncertainty, axis=0))
-            self.master_sky_std = np.sqrt(np.sum(np.square(master_sky_uncertainty), axis=0))
-
-    def subtract_master_sky(self, save_to=None, filename_prefix=None):
-
-        if filename_prefix is None:
-            filename_prefix = ''
-
-        if not hasattr(self, 'master_sky'):
-            self.make_master_sky()
-
-        for index, file in enumerate(self.science_files):
-            logger.info('Subtracting sky from file {:2}/{:2}) {}'.format(index+1, len(self.science_files), file))
-            with fits.open(os.path.join(self.file_path, file)) as hdulist:
-                hdulist[0].data = np.subtract(hdulist[0].data, self.master_sky)
-                hdulist[0].header.set('SKYSUB', self.time_stamp())
-                logger.info(f"Saving sky subtracted data to file {os.path.join(save_to, filename_prefix + file)}")
-                hdulist[0].writeto(os.path.join(save_to, filename_prefix + file))
-
-    def time_stamp(self):
-        """Return a time stamp str of format 'YYYYMMDD_HHMMSS'."""
-        return datetime.now().strftime('%Y%m%d_%H%M%S')
 
 
 def subtract_scalar_background(files, params, prefix=None, debug=False):
