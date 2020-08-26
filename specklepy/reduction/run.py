@@ -96,9 +96,9 @@ def full_reduction(params, debug=False):
 
     Args:
         params (dict):
-            Dictionary with all the settings for reduction
+            Dictionary with all the settings for reduction.
         debug (bool, optional):
-            Show debugging information
+            Show debugging information.
     """
 
     # Set logging level
@@ -107,7 +107,7 @@ def full_reduction(params, debug=False):
 
     # (0) Read file list table
     logger.info("Reading file list ...")
-    in_files = FileArchive(params['PATHS']['fileList'],
+    in_files = FileArchive(file_list=params['PATHS']['fileList'],
                            in_dir=params['PATHS']['filePath'],
                            out_dir=params['PATHS']['outDir'])
     logger.info('\n' + str(in_files.table))
