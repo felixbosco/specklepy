@@ -299,8 +299,11 @@ class FileArchive(object):
         sequences = []
         for setup in self.setups:
             sky_files = self.filter({'OBSTYPE': 'SKY', 'SETUP': setup})
+            sky_time_stamps = self.filter({'OBSTYPE': 'SKY', 'SETUP': setup}, namekey='DATE')
             science_files = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup})
-            sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir))
+            science_time_stamps = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup}, namekey='DATE')
+            sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
+                                      sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps))
         return sequences
 
     def initialize_product_files(self, prefix='r'):
