@@ -8,7 +8,7 @@ import sys
 
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
-from astropy.table import Table
+from astropy.table import Column, Table
 
 from specklepy.io import config
 from specklepy.logging import logger
@@ -259,7 +259,8 @@ class FileArchive(object):
 
         # Identifying setups key-by-key
         logger.info("Identifying distinct observational setups in the file list...")
-        self.table['SETUP'] = [None] * len(self.table)
+        # self.table['SETUP'] = [None] * len(self.table)
+        self.table.add_column(col=Column(data=[None] * len(self.table), name='SETUP'))
 
         # Iterate over keywords and identify unique settings per key
         for key in keywords:
@@ -276,7 +277,7 @@ class FileArchive(object):
                         if row['SETUP'] is None:
                             row['SETUP'] = str(index)
                         else:
-                            row['SETUP'] + str(index)
+                            row['SETUP'] += str(index)
 
         # Overwrite setup keys by length-1 string
         combinations = np.unique(self.table['SETUP'].data)
