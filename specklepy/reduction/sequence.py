@@ -58,7 +58,15 @@ class Sequence(object):
     def time_stamps(self):
         return np.concatenate((self.sky_time_stamps, self.science_time_stamps))
 
-    def relative_time_stamps(self):
+    @property
+    def n_sky(self):
+        return len(self.sky_files)
+
+    @property
+    def n_science(self):
+        return len(self.science_files)
+
+    def time_stamps_to_offset_seconds(self):
 
         # Check whether time stamps free from offset (equivalent to float type)
         if isinstance(self.time_stamps[0], float):
@@ -72,6 +80,24 @@ class Sequence(object):
         # Remove time offset
         self.sky_time_stamps = combine.time_difference(start, self.sky_time_stamps)
         self.science_time_stamps = combine.time_difference(start, self.science_time_stamps)
+
+    def compute_weights(self):
+        # Assert that times are offset seconds
+        self.time_stamps_to_offset_seconds()
+
+        # Compute time offsets
+        weights = np.zeros((self.n_science, self.n_sky))
+        for ii in range(self.n_science):
+            weights[ii] = self.science_time_stamps[ii] - self.sky_time_stamps
+
+        # Transform time offsets into weights
+        weights = np.square(weights)
+
+        # Normalize the weights
+        for ii in range(self.n_science):
+            weights[ii] /= np.sum(weights[ii])
+
+        return weights
 
     # def make_master_sky(self):
     #
