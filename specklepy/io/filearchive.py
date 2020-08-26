@@ -23,7 +23,7 @@ class FileArchive(object):
         ...
     """
 
-    def __init__(self, input):
+    def __init__(self, input, in_dir=None, out_dir=None):
         """Create a FileManager instance.
 
         Long description...
@@ -31,7 +31,21 @@ class FileArchive(object):
         Args:
             input (str, list):
                 Path to list of files or generic file path. Can also be provided as list type.
+            in_dir (str, optional):
+                Path to the raw/ input data.
+            out_dir (str, optional):
+                Path to the product/ output data.
         """
+
+        # Store in and out paths
+        if in_dir is None:
+            self.in_dir = './'
+        else:
+            self.in_dir = in_dir
+        if out_dir is None:
+            self.out_dir = './'
+        else:
+            self.out_dir = out_dir
 
         self.input = input
         if isinstance(self.input, str):
@@ -199,17 +213,11 @@ class FileArchive(object):
             row_indizes = np.where(self.table['Setup'].data == combination)
             self.table['Setup'][row_indizes] = string.ascii_uppercase[index]
 
-    def initialize_product_files(self, raw_files=None, out_dir=None, prefix='r'):
+    def initialize_product_files(self, prefix='r'):
         product_files = []
         for file in self.filter({'OBSTYPE': 'SCIENCE'}):
-            if raw_files is None:
-                src = file
-            else:
-                src = os.path.join(raw_files, file)
-            if out_dir is None:
-                dest = prefix + file
-            else:
-                dest = os.path.join(out_dir, prefix + file)
+            src = os.path.join(self.in_dir, file)
+            dest = os.path.join(self.out_dir, prefix + file)
             logger.info(f"Initializing data product file {dest}")
             os.system(f"cp {src} {dest}")
             with fits.open(dest) as hdu_list:

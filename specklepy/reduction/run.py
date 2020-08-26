@@ -26,14 +26,15 @@ def full_reduction(params, debug=False):
 
     # (0) Read file list table
     logger.info("Reading file list ...")
-    in_files = FileArchive(params['PATHS']['fileList'])
+    in_files = FileArchive(params['PATHS']['fileList'],
+                           in_dir=params['PATHS']['filePath'],
+                           out_dir=params['PATHS']['outDir'])
     logger.info('\n' + str(in_files.table))
 
     # (1) Initialize reduction files
     if not os.path.isdir(params['PATHS']['outDir']):
         os.makedirs(params['PATHS']['outDir'])
-    product_files = in_files.initialize_product_files(raw_files=params['PATHS']['filePath'],
-                                                      out_dir=params['PATHS']['outDir'])
+    product_files = in_files.initialize_product_files()
 
     # (2) Flat fielding
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:
