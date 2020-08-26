@@ -10,9 +10,9 @@ from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Column, Table
 
-from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
+from specklepy.reduction.sequence import Sequence
 
 
 class FileArchive(object):
@@ -111,6 +111,10 @@ class FileArchive(object):
     @property
     def files(self):
         return self.table['FILE'].data
+
+    @property
+    def setups(self):
+        return np.unique(self.table['SETUP'].data)
 
     @staticmethod
     def is_fits_file(filename):
@@ -284,6 +288,20 @@ class FileArchive(object):
         for index, combination in enumerate(combinations):
             row_indexes = np.where(self.table['SETUP'].data == combination)
             self.table['SETUP'][row_indexes] = string.ascii_uppercase[index]
+
+    def identify_sequences(self):
+        """Identify observation sequences.
+
+        Returns:
+            sequences (list of Sequence):
+                List of observing sequences.
+        """
+        sequences = []
+        for setup in self.setups:
+            sky_files = self.filter({'OBSTYPE': 'SKY', 'SETUP': setup})
+            science_files = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup})
+            sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir))
+        return sequences
 
     def initialize_product_files(self, prefix='r'):
         """Copy the science data cubes into the stored out directory.
