@@ -117,13 +117,26 @@ class FileArchive(object):
         _, extension = os.path.splitext(filename)
         return extension == '.fits'
 
-    def read_table_file(self, file, namekey='FILE'):
-        """Interprets text in a file input."""
+    @staticmethod
+    def read_table_file(file):
+        """Interprets text in a file input.
+
+        Args:
+            file (str):
+                Name of the file containing the table.
+
+        Returns:
+            table (astropy.Table):
+                Table based on file input.
+        """
 
         try:
             table = Table.read(file)
         except IORegistryError:
-            table = Table.read(file, format='ascii.fixed_width')
+            try:
+                table = Table.read(file, format='ascii.fixed_width')
+            except IORegistryError:
+                table = Table.read(file, format='ascii.no_header')
         except:
             files = []
             logger.info("Reading file names from input file {}.".format(file))
@@ -141,17 +154,17 @@ class FileArchive(object):
 
         Args:
             files (list):
-                .
+                Names of the FITS files to read the header information from.
             cards (list):
-                .
+                Header cards to read.
             dtypes (list):
-                .
+                Expected data types of values.
             names (list):
-                .
+                Names of the output table columns. If provided this overwrites the column names based on `cards`.
 
         Returns:
             table (astropy.Table):
-                .
+                Table with the header information about the header `cards`, for the files in `files`.
         """
 
         # Initialize output file information table
@@ -178,10 +191,26 @@ class FileArchive(object):
         return table
 
     def write_table(self, file_name):
+        """Write the archive's table to a file `file_name`."""
         logger.info(f"Writing file information to {file_name}")
         self.table.write(file_name, format='ascii.fixed_width', overwrite=True)
 
     def filter(self, filter_dict, namekey='FILE'):
+        """Filter the archive's table by the column properties.
+
+        filter_dict = {'name_of_column': [desired_value_1, desired_value_2]}
+
+        Args:
+            filter_dict:
+                Dictionary that holds the table column names as keys and acceptable values as lists as the
+                corresponding values.
+            namekey (str, optional):
+                Name/ key of the out put column that shall be filtered by `filter_dict`.
+
+        Returns:
+            filtered (np.array):
+                Array_like subset of the column `namekey` that match the criteria based on filter_dict.
+        """
 
         if not isinstance(filter_dict, dict):
             raise SpecklepyTypeError('FileArchive.filter', 'filter_dict', type(filter_dict), 'dict')
@@ -200,6 +229,12 @@ class FileArchive(object):
 
     def get_flats(self):
         return self.filter({'OBSTYPE': 'FLAT'})
+
+    def get_science(self):
+        return self.filter({'OBSTYPE': 'SCIENCE'})
+
+    def get_skies(self):
+        return self.filter({'OBSTYPE': 'SKY'})
 
     def identify_setups(self, keywords):
         """Identify distinct observational setups in a list of files.
@@ -242,7 +277,21 @@ class FileArchive(object):
             self.table['SETUP'][row_indexes] = string.ascii_uppercase[index]
 
     def initialize_product_files(self, prefix='r'):
+        """Copy the science data cubes into the stored out directory.
+
+        Args:
+            prefix (str, optional):
+                File prefix for output files.
+
+        Returns:
+            product_files (list):
+                List of paths of the data reduction products.
+        """
+
+        # Initialize list of data reduction products
         product_files = []
+
+        # Copy the science data cubes into outdir (with an additional file prefix)
         for file in self.filter({'OBSTYPE': 'SCIENCE'}):
             src = os.path.join(self.in_dir, file)
             dest = os.path.join(self.out_dir, prefix + file)
