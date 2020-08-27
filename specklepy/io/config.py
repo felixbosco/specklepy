@@ -23,10 +23,19 @@ def read(par_file):
     # Identify type of file
     root, ext = os.path.splitext(par_file)
 
+    # Use extension-specific reader
     if ext == '.yaml':
-        return read_yaml(par_file)
+        config = read_yaml(par_file)
     else:
-        return read_ini(par_file)
+        config = read_ini(par_file)
+
+    # Check about 'None' strings
+    for key in config.keys():
+        for kkey in config[key].keys():
+            if config[key][kkey] == 'None':
+                config[key][kkey] = None
+
+    return config
 
 
 def read_ini(par_file):
