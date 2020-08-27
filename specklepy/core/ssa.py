@@ -1,4 +1,4 @@
-from logging import DEBUG
+from IPython import embed
 import numpy as np
 import os
 
@@ -90,44 +90,45 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         var_ext = 'VAR'
 
     if debug:
-        logger.setLevel(DEBUG)
-        logger.handlers[0].setLevel(DEBUG)
+        logger.setLevel('DEBUG')
+        logger.handlers[0].setLevel('DEBUG')
         logger.info("Set logging level to DEBUG")
 
-    # Do not align just a single file
+    # Align reconstructions if multiple files are provided
     if lazy_mode and len(files) == 1:
-        with fits.open(files[0]) as hdulist:
-            cube = hdulist[0].data
-            try:
-                var_cube = hdulist[var_ext].data
-                reconstruction, reconstruction_var = coadd_frames(cube, var_cube=var_cube)
-            except:
-                reconstruction = coadd_frames(cube)
 
-    # Align reconstructions if multiple files are given
+        # Do not align just a single file
+        with fits.open(files[0]) as hdu_list:
+            cube = hdu_list[0].data
+            if var_ext in hdu_list:
+                var_cube = hdu_list[var_ext].data
+            else:
+                var_cube = None
+            reconstruction, reconstruction_var = coadd_frames(cube, var_cube=var_cube)
+
     else:
+
         # Compute temporary reconstructions of the individual cubes
         tmp_files = []
         for index, file in enumerate(files):
-            with fits.open(file) as hdulist:
-                cube = hdulist[0].data
-                try:
-                    var_cube = hdulist[var_ext].data
+            with fits.open(file) as hdu_list:
+                cube = hdu_list[0].data
+                if var_ext in hdu_list:
+                    var_cube = hdu_list[var_ext].data
                     logger.debug(f"Found variance extension {var_ext} in file {file}")
-                    tmp, tmp_var = coadd_frames(cube, var_cube=var_cube)
-                except:
+                else:
                     logger.debug(f"Did not find variance extension {var_ext} in file {file}")
-                    tmp = coadd_frames(cube)
+                    var_cube = None
+                tmp, tmp_var = coadd_frames(cube, var_cube=var_cube)
             tmp_file = os.path.basename(file).replace(".fits", "_ssa.fits")
             tmp_file = os.path.join(tmp_dir, tmp_file)
             logger.info("Saving interim SSA reconstruction of cube to {}".format(tmp_file))
             tmp_file_object = Outfile(tmp_file, data=tmp, verbose=True)
-            # tmp_file_object = Outfile(tmp_file, shape=tmp.shape, verbose=False)
-            # tmp_file_object.data = tmp
-            if 'tmp_var' in locals():
+
+            # Store variance of temporary reconstruction
+            if tmp_var is not None:
                 tmp_file_object.new_extension(var_ext, data=tmp_var)
                 del tmp_var
-            # fits.writeto(tmp_file, tmp, overwrite=True)
             tmp_files.append(tmp_file)
 
         # Align tmp reconstructions and add up
@@ -135,43 +136,44 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
                                                         return_image_shape=True, lazy_mode=True)
         pad_vectors, ref_pad_vector = alignment.get_pad_vectors(file_shifts, cube_mode=(len(image_shape) == 3),
                                                                 return_reference_image_pad_vector=True)
-        # reconstruction = np.zeros(image_shape)
+
+        # Iterate over file-wise reconstructions
+        reconstruction = None
+        reconstruction_var = None
         for index, file in enumerate(tmp_files):
-            with fits.open(file) as hdulist:
-                tmp_image = hdulist[0].data
-                try:
-                    tmp_image_var = hdulist[var_ext].data
-                except:
-                    # No VAR extension in file
-                    pass
-            if 'reconstruction' not in locals():
+
+            # Read data
+            with fits.open(file) as hdu_list:
+                tmp_image = hdu_list[0].data
+                if var_ext in hdu_list:
+                    tmp_image_var = hdu_list[var_ext].data
+                else:
+                    tmp_image_var = None
+
+            # Initialize or co-add reconstructions and var images
+            if reconstruction is None:
                 reconstruction = alignment.pad_array(tmp_image, pad_vectors[index], mode=mode,
                                                      reference_image_pad_vector=ref_pad_vector)
-                try:
+                if tmp_image_var is not None:
                     reconstruction_var = alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode,
                                                              reference_image_pad_vector=ref_pad_vector)
-                except:
-                    pass
             else:
                 reconstruction += alignment.pad_array(tmp_image, pad_vectors[index], mode=mode,
                                                       reference_image_pad_vector=ref_pad_vector)
-                try:
+                if tmp_image_var is not None:
                     reconstruction_var += alignment.pad_array(tmp_image_var, pad_vectors[index], mode=mode,
                                                               reference_image_pad_vector=ref_pad_vector)
-                except:
-                    pass
-
     logger.info("Reconstruction finished...")
 
     # Save the result to an Outfile
     if outfile is not None:
         outfile.data = reconstruction
-        if 'reconstruction_var' in locals():
+        if reconstruction_var is not None:
             outfile.new_extension(name=var_ext, data=reconstruction_var)
 
-    if 'reconstruction_var' in locals():
+    # Return reconstruction (and the variance map if computed)
+    if reconstruction_var is not None:
         return reconstruction, reconstruction_var
-        # Otherwise:
     return reconstruction
 
 
@@ -190,6 +192,8 @@ def coadd_frames(cube, var_cube=None):
     Returns:
         coadded (np.ndarray, ndim=2):
             SSA-integrated frames of the input cube.
+        var_coadded (np.ndarray, ndim=2):
+            SSA-integrated variances of the input cube or the variance map itself if provided as a 2D cube.
     """
 
     if not isinstance(cube, np.ndarray):
@@ -197,11 +201,17 @@ def coadd_frames(cube, var_cube=None):
     if cube.ndim is not 3:
         raise SpecklepyValueError('coadd_frames()', argname='cube.ndim', argvalue=cube.ndim, expected='3')
 
-    if var_cube is not None and not isinstance(var_cube, np.ndarray):
-        raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube), expected='np.ndarray')
-    if var_cube is not None and var_cube.shape != cube.shape:
-        raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=var_cube.shape,
-                                  expected=str(cube.shape))
+    if var_cube is not None:
+        if not isinstance(var_cube, np.ndarray):
+            raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube),
+                                     expected='np.ndarray')
+        if var_cube.ndim == cube.ndim and var_cube.shape != cube.shape:
+            raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
+                                      expected=str(cube.shape))
+        elif var_cube.ndim == cube.ndim-1:
+            if var_cube.shape[0] != cube.shape[1] or var_cube.shape[1] != cube.shape[2]:
+                raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
+                                          expected=str(cube.shape))
 
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
@@ -224,11 +234,18 @@ def coadd_frames(cube, var_cube=None):
         coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
                                        reference_image_pad_vector=ref_pad_vector)
 
+    # Coadd variance cube (if not an image itself)
     if var_cube is not None:
-        var_coadded = np.zeros(coadded.shape)
-        for index, frame in enumerate(var_cube):
-            var_coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
-                                               reference_image_pad_vector=ref_pad_vector)
-        return coadded, var_coadded
+        if var_cube.ndim == 3:
+            var_coadded = np.zeros(coadded.shape)
+            for index, frame in enumerate(var_cube):
+                var_coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
+                                                   reference_image_pad_vector=ref_pad_vector)
+        elif var_cube.ndim == 2:
+            var_coadded = var_cube
+        else:
+            raise RuntimeError(f"var_cube has unexpected shape: {var_cube.shape}")
+    else:
+        var_coadded = None
 
-    return coadded
+    return coadded, var_coadded
