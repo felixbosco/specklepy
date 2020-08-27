@@ -32,7 +32,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
         return_image_shape (bool, optional):
             Set to True for for returning the shape of the anticipated output image. Default is False.
         in_dir (str, optional):
-            Path to the files.
+            Path to the files. `None` is substituted by an empty string.
         debug (bool, optional):
             If set to True, it shows the 2D correlation.
 
@@ -70,7 +70,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
                                  expected='bool')
 
     if in_dir is None:
-        in_dir = './'
+        in_dir = ''
 
     # Skip computations if only one file is provided
     if lazy_mode and len(files) == 1:
