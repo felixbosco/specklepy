@@ -313,13 +313,21 @@ class FileArchive(object):
         # Identify the observing sequences
         sequences = []
         for setup in self.setups:
+            # Query names and time stamps of science and sky files
             sky_files = self.filter({'OBSTYPE': source.upper(), 'SETUP': setup})
             sky_time_stamps = self.filter({'OBSTYPE': source.upper(), 'SETUP': setup}, namekey='DATE')
             science_files = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup})
             science_time_stamps = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup}, namekey='DATE')
-            sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
-                                      sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
-                                      source=source))
+
+            # Test the number of source files
+            if len(sky_files) == 0:
+                logger.warning(f"Did not find any sky observations for setup {setup}. No sky subtraction will be "
+                               f"applied!")
+            else:
+                # Store the information in a new sequence
+                sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
+                                          sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
+                                          source=source))
         return sequences
 
     def initialize_product_files(self, prefix='r'):
