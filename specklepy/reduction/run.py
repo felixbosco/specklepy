@@ -112,9 +112,11 @@ def full_reduction(params, debug=False):
                            out_dir=params['PATHS']['outDir'])
     logger.info('\n' + str(in_files.table))
 
-    # (1) Initialize reduction files
+    # (1) Initialize directories and reduction files
     if not os.path.isdir(params['PATHS']['outDir']):
         os.makedirs(params['PATHS']['outDir'])
+    if not os.path.isdir(params['PATHS']['tmpDir']):
+        os.makedirs(params['PATHS']['tmpDir'])
     if 'skip' in params['PATHS'] and params['PATHS']['skip']:
         product_files = glob.glob(os.path.join(params['PATHS']['outDir'], '*fits'))
     else:
@@ -130,7 +132,7 @@ def full_reduction(params, debug=False):
         else:
             logger.info("Starting flat field correction...")
             master_flat = flat.MasterFlat(flat_files, file_name=params['FLAT']['masterFlatFile'],
-                                          file_path=params['PATHS']['filePath'])
+                                          file_path=params['PATHS']['filePath'], out_dir=params['PATHS']['tmpDir'])
             master_flat.combine()
             master_flat.run_correction(file_list=product_files, file_path=None)
 
