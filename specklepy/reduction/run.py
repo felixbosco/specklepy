@@ -115,9 +115,10 @@ def full_reduction(params, debug=False):
     # (1) Initialize reduction files
     if not os.path.isdir(params['PATHS']['outDir']):
         os.makedirs(params['PATHS']['outDir'])
-    # TODO: Switch back to actually creating the files instead of just looking them up
-    # product_files = in_files.initialize_product_files()
-    product_files = glob.glob(os.path.join(params['PATHS']['outDir'], '*fits'))
+    if 'skip' in params['PATHS'] and params['PATHS']['skip']:
+        product_files = glob.glob(os.path.join(params['PATHS']['outDir'], '*fits'))
+    else:
+        product_files = in_files.initialize_product_files()
 
     # (2) Flat fielding
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:
