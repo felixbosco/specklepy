@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 from astropy.io import fits
 
@@ -7,7 +8,8 @@ from specklepy.logging import logger
 from specklepy.utils.plot import imshow
 
 
-def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, debug=False):
+def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, in_dir=None,
+               debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -15,7 +17,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
     the relative shifts of files with respect to a reference file.
 
     Args:
-        files (list):
+        files (list or array_like):
             List of files to align.
         reference_file (str, int, optional):
             Path to a reference file or index of the file in files, relative to which the shifts are computed. Default
@@ -29,6 +31,8 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
             Set to False, to enforce the alignment of a single file with respect to the reference file. Default is True.
         return_image_shape (bool, optional):
             Set to True for for returning the shape of the anticipated output image. Default is False.
+        in_dir (str, optional):
+            Path to the files.
         debug (bool, optional):
             If set to True, it shows the 2D correlation.
 
@@ -38,28 +42,35 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
     """
 
     # Check input parameters
-    if not isinstance(files, list):
+    if not isinstance(files, (list, np.ndarray)):
         if isinstance(files, str):
             files = [files]
         else:
             raise SpecklepyTypeError('get_shifts()', argname='files', argtype=type(files), expected='list')
+
     if reference_file is None:
         reference_file = files[0]
     elif isinstance(reference_file, int):
         reference_file = files[reference_file]
     elif not isinstance(reference_file, str):
         raise SpecklepyTypeError('get_shifts()', argname='reference_file', argtype=type(reference_file), expected='str')
+
     if isinstance(mode, str):
         if mode not in ['correlation', 'maximum', 'peak']:
             raise SpecklepyValueError('get_shifts()', argname='mode', argvalue=mode,
                                       expected="'correlation', 'maximum' or 'peak'")
     else:
         raise SpecklepyTypeError('get_shifts()', argname='mode', argtype=type(mode), expected='str')
+
     if not isinstance(lazy_mode, bool):
         raise SpecklepyTypeError('get_shifts()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
+
     if not isinstance(return_image_shape, bool):
         raise SpecklepyTypeError('get_shifts()', argname='return_image_shape', argtype=type(return_image_shape),
                                  expected='bool')
+
+    if in_dir is None:
+        in_dir = './'
 
     # Skip computations if only one file is provided
     if lazy_mode and len(files) == 1:
@@ -74,7 +85,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
 
         # Identify reference file and Fourier transform the integrated image
         logger.info(f"Computing relative shifts between data cubes. Reference file is {reference_file}")
-        reference_image = fits.getdata(reference_file)
+        reference_image = fits.getdata(os.path.join(in_dir, reference_file))
         if reference_image.ndim == 3:
             # Integrating over time axis if reference image is a cube
             reference_image = np.sum(reference_image, axis=0)
@@ -87,7 +98,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
             if file == reference_file:
                 shift = (0, 0)
             else:
-                image = fits.getdata(file)
+                image = fits.getdata(os.path.join(in_dir, file))
                 if image.ndim == 3:
                     image = np.sum(image, axis=0)
                 shift = get_shift(image, reference_image=f_reference_image, is_fourier_transformed=True, mode=mode,
