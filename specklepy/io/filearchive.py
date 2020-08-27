@@ -72,6 +72,7 @@ class FileArchive(object):
                 self.table = self.read_table_file(files[0])
             else:
                 self.table = self.gather_table_from_list(files=files, **kwargs)
+                self.in_dir = os.path.dirname(files[0])
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
