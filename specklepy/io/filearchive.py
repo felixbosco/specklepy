@@ -84,7 +84,7 @@ class FileArchive(object):
 
         # Initialize the index for iteration
         self.index = 0
-
+        
         # Initialize the list of product files
         self.product_files = None
 
