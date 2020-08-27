@@ -85,6 +85,9 @@ class FileArchive(object):
         # Initialize the index for iteration
         self.index = 0
 
+        # Initialize the list of product files
+        self.product_files = None
+
     def __iter__(self):
         return self
 
@@ -367,5 +370,8 @@ class FileArchive(object):
 
             # Store new file in the list of product files
             product_files.append(dest)
+            
+        # Store list of product files
+        self.product_files = product_files
 
         return product_files
