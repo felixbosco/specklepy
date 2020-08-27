@@ -14,7 +14,7 @@ from specklepy.logging import logger
 
 class MasterFlat(object):
 
-    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None):
+    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None):
 
         # Store input parameters
         if isinstance(file_list, (list, np.ndarray)):
@@ -36,7 +36,7 @@ class MasterFlat(object):
             raise SpecklepyTypeError('MasterFlat', 'file_path', type(file_path), 'str')
 
         # Create an output file
-        self.master_file = MasterFile(self.file_name, files=self.files)
+        self.master_file = MasterFile(self.file_name, files=self.files, out_dir=out_dir)
 
     def combine(self, method='clip'):
         """Combine the frames of the stored files to a master flat.
