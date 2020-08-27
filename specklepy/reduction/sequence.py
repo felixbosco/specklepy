@@ -91,17 +91,18 @@ class Sequence(object):
         self.sky_time_stamps = combine.time_difference(start, self.sky_time_stamps)
         self.science_time_stamps = combine.time_difference(start, self.science_time_stamps)
 
-    def compute_weights(self):
+    def compute_weights(self, time_scale=300):
         # Assert that times are offset seconds
         self.time_stamps_to_offset_seconds()
 
-        # Compute time offsets
+        # Compute weights from time differences
         weights = np.zeros((self.n_science, self.n_sky))
         for ii in range(self.n_science):
-            weights[ii] = self.science_time_stamps[ii] - self.sky_time_stamps
+            delta_t = self.science_time_stamps[ii] - self.sky_time_stamps
+            weights[ii] = np.exp(-1/2 * np.square(np.divide(delta_t, time_scale)))
 
-        # Transform time offsets into weights
-        weights = np.square(weights)
+        # # Transform time offsets into weights
+        # weights = np.square(weights)
 
         # Normalize the weights
         for ii in range(self.n_science):
