@@ -10,7 +10,7 @@ class PSFFile(Outfile):
 
     """Outfile with some default parameters and init behaviour for PSF files."""
 
-    def __init__(self, in_file, out_dir, frame_shape, cards=None, header_card_prefix=None):
+    def __init__(self, in_file, out_dir, frame_shape, in_dir=None, cards=None, header_card_prefix=None):
         """Create a PSFFile instance.
 
         Args:
@@ -20,7 +20,9 @@ class PSFFile(Outfile):
                 Name of the directory that the file will be stored in.
             frame_shape (tuple):
                 Shape of the PSF frames, which is the box size.
-            cards (dict):
+            in_dir (str, optional):
+                Path to the input file.
+            cards (dict, optional):
                 Dictionary of header cards.
             header_card_prefix (str, optional):
         """
@@ -52,7 +54,12 @@ class PSFFile(Outfile):
         # Add name of parent file to header
         cards["FILE NAME"] = os.path.basename(in_file)
 
-        hdr_input = fits.getheader(in_file)
+        # Derive data shape
+        print(in_dir, type(in_dir))
+        if in_dir is not None:
+            hdr_input = fits.getheader(os.path.join(in_dir, in_file))
+        else:
+            hdr_input = fits.getheader(in_file)
         shape = (hdr_input['NAXIS3'], frame_shape[0], frame_shape[1])
 
         super().__init__(filename=os.path.join(out_dir, outfile), shape=shape, cards=cards,
