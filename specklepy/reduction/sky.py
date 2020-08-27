@@ -2,6 +2,7 @@ from datetime import datetime
 from IPython import embed
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import trange
 import os
 
 from astropy.io import fits
@@ -53,81 +54,64 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
         source = 'sky'
     logger.info(f"Sky background subtraction source: {source}")
 
-    sequences = in_files.identify_sequences()
-    for sequence in sequences:
-        weights = sequence.compute_weights()
-        # TODO continue here!
+    # Identify the observing sequences
+    sequences = in_files.identify_sequences(source=source)
 
-    # Identify source files and time stamps
-    if source == 'sky':
-        sky_files = in_files.filter({'OBSTYPE': 'SKY'})
-        sky_timestamps = in_files.filter({'OBSTYPE': 'SKY'}, namekey='DATE')
-    elif source == 'science':
-        sky_files = in_files.filter({'OBSTYPE': 'SCIENCE'})
-        sky_timestamps = in_files.filter({'OBSTYPE': 'SCIENCE'}, namekey='DATE')
-    else:
-        raise SpecklepyValueError('full_reduction', argname='source', argvalue=source,
-                                  expected="'sky' or 'science'")
-    sky_times = combine.time_difference(sky_timestamps[0], list(sky_timestamps))
-    logger.debug(f"Sky files are: {sky_files}")
-    logger.debug(f"Sky time stamps are: {sky_times}")
-
-    # Test the number of source files
-    if len(sky_files) == 0:
-        raise RuntimeError("Did not find any sky observations. No sky subtraction will be applied!")
+    # # Identify source files and time stamps
+    # if source == 'sky':
+    #     sky_files = in_files.filter({'OBSTYPE': 'SKY'})
+    #     sky_timestamps = in_files.filter({'OBSTYPE': 'SKY'}, namekey='DATE')
+    # elif source == 'science':
+    #     sky_files = in_files.filter({'OBSTYPE': 'SCIENCE'})
+    #     sky_timestamps = in_files.filter({'OBSTYPE': 'SCIENCE'}, namekey='DATE')
+    # else:
+    #     raise SpecklepyValueError('full_reduction', argname='source', argvalue=source,
+    #                               expected="'sky' or 'science'")
+    # sky_times = combine.time_difference(sky_timestamps[0], list(sky_timestamps))
+    # logger.debug(f"Sky files are: {sky_files}")
+    # logger.debug(f"Sky time stamps are: {sky_times}")
 
     # Start the background estimates
     if method == 'scalar':
 
-        # Start extracting sky fluxes
-        sky_fluxes = np.zeros(sky_times.shape)
-        sky_flux_uncertainties = np.zeros(sky_times.shape)
-        for i, file in enumerate(sky_files):
-            bkg, d_bkg = estimate_sky_background(file, method=method, mask_sources=mask_sources, path=file_path)
-            sky_fluxes[i] = bkg
-            sky_flux_uncertainties[i] = d_bkg
-        logger.debug(f"Shapes:\nT: {sky_times.shape}\nF: {sky_fluxes.shape}\ndF: {sky_flux_uncertainties.shape}")
+        # Iterate through observing sequences
+        for sequence in sequences:
 
-        # Extract time stamps and names of science files
-        science_files = in_files.filter({'OBSTYPE': 'SCIENCE'})
-        science_timestamps = in_files.filter({'OBSTYPE': 'SCIENCE'}, namekey='DATE')
-        science_times = combine.time_difference(sky_timestamps[0], list(science_timestamps))
+            # Compute weights based on the time offset to the individual sky observations
+            weights = sequence.compute_weights()
 
-        # Compute weighted sky background for each file
-        science_sky_fluxes = np.zeros(science_times.shape)
-        science_sky_flux_uncertainties = np.zeros(science_times.shape)
-        for i, file in enumerate(science_files):
-            t0 = science_timestamps[i]
-            dt = combine.time_difference(t0, sky_timestamps)
-            weights = combine.get_distance_weights(dt)
-            logger.debug(f"Time differences: {dt}")
-            logger.debug(f"Time weights: {weights}")
+            # Start extracting sky fluxes
+            sky_bkg = np.zeros(sequence.n_sky)
+            sky_bkg_std = np.zeros(sequence.n_sky)
+            for i in trange(sequence.n_sky, desc='Estimate sky background from cube'):
+                file = sequence.sky_files[i]
+                bkg, d_bkg = estimate_sky_background(file, method=method, mask_sources=mask_sources, path=file_path)
+                sky_bkg[i] = bkg
+                sky_bkg_std[i] = d_bkg
+            logger.debug(f"Shapes:\nF: {sky_bkg.shape}\ndF: {sky_bkg_std.shape}")
 
-            wbkg, dwbkg = combine.weighted_mean(sky_fluxes, vars=np.square(sky_flux_uncertainties),
-                                                weights=weights)
+            # Compute weighted sky background for each science file
+            weighted_sky_bkg = np.dot(weights, sky_bkg)
+            weighted_sky_bkg_var = np.dot(np.square(weights), np.square(sky_bkg_std))
 
-            science_sky_fluxes[i] = wbkg
-            science_sky_flux_uncertainties[i] = dwbkg
-
-        logger.debug(f"Science sky fluxes: {science_sky_fluxes}")
-        logger.debug(f"Science sky flux uncertainties: {science_sky_flux_uncertainties}")
-
-        # Plot sky flux estimates
-        for i, file in enumerate(sky_files):
-            plt.text(sky_times[i], sky_fluxes[i], file, rotation=90, alpha=.5)
-        for i, file in enumerate(science_files):
-            plt.text(science_times[i], science_sky_fluxes[i], file, rotation=90, alpha=.66)
-        plt.errorbar(x=sky_times, y=sky_fluxes, yerr=sky_flux_uncertainties,
-                     fmt='None', ecolor='tab:blue', alpha=.5)
-        plt.plot(sky_times, sky_fluxes, 'D', label='Sky', c='tab:blue')
-        plt.errorbar(x=science_times, y=science_sky_fluxes, yerr=science_sky_flux_uncertainties,
-                     fmt='None', ecolor='tab:orange', alpha=.66)
-        plt.plot(science_times, science_sky_fluxes, 'D', label='Science', c='tab:orange')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Flux (counts)')
-        plt.legend()
-        plt.show()
-        plt.close()
+            # Plot sky flux estimates
+            if debug or True:
+                for i, file in enumerate(sequence.sky_files):
+                    plt.text(sequence.sky_time_stamps[i], sky_bkg[i], file, rotation=90, alpha=.5)
+                for i, file in enumerate(sequence.science_files):
+                    plt.text(sequence.science_time_stamps[i], weighted_sky_bkg[i], file, rotation=90,
+                             alpha=.66)
+                plt.errorbar(x=sequence.sky_time_stamps, y=sky_bkg, yerr=sky_bkg_std,
+                             fmt='None', ecolor='tab:blue', alpha=.5)
+                plt.plot(sequence.sky_time_stamps, sky_bkg, 'D', label='Sky', c='tab:blue')
+                plt.errorbar(x=sequence.science_time_stamps, y=weighted_sky_bkg, yerr=np.sqrt(weighted_sky_bkg_var),
+                             fmt='None', ecolor='tab:orange', alpha=.66)
+                plt.plot(sequence.science_time_stamps, weighted_sky_bkg, 'D', label='Science', c='tab:orange')
+                plt.xlabel('Time (s)')
+                plt.ylabel('Flux (counts)')
+                plt.legend()
+                plt.show()
+                plt.close()
 
     elif method in ['image', 'frame']:
         raise NotImplementedError("Sky subtraction in image mode is not implemented yet!")
