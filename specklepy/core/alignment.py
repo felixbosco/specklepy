@@ -177,7 +177,7 @@ def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=F
     """Computes padding vectors from the relative shifts between files.
 
     Args:
-        shifts (list):
+        shifts (list or np.ndarray):
             Shifts between files, relative to a reference image. See get_shifts function for details.
         cube_mode (bool, optional):
             If image is a cube, the estimated pad vectors will obtain pad_vector entries of (0, 0) for the zeroth axis.
@@ -195,9 +195,7 @@ def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=F
     """
 
     # Check input parameters
-    if isinstance(shifts, list):
-        pass
-    elif isinstance(shifts, np.ndarray):
+    if isinstance(shifts, (list, np.ndarray)):
         pass
     else:
         raise SpecklepyTypeError('get_pad_vectors()', argname='shifts', argtype=type(shifts), expected='list')
