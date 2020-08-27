@@ -1,5 +1,7 @@
+from IPython import embed
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift
+import os
 from tqdm import trange
 
 from astropy.io import fits
@@ -10,7 +12,7 @@ from specklepy.core.apodization import apodize
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.sourceextraction import find_sources
 from specklepy.core.ssa import ssa
-from specklepy.io.parameterset import ParameterSet
+from specklepy.io.filearchive import FileArchive
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
@@ -25,8 +27,8 @@ def holography(params, mode='same', debug=False):
     modules of specklepy.
 
     Args:
-        params (specklepy.io.parameterset.ParameterSet):
-            Class instance that carries all important parameters.
+        params (dict):
+            Dictionary that carries all important parameters.
         mode (str, optional):
             Define the size of the output image as 'same' to the reference
             image or expanding to include the 'full' covered field. Default is
@@ -39,25 +41,27 @@ def holography(params, mode='same', debug=False):
         image (np.ndarray): The image reconstruction.
     """
 
-    logger.info(f"Starting holographic reconstruction of {len(params.inFiles)} files...")
-    if not isinstance(params, ParameterSet):
-        logger.warning(f"holography function received params argument of type {type(params)!r} instead of the expected "
-                       f"type specklepy.io.parameterset.ParameterSet. This may cause unforeseen errors.")
+    logger.info(f"Starting holographic reconstruction...")
+    file_archive = FileArchive(file_list=params['PATHS']['inDir'], cards=['DATE'], dtypes=[str])
+    in_files = file_archive.files
+    in_dir = file_archive.in_dir
+
+    # Input check
     if mode not in ['same', 'full', 'valid']:
         raise SpecklepyValueError('holography()', argname='mode', argvalue=mode,
                                   expected="either 'same', 'full', or 'valid'")
 
     # Initialize the outfile
-    params.outFile = ReconstructionFile(filename=params.paths.outFile, files=params.inFiles,
-                                        cards={"RECONSTRUCTION": "Holography"})
+    out_file = ReconstructionFile(filename=params['PATHS']['outFile'], files=in_files,
+                                  cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
 
     # (i-ii) Align cubes
-    shifts = get_shifts(files=params.inFiles, reference_file=params.paths.alignmentReferenceFile,
-                        lazy_mode=True, return_image_shape=False, debug=debug)
+    shifts = get_shifts(files=in_files, reference_file=params['PATHS']['alignmentReferenceFile'],
+                        lazy_mode=True, return_image_shape=False, in_dir=in_dir, debug=debug)
 
     # (iii) Compute SSA reconstruction
-    image = ssa(params.inFiles, mode=mode, outfile=params.outFile, tmp_dir=params.paths.tmpDir,
-                variance_extension_name=params.options.varianceExtensionName)
+    image = ssa(in_files, mode=mode, outfile=out_file, in_dir=in_dir, tmp_dir=params['PATHS']['tmpDir'],
+                variance_extension_name=params['OPTIONS']['varianceExtensionName'])
     if isinstance(image, tuple):
         # SSA returned a reconstruction image and a variance image
         image, image_var = image
@@ -67,10 +71,10 @@ def holography(params, mode='same', debug=False):
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
         find_sources(image=image,
-                     fwhm=params.starfinder.starfinderFwhm,
-                     noise_threshold=params.starfinder.noiseThreshold,
+                     fwhm=params['STARFINDER']['starfinderFwhm'],
+                     noise_threshold=params['STARFINDER']['noiseThreshold'],
                      background_subtraction=False,
-                     writeto=params.paths.allStarsFile,
+                     writeto=params['PATHS']['allStarsFile'],
                      starfinder='DAO', verbose=False)
 
         # (v) Select reference stars
@@ -78,33 +82,34 @@ def holography(params, mode='same', debug=False):
         input("\tWhen you are done, just hit a key.")
 
         # (vi) PSF extraction
-        ref_stars = ReferenceStars(psf_radius=params.psfextraction.psfRadius,
-                                   reference_source_file=params.paths.refSourceFile, in_files=params.inFiles,
-                                   save_dir=params.paths.tmpDir,
-                                   field_segmentation=params.psfextraction.fieldSegmentation)
-        if params.psfextraction.mode.lower() == 'epsf':
-            params.psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
-        elif params.psfextraction.mode.lower() in ['mean', 'median', 'weighted_mean']:
-            params.psf_files = ref_stars.extract_psfs(file_shifts=shifts,
-                                                      mode=params.psfextraction.mode.lower(), debug=debug)
+        ref_stars = ReferenceStars(psf_radius=params['PSFEXTRACTION']['psfRadius'],
+                                   reference_source_file=params['PATHS']['refSourceFile'], in_files=in_files,
+                                   save_dir=params['PATHS']['tmpDir'], in_dir=in_dir,
+                                   field_segmentation=params['PSFEXTRACTION']['fieldSegmentation'])
+        if params['PSFEXTRACTION']['mode'].lower() == 'epsf':
+            psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
+        elif params['PSFEXTRACTION']['mode'].lower() in ['mean', 'median', 'weighted_mean']:
+            psf_files = ref_stars.extract_psfs(file_shifts=shifts,
+                                                      mode=params['PSFEXTRACTION']['mode'].lower(), debug=debug)
         else:
-            raise RuntimeError(f"PSF extraction mode '{params.psfextraction.mode}' is not understood!")
+            raise RuntimeError(f"PSF extraction mode '{params['PSFEXTRACTION']['mode']}' is not understood!")
         logger.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
-        for file in params.psf_files:
+        psf_noise_mask = None
+        for file in psf_files:
             with fits.open(file, mode='update') as hdu_list:
                 n_frames = hdu_list[0].header['NAXIS3']
-                if not hasattr(params, 'psfNoiseMask'):
-                    params.psfNoiseMask = get_noise_mask(hdu_list[0].data[0],
-                                                         noise_reference_margin=
-                                                         params.psfextraction.noiseReferenceMargin)
+                if psf_noise_mask is None:
+                    psf_noise_mask = get_noise_mask(hdu_list[0].data[0],
+                                                    noise_reference_margin=
+                                                    params['PSFEXTRACTION']['noiseReferenceMargin'])
                 for index in range(n_frames):
-                    reference = np.ma.masked_array(hdu_list[0].data[index], mask=params.psfNoiseMask)
+                    reference = np.ma.masked_array(hdu_list[0].data[index], mask=psf_noise_mask)
                     background = np.mean(reference)
                     noise = np.std(reference)
                     update = np.maximum(hdu_list[0].data[index] - background -
-                                        params.psfextraction.noiseThreshold * noise, 0.0)
+                                        params['PSFEXTRACTION']['noiseThreshold'] * noise, 0.0)
                     if np.sum(update) == 0.0:
                         raise ValueError("After background subtraction and noise thresholding, no signal is leftover. "
                                          "Please reduce the noiseThreshold!")
@@ -117,11 +122,11 @@ def holography(params, mode='same', debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        f_object = FourierObject(params.inFiles, params.psf_files, shifts=shifts, mode=mode)
+        f_object = FourierObject(in_files, psf_files, shifts=shifts, mode=mode, in_dir=in_dir)
         f_object.coadd_fft()
 
         # (x) Apodization
-        f_object.apodize(params.apodization.apodizationType, params.apodization.apodizationWidth)
+        f_object.apodize(params['APODIZATION']['apodizationType'], params['APODIZATION']['apodizationWidth'])
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
         image = f_object.ifft(total_flux=total_flux)
@@ -131,7 +136,7 @@ def holography(params, mode='same', debug=False):
             imshow(image)
 
         # Save the latest reconstruction image to outfile
-        params.outFile.data = image
+        out_file.data = image
 
         # Ask the user whether the iteration shall be continued or not
         answer = input("\tDo you want to continue with one more iteration? [yes/no]\n\t")
@@ -139,8 +144,9 @@ def holography(params, mode='same', debug=False):
             break
 
     # Repeat astrometry and photometry, i.e. StarFinder on final image
-    find_sources(image=image, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.noiseThreshold,
-                 background_subtraction=False, writeto=params.paths.allStarsFile, starfinder='DAO', verbose=False)
+    find_sources(image=image, fwhm=params['STARFINDER']['starfinderFwhm'],
+                 noise_threshold=params['STARFINDER']['noiseThreshold'], background_subtraction=False,
+                 writeto=params['PATHS']['allStarsFile'], starfinder='DAO', verbose=False)
 
     # Finally return the image
     return image
@@ -175,7 +181,7 @@ class FourierObject(object):
     Therefore it estimates the padding of the PSF and image frames.
     """
 
-    def __init__(self, in_files, psf_files, shifts, mode='same'):
+    def __init__(self, in_files, psf_files, shifts, mode='same', in_dir=None):
         """ Initialize a FourierObject instance.
 
         Args:
@@ -188,6 +194,8 @@ class FourierObject(object):
             mode (str, optional):
                 Define the size of the output image as 'same' to the reference image or expanding to include the 'full'
                 covered field. Default is 'same'.
+            in_dir (str, optional):
+                Path to the input files.
         """
 
         # Assert that there are the same number of inFiles and psfFiles, which should be the case after running the
@@ -204,6 +212,10 @@ class FourierObject(object):
             raise SpecklepyValueError('FourierObject', argname='mode', argvalue=mode,
                                       expected="either 'same', 'full', or 'valid'")
         self.mode = mode
+        if in_dir is None:
+            self.in_dir = ''
+        else:
+            self.in_dir = in_dir
 
         # Extract padding vectors for images and reference image
         logger.info("Initializing padding vectors")
@@ -217,7 +229,7 @@ class FourierObject(object):
         # Get example image frame, used as final image size
         image_file = in_files[file_index]
         logger.info(f"\tUsing example image frame from {image_file}")
-        img = fits.getdata(image_file)[0]  # Remove time axis padding
+        img = fits.getdata(os.path.join(self.in_dir, image_file))[0]  # Remove time axis padding
         img = pad_array(array=img, pad_vector=image_pad_vector, mode=mode,
                         reference_image_pad_vector=self.reference_image_pad_vector)
         logger.info(f"\tShift: {shifts[file_index]}")
@@ -262,7 +274,7 @@ class FourierObject(object):
 
             # Open PSF and image files
             psf_cube = fits.getdata(self.psf_files[file_index])
-            image_cube = fits.getdata(self.in_files[file_index])
+            image_cube = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]))
             n_frames = image_cube.shape[0]
 
             for frame_index in trange(n_frames, desc="Fourier transforming frames"):
