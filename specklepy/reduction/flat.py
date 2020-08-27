@@ -1,3 +1,4 @@
+from IPython import embed
 import numpy as np
 import os
 from tqdm import trange
@@ -30,13 +31,13 @@ class MasterFlat(object):
         else:
             raise SpecklepyTypeError('MasterFlat', 'file_name', type(file_name), 'str')
 
-        if isinstance(file_path, str):
+        if isinstance(file_path, str) or file_path is None:
             self.file_path = file_path
         else:
             raise SpecklepyTypeError('MasterFlat', 'file_path', type(file_path), 'str')
 
         # Create an output file
-        self.master_file = MasterFile(self.file_name, files=self.files, out_dir=out_dir)
+        self.master_file = MasterFile(self.file_name, files=self.files, in_dir=file_path, out_dir=out_dir)
 
     def combine(self, method='clip'):
         """Combine the frames of the stored files to a master flat.
