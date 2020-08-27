@@ -32,8 +32,11 @@ def read(par_file):
     # Check about 'None' strings
     for key in config.keys():
         for kkey in config[key].keys():
-            if config[key][kkey] == 'None':
-                config[key][kkey] = None
+            if isinstance(config[key][kkey], str):
+                try:
+                    config[key][kkey] = eval(config[key][kkey])
+                except (NameError, SyntaxError):
+                    pass
 
     return config
 
