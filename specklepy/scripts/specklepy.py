@@ -54,8 +54,12 @@ def main():
     elif args.command is 'holography':
 
         # Read parameters from file and execute reconstruction
-        params = HolographyParameterSet(args.parfile)
-        holography(params, mode=params.options.reconstructionMode, debug=args.debug)
+        # params = HolographyParameterSet(args.parfile)
+        defaults_file = os.path.join(os.path.dirname(__file__), '../config/holography.cfg')
+        defaults_file = os.path.abspath(defaults_file)
+        params = config.read(defaults_file)
+        params = config.update_from_file(params, args.parfile)
+        holography(params, mode=params['OPTIONS']['reconstructionMode'], debug=args.debug)
 
     elif args.command is 'aperture':
         pass
