@@ -1,4 +1,5 @@
 import numpy as np
+import os
 from scipy import ndimage
 from tqdm import trange
 
@@ -17,7 +18,7 @@ class ReferenceStars(object):
 
     """Class that holds a list of reference stars and can extract the PSFs on their positions."""
 
-    def __init__(self, psf_radius, reference_source_file, in_files, save_dir, field_segmentation=None):
+    def __init__(self, psf_radius, reference_source_file, in_files, save_dir, in_dir=None, field_segmentation=None):
         """
 
         Args:
@@ -30,6 +31,8 @@ class ReferenceStars(object):
                 List of input files.
             save_dir (str):
                 Directory where the PSF estimates will be stored.
+            in_dir (str, optional):
+                Path to the input files.
             field_segmentation (list):
                 Segmentation of the image into field segments with their own PSF.
         """
@@ -39,6 +42,10 @@ class ReferenceStars(object):
         self.star_table = Table.read(reference_source_file, format='ascii')
         self.in_files = in_files
         self.save_dir = save_dir
+        if in_dir is None:
+            self.in_dir = ''
+        else:
+            self.in_dir = in_dir
 
         if field_segmentation:
             example_image_shape = fits.getdata(self.in_files[0])[0].shape
@@ -64,8 +71,8 @@ class ReferenceStars(object):
 
         apertures = []
         for star in self.star_table:
-            apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius, data=filename,
-                                      mask='rectangular', crop=True, verbose=False))
+            apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius,
+                                      data=os.path.join(self.in_dir, filename), mask='rectangular', crop=True))
         return apertures
 
     def extract_psfs(self, file_shifts=None, mode='median', align=True, debug=False):
@@ -107,7 +114,7 @@ class ReferenceStars(object):
             # Initialize file by file
             logger.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=(self.box_size, self.box_size),
-                               header_card_prefix="HIERARCH SPECKLEPY ")
+                               in_dir=self.in_dir, header_card_prefix="HIERARCH SPECKLEPY ")
             psf_files.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e.
@@ -175,7 +182,7 @@ class ReferenceStars(object):
             # Initialize file by file
             logger.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=(self.box_size, self.box_size),
-                               header_card_prefix="HIERARCH SPECKLEPY")
+                               in_dir=self.in_dir, header_card_prefix="HIERARCH SPECKLEPY")
             psf_files.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e.
@@ -186,7 +193,7 @@ class ReferenceStars(object):
                 apertures = self.init_apertures(file, shift=file_shifts[file_index])
 
             # Extract the number of frames in the FITS file from the header
-            frame_number = fits.getheader(file)['NAXIS3']
+            frame_number = fits.getheader(os.path.join(self.in_dir, file))['NAXIS3']
 
             # Extract the PSF by combining the aperture frames in the desired mode
             for frame_index in trange(frame_number, desc="Extracting PSF from frames"):
@@ -214,7 +221,7 @@ class ReferenceStars(object):
                     ivar_oversampled[y, x] += np.divide(1, aperture.vars)
                 
                 if debug:
-                    imshow(aperture.data[frame_index], maximize=True, title=f"Aperture {aperture_index}")
+                    imshow(apertures[0].data[frame_index], maximize=True, title=f"Aperture {0}")
                     imshow(epsf_oversampled, maximize=True, title="oversampled ePSF")
                     imshow(ivar_oversampled, maximize=True, title='oversampled IVAR')
                 
