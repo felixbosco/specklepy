@@ -1,5 +1,6 @@
 from datetime import datetime
 import glob
+from IPython import embed
 import os
 
 from astropy.io import fits
@@ -46,7 +47,12 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
             logger.info(
                 f"Dropping header card {card} from setup identification, as there is no description in the config file."
                 f"\nCheck out {instrument_config_file} for details.")
-            header_cards.remove(card)
+            cards.append(None)
+    for card, dtype, header_card in zip(cards, dtypes, header_cards):
+        if card is None:
+            cards.remove(card)
+            dtypes.remove(dtype)
+            header_cards.remove(header_card)
 
     # Apply fall back values
     if path is None:
