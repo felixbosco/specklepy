@@ -1,4 +1,5 @@
 import os
+
 from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError
@@ -55,7 +56,6 @@ class PSFFile(Outfile):
         cards["FILE NAME"] = os.path.basename(in_file)
 
         # Derive data shape
-        print(in_dir, type(in_dir))
         if in_dir is not None:
             hdr_input = fits.getheader(os.path.join(in_dir, in_file))
         else:
