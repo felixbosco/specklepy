@@ -82,6 +82,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
 
     if in_dir is None:
         in_dir = ''
+    reference_file = os.path.join(in_dir, reference_file)
 
     if tmp_dir is not None:
         if isinstance(tmp_dir, str) and not os.path.isdir(tmp_dir):
