@@ -78,11 +78,13 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
     if 'yaml' in ext:
         logger.info(f"Creating default reduction YAML parameter file {par_file}")
         par_file_content = f"PATHS:\n  filePath: {path}\n  fileList: {list_file}\n  outDir: Science/\n  tmpDir: tmp/" \
+                           f"\n  prefix: r" \
                            f"\n\nFLAT:\n  masterFlatFile: MasterFlat.fits" \
                            f"\n\nSKY:\n  method: scalar"
     else:
         logger.info(f"Creating default reduction INI parameter file {par_file}")
         par_file_content = f"[PATHS]\nfilePath = {path}\nfileList = {list_file}\noutDir = Science/\ntmpDir = tmp/" \
+                           f"\nprefix = r" \
                            f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
                            f"\n\n[SKY]\nmethod = scalar"
     with open(par_file, 'w+') as par_file:
@@ -120,7 +122,7 @@ def full_reduction(params, debug=False):
     if 'skip' in params['PATHS'] and params['PATHS']['skip']:
         product_files = glob.glob(os.path.join(params['PATHS']['outDir'], '*fits'))
     else:
-        product_files = in_files.initialize_product_files()
+        product_files = in_files.initialize_product_files(prefix=params['PATHS']['prefix'])
 
     # (2) Flat fielding
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:

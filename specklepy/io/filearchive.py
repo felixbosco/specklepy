@@ -25,7 +25,7 @@ class FileArchive(object):
         ...
     """
 
-    def __init__(self, file_list, in_dir=None, out_dir=None, **kwargs):
+    def __init__(self, file_list, in_dir=None, out_dir=None, out_prefix=None, **kwargs):
         """Create a FileArchive instance.
 
         Long description...
@@ -37,6 +37,8 @@ class FileArchive(object):
                 Path to the raw/ input data.
             out_dir (str, optional):
                 Path to the product/ output data.
+            out_prefix (str, optional):
+                Prefix of the product/ output data.
         """
 
         # Store in and out paths
@@ -48,6 +50,10 @@ class FileArchive(object):
             self.out_dir = './'
         else:
             self.out_dir = out_dir
+        if out_prefix is None:
+            self.out_prefix = ''
+        else:
+            self.out_prefix = out_prefix
 
         # Interpret the file list input
         if isinstance(file_list, str):
@@ -330,7 +336,7 @@ class FileArchive(object):
                                           source=source))
         return sequences
 
-    def initialize_product_files(self, prefix='r'):
+    def initialize_product_files(self, prefix=None):
         """Copy the science data cubes into the stored out directory.
 
         Args:
@@ -342,13 +348,17 @@ class FileArchive(object):
                 List of paths of the data reduction products.
         """
 
+        # Store update prefix
+        if prefix:
+            self.out_prefix = prefix
+
         # Initialize list of data reduction products
         product_files = []
 
         # Copy the science data cubes into outdir (with an additional file prefix)
         for file in self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}):
             src = os.path.join(self.in_dir, file)
-            dest = os.path.join(self.out_dir, prefix + file)
+            dest = os.path.join(self.out_dir, self.out_prefix + file)
             logger.info(f"Initializing data product file {dest}")
             os.system(f"cp {src} {dest}")
             with fits.open(dest) as hdu_list:
