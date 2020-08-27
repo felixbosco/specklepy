@@ -289,7 +289,7 @@ class FileArchive(object):
             row_indexes = np.where(self.table['SETUP'].data == combination)
             self.table['SETUP'][row_indexes] = string.ascii_uppercase[index]
 
-    def identify_sequences(self):
+    def identify_sequences(self, source='sky'):
         """Identify observation sequences.
 
         Returns:
@@ -298,12 +298,13 @@ class FileArchive(object):
         """
         sequences = []
         for setup in self.setups:
-            sky_files = self.filter({'OBSTYPE': 'SKY', 'SETUP': setup})
-            sky_time_stamps = self.filter({'OBSTYPE': 'SKY', 'SETUP': setup}, namekey='DATE')
+            sky_files = self.filter({'OBSTYPE': source.upper(), 'SETUP': setup})
+            sky_time_stamps = self.filter({'OBSTYPE': source.upper(), 'SETUP': setup}, namekey='DATE')
             science_files = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup})
             science_time_stamps = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup}, namekey='DATE')
             sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
-                                      sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps))
+                                      sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
+                                      source=source))
         return sequences
 
     def initialize_product_files(self, prefix='r'):
