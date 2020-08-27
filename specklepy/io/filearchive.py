@@ -70,6 +70,8 @@ class FileArchive(object):
                 logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
                             "names.".format(files[0]))
                 self.table = self.read_table_file(files[0])
+            else:
+                self.table = self.gather_table_from_list(files=files, **kwargs)
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
@@ -183,6 +185,10 @@ class FileArchive(object):
         """
 
         # Initialize output file information table
+        if cards is None:
+            cards = []
+        if dtypes is None:
+            dtypes = []
         if names is None:
             table = Table(names=['FILE']+cards, dtype=[str]+dtypes)
         else:
@@ -205,7 +211,6 @@ class FileArchive(object):
 
         # Sort table entries by default properties and user request
         table.sort('FILE')
-        table.sort('OBSTYPE')
         if sort_by:
             table.sort(sort_by)
 
