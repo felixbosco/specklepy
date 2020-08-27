@@ -18,15 +18,19 @@ from specklepy.reduction.sequence import Sequence
 from specklepy.utils import combine
 
 
-def subtract_sky_background(in_files, method='scalar', source='sky', mask_sources=False, file_path=None, debug=False):
+def subtract_sky_background(in_files, out_files=None, method='scalar', source='sky', mask_sources=False, file_path=None,
+                            debug=False):
 
     """Estimate and subtract the sky background via different methods and sources.
 
     TODO: Implement sky subtraction from image
 
     Args:
-        in_files:
+        in_files (specklepy.FileArchive):
 
+        out_files (list):
+            List of files to apply the sky subtraction to. If left empty, the list stored in the `in_files` FileArchive
+            is used.
         method (str, optional):
             Switch between a scalar (`scalar`) background value or a 2D image (`images`).
         source (str, optional):
@@ -53,6 +57,8 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
     if source is None:
         source = 'sky'
     logger.info(f"Sky background subtraction source: {source}")
+    if out_files is None:
+        out_files = in_files.product_files
 
     # Identify the observing sequences
     sequences = in_files.identify_sequences(source=source)
@@ -100,8 +106,17 @@ def subtract_sky_background(in_files, method='scalar', source='sky', mask_source
                 plt.close()
 
             # Subtract sky from product files
-            for science_file in sequence.science_files:
-                logger.info("Subtracting sky ")
+            for i, science_file in enumerate(sequence.science_files):
+                for out_file in out_files:
+                    if science_file in out_file:
+                        science_file = out_file
+                logger.info(f"Applying sky background subtraction on file {science_file}")
+                with fits.open(science_file, mode='update') as hdu_list:
+                    hdu_list[0].data -= weighted_sky_bkg[i]
+                    if 'VAR' in hdu_list:
+                        hdu_list['VAR'].data += weighted_sky_bkg_var[i]
+                    hdu_list.flush()
+
 
     elif method in ['image', 'frame']:
         raise NotImplementedError("Sky subtraction in image mode is not implemented yet!")
