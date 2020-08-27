@@ -7,15 +7,12 @@ import os
 
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
-from astropy.table import Table
 
 from photutils import make_source_mask
 
 from specklepy.io.outfile import Outfile
 from specklepy.logging import logger
-from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.reduction.sequence import Sequence
-from specklepy.utils import combine
+from specklepy.exceptions import SpecklepyTypeError
 
 
 def subtract_sky_background(in_files, out_files=None, method='scalar', source='sky', mask_sources=False, file_path=None,
@@ -27,7 +24,7 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
 
     Args:
         in_files (specklepy.FileArchive):
-
+            File archive storing the information of all the files in the reduction.
         out_files (list):
             List of files to apply the sky subtraction to. If left empty, the list stored in the `in_files` FileArchive
             is used.
@@ -116,7 +113,6 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
                     if 'VAR' in hdu_list:
                         hdu_list['VAR'].data += weighted_sky_bkg_var[i]
                     hdu_list.flush()
-
 
     elif method in ['image', 'frame']:
         raise NotImplementedError("Sky subtraction in image mode is not implemented yet!")
