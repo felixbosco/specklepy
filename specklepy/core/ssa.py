@@ -11,7 +11,8 @@ from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
 
 
-def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, lazy_mode=True, debug=False, **kwargs):
+def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, lazy_mode=True, debug=False,
+        **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
@@ -24,7 +25,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
     See Bates & Cady (1980) for references.
 
     Args:
-        files (list):
+        files (list or array_like):
             List of complete paths to the fits files that shall be considered for the SSA reconstruction.
         mode (str):
             Name of the reconstruction mode: In 'same' mode, the reconstruction covers the same field of view of the
@@ -35,6 +36,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
             specklepy.core.aligment.get_shifts for details. Default is 0.
         outfile (specklepy.io.recfile, optional):
             Object to write the result to, if provided.
+        in_dir (str, optional):
+            Path to the files. `None` is substituted by an empty string.
         tmp_dir (str, optional):
             Path of a directory in which the temporary results are stored in.
         lazy_mode (bool, optional):
@@ -49,7 +52,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
 
     logger.info("Starting SSA reconstruction...")
     # Check parameters
-    if not isinstance(files, list):
+    if not isinstance(files, (list, np.ndarray)):
         if isinstance(files, str):
             files = [files]
         else:
@@ -76,6 +79,9 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         pass
     else:
         raise SpecklepyTypeError('ssa()', argname='outfile', argtype=type(outfile), expected='str')
+
+    if in_dir is None:
+        in_dir = ''
 
     if tmp_dir is not None:
         if isinstance(tmp_dir, str) and not os.path.isdir(tmp_dir):
@@ -111,7 +117,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, tmp_dir=None, laz
         # Compute temporary reconstructions of the individual cubes
         tmp_files = []
         for index, file in enumerate(files):
-            with fits.open(file) as hdu_list:
+            with fits.open(os.path.join(in_dir, file)) as hdu_list:
                 cube = hdu_list[0].data
                 if var_ext in hdu_list:
                     var_cube = hdu_list[var_ext].data
