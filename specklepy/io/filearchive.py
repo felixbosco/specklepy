@@ -346,7 +346,7 @@ class FileArchive(object):
         product_files = []
 
         # Copy the science data cubes into outdir (with an additional file prefix)
-        for file in self.filter({'OBSTYPE': 'SCIENCE'}):
+        for file in self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}):
             src = os.path.join(self.in_dir, file)
             dest = os.path.join(self.out_dir, prefix + file)
             logger.info(f"Initializing data product file {dest}")
