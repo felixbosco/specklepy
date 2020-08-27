@@ -11,7 +11,7 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Column, Table
 
 from specklepy.logging import logger
-from specklepy.exceptions import SpecklepyTypeError
+from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.reduction.sequence import Sequence
 
 
@@ -292,10 +292,25 @@ class FileArchive(object):
     def identify_sequences(self, source='sky'):
         """Identify observation sequences.
 
+        Args:
+            source (str, optional):
+                Observation type of the images the shall be used to measure the sky background from. Options are 'sky'
+                (default) and 'science'.
+
         Returns:
             sequences (list of Sequence):
                 List of observing sequences.
         """
+
+        # Type check
+        if isinstance(source, str):
+            if source not in ['sky', 'science']:
+                raise SpecklepyValueError('identify sequences', argname='source', argvalue=source,
+                                          expected="'sky' or 'science'")
+        else:
+            raise SpecklepyTypeError('identify sequences', argname='source', argtype=type(source), expected='str')
+
+        # Identify the observing sequences
         sequences = []
         for setup in self.setups:
             sky_files = self.filter({'OBSTYPE': source.upper(), 'SETUP': setup})
