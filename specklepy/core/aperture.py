@@ -1,8 +1,9 @@
+from copy import copy
+from datetime import datetime
 import numpy as np
 import warnings
-from copy import copy
+
 from astropy.io import fits
-from datetime import datetime
 
 from specklepy.logging import logger
 from specklepy.utils import transferfunctions as tf
@@ -10,34 +11,28 @@ from specklepy.utils import transferfunctions as tf
 
 class Aperture(object):
 
-    def __init__(self, *args, data, vars=None, mask='circular', crop=True, verbose=True):
+    def __init__(self, *args, data, vars=None, mask='circular', crop=True):
         """Instantiate Aperture object.
 
         Long description...
 
         Args:
-            *args (int, float:
-                Can be either two or three arguments, where the last is always
-                interpreted as the aperture radius, which must be int type. The
-                other arguments can be either a coordinate tuple or two
-                individual coordinates.
+            *args (int, float):
+                Can be either two or three arguments, where the last is always interpreted as the aperture radius,
+                which must be int type. The other arguments can be either a coordinate tuple or two individual
+                coordinates.
             data (np.ndarray, str):
-                2D or 3D np.ndarray that the aperture shall be extracted of. If
-                provided as str type, this is assumed to be a path and the
-                objects tries to read the fits file.
+                2D or 3D np.ndarray that the aperture shall be extracted of. If provided as str type, this is assumed
+                to be a path and the objects tries to read the fits file.
             vars (np.ndarray, optional):
-                Variance of the data. If not provided, the variance will be
-                estimated along the time axis of a cube. In the future this
-                might read in from a file extension. Default is None.
+                Variance of the data. If not provided, the variance will be estimated along the time axis of a cube. In
+                the future this might read in from a file extension. Default is None.
             mask (str, optional):
-                Mode that is describing, how the aperture is masked. Can be
-                'circular' or 'rectangular'. If 'circular', then it creates a
-                circular mask and the data become a np.ma.masked_array. Default
-                is 'circular'.
+                Mode that is describing, how the aperture is masked. Can be 'circular' or 'rectangular'. If 'circular',
+                then it creates a circular mask and the data become a np.ma.masked_array. Default is 'circular'.
             crop (bool, optional):
-                If set to True, then the object only stores a copy of the data
-                with radius around the center. Otherwise all the data beyond
-                the limits of the aperture are masked. Default is True.
+                If set to True, then the object only stores a copy of the data with radius around the center. Otherwise
+                all the data beyond the limits of the aperture are masked. Default is True.
             verbose (bool, optional):
                 Set to True for retrieving more information. Default is True.
         """
@@ -68,7 +63,6 @@ class Aperture(object):
             self.xoffset = x0 - self.x0
             self.yoffset = y0 - self.y0
 
-
         if isinstance(radius, int):
             self.radius = radius
         else:
@@ -76,8 +70,7 @@ class Aperture(object):
 
         # Handling data input
         if isinstance(data, str):
-            if verbose:
-                logger.info("Aperture argument data '{}' is interpreted as file name.".format(data))
+            logger.debug(f"Aperture argument data '{data}' is interpreted as file name.")
             data = fits.getdata(data)
         if not (data.ndim == 2 or data.ndim == 3):
             raise ValueError("Data input of Aperture class must be of dimension 2 or 3, but was provided as data.ndim={}.".format(data.ndim))
@@ -97,8 +90,6 @@ class Aperture(object):
                 self.vars = np.var(self.data, axis=0)
         else:
             self.vars = None
-
-
 
     @property
     def width(self):
@@ -123,8 +114,6 @@ class Aperture(object):
     def __getitem__(self, index):
         return self.data[index]
 
-
-
     def make_distance_map(self):
         if self.cropped:
             center = (self.radius, self.radius)
@@ -133,13 +122,11 @@ class Aperture(object):
         xx, yy = np.mgrid[:self.data.shape[-2], :self.data.shape[-1]]
         return np.sqrt(np.square(xx - center[0]) + np.square(yy - center[1]))
 
-
-
     def make_mask(self, mode='circular'):
         """Create a circular or rectangular mask."""
 
         if not isinstance(mode, str):
-            raise TypeError("Aperture received mask argument of type {}, but needs to be str type!".format(type(mask)))
+            raise TypeError("Aperture received mode argument of type {}, but needs to be str type!".format(type(mode)))
 
         if mode == 'circular':
             distance_map = self.make_distance_map()
@@ -155,29 +142,27 @@ class Aperture(object):
             else:
                 mask = np.ones(self.data.shape, dtype=bool)
                 if mask.ndim == 2:
-                    mask[self.x0 - self.radius : self.y0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius +1] = 0
+                    mask[self.x0 - self.radius: self.y0 + self.radius + 1, self.y0 - self.radius: self.y0 + self.radius + 1] = 0
                 elif mask.ndim == 3:
-                    mask[ : , self.x0 - self.radius : self.y0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius +1] = 0
+                    mask[:, self.x0 - self.radius: self.y0 + self.radius + 1, self.y0 - self.radius: self.y0 + self.radius + 1] = 0
                 return mask
         else:
-            raise ValueError("Aperture received mask argument {}, but needs to be either 'circular' or 'rectangular'!".format(mask))
-
-
+            raise ValueError("Aperture received mode argument {}, but needs to be either 'circular' or 'rectangular'!".format(mode))
 
     def crop(self):
         if self.cropped:
             logger.info("Margins are removed already from aperture instance.")
         else:
             if self.data.ndim == 2:
-                self.data = copy(self.data[self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
+                self.data = copy(self.data[self.x0 - self.radius: self.x0 + self.radius + 1,
+                                 self.y0 - self.radius: self.y0 + self.radius + 1])
             elif self.data.ndim == 3:
-                self.data = copy(self.data[:, self.x0 - self.radius : self.x0 + self.radius + 1, self.y0 - self.radius : self.y0 + self.radius + 1])
+                self.data = copy(self.data[:, self.x0 - self.radius: self.x0 + self.radius + 1,
+                                 self.y0 - self.radius: self.y0 + self.radius + 1])
             self.cropped = True
 
     def remove_margins(self):
         self.crop()
-
-
 
     def get_integrated(self):
         """Returns a 2-dimensional represntation of the aperture and integrates
@@ -188,14 +173,10 @@ class Aperture(object):
         else:
             return copy(self.data)
 
-
-
     def get_aperture_peak(self):
         """Returns the coordinates of the emission peak in the aperture."""
         tmp = self.get_integrated()
         return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
-
-
 
     def initialize_Fourier_file(self, infile, Fourier_file):
         self.infile = infile
@@ -211,8 +192,6 @@ class Aperture(object):
         fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
         logger.info("Initialized {}".format(self.Fourier_file))
 
-
-
     def powerspec_to_file(self, infile=None, Fourier_file=None):
         if not hasattr(self, 'Fourier_file'):
             self.initialize_Fourier_file(infile, Fourier_file)
@@ -225,8 +204,6 @@ class Aperture(object):
             print()
         logger.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
 
-
-
     def powerspec(self):
         self.Fourier_data = np.zeros(self.data.shape)
         for index, frame in enumerate(self.data):
@@ -234,8 +211,6 @@ class Aperture(object):
             self.Fourier_data[index] = tf.powerspec(frame)
         print()
         logger.info("Computed the Fourier transform of every frame.")
-
-
 
     def get_encircled_energy(self, saveto=None):
         """Extracts the encircled energy from an aperture as a function of
@@ -261,8 +236,6 @@ class Aperture(object):
             logger.info("Saved encircled energy data to file {}".format(saveto))
 
         return rdata, ydata
-
-
 
     def get_psf_profile(self):
         """Computes the radial average of the PSF in the aperture."""
