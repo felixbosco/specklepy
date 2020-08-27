@@ -5,7 +5,7 @@ import glob
 import os
 
 
-def long_description():
+def read_long_description():
     with open("README.md", "r") as f:
         long_description = f.read()
     return long_description
@@ -24,9 +24,9 @@ def find_packages():
 
 
 setup(name='specklepy',
-      version='0.5.3',
+      version='0.5.4',
       description='Specklepy Holographic Data Reduction',
-      long_description=long_description(),
+      long_description=read_long_description(),
       long_description_content_type="text/markdown",
       classifiers=[
         'License :: OSI Approved :: MIT License',

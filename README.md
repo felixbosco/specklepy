@@ -168,7 +168,7 @@ These are the current To-Do items:
   * ~~**low priority:** Make command line arguments to positional arguments for required args~~
   * Transform config parameter sets into multilevel dictionaries
 * data reduction module:
-  * Flatfield correction from flat frames
+  * ~~Flatfield correction from flat frames~~
   * Extend scalar sky subtraction from the images to two-dimensional sky estimates (from sky frames)
   * Linearity correction (wait for D. Thompson)
 * core module:
@@ -192,7 +192,8 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
-- *0.5.3dev*: Working on the extraction of multiple PSFs.
+- *0.5.4dev*: Working on the extraction of multiple PSFs.
+- *0.5.4*: Data reduction is working in scalar background mode
 - *0.5.3*: Implemented calling with commands of a universal script, a la `specklepy reduce --setup`. The synthetic 
 exposure generator now accepts intuitive syntax ('5 km/ s') for quantities.
 - *0.5.2*: Implement noise propagation during data reduction. The reduction setup `specklepy_reduction_setup` now 
