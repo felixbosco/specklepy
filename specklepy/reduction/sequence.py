@@ -92,6 +92,18 @@ class Sequence(object):
         self.science_time_stamps = combine.time_difference(start, self.science_time_stamps)
 
     def compute_weights(self, time_scale=300):
+        """Compute the weights by the individual sky measurements are weighted for a given science frame.
+
+        Args:
+            time_scale (float, optional):
+                Time scale for sky background variations. This is used as a reference time scale to compare the offsets
+                against.
+
+        Returns:
+            weights (np.array):
+                The array of weights of shape (n_science, n_sky).
+        """
+
         # Assert that times are offset seconds
         self.time_stamps_to_offset_seconds()
 
