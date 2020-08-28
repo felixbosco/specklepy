@@ -14,10 +14,11 @@ from photutils import make_source_mask
 from specklepy.io.outfile import Outfile
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
+from specklepy.utils.plot import save_figure
 
 
 def subtract_sky_background(in_files, out_files=None, method='scalar', source='sky', mask_sources=False, file_path=None,
-                            tmp_dir=None, debug=False):
+                            tmp_dir=None, show=False, debug=False):
 
     """Estimate and subtract the sky background via different methods and sources.
 
@@ -42,6 +43,8 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
             Path to the files, listed in `in_files`.
         tmp_dir (str, optional):
             Directory to which temporary results and QA data is stored.
+        show (bool, optional):
+            Show plots of sky estimates for each sequence. They will be created and stored regardless of this choice.
         debug (bool, optional):
             Show debugging information.
     """
@@ -69,7 +72,9 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
     if method == 'scalar':
 
         # Iterate through observing sequences
-        for sequence in sequences:
+        for s, sequence in enumerate(sequences):
+
+            logger.info(f"Starting observing sequence {s} :: Object {sequence.object} :: Setup {sequence.setup}")
 
             # Compute weights based on the time offset to the individual sky observations
             weights = sequence.compute_weights()
@@ -95,23 +100,24 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
             sky_bkg_table.write(os.path.join(tmp_dir, sky_bkg_table_name), overwrite=True)
 
             # Plot sky flux estimates
-            if debug or True:
-                for i, file in enumerate(sequence.sky_files):
-                    plt.text(sequence.sky_time_stamps[i], sky_bkg[i], file, rotation=90, alpha=.5)
-                for i, file in enumerate(sequence.science_files):
-                    plt.text(sequence.science_time_stamps[i], weighted_sky_bkg[i], file, rotation=90,
-                             alpha=.66)
-                plt.errorbar(x=sequence.sky_time_stamps, y=sky_bkg, yerr=sky_bkg_std,
-                             fmt='None', ecolor='tab:blue', alpha=.5)
-                plt.plot(sequence.sky_time_stamps, sky_bkg, 'D', label='Sky', c='tab:blue')
-                plt.errorbar(x=sequence.science_time_stamps, y=weighted_sky_bkg, yerr=np.sqrt(weighted_sky_bkg_var),
-                             fmt='None', ecolor='tab:orange', alpha=.66)
-                plt.plot(sequence.science_time_stamps, weighted_sky_bkg, 'D', label='Science', c='tab:orange')
-                plt.xlabel('Time (s)')
-                plt.ylabel('Flux (counts)')
-                plt.legend()
+            for i, file in enumerate(sequence.sky_files):
+                plt.text(sequence.sky_time_stamps[i], sky_bkg[i], file, rotation=90, alpha=.5)
+            for i, file in enumerate(sequence.science_files):
+                plt.text(sequence.science_time_stamps[i], weighted_sky_bkg[i], file, rotation=90,
+                         alpha=.66)
+            plt.errorbar(x=sequence.sky_time_stamps, y=sky_bkg, yerr=sky_bkg_std,
+                         fmt='None', ecolor='tab:blue', alpha=.5)
+            plt.plot(sequence.sky_time_stamps, sky_bkg, 'D', label='Sky', c='tab:blue')
+            plt.errorbar(x=sequence.science_time_stamps, y=weighted_sky_bkg, yerr=np.sqrt(weighted_sky_bkg_var),
+                         fmt='None', ecolor='tab:orange', alpha=.66)
+            plt.plot(sequence.science_time_stamps, weighted_sky_bkg, 'D', label='Science', c='tab:orange')
+            plt.xlabel('Time (s)')
+            plt.ylabel('Flux (counts)')
+            plt.legend()
+            save_figure(os.path.join(tmp_dir, sky_bkg_table_name.replace('.fits', '.png')))
+            if show:
                 plt.show()
-                plt.close()
+            plt.close()
 
             # Subtract sky from product files
             for i, science_file in enumerate(sequence.science_files):
