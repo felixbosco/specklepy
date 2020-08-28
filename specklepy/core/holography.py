@@ -42,7 +42,7 @@ def holography(params, mode='same', debug=False):
     """
 
     logger.info(f"Starting holographic reconstruction...")
-    file_archive = FileArchive(file_list=params['PATHS']['inDir'], cards=['DATE'], dtypes=[str])
+    file_archive = FileArchive(file_list=params['PATHS']['inDir'], cards=[], dtypes=[])
     in_files = file_archive.files
     in_dir = file_archive.in_dir
 
@@ -89,8 +89,8 @@ def holography(params, mode='same', debug=False):
         if params['PSFEXTRACTION']['mode'].lower() == 'epsf':
             psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
         elif params['PSFEXTRACTION']['mode'].lower() in ['mean', 'median', 'weighted_mean']:
-            psf_files = ref_stars.extract_psfs(file_shifts=shifts,
-                                                      mode=params['PSFEXTRACTION']['mode'].lower(), debug=debug)
+            psf_files = ref_stars.extract_psfs(file_shifts=shifts, mode=params['PSFEXTRACTION']['mode'].lower(),
+                                               debug=debug)
         else:
             raise RuntimeError(f"PSF extraction mode '{params['PSFEXTRACTION']['mode']}' is not understood!")
         logger.info("Saved the extracted PSFs...")

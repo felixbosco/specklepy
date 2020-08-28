@@ -125,7 +125,7 @@ class ReferenceStars(object):
                 apertures = self.init_apertures(file, shift=file_shifts[file_index])
 
             # Extract the number of frames in the FITS file from the header
-            frame_number = fits.getheader(file)['NAXIS3']
+            frame_number = fits.getheader(os.path.join(self.in_dir, file))['NAXIS3']
 
             # Check apertures visually
             if debug:
