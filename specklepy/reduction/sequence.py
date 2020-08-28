@@ -1,18 +1,14 @@
 from IPython import embed
 import numpy as np
-import os
-
-from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError
-from specklepy.logging import logger
 from specklepy.utils import combine
 
 
 class Sequence(object):
 
     def __init__(self, science_files, sky_files, sky_time_stamps, science_time_stamps, source=None, file_path=None,
-                 object=None):
+                 object=None, setup=None):
 
         if isinstance(science_files, (list, np.ndarray)):
             self.science_files = science_files
@@ -55,6 +51,11 @@ class Sequence(object):
             self.object = ''
         else:
             self.object = object
+
+        if setup is None:
+            self.setup = ''
+        else:
+            self.setup = setup
 
     def __str__(self):
         s = str(type(self)) + "\n"

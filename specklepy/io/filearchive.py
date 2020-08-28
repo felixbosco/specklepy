@@ -362,7 +362,7 @@ class FileArchive(object):
                     # Store the information in a new sequence
                     sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
                                               sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
-                                              source=source, object=object))
+                                              source=source, object=object, setup=setup))
         return sequences
 
     def initialize_product_files(self, prefix=None):
