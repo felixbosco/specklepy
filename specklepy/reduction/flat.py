@@ -1,3 +1,4 @@
+from datetime import datetime
 from IPython import embed
 import numpy as np
 import os
@@ -172,3 +173,6 @@ class MasterFlat(object):
                     else:
                         var_hdu = fits.ImageHDU(data=master_flat_var, name='VAR', header=None)
                         hdu_list.append(var_hdu)
+
+                hdu_list[0].header.set('FLATCORR', str(datetime.now()))
+                hdu_list.flush()
