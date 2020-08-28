@@ -128,6 +128,10 @@ class FileArchive(object):
     def setups(self):
         return np.unique(self.table['SETUP'].data)
 
+    @property
+    def objects(self):
+        return np.unique(self.table['OBJECT'].data)
+
     @staticmethod
     def is_fits_file(filename):
         _, extension = os.path.splitext(filename)
@@ -201,9 +205,13 @@ class FileArchive(object):
             hdr = fits.getheader(file)
             new_row = [os.path.basename(file)]
             for card in cards:
-                try:
-                    new_row.append(hdr[card])
-                except KeyError:
+                if card in hdr:
+                    value = hdr[card]
+                    if not isinstance(value, str) or card == 'FILE':
+                        new_row.append(hdr[card])
+                    else:
+                        new_row.append(hdr[card].upper())
+                else:
                     logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header "
                                 f"card ({card}).")
                     break
@@ -328,21 +336,24 @@ class FileArchive(object):
         # Identify the observing sequences
         sequences = []
         for setup in self.setups:
-            # Query names and time stamps of science and sky files
-            sky_files = self.filter({'OBSTYPE': source.upper(), 'SETUP': setup})
-            sky_time_stamps = self.filter({'OBSTYPE': source.upper(), 'SETUP': setup}, namekey='DATE')
-            science_files = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup})
-            science_time_stamps = self.filter({'OBSTYPE': 'SCIENCE', 'SETUP': setup}, namekey='DATE')
+            for object in self.objects:
+                # Query names and time stamps of science and sky files
+                sky_files = self.filter({'OBSTYPE': source.upper(), 'OBJECT': object, 'SETUP': setup})
+                sky_time_stamps = self.filter({'OBSTYPE': source.upper(), 'OBJECT': object, 'SETUP': setup},
+                                              namekey='DATE')
+                science_files = self.filter({'OBSTYPE': 'SCIENCE', 'OBJECT': object, 'SETUP': setup})
+                science_time_stamps = self.filter({'OBSTYPE': 'SCIENCE', 'OBJECT': object, 'SETUP': setup},
+                                                  namekey='DATE')
 
-            # Test the number of source files
-            if len(sky_files) == 0:
-                logger.warning(f"Did not find any sky observations for setup {setup}. No sky subtraction will be "
-                               f"applied!")
-            else:
-                # Store the information in a new sequence
-                sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
-                                          sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
-                                          source=source))
+                # Test the number of source files
+                if len(sky_files) == 0:
+                    logger.warning(f"Did not find any sky observations for setup {setup}. No sky subtraction will be "
+                                   f"applied!")
+                else:
+                    # Store the information in a new sequence
+                    sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
+                                              sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
+                                              source=source))
         return sequences
 
     def initialize_product_files(self, prefix=None):
