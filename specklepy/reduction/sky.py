@@ -131,7 +131,7 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
                         hdu_list['VAR'].data = hdu_list['VAR'].data + weighted_sky_bkg_var[i]
                     else:
                         # Construct new HDU
-                        shape = list(hdu_list[0].data.shape[-2, -1])
+                        shape = np.array(hdu_list[0].data.shape)[[-2, -1]]
                         data = np.full(shape=shape, fill_value=weighted_sky_bkg_var[i])
                         hdu = fits.ImageHDU(data=data, name='VAR')
                         hdu_list.append(hdu)
