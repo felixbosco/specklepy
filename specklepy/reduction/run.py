@@ -35,8 +35,8 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
 
     # Read config
     configs = config.read(instrument_config_file)
-    instrument = configs['INSTRUMENTS'][instrument]
-    instrument_header_cards = configs[instrument]
+    # instrument = configs['INSTRUMENTS'][instrument]
+    instrument_header_cards = configs[instrument.upper()]
 
     # Double check whether all aliases are defined
     cards = []
