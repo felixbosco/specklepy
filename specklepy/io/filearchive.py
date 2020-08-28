@@ -356,8 +356,8 @@ class FileArchive(object):
 
                 # Test the number of source files
                 if len(sky_files) == 0:
-                    logger.warning(f"Did not find any sky observations for setup {setup}. No sky subtraction will be "
-                                   f"applied!")
+                    logger.warning(f"Did not find any sky observations for object {object} in setup {setup}. No sky "
+                                   f"subtraction will be applied!")
                 else:
                     # Store the information in a new sequence
                     sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
