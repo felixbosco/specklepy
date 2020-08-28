@@ -390,9 +390,10 @@ class FileArchive(object):
             dest = os.path.join(self.out_dir, self.out_prefix + file)
             logger.info(f"Initializing data product file {dest}")
             os.system(f"cp {src} {dest}")
-            with fits.open(dest) as hdu_list:
-                hdu_list[0].header.set('PIPELINE', 'Specklepy')
+            with fits.open(dest, mode='update') as hdu_list:
+                hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
                 hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+                hdu_list.flush()
 
             # Store new file in the list of product files
             product_files.append(dest)
