@@ -11,7 +11,8 @@ from specklepy.utils import combine
 
 class Sequence(object):
 
-    def __init__(self, science_files, sky_files, sky_time_stamps, science_time_stamps, source=None, file_path=None):
+    def __init__(self, science_files, sky_files, sky_time_stamps, science_time_stamps, source=None, file_path=None,
+                 object=None):
 
         if isinstance(science_files, (list, np.ndarray)):
             self.science_files = science_files
@@ -49,6 +50,11 @@ class Sequence(object):
             self.file_path = file_path
         else:
             raise SpecklepyTypeError('Sequence', 'file_path', type(file_path), 'str')
+
+        if object is None:
+            self.object = ''
+        else:
+            self.object = object
 
     def __str__(self):
         s = str(type(self)) + "\n"
