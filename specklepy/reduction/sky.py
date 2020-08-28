@@ -59,6 +59,8 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
     logger.info(f"Sky background subtraction source: {source}")
     if out_files is None:
         out_files = in_files.product_files
+    if out_files is None:
+        logger.warning(f"Output files are not declared in subtract_sky_background!")
 
     # Identify the observing sequences
     sequences = in_files.identify_sequences(source=source)
@@ -118,9 +120,9 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
                         science_file = out_file
                 logger.info(f"Applying sky background subtraction on file {science_file}")
                 with fits.open(science_file, mode='update') as hdu_list:
-                    hdu_list[0].data -= weighted_sky_bkg[i]
+                    hdu_list[0].data = hdu_list[0].data.astype(float) - weighted_sky_bkg[i]
                     if 'VAR' in hdu_list:
-                        hdu_list['VAR'].data += weighted_sky_bkg_var[i]
+                        hdu_list['VAR'].data = hdu_list['VAR'].data + weighted_sky_bkg_var[i]
                     hdu_list.flush()
 
     elif method in ['image', 'frame']:
