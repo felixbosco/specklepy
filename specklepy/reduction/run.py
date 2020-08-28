@@ -152,8 +152,8 @@ def full_reduction(params, debug=False):
     else:
         logger.info("Starting sky subtraction...")
         try:
-            sky.subtract_sky_background(**params['SKY'], in_files=in_files, file_path=params['PATHS']['filePath'],
-                                        tmp_dir=params['PATHS']['tmpDir'])
+            sky.subtract_sky_background(**params['SKY'], in_files=in_files, out_files=product_files,
+                                        file_path=params['PATHS']['filePath'], tmp_dir=params['PATHS']['tmpDir'])
         except RuntimeError as e:
             raise RuntimeWarning(e)
 
