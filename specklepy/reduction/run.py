@@ -29,30 +29,29 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
     """
 
     # Defaults
-    header_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
+    default_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
     dtypes = [str, str, str, float, int, str]
     instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
     # Read config
     configs = config.read(instrument_config_file)
-    # instrument = configs['INSTRUMENTS'][instrument]
-    instrument_header_cards = configs[instrument.upper()]
+    instrument_cards = configs[instrument.upper()]
 
     # Double check whether all aliases are defined
     cards = []
-    for card in header_cards:
+    for card in default_cards:
         try:
-            cards.append(instrument_header_cards[card])
+            cards.append(instrument_cards[card])
         except KeyError:
             logger.info(
                 f"Dropping header card {card} from setup identification, as there is no description in the config file."
                 f"\nCheck out {instrument_config_file} for details.")
             cards.append(None)
-    for card, dtype, header_card in zip(cards, dtypes, header_cards):
+    for card, dtype, header_card in zip(cards, dtypes, default_cards):
         if card is None:
             cards.remove(card)
             dtypes.remove(dtype)
-            header_cards.remove(header_card)
+            default_cards.remove(header_card)
 
     # Apply fall back values
     if path is None:
@@ -75,7 +74,7 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
         raise RuntimeError(f"Found no files in {path}!")
 
     # Initialize a file archive
-    raw_files = FileArchive(files, cards=cards, dtypes=dtypes, names=header_cards, sort_by=sort_by)
+    raw_files = FileArchive(files, cards=cards, dtypes=dtypes, names=default_cards, sort_by=sort_by)
     raw_files.identify_setups(['FILTER', 'EXPTIME'])
     raw_files.write_table(file_name=list_file)
 
