@@ -127,8 +127,15 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
                 logger.info(f"Applying sky background subtraction on file {science_file}")
                 with fits.open(science_file, mode='update') as hdu_list:
                     hdu_list[0].data = hdu_list[0].data.astype(float) - weighted_sky_bkg[i]
+                    hdu_list[0].header.set('SKYCORR', str(datetime.now()))
                     if 'VAR' in hdu_list:
                         hdu_list['VAR'].data = hdu_list['VAR'].data + weighted_sky_bkg_var[i]
+                    else:
+                        # Construct new HDU
+                        shape = list(hdu_list[0].data.shape[-2, -1])
+                        data = np.full(shape=shape, fill_value=weighted_sky_bkg_var[i])
+                        hdu = fits.ImageHDU(data=data, name='VAR')
+                        hdu_list.append(hdu)
                     hdu_list.flush()
 
     elif method in ['image', 'frame']:
