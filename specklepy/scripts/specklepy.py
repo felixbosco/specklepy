@@ -6,7 +6,6 @@ from specklepy.core.holography import holography
 from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
-from specklepy.io.parameterset import HolographyParameterSet
 from specklepy.logging import logger
 from specklepy.reduction import run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
@@ -54,7 +53,6 @@ def main():
     elif args.command is 'holography':
 
         # Read parameters from file and execute reconstruction
-        # params = HolographyParameterSet(args.parfile)
         defaults_file = os.path.join(os.path.dirname(__file__), '../config/holography.cfg')
         defaults_file = os.path.abspath(defaults_file)
         params = config.read(defaults_file)
