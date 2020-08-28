@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as clrs
+import os
+
 import astropy.units as u
 
 from specklepy.logging import logger
@@ -106,6 +108,33 @@ def maximize_plot():
             logger.warning("Could not maximize plot")
     else:
         raise RuntimeWarning("Maximizing plot is not possible with matplotlib backend {}".format(backend))
+
+
+def save_figure(file_name=None):
+    """Save figure to a file, if a file name is provided.
+
+    Args:
+        file_name (str, optional):
+            Name of the file to store the figure to. Nothing is done if not provided.
+    """
+    if file_name is not None:
+        logger.info(f"Saving figure to {file_name}")
+
+        # Identify requested file extension
+        root, extension = os.path.splitext(file_name)
+        extensions = ['.pdf', '.png', extension]
+
+        # Save figure in multiple formats
+        for ext in extensions:
+            plot_file = root + ext
+            try:
+                plt.savefig(plot_file, bbox_inches='tight', pad_inches=0)
+            except FileNotFoundError:
+                path, file_name = os.path.split(plot_file)
+                if not os.path.exists(path):
+                    logger.info(f"Making dir {path}")
+                    os.mkdir(path=path)
+                plt.savefig(plot_file, bbox_inches='tight', pad_inches=0)
 
 
 def desaturate_color(color, ncolors=1, saturation_values=None, saturation_min=0.1):
