@@ -6,6 +6,7 @@ from tqdm import trange
 import os
 
 from astropy.io import fits
+from astropy.table import Table
 from astropy.stats import sigma_clipped_stats
 
 from photutils import make_source_mask
@@ -16,7 +17,7 @@ from specklepy.exceptions import SpecklepyTypeError
 
 
 def subtract_sky_background(in_files, out_files=None, method='scalar', source='sky', mask_sources=False, file_path=None,
-                            debug=False):
+                            tmp_dir=None, debug=False):
 
     """Estimate and subtract the sky background via different methods and sources.
 
@@ -39,6 +40,8 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
             tested. However, masking sources yields a more precise result.
         file_path (str, optional):
             Path to the files, listed in `in_files`.
+        tmp_dir (str, optional):
+            Directory to which temporary results and QA data is stored.
         debug (bool, optional):
             Show debugging information.
     """
@@ -82,6 +85,12 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
             # Compute weighted sky background for each science file
             weighted_sky_bkg = np.dot(weights, sky_bkg)
             weighted_sky_bkg_var = np.dot(np.square(weights), np.square(sky_bkg_std))
+
+            # Store sky background estimates
+            sky_bkg_table = Table(data=[sequence.sky_files, weighted_sky_bkg, weighted_sky_bkg_var],
+                                  names=['FILE', 'BKG', 'VAR'])
+            sky_bkg_table_name = f"sky_bkg_{sequence.object}_{sequence.setup}.fits"
+            sky_bkg_table.write(os.path.join(tmp_dir, sky_bkg_table_name), overwrite=True)
 
             # Plot sky flux estimates
             if debug or True:
