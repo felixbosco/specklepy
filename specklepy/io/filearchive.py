@@ -205,16 +205,25 @@ class FileArchive(object):
             hdr = fits.getheader(file)
             new_row = [os.path.basename(file)]
             for card in cards:
-                if card in hdr:
-                    value = hdr[card]
-                    if not isinstance(value, str) or card == 'FILE':
-                        new_row.append(hdr[card])
-                    else:
-                        new_row.append(hdr[card].upper())
+                # Card actually contains two or more cards
+                if ',' in card:
+                    _cards = card.replace(',', '').split()
+                    value = hdr[_cards[0]]
+                    for _card in _cards[1:]:
+                        value += ' ' + hdr[_card]
+                    new_row.append(value)
+                # Only one card
                 else:
-                    logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header "
-                                f"card ({card}).")
-                    break
+                    if card in hdr:
+                        value = hdr[card]
+                        if not isinstance(value, str) or card == 'FILE':
+                            new_row.append(value)
+                        else:
+                            new_row.append(value.upper())
+                    else:
+                        logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header "
+                                    f"card ({card}).")
+                        break
             if len(new_row) == len(table.columns):
                 table.add_row(new_row)
 
