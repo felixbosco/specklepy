@@ -125,8 +125,8 @@ def holography(params, mode='same', debug=False):
         # (x) Apodization
         if 'apodizationType' in params['APODIZATION'] or 'apodizationWidth' in params['APODIZATION']:
             # Catch deprecated parameter names
-            raise RuntimeWarning("Parameters 'apodizationType' and 'apodizationWidth' are deprecated. "
-                                 "Use 'type' and 'radius' instead!")
+            logger.warning("Parameters 'apodizationType' and 'apodizationWidth' are deprecated. Use 'type' and "
+                           "'radius' instead!")
         f_object.apodize(type=params['APODIZATION']['type'], radius=params['APODIZATION']['radius'])
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
