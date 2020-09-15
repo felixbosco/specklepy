@@ -99,8 +99,8 @@ noiseReferenceMargin = 3
 noiseThreshold = 1  # multiples of standard deviation
 
 [APODIZATION]
-apodizationType = Gaussian # Gaussian or Airy
-apodizationWidth = 1.645 # in pixels
+type = Gaussian # Gaussian or Airy
+radius = 1.645 # Standard dev of Gaussian or first zero of Airy disk in pixels
 ```
 
 [(top)](#table-of-contents)
