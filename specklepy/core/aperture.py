@@ -73,7 +73,8 @@ class Aperture(object):
             logger.debug(f"Aperture argument data '{data}' is interpreted as file name.")
             data = fits.getdata(data)
         if not (data.ndim == 2 or data.ndim == 3):
-            raise ValueError("Data input of Aperture class must be of dimension 2 or 3, but was provided as data.ndim={}.".format(data.ndim))
+            raise ValueError(f"Data input of Aperture class must be of dimension 2 or 3, but was provided as "
+                             f"data.ndim={data.ndim}.")
         self.data = copy(data)
 
         # Remove the margins if requested
@@ -97,24 +98,24 @@ class Aperture(object):
 
     @property
     def index(self):
-        return (self.x0, self.y0)
+        return self.x0, self.y0
 
     @property
     def offset(self):
-        return (self.xoffset, self.yoffset)
+        return self.xoffset, self.yoffset
 
     @property
     def shape(self):
         return self.data.shape
 
     @property
-    def nframes(self):
+    def n_frames(self):
         return self.data.shape[0]
 
     def __getitem__(self, index):
         return self.data[index]
 
-    def make_distance_map(self):
+    def make_radius_map(self):
         if self.cropped:
             center = (self.radius, self.radius)
         else:
@@ -129,7 +130,7 @@ class Aperture(object):
             raise TypeError("Aperture received mode argument of type {}, but needs to be str type!".format(type(mode)))
 
         if mode == 'circular':
-            distance_map = self.make_distance_map()
+            distance_map = self.make_radius_map()
             mask2D = np.ma.masked_greater(distance_map, self.radius).mask
             if self.data.ndim == 2:
                 return mask2D
@@ -147,7 +148,8 @@ class Aperture(object):
                     mask[:, self.x0 - self.radius: self.y0 + self.radius + 1, self.y0 - self.radius: self.y0 + self.radius + 1] = 0
                 return mask
         else:
-            raise ValueError("Aperture received mode argument {}, but needs to be either 'circular' or 'rectangular'!".format(mode))
+            raise ValueError(f"Aperture received mode argument {mode}, but needs to be either 'circular' or "
+                             f"'rectangular'!")
 
     def crop(self):
         if self.cropped:
@@ -212,6 +214,9 @@ class Aperture(object):
         print()
         logger.info("Computed the Fourier transform of every frame.")
 
+    def get_variance(self):
+
+
     def get_encircled_energy(self, saveto=None):
         """Extracts the encircled energy from an aperture as a function of
         radius."""
@@ -221,7 +226,7 @@ class Aperture(object):
         # Initialize variables
         rdata = np.arange(0, self.radius, 1)
         ydata = np.zeros(rdata.shape)
-        distance_map = self.make_distance_map()
+        distance_map = self.make_radius_map()
 
         # Iterate over aperture radii
         for index, subset_radius in enumerate(rdata):
@@ -242,7 +247,7 @@ class Aperture(object):
 
         tmp = self.get_integrated()
 
-        radius_map = self.make_distance_map()
+        radius_map = self.make_radius_map()
         rdata = np.unique(radius_map)
         ydata = np.zeros(rdata.shape)
         with warnings.catch_warnings():
