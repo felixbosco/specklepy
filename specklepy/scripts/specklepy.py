@@ -60,8 +60,12 @@ def main():
         params = config.update_from_file(params, args.parfile)
         holography(params, mode=params['OPTIONS']['reconstructionMode'], debug=args.debug)
 
-    elif args.command is 'psf1d':
-        analysis.get_psf_1d(args.file, args.index, args.radius, args.out_file, args.normalize, debug=args.debug)
-
     elif args.command is 'aperture':
-        pass
+        if args.mode == 'psf1d':
+            logger.info("Extract 1D PSF profile")
+            analysis.get_psf_1d(args.file, args.index, args.radius, args.out_file, args.normalize, debug=args.debug)
+        elif args.mode == 'variance':
+            logger.info("Extract 1D PSF variation")
+            analysis.get_psf_variation(args.file, args.index, args.radius, args.out_file, args.normalize, args.debug)
+        else:
+            logger.warning(f"Aperture mode {args.mode} not recognized!")
