@@ -123,10 +123,14 @@ def holography(params, mode='same', debug=False):
         f_object.coadd_fft()
 
         # (x) Apodization
-        if 'apodizationType' in params['APODIZATION'] or 'apodizationWidth' in params['APODIZATION']:
+        if 'apodizationType' in params['APODIZATION']:
             # Catch deprecated parameter names
-            logger.warning("Parameters 'apodizationType' and 'apodizationWidth' are deprecated. Use 'type' and "
-                           "'radius' instead!")
+            logger.warning("Parameter 'apodizationType' is deprecated. Use 'type' instead!")
+            params['APODIZATION']['type'] = params['APODIZATION']['apodizationType']
+        if 'apodizationWidth' in params['APODIZATION']:
+            # Catch deprecated parameter names
+            logger.warning("Parameter 'apodizationWidth' is deprecated. Use 'radius' instead!")
+            params['APODIZATION']['radius'] = params['APODIZATION']['apodizationWidth']
         f_object.apodize(type=params['APODIZATION']['type'], radius=params['APODIZATION']['radius'])
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
