@@ -68,6 +68,20 @@ class GeneralArgParser(object):
         parser_holography.add_argument('parfile', type=str, help='Path to a parameter file.')
         parser_holography.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        # Parser for extracting 1D PSF profiles
+        parser_psf_1d = subparsers.add_parser('psf1d', help='Extract 1D PSF profiles.')
+        parser_psf_1d.set_defaults(command='psf1d')
+        parser_psf_1d.add_argument('file', type=str, default=None, help='File name to analyse.')
+        parser_psf_1d.add_argument('-i', '--index', nargs='+', type=int,
+                                   help='Center index of the aperture to analyse. Provide this as "--index 123 456".')
+        parser_psf_1d.add_argument('-r', '--radius', type=int, default=10,
+                                   help='Radius of the aperture to analyse in pix.')
+        parser_psf_1d.add_argument('-n', '--normalize', type=str, default=None,
+                                   help='Normalize the flux values, to either "peak", "aperture" or leave as `None` for '
+                                        'not normalizing.')
+        parser_psf_1d.add_argument('-o', '--out_file', type=str, default=None, help='Saves the results to this file.')
+        parser_psf_1d.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
+
         # Parser for aperture analysis
         parser_aperture = subparsers.add_parser('aperture', help='Aperture analysis in the image data.')
         parser_aperture.set_defaults(command='aperture')

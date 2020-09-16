@@ -2,6 +2,7 @@
 
 import os
 
+from specklepy.core import analysis
 from specklepy.core.holography import holography
 from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
@@ -58,6 +59,9 @@ def main():
         params = config.read(defaults_file)
         params = config.update_from_file(params, args.parfile)
         holography(params, mode=params['OPTIONS']['reconstructionMode'], debug=args.debug)
+
+    elif args.command is 'psf1d':
+        analysis.get_psf_1d(args.file, args.index, args.radius, args.out_file, args.normalize, debug=args.debug)
 
     elif args.command is 'aperture':
         pass
