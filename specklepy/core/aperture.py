@@ -214,24 +214,44 @@ class Aperture(object):
         print()
         logger.info("Computed the Fourier transform of every frame.")
 
-    def get_variance(self):
+    def get_psf_variance(self):
 
+        # Check data shape
+        if self.data.ndim != 3:
+            logger.warning(f"Aperture data need to be 3D but are {self.data.ndim}-dimensional!")
+            raise SystemExit("Aborting...")
+
+        # Initialize output radii and array
+        radius_map = self.make_radius_map()
+        rdata = np.unique(radius_map)
+        ydata = np.zeros(rdata.shape)
+
+        #
+        var_map = np.var(self.data, axis=0)
+
+        # Iterate over aperture radii
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for index, radius in enumerate(rdata):
+                ydata[index] = np.mean(var_map[np.where(radius_map == radius)])
+
+        return rdata, ydata
 
     def get_encircled_energy(self, saveto=None):
         """Extracts the encircled energy from an aperture as a function of
         radius."""
 
+        # Initialize output radii and array
+        radius_map = self.make_radius_map()
+        rdata = np.unique(radius_map)
+        ydata = np.zeros(rdata.shape)
+
+        #
         tmp = self.get_integrated()
 
-        # Initialize variables
-        rdata = np.arange(0, self.radius, 1)
-        ydata = np.zeros(rdata.shape)
-        distance_map = self.make_radius_map()
-
         # Iterate over aperture radii
-        for index, subset_radius in enumerate(rdata):
-            mask = np.ma.masked_greater(distance_map, subset_radius).mask
-            ydata[index] = np.sum(np.ma.masked_array(tmp, mask=mask))
+        for index, radius in enumerate(rdata):
+            ydata[index] = np.sum(tmp[np.where(radius_map <= radius)])
 
         # Save results to file
         if saveto is not None:
@@ -245,11 +265,15 @@ class Aperture(object):
     def get_psf_profile(self):
         """Computes the radial average of the PSF in the aperture."""
 
-        tmp = self.get_integrated()
-
+        # Initialize output radii and array
         radius_map = self.make_radius_map()
         rdata = np.unique(radius_map)
         ydata = np.zeros(rdata.shape)
+
+        #
+        tmp = self.get_integrated()
+
+        # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for index, radius in enumerate(rdata):
