@@ -48,6 +48,19 @@ def holography(params, mode='same', debug=False):
         raise SpecklepyValueError('holography()', argname='mode', argvalue=mode,
                                   expected="either 'same', 'full', or 'valid'")
 
+    if 'apodizationType' in params['APODIZATION']:
+        # Catch deprecated parameter name
+        logger.warning("Parameter 'apodizationType' is deprecated. Use 'type' instead!")
+        params['APODIZATION']['type'] = params['APODIZATION']['apodizationType']
+    if 'apodizationWidth' in params['APODIZATION']:
+        # Catch deprecated parameter name
+        logger.warning("Parameter 'apodizationWidth' is deprecated. Use 'radius' instead!")
+        params['APODIZATION']['radius'] = params['APODIZATION']['apodizationWidth']
+    if params['APODIZATION']['type'] is None or params['APODIZATION']['type'].lower() not in ['gaussian', 'airy']:
+        logger.error(f"Apodization type has not been set or of wrong type ({params['APODIZATION']['type']})")
+    if params['APODIZATION']['radius'] is None or not isinstance(params['APODIZATION']['radius'], (int, float)):
+        logger.error(f"Apodization radius has not been set or of wrong type ({params['APODIZATION']['radius']})")
+
     # Initialize the outfile
     out_file = ReconstructionFile(filename=params['PATHS']['outFile'], files=in_files,
                                   cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
@@ -123,14 +136,6 @@ def holography(params, mode='same', debug=False):
         f_object.coadd_fft()
 
         # (x) Apodization
-        if 'apodizationType' in params['APODIZATION']:
-            # Catch deprecated parameter names
-            logger.warning("Parameter 'apodizationType' is deprecated. Use 'type' instead!")
-            params['APODIZATION']['type'] = params['APODIZATION']['apodizationType']
-        if 'apodizationWidth' in params['APODIZATION']:
-            # Catch deprecated parameter names
-            logger.warning("Parameter 'apodizationWidth' is deprecated. Use 'radius' instead!")
-            params['APODIZATION']['radius'] = params['APODIZATION']['apodizationWidth']
         f_object.apodize(type=params['APODIZATION']['type'], radius=params['APODIZATION']['radius'])
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
