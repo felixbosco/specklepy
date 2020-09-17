@@ -6,9 +6,10 @@ from tqdm import trange
 from astropy.io import fits
 
 from specklepy.core.alignment import get_pad_vectors, pad_array
-from specklepy.core.apodization import apodize
+from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
+from specklepy.utils.transferfunctions import otf
 
 
 class FourierObject(object):
@@ -140,24 +141,50 @@ class FourierObject(object):
 
         return self.fourier_image
 
-    def apodize(self, type, radius):
-        """Apodize the Fourier object with a Gaussian kernel.
+    def apodize(self, type, radius, crop=False):
+        """Apodize the Fourier object with a Gaussian or Airy disk kernel.
 
         Args:
             type (str):
-                Type of the apodization. Can be either `Gaussian` or `Airy`. See specklepy.core.apodization for details.
+                Type of the apodization. Can be either `Gaussian` or `Airy`. See specklepy.core.psfmodel for details.
             radius (float):
                 Radius of the apodization kernel. This is the standard deviation of a Gaussian kernel or the radius of
                 first zero in the case of an Airy function.
+            crop (bool, optional):
+                Crop corners of the PSF and set them to zero.
 
         Returns:
             apodized (np.array, dtype=np.complex128):
                 Apodized Fourier-plane image.
         """
 
+        # Assert image shape
+        if self.fourier_image.shape[0] != self.fourier_image.shape[1]:
+            logger.warning("The apodization is applied to a non-quadratic input image. This may cause some "
+                           "unpredictable results!")
+
         logger.info("Apodizing the object...")
-        if type is not None and radius is not None:
-            self.fourier_image = apodize(self.fourier_image, type, radius=radius)
+        if type is None and radius is None:
+            logger.warning(f"Apodization is skipped for either type or radius not being defined!")
+            return self.fourier_image
+
+        # Interpret function input and compute apodization PSF
+        psf_model = PSFModel(type=type, radius=radius)
+        apodization_psf = psf_model(self.fourier_image.shape)
+
+        # Crop corners of the PSF
+        if crop:
+            threshold = apodization_psf[0, int(psf_model.center[1])]
+            apodization_psf -= threshold
+            apodization_psf = np.maximum(apodization_psf, 0.0)
+
+        # Normalize to unity
+        apodization_psf /= np.sum(apodization_psf)
+
+        # Transform into Fourier space
+        apodization_otf = otf(apodization_psf)
+        self.fourier_image = np.multiply(self.fourier_image, apodization_otf)
+
         return self.fourier_image
 
     def ifft(self, total_flux=None):
