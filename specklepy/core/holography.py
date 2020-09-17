@@ -89,7 +89,7 @@ def holography(params, mode='same', debug=False):
 
         # (v) Select reference stars
         print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
-        input("\tWhen you are done, just hit a key.")
+        input("\tWhen you are done, hit a ENTER.")
 
         # (vi) PSF extraction
         ref_stars = ReferenceStars(psf_radius=params['PSFEXTRACTION']['psfRadius'],
