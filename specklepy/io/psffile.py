@@ -33,10 +33,11 @@ class PSFFile(Outfile):
             logger.info(f"Creating PSF directory {out_dir}")
             os.makedirs(out_dir)
 
-        # Adapt filename to form the name of the outfile
-        _, outfile = os.path.split(in_file)
-        outfile = outfile.replace('.fits', '_psfs.fits')
-        # self.filename = outDir + outfile
+        # Adapt filename to form the name of the out_file
+        # _, out_file = os.path.split(in_file)
+        # out_file = out_file.replace('.fits', '_psfs.fits')
+        out_file = 'psf_' + os.path.basename(in_file)
+        # self.filename = outDir + out_file
 
         # Type assertion
         if not isinstance(frame_shape, tuple):
@@ -62,5 +63,5 @@ class PSFFile(Outfile):
             hdr_input = fits.getheader(in_file)
         shape = (hdr_input['NAXIS3'], frame_shape[0], frame_shape[1])
 
-        super().__init__(filename=os.path.join(out_dir, outfile), shape=shape, cards=cards,
+        super().__init__(filename=out_file, path=out_dir, shape=shape, cards=cards,
                          header_card_prefix=header_card_prefix)
