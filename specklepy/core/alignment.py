@@ -76,7 +76,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
     if lazy_mode and len(files) == 1:
         logger.info("Only one data cube is provided, nothing to align.")
         shifts = [(0, 0)]
-        image_shape = fits.getdata(files[0]).shape
+        image_shape = fits.getdata(os.path.join(in_dir, files[0])).shape
         image_shape = (image_shape[-2], image_shape[-1])
 
     # Otherwise estimate shifts

@@ -105,7 +105,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
     if lazy_mode and len(files) == 1:
 
         # Do not align just a single file
-        with fits.open(files[0]) as hdu_list:
+        with fits.open(os.path.join(in_dir, files[0])) as hdu_list:
             cube = hdu_list[0].data
             if var_ext in hdu_list:
                 var_cube = hdu_list[var_ext].data
