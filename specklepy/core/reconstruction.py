@@ -4,10 +4,11 @@ import os
 
 from astropy.io import fits
 
-from specklepy.core.alignment import get_shifts, get_pad_vectors
+from specklepy.core import alignment
 from specklepy.core.ssa import coadd_frames
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.outfile import Outfile
+from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
 
 
@@ -22,7 +23,7 @@ class Reconstruction(object):
     supported_modes = ['full', 'same', 'valid']
 
     def __init__(self, in_files, mode='same', reference_image=None, out_file=None, in_dir=None, tmp_dir=None,
-                 alignment_method='collapse', debug=False):
+                 alignment_method='collapse', var_ext=None, debug=False):
         """Create a Reconstruction instance.
 
         Args:
@@ -56,28 +57,20 @@ class Reconstruction(object):
         if not isinstance(mode, str):
             raise SpecklepyTypeError('Reconstruction', 'mode', type(mode), 'str')
         if out_file is not None and not isinstance(out_file, str):
-            raise SpecklepyTypeError('Reconstruction', 'outfile', type(out_file), 'str')
+            raise SpecklepyTypeError('Reconstruction', 'out_file', type(out_file), 'str')
 
         # Check input parameter values
         if mode not in self.supported_modes:
             raise SpecklepyValueError('Reconstruction', 'mode', mode, f"in {self.supported_modes}")
-        if mode is 'same' and reference_image is None:
-            logger.warning("Reconstruction requires a reference image if run in `same` mode! The first image will "
-                           "be used as reference field.")
-            reference_image = 0
-        if in_dir is None:
-            in_dir = ''
-        if tmp_dir is None:
-            tmp_dir = ''
 
         # Store input data
         self.in_files = in_files
         self.mode = mode
-        self.outfile = out_file
-        if reference_image is None:
-            self.reference_image = 0
-        else:
-            self.reference_image = reference_image
+        self.out_file = out_file if out_file is not None else 'reconstruction.fits'
+        self.reference_image = reference_image if reference_image is not None else 0
+        self.in_dir = in_dir if in_dir is not None else ''
+        self.tmp_dir = tmp_dir if tmp_dir is not None else ''
+        self.var_ext = var_ext if var_ext is not None else 'VAR'
 
         # Retrieve name of reference file
         if isinstance(self.reference_image, str):
@@ -100,43 +93,50 @@ class Reconstruction(object):
             self.shifts = (0, 0)
         else:
             # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
-            tmp_files = []
+            self.tmp_files = []
             for file in self.in_files:
                 cube = fits.getdata(os.path.join(in_dir, file))
+                image = None
+                image_var = None
                 if alignment_method == 'collapse':
-                    image = np.sum(cube, axis=0)
+                    if not debug:
+                        image = np.sum(cube, axis=0)
                     tmp_file = 'int_' + os.path.basename(file)
                     tmp_path = os.path.join(tmp_dir, tmp_file)
                 elif alignment_method == 'ssa':
-                    image = coadd_frames(cube=cube)
+                    if not debug:
+                        image, image_var = coadd_frames(cube=cube)
                     tmp_file = 'ssa_' + os.path.basename(file)
                     tmp_path = os.path.join(tmp_dir, tmp_file)
                 else:
                     raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
                                               expected="either 'collapse' or 'ssa'")
-                tmp_files.append(tmp_file)
+                self.tmp_files.append(tmp_file)
 
                 logger.info(f"Saving temporary reconstruction of cube {file} to {tmp_path}")
-                Outfile(tmp_path, data=image, verbose=True)
+                if not debug:
+                    tmp_file_object = Outfile(tmp_path, data=image, verbose=True)
+                    if image_var is not None:
+                        tmp_file_object.new_extension(name=self.var_ext, data=image_var)
 
             # Identify reference tmp file
             if isinstance(self.reference_image, str):
                 self.reference_tmp_file = None
-                for tmp_file in tmp_files:
+                for tmp_file in self.tmp_files:
                     if self.reference_file in tmp_file:
                         self.reference_tmp_file = tmp_file
                 if self.reference_tmp_file is None:
                     raise RuntimeError(f"Unable to identify reference file in list of temporary reconstructions!")
             elif isinstance(self.reference_image, int):
-                self.reference_tmp_file = tmp_files[self.reference_image]
+                self.reference_tmp_file = self.tmp_files[self.reference_image]
 
             # Estimate relative shifts
-            self.shifts = get_shifts(files=tmp_files, reference_file=self.reference_tmp_file,
-                                     lazy_mode=True, return_image_shape=False, in_dir=tmp_dir, debug=debug)
+            self.shifts = alignment.get_shifts(files=self.tmp_files, reference_file=self.reference_tmp_file,
+                                               lazy_mode=True, return_image_shape=False, in_dir=tmp_dir, debug=debug)
 
             # Derive corresponding padding vectors
-            self.pad_vectors, self.reference_pad_vector = get_pad_vectors(shifts=self.shifts, cube_mode=False,
-                                                                          return_reference_image_pad_vector=True)
+            self.pad_vectors, self.reference_pad_vector = \
+                alignment.get_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
 
             # Derive corresponding image sizes
             self.image = np.zeros(frame_shape)
@@ -153,6 +153,31 @@ class Reconstruction(object):
         # Initialize the variance map
         self.var = np.zeros(self.image.shape)
 
-        # Initialize out file
-        pass
-        embed()
+        # Initialize output file and create an extension for the variance
+        self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file, shape=self.image.shape,
+                                      in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
+        self.out_file.new_extension(name=self.var_ext, data=self.var)
+
+    def coadd_images(self):
+        for index, file in enumerate(self.tmp_files):
+
+            # Read data
+            with fits.open(os.path.join(self.tmp_dir, file)) as hdu_list:
+                tmp_image = hdu_list[0].data
+                if self.var_ext is not None and self.var_ext in hdu_list:
+                    tmp_image_var = hdu_list[self.var_ext].data
+                else:
+                    tmp_image_var = None
+
+            # Initialize or co-add reconstructions and var images
+            self.image += alignment.pad_array(tmp_image, self.pad_vectors[index], mode=self.mode,
+                                                  reference_image_pad_vector=self.reference_pad_vector)
+            if tmp_image_var is not None:
+                self.var += alignment.pad_array(tmp_image_var, self.pad_vectors[index], mode=self.mode,
+                                                          reference_image_pad_vector=self.reference_pad_vector)
+
+        # Update out_file
+        self.out_file.data = self.image
+        self.out_file.update_extension(ext_name=self.var_ext, data=self.var)
+
+        return self.image, self.var
