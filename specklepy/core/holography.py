@@ -7,6 +7,7 @@ from specklepy.core.alignment import get_shifts
 from specklepy.core.aperture import Aperture
 from specklepy.core.fourierobject import FourierObject
 from specklepy.core.psfextraction import ReferenceStars
+from specklepy.core.reconstruction import Reconstruction
 from specklepy.core.sourceextraction import find_sources
 from specklepy.core.ssa import ssa
 from specklepy.io.filearchive import FileArchive
@@ -42,6 +43,7 @@ def holography(params, mode='same', debug=False):
     file_archive = FileArchive(file_list=params['PATHS']['inDir'], cards=[], dtypes=[])
     in_files = file_archive.files
     in_dir = file_archive.in_dir
+    tmp_dir = params['PATHS']['tmpDir']
 
     # Input check
     if mode not in ['same', 'full', 'valid']:
@@ -65,13 +67,21 @@ def holography(params, mode='same', debug=False):
     out_file = ReconstructionFile(filename=params['PATHS']['outFile'], files=in_files,
                                   cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
 
+    # Initialize reconstruction
+    reconstruction = Reconstruction(in_files=in_files, mode=mode, alignment_method='ssa',
+                                    reference_image=params['PATHS']['alignmentReferenceFile'],
+                                    in_dir=in_dir, tmp_dir=tmp_dir, out_file=params['PATHS']['outFile'],
+                                    var_ext=params['OPTIONS']['varianceExtensionName'], debug=debug)
+
     # (i-ii) Align cubes
-    shifts = get_shifts(files=in_files, reference_file=params['PATHS']['alignmentReferenceFile'],
-                        lazy_mode=True, return_image_shape=False, in_dir=in_dir, debug=debug)
+    # shifts = get_shifts(files=in_files, reference_file=params['PATHS']['alignmentReferenceFile'],
+    #                     lazy_mode=True, return_image_shape=False, in_dir=in_dir, debug=debug)
+    shifts = reconstruction.shifts
 
     # (iii) Compute SSA reconstruction
-    image = ssa(in_files, mode=mode, outfile=out_file, in_dir=in_dir, tmp_dir=params['PATHS']['tmpDir'],
-                variance_extension_name=params['OPTIONS']['varianceExtensionName'])
+    # image = ssa(in_files, mode=mode, outfile=out_file, in_dir=in_dir, tmp_dir=tmp_dir,
+    #             variance_extension_name=params['OPTIONS']['varianceExtensionName'])
+    image = reconstruction.coadd_images()
     if isinstance(image, tuple):
         # SSA returned a reconstruction image and a variance image
         image, image_var = image
@@ -94,7 +104,7 @@ def holography(params, mode='same', debug=False):
         # (vi) PSF extraction
         ref_stars = ReferenceStars(psf_radius=params['PSFEXTRACTION']['psfRadius'],
                                    reference_source_file=params['PATHS']['refSourceFile'], in_files=in_files,
-                                   save_dir=params['PATHS']['tmpDir'], in_dir=in_dir,
+                                   save_dir=tmp_dir, in_dir=in_dir,
                                    field_segmentation=params['PSFEXTRACTION']['fieldSegmentation'])
         if params['PSFEXTRACTION']['mode'].lower() == 'epsf':
             psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
