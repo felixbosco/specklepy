@@ -279,7 +279,7 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
     padded = np.pad(array, pad_vector, mode='constant')
 
     # Crop the image according to the desired mode
-    if mode is 'same':
+    if mode == 'same':
         # Take reference pad vector and adapt to correctly limit the image
         _r = reference_image_pad_vector
         # Pick only those pixels, covered by the reference image
@@ -288,11 +288,11 @@ def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
         else:
             padded = padded[:, _r[0][0]: _adapt_max_coordinate(_r[0][1]), _r[1][0]: _adapt_max_coordinate(_r[1][1])]
 
-    elif mode is 'full':
+    elif mode == 'full':
         # There is nothing to crop in 'full' mode
         pass
 
-    elif mode is 'valid':
+    elif mode == 'valid':
         raise NotImplementedError("specklepy.core.alignment.pad_array does not support the 'valid' mode yet!")
 
     return padded
