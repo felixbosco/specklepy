@@ -10,6 +10,7 @@ from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.reduction import run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
+from specklepy.utils.resolution import get_resolution_parameters
 from specklepy.gui.window import start
 
 
@@ -69,3 +70,8 @@ def main():
             analysis.get_psf_variation(args.file, args.index, args.radius, args.out_file, args.normalize, args.debug)
         else:
             logger.warning(f"Aperture mode {args.mode} not recognized!")
+
+    elif args.command is 'apodization':
+        get_resolution_parameters(wavelength=args.wavelength, diameter=args.diameter, pixel_scale=args.pixel_scale)
+
+

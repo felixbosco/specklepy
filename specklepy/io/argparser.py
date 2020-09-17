@@ -97,6 +97,17 @@ class GeneralArgParser(object):
         parser_aperture.add_argument('-o', '--out_file', type=str, default=None, help='Saves the results to this file.')
         parser_aperture.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        # Parser for
+        parser_apodization = subparsers.add_parser('apodization', help='compute the apodization function parameters.')
+        parser_apodization.set_defaults(command='apodization')
+        parser_apodization.add_argument('diameter', type=float,
+                                        help='diameter of the telescope primary mirror in units of meters')
+        parser_apodization.add_argument('wavelength', type=float,
+                                        help='observing wavelength in units of meters')
+        parser_apodization.add_argument('-p', '--pixel_scale', type=float, default=None,
+                                        help='pixel/ plate scale of the detector in units of mas')
+        parser_apodization.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+
     def parse_args(self, *args, **kwargs):
         """Parse command line arguments.
 
