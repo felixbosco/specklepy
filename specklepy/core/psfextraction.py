@@ -115,7 +115,7 @@ class ReferenceStars(object):
             logger.info("Extracting PSFs from file {}".format(file))
             psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=(self.box_size, self.box_size),
                                in_dir=self.in_dir, header_card_prefix="HIERARCH SPECKLEPY ")
-            psf_files.append(psf_file.filename)
+            psf_files.append(psf_file.file_path)
 
             # Consider alignment of cubes when initializing the apertures, i.e.
             # the position of the aperture in the shifted cube
