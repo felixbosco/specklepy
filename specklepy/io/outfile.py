@@ -165,7 +165,7 @@ class Outfile(object):
             hdu_list[0].header.set('UPDATED', str(datetime.now()))
             hdu_list.flush()
         if self.verbose:
-            logger.info("Updating data in {}".format(self.file_path))
+            logger.info(f"Updating data in {self.file_path}")
 
     def __getitem__(self, extension):
         return fits.getdata(self.file_path, extension)  # [index]
@@ -208,6 +208,13 @@ class Outfile(object):
                 hdu_list.append(hdu=hdu)
             else:
                 hdu_list.insert(index=index, hdu=hdu)
+            hdu_list.flush()
+
+    def update_extension(self, ext_name, data):
+        if self.verbose:
+            logger.info(f"Updating data in {self.file_path}[{ext_name}]")
+        with fits.open(self.file_path, mode='update') as hdu_list:
+            hdu_list[ext_name].data = data
             hdu_list.flush()
 
     def has_extension(self, ext_name):
