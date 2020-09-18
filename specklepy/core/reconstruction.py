@@ -73,65 +73,28 @@ class Reconstruction(object):
         self.var_ext = var_ext if var_ext is not None else 'VAR'
 
         # Retrieve name of reference file
-        if isinstance(self.reference_image, str):
-            self.reference_file = self.reference_image
-        elif isinstance(self.reference_image, int):
-            self.reference_file = self.in_files[self.reference_image]
-        else:
-            SpecklepyTypeError('Reconstruction', 'reference_image', type(reference_image), 'int or str')
+        self.reference_file = self.identify_reference_file()
 
         # Derive shape of individual input frames
         single_cube_mode = len(self.in_files) == 1
         example_frame = fits.getdata(os.path.join(in_dir, self.in_files[0]))
         if example_frame.ndim == 3:
             example_frame = example_frame[0]
-        frame_shape = example_frame.shape
+        self.frame_shape = example_frame.shape
 
         # Initialize image
         if single_cube_mode:
-            self.image = np.zeros(frame_shape)
+            self.image = np.zeros(self.frame_shape)
             self.shifts = (0, 0)
         else:
             # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
-            self.tmp_files = []
-            for file in self.in_files:
-                cube = fits.getdata(os.path.join(in_dir, file))
-                image = None
-                image_var = None
-                if alignment_method == 'collapse':
-                    if not debug:
-                        image = np.sum(cube, axis=0)
-                    tmp_file = 'int_' + os.path.basename(file)
-                    tmp_path = os.path.join(tmp_dir, tmp_file)
-                elif alignment_method == 'ssa':
-                    if not debug:
-                        image, image_var = coadd_frames(cube=cube)
-                    tmp_file = 'ssa_' + os.path.basename(file)
-                    tmp_path = os.path.join(tmp_dir, tmp_file)
-                else:
-                    raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
-                                              expected="either 'collapse' or 'ssa'")
-                self.tmp_files.append(tmp_file)
-
-                logger.info(f"Saving temporary reconstruction of cube {file} to {tmp_path}")
-                if not debug:
-                    tmp_file_object = Outfile(tmp_path, data=image, verbose=True)
-                    if image_var is not None:
-                        tmp_file_object.new_extension(name=self.var_ext, data=image_var)
+            self.long_exp_files = self.create_long_exposures(alignment_method=alignment_method)
 
             # Identify reference tmp file
-            if isinstance(self.reference_image, str):
-                self.reference_tmp_file = None
-                for tmp_file in self.tmp_files:
-                    if self.reference_file in tmp_file:
-                        self.reference_tmp_file = tmp_file
-                if self.reference_tmp_file is None:
-                    raise RuntimeError(f"Unable to identify reference file in list of temporary reconstructions!")
-            elif isinstance(self.reference_image, int):
-                self.reference_tmp_file = self.tmp_files[self.reference_image]
+            self.reference_tmp_file = self.identify_reference_long_exposure_file()
 
             # Estimate relative shifts
-            self.shifts = alignment.get_shifts(files=self.tmp_files, reference_file=self.reference_tmp_file,
+            self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_tmp_file,
                                                lazy_mode=True, return_image_shape=False, in_dir=tmp_dir, debug=debug)
 
             # Derive corresponding padding vectors
@@ -139,16 +102,7 @@ class Reconstruction(object):
                 alignment.get_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
 
             # Derive corresponding image sizes
-            self.image = np.zeros(frame_shape)
-            if self.mode == 'same':
-                pass
-            elif self.mode == 'full':
-                self.image = np.pad(self.image, self.reference_pad_vector, mode='constant')
-            elif self.mode == 'valid':
-                # Estimate minimum overlap
-                _shifts = np.array(self.shifts)
-                _crop_by = np.max(_shifts, axis=0) - np.min(_shifts, axis=0)
-                self.image = self.image[_crop_by[0]:, _crop_by[1]:]
+            self.image = self.initialize_image()
 
         # Initialize the variance map
         self.var = np.zeros(self.image.shape)
@@ -158,8 +112,98 @@ class Reconstruction(object):
                                       in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
         self.out_file.new_extension(name=self.var_ext, data=self.var)
 
-    def coadd_images(self):
-        for index, file in enumerate(self.tmp_files):
+    def identify_reference_file(self):
+
+        # Initialize reference file
+        reference_file = None
+
+        # Interpret reference image
+        if isinstance(self.reference_image, str):
+            reference_file = self.reference_image
+        elif isinstance(self.reference_image, int):
+            reference_file = self.in_files[self.reference_image]
+        else:
+            SpecklepyTypeError('Reconstruction', 'reference_image', type(self.reference_image), 'int or str')
+
+        return reference_file
+
+    def identify_reference_long_exposure_file(self):
+        """Identify the long exposure file that corresponds to the reference cube"""
+        reference_tmp_file = None
+
+        if isinstance(self.reference_image, str):
+            for tmp_file in self.long_exp_files:
+                if self.reference_file in tmp_file:
+                    self.reference_tmp_file = tmp_file
+            if reference_tmp_file is None:
+                raise RuntimeError(f"Unable to identify reference file in list of temporary reconstructions!")
+
+        elif isinstance(self.reference_image, int):
+            reference_tmp_file = self.long_exp_files[self.reference_image]
+
+        return reference_tmp_file
+
+    def create_long_exposures(self, alignment_method):
+        """Compute long exposures from the input data cubes."""
+
+        # Initialize list of long exposure files
+        long_exposure_files = []
+
+        # Iterate over input data cubes
+        for file in self.in_files:
+
+            # Read data from file
+            cube = fits.getdata(os.path.join(self.in_dir, file))
+            image = None
+            image_var = None
+
+            # Compute collapsed or SSA'ed images from the cube
+            if alignment_method == 'collapse':
+                image = np.sum(cube, axis=0)
+                tmp_file = 'int_' + os.path.basename(file)
+            elif alignment_method == 'ssa':
+                image, image_var = coadd_frames(cube=cube)
+                tmp_file = 'ssa_' + os.path.basename(file)
+            else:
+                raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
+                                          expected="either 'collapse' or 'ssa'")
+
+            # Store data to a new Outfile instance
+            tmp_path = os.path.join(self.tmp_dir, tmp_file)
+            logger.info(f"Saving temporary reconstruction of cube {file} to {tmp_path}")
+            tmp_file_object = Outfile(tmp_path, data=image, verbose=True)
+            if image_var is not None:
+                tmp_file_object.new_extension(name=self.var_ext, data=image_var)
+
+            # Add the recently created file to the list
+            long_exposure_files.append(tmp_file)
+
+        return long_exposure_files
+
+    def initialize_image(self):
+        """Initialize the reconstruction image."""
+
+        # Initialize image along the input frame shape
+        image = np.zeros(self.frame_shape)
+
+        # Crop or expand according to the reconstruction mode
+        if self.mode == 'same':
+            pass
+        elif self.mode == 'full':
+            image = np.pad(image, self.reference_pad_vector, mode='constant')
+        elif self.mode == 'valid':
+            # Estimate minimum overlap
+            _shifts = np.array(self.shifts)
+            _crop_by = np.max(_shifts, axis=0) - np.min(_shifts, axis=0)
+            image = image[_crop_by[0]:, _crop_by[1]:]
+
+        return image
+
+    def coadd_long_exposures(self):
+        """Coadd the interim long exposures."""
+
+        # Iterate over long exposure images
+        for index, file in enumerate(self.long_exp_files):
 
             # Read data
             with fits.open(os.path.join(self.tmp_dir, file)) as hdu_list:
@@ -169,7 +213,7 @@ class Reconstruction(object):
                 else:
                     tmp_image_var = None
 
-            # Initialize or co-add reconstructions and var images
+            # Co-add reconstructions and var images
             self.image += alignment.pad_array(tmp_image, self.pad_vectors[index], mode=self.mode,
                                                   reference_image_pad_vector=self.reference_pad_vector)
             if tmp_image_var is not None:
