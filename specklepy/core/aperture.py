@@ -215,6 +215,7 @@ class Aperture(object):
         logger.info("Computed the Fourier transform of every frame.")
 
     def get_psf_variance(self):
+        """Extract a radial variance profile of the speckle PSFs."""
 
         # Check data shape
         if self.data.ndim != 3:
@@ -225,17 +226,20 @@ class Aperture(object):
         radius_map = self.make_radius_map()
         rdata = np.unique(radius_map)
         ydata = np.zeros(rdata.shape)
+        edata = np.zeros(rdata.shape)
 
-        #
+        # Extract 2D variance map
         var_map = np.var(self.data, axis=0)
 
         # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for index, radius in enumerate(rdata):
-                ydata[index] = np.mean(var_map[np.where(radius_map == radius)])
+                subset = var_map[np.where(radius_map == radius)]
+                ydata[index] = np.mean(subset)
+                edata[index] = np.mean(subset)
 
-        return rdata, ydata
+        return rdata, ydata, edata
 
     def get_encircled_energy(self, saveto=None):
         """Extracts the encircled energy from an aperture as a function of
@@ -245,13 +249,16 @@ class Aperture(object):
         radius_map = self.make_radius_map()
         rdata = np.unique(radius_map)
         ydata = np.zeros(rdata.shape)
+        edata = np.zeros(rdata.shape)
 
-        #
-        tmp = self.get_integrated()
+        # Extract 2D image
+        image = self.get_integrated()
 
         # Iterate over aperture radii
         for index, radius in enumerate(rdata):
-            ydata[index] = np.sum(tmp[np.where(radius_map <= radius)])
+            subset = image[np.where(radius_map <= radius)]
+            ydata[index] = np.sum(image)
+            edata[index] = np.sum(image)
 
         # Save results to file
         if saveto is not None:
@@ -260,7 +267,7 @@ class Aperture(object):
             np.savetxt(saveto, data, header=header)
             logger.info("Saved encircled energy data to file {}".format(saveto))
 
-        return rdata, ydata
+        return rdata, ydata, edata
 
     def get_psf_profile(self):
         """Computes the radial average of the PSF in the aperture."""
@@ -269,14 +276,17 @@ class Aperture(object):
         radius_map = self.make_radius_map()
         rdata = np.unique(radius_map)
         ydata = np.zeros(rdata.shape)
+        edata = np.zeros(rdata.shape)
 
-        #
-        tmp = self.get_integrated()
+        # Extract 2D image
+        image = self.get_integrated()
 
         # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for index, radius in enumerate(rdata):
-                ydata[index] = np.mean(tmp[np.where(radius_map == radius)])
+                subset = image[np.where(radius_map == radius)]
+                ydata[index] = np.mean(subset)
+                edata[index] = np.std(subset)
 
-        return rdata, ydata
+        return rdata, ydata, edata
