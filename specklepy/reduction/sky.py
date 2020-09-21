@@ -136,6 +136,8 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
                         hdu = fits.ImageHDU(data=data, name='VAR')
                         hdu_list.append(hdu)
                     hdu_list[0].header.set('SKYCORR', str(datetime.now()))
+                    hdu_list[0].header.set('SKYBKG', weighted_sky_bkg[i], "Sky background")
+                    hdu_list[0].header.set('SKYVAR', weighted_sky_bkg_var[i], "Sky background variance")
                     hdu_list.flush()
 
     elif method in ['image', 'frame']:
