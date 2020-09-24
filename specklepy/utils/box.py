@@ -6,17 +6,17 @@ from specklepy.logging import logger
 
 class Box(object):
 
-    def __init__(self, x_min=None, x_max=None, y_min=None, y_max=None, indexes=None):
+    def __init__(self, indexes=None):
 
         # Initialize attributes with kwargs
-        self.x_min = x_min
-        self.x_max = x_max
-        self.y_min = y_min
-        self.y_max = y_max
+        self.x_min = None
+        self.x_max = None
+        self.y_min = None
+        self.y_max = None
 
         # Interpret indexes input and overwrite
         if indexes is not None:
-            if not isinstance(indexes, (tuple, list)):
+            if not isinstance(indexes, list):
                 raise SpecklepyTypeError('Box', argname='*args', argtype=type(indexes), expected='list')
             else:
                 if len(indexes) == 1:
@@ -50,7 +50,7 @@ class Box(object):
     def __repr__(self):
         return f"[[{self.y_min}, {self.y_max}], [{self.x_min}, {self.x_max}]]"
 
-    def get(self, array):
+    def __call__(self, array, update=True):
 
         # Abort if Box is undefined
         if self.x_min is None and self.x_max is None and self.y_min is None and self.y_max is None:
@@ -63,7 +63,21 @@ class Box(object):
             y_min = 0 if self.y_min is None else self.y_min
             y_max = array.shape[1] if self.y_max is None else self.y_max
 
+            # Update limits
+            if update:
+                self.x_min = x_min
+                self.x_max = x_max
+                self.y_min = y_min
+                self.y_max = y_max
+
             # Create index sets
             x, y = np.meshgrid(range(y_min, y_max), range(x_min, x_max))
 
             return array[y, x]
+
+    @property
+    def shape(self):
+        if None in [self.x_max, self.x_min, self.y_max, self.y_min]:
+            return None
+        else:
+            return self.x_max - self.x_min, self.y_max - self.y_min
