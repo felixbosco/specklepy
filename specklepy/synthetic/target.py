@@ -29,7 +29,8 @@ class Target(object):
     """
 
     __name__ = 'target'
-    # Credit https://en.wikipedia.org/wiki/Photometric_system
+    # Credit https://en.wikipedia.org/wiki/Apparent_magnitude
+    # Central wavelength (mum) | Bandpass (mum) |
     photometry_dict = {'U': {'wavelength': 0.36, 'FWHM': 0.15, 'Flux': 1810.0},
                        'B': {'wavelength': 0.44, 'FWHM': 0.22, 'Flux': 4260.0},
                        'V': {'wavelength': 0.55, 'FWHM': 0.16, 'Flux': 3640.0},
