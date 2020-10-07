@@ -148,9 +148,9 @@ quantum_efficiency = 0.9 electron/ ph
 saturation_level = 60000 electron
 
 [PARAMETERS]
-DIT = 1.2 s  # Discrete integration time
-nframes = 100  # Number of frames to generate
-nframes_limit = 100  # Maximum number of frames per file
+exposure_time = 1.2 s  # Discrete integration time
+n_frames = 100  # Number of frames to generate
+n_frames_limit = 100  # Maximum number of frames per file
 outfile = airy_1200ms.fits
 time_stamp = None
 dithers = [(0, 0)]
