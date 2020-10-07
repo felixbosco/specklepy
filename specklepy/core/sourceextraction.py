@@ -68,7 +68,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         threshold = noise_threshold * std
     else:
         if isinstance(image_var, str):
-            embed()
+            # Try to load variance extension from file
             image_var = fits.getdata(filename, image_var)
             image_var = np.mean(image_var)
         threshold = noise_threshold * np.sqrt(image_var)
