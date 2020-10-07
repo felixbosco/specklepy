@@ -10,7 +10,7 @@ from astropy.visualization import SqrtStretch
 from astropy.visualization.mpl_normalize import ImageNormalize
 from photutils import CircularAperture
 
-from specklepy.core.sourceextraction import find_sources
+from specklepy.core.sourceextraction import extract_sources
 from specklepy.io.parameterset import ParameterSet
 from specklepy.logging import logger
 
@@ -60,8 +60,8 @@ def main(options=None):
 
     # finder = SourceExtraction()
     # finder.
-    find_sources(image=args.file, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.noiseThreshold,
-        background_subtraction=background_subtraction, writeto=args.outfile)
+    extract_sources(image=args.file, fwhm=params.starfinder.starfinderFwhm, noise_threshold=params.starfinder.noiseThreshold,
+                    background_subtraction=background_subtraction, write_to=args.outfile)
     # finder.writeto(args.outfile)
 
     # Plot results

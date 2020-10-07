@@ -8,7 +8,7 @@ from specklepy.core.aperture import Aperture
 from specklepy.core.fourierobject import FourierObject
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.reconstruction import Reconstruction
-from specklepy.core.sourceextraction import find_sources
+from specklepy.core.sourceextraction import extract_sources
 from specklepy.core.ssa import ssa
 from specklepy.io.filearchive import FileArchive
 from specklepy.io.reconstructionfile import ReconstructionFile
@@ -90,12 +90,12 @@ def holography(params, mode='same', debug=False):
     # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
-        find_sources(image=image,
-                     fwhm=params['STARFINDER']['starfinderFwhm'],
-                     noise_threshold=params['STARFINDER']['noiseThreshold'],
-                     background_subtraction=False,
-                     writeto=params['PATHS']['allStarsFile'],
-                     starfinder='DAO', verbose=False)
+        extract_sources(image=image,
+                        fwhm=params['STARFINDER']['starfinderFwhm'],
+                        noise_threshold=params['STARFINDER']['noiseThreshold'],
+                        background_subtraction=False,
+                        write_to=params['PATHS']['allStarsFile'],
+                        star_finder='DAO', verbose=False)
 
         # (v) Select reference stars
         print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
@@ -164,9 +164,9 @@ def holography(params, mode='same', debug=False):
             break
 
     # Repeat astrometry and photometry, i.e. StarFinder on final image
-    find_sources(image=image, fwhm=params['STARFINDER']['starfinderFwhm'],
-                 noise_threshold=params['STARFINDER']['noiseThreshold'], background_subtraction=False,
-                 writeto=params['PATHS']['allStarsFile'], starfinder='DAO', verbose=False)
+    extract_sources(image=image, fwhm=params['STARFINDER']['starfinderFwhm'],
+                    noise_threshold=params['STARFINDER']['noiseThreshold'], background_subtraction=False,
+                    write_to=params['PATHS']['allStarsFile'], star_finder='DAO', verbose=False)
 
     # Finally return the image
     return image

@@ -96,8 +96,8 @@ class HolographicReconstruction(object):
         """Find sources in the reference image, which may either be a SSA or
         ha preceding holographic reconstruction."""
         finder = SourceExtraction()
-        finder.find_sources(image=self.image, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
-            background_subtraction=background_subtraction, verbose=False)
+        finder.extract_sources(image=self.image, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
+                               background_subtraction=background_subtraction, verbose=False)
         finder.writeto(self.params.allStarsFile)
 
 
