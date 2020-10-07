@@ -61,7 +61,10 @@ class ScaledTuple(object):
     def coordinates(self):
         return self.x_scaled, self.y_scaled
 
-    def shift(self, other, scaled=False):
+
+class Position(ScaledTuple):
+
+    def offset(self, other, scaled=False):
         if isinstance(other, tuple):
             if scaled:
                 self._x += other[0] / self.scale
@@ -69,6 +72,18 @@ class ScaledTuple(object):
             else:
                 self._x += other[0]
                 self._y += other[1]
-        elif isinstance(other, Position):
+        elif isinstance(other, ScaledTuple):
             self._x += other._x
             self._y += other._y
+
+
+class ScaledShape(ScaledTuple):
+
+    @property
+    def shape(self):
+        return self.index
+
+    @property
+    def scaled_shape(self):
+        return self.coordinates
+
