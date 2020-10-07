@@ -4,6 +4,7 @@ import os
 
 from specklepy.core import analysis
 from specklepy.core.holography import holography
+from specklepy.core.sourceextraction import extract_sources
 from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
@@ -70,6 +71,10 @@ def main():
             analysis.get_psf_variation(args.file, args.index, args.radius, args.out_file, args.normalize, args.debug)
         else:
             logger.warning(f"Aperture mode {args.mode} not recognized!")
+
+    elif args.command is 'extract':
+        extract_sources(image=args.file_name, noise_threshold=args.noise_threshold, fwhm=args.fwhm,
+                        write_to=args.out_file)
 
     elif args.command is 'apodization':
         get_resolution_parameters(wavelength=args.wavelength, diameter=args.diameter, pixel_scale=args.pixel_scale)
