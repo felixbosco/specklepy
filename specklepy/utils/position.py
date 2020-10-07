@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Position(object):
 
     """A class for transforming positions between pixel coordinates and unit coordinates.
@@ -24,17 +27,23 @@ class Position(object):
         self.scale = scale
 
         if center is None:
-            self.center = (0, 0)
+            self._center = (0, 0)
         else:
-            self.center = center
+            if scaled:
+                self._center = tuple(np.array(center) / scale)
+            else:
+                self._center = center
+
+    def __repr__(self):
+        return f"Position({self._x}, {self._y})"
 
     @property
     def x(self):
-        return self._x - self.center[0]
+        return self._x - self._center[0]
 
     @property
     def y(self):
-        return self._y - self.center[1]
+        return self._y - self._center[1]
 
     @property
     def index(self):
@@ -51,3 +60,15 @@ class Position(object):
     @property
     def coordinates(self):
         return self.x_scaled, self.y_scaled
+
+    def shift(self, other, scaled=False):
+        if isinstance(other, tuple):
+            if scaled:
+                self._x += other[0] / self.scale
+                self._y += other[1] / self.scale
+            else:
+                self._x += other[0]
+                self._y += other[1]
+        elif isinstance(other, Position):
+            self._x += other._x
+            self._y += other._y
