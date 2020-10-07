@@ -11,7 +11,7 @@ from specklepy.logging import logger
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_subtraction=False, write_to=None,
-                    verbose=True):
+                    debug=True):
     """Extract sources from an image with a StarFinder routine.
 
     Long description...
@@ -30,13 +30,17 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_
             Enable background subtraction. Default is False.
         write_to (str, optional):
             If provided as a str, the list of identified sources  is saved to this file.
-        verbose (bool, optional):
-            Set to False, if reducing the terminal output. Default is True.
+        debug (bool, optional):
+            Show debugging information. Default is False.
 
     Returns:
         sources (astropy.table.Table): Table of identified sources, None if no
             sources are detected.
     """
+
+    # Set logger level
+    if debug:
+        logger.setLevel('DEBUG')
 
     # Input parameters
     if isinstance(image, np.ndarray):
@@ -54,7 +58,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_
     mean, median, std = sigma_clipped_stats(image, sigma=3.0)
     logger.info(f"Noise statistics for {filename}:\n\tMean = {mean:.3}\n\tMedian = {median:.3}\n\tStdDev = {std:.3}")
 
-    # Instantiate starfinder object
+    # Instantiate StarFinder object
     if not isinstance(star_finder, str):
         raise SpecklepyTypeError('extract_sources', argname='starfinder', argtype=type(star_finder), expected='str')
     if 'dao' in star_finder.lower():
@@ -77,16 +81,14 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_
     sources.rename_column('xcentroid', 'x')
     sources.rename_column('ycentroid', 'y')
     sources.keep_columns(['x', 'y', 'flux'])
-    for col in sources.colnames:
-        sources[col].info.format = '%.8g'  # for consistent table output
-    if verbose:
-        logger.info("Found {} sources:\n{}".format(len(sources), sources))
-    else:
-        logger.info("Found {} sources".format(len(sources)))
 
-    # Save sources table to file, if writeto is provided
+    # Add terminal output
+    logger.info(f"Extracted {len(sources)} sources")
+    logger.debug(sources)
+
+    # Save sources table to file, if requested
     if write_to is not None:
         logger.info("Writing list of sources to file {}".format(write_to))
-        sources.write(write_to, format='ascii', overwrite=True)
+        sources.write(write_to, format='ascii.fixed_width', overwrite=True)
 
     return sources
