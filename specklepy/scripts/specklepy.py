@@ -31,8 +31,8 @@ def main():
     if args.command is 'generate':
 
         # Read parameters from file and generate exposures
-        target, telescope, detector, kwargs = get_objects(args.parfile, debug=args.debug)
-        generate_exposure(target=target, telescope=telescope, detector=detector, debug=args.debug, **kwargs)
+        target, telescope, detector, parameters = get_objects(args.parfile, debug=args.debug)
+        generate_exposure(target=target, telescope=telescope, detector=detector, debug=args.debug, **parameters)
 
     elif args.command is 'reduce':
 

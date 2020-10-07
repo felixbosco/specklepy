@@ -169,8 +169,12 @@ def get_objects(parameter_file, debug=False):
             Show debugging information.
 
     Returns:
-        objects (dict):
-            Dict containing the parameter file section as a key word and the objects (or kwargs dict) as values.
+        target (Target object):
+            .
+        telescope (Telescope object):
+        detector (Detector object):
+        parameters (dict):
+            Dictionary containing the parameters parsed toward generate exposure beyond the three objects.
     """
 
     # Set logger level
@@ -191,17 +195,24 @@ def get_objects(parameter_file, debug=False):
     logger.debug(f"Initialized Telescope instance:\n{telescope}")
     detector = Detector(**params['DETECTOR'])
     logger.debug(f"Initialized Detector instance:\n{detector}")
-    kwargs = params['KWARGS']
+
+    # Extract and interpret other kez word parameters
+    if 'KWARGS' in params:
+        parameters = params['KWARGS']
+    elif 'PARAMETERS' in params:
+        parameters = params['PARAMETERS']
+    else:
+        parameters = {}
 
     # Interpret types of key word arguments
-    for key in kwargs.keys():
+    for key in parameters.keys():
         try:
-            kwargs[key] = eval(kwargs[key])
-            logger.debug(f"Kwarg {key} evaluated as {kwargs[key]} ({type(kwargs[key])})")
+            parameters[key] = eval(parameters[key])
+            logger.debug(f"Kwarg {key} evaluated as {parameters[key]} ({type(parameters[key])})")
         except SyntaxError:
-            kwargs[key] = Quantity(kwargs[key])
-            logger.debug(f"Kwarg {key} evaluated as {kwargs[key]} ({type(kwargs[key])})")
+            parameters[key] = Quantity(parameters[key])
+            logger.debug(f"Kwarg {key} evaluated as {parameters[key]} ({type(parameters[key])})")
         except NameError:
-            logger.debug(f"Kwarg {key} not evaluated {kwargs[key]} ({type(kwargs[key])})")
+            logger.debug(f"Kwarg {key} not evaluated {parameters[key]} ({type(parameters[key])})")
 
-    return target, telescope, detector, kwargs
+    return target, telescope, detector, parameters
