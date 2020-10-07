@@ -86,7 +86,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
         object_name = _object.__name__
 
         for key in object_dict:
-            if key in skip_attributes[object_name]:
+            if key in skip_attributes[object_name] or object_dict[key] is None:
                 continue
             card = f"HIERARCH SPECKLEPY {object_name.upper()} {key.upper()}"
             if isinstance(object_dict[key], Quantity):
