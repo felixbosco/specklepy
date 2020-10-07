@@ -51,7 +51,7 @@ def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maxim
     if norm == 'log':
         norm = clrs.LogNorm()
     plt.figure()
-    plt.imshow(image, norm=norm)
+    plt.imshow(image, norm=norm, origin='lower')
     plt.title(title)
     if maximize:
         maximize_plot()
