@@ -243,7 +243,7 @@ class Target(object):
 
         if dither is None:
             phase_center = (0, 0)
-        elif isinstance(dither, tuple) or isinstance(dither, list):
+        elif isinstance(dither, (tuple, list)):
             if not (isinstance(dither[0], (int, float))):
                 raise TypeError("Dithers should be provided as int or float. These are then interpreted as arcsecconds.")
             else:
