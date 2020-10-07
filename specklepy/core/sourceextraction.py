@@ -10,7 +10,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
 
 
-def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_subtraction=False, write_to=None,
+def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_subtraction=True, write_to=None,
                     debug=True):
     """Extract sources from an image with a StarFinder routine.
 
@@ -27,11 +27,12 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_
             Choose whether the 'DAO' or 'IRAF' StarFinder implementations from photutils shall be used. Default is
             'DAO'.
         background_subtraction (bool, optional):
-            Enable background subtraction. Default is False.
+            Let the StarFinder consider the background subtraction. Set False for ignoring background flux. Default is
+            `True`.
         write_to (str, optional):
-            If provided as a str, the list of identified sources  is saved to this file.
+            If provided as a str, the list of identified sources is saved to this file.
         debug (bool, optional):
-            Show debugging information. Default is False.
+            Show debugging information. Default is `False`.
 
     Returns:
         sources (astropy.table.Table): Table of identified sources, None if no
@@ -58,22 +59,26 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_
     mean, median, std = sigma_clipped_stats(image, sigma=3.0)
     logger.info(f"Noise statistics for {filename}:\n\tMean = {mean:.3}\n\tMedian = {median:.3}\n\tStdDev = {std:.3}")
 
+    # Consider sky background
+    if background_subtraction:
+        logger.info(f"Considering mean sky background of {mean}")
+        sky = mean
+    else:
+        sky = 0.0
+
     # Instantiate StarFinder object
     if not isinstance(star_finder, str):
         raise SpecklepyTypeError('extract_sources', argname='starfinder', argtype=type(star_finder), expected='str')
     if 'dao' in star_finder.lower():
-        star_finder = DAOStarFinder(fwhm=fwhm, threshold=noise_threshold * std)
+        star_finder = DAOStarFinder(fwhm=fwhm, threshold=noise_threshold * std, sky=sky)
     elif 'iraf' in star_finder.lower():
-        star_finder = IRAFStarFinder(fwhm=fwhm, threshold=noise_threshold * std)
+        star_finder = IRAFStarFinder(fwhm=fwhm, threshold=noise_threshold * std, sky=sky)
     else:
         raise SpecklepyValueError('extract_sources', argname='star_finder', argvalue=star_finder,
                                   expected="'DAO' or 'IRAF")
 
     # Find stars
-    if background_subtraction:
-        logger.info("Subtracting background...")
-        image -= median
-    logger.info("Finding sources...")
+    logger.info("Extracting sources...")
     sources = star_finder(image)
 
     # Reformatting sources table
