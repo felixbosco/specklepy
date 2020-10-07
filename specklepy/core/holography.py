@@ -93,9 +93,9 @@ def holography(params, mode='same', debug=False):
         extract_sources(image=image,
                         fwhm=params['STARFINDER']['starfinderFwhm'],
                         noise_threshold=params['STARFINDER']['noiseThreshold'],
-                        background_subtraction=False,
+                        background_subtraction=True,
                         write_to=params['PATHS']['allStarsFile'],
-                        star_finder='DAO', verbose=False)
+                        star_finder='DAO', debug=debug)
 
         # (v) Select reference stars
         print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
@@ -165,8 +165,8 @@ def holography(params, mode='same', debug=False):
 
     # Repeat astrometry and photometry, i.e. StarFinder on final image
     extract_sources(image=image, fwhm=params['STARFINDER']['starfinderFwhm'],
-                    noise_threshold=params['STARFINDER']['noiseThreshold'], background_subtraction=False,
-                    write_to=params['PATHS']['allStarsFile'], star_finder='DAO', verbose=False)
+                    noise_threshold=params['STARFINDER']['noiseThreshold'], background_subtraction=True,
+                    write_to=params['PATHS']['allStarsFile'], star_finder='DAO', debug=debug)
 
     # Finally return the image
     return image
