@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 import numpy as np
-from configparser import ConfigParser
+from tqdm import trange
 
 from astropy.io import fits
 from astropy.units import Quantity
@@ -123,6 +123,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     frame_counter = 0
     for outfile_index, outfile in enumerate(outfiles):
         with fits.open(outfile, mode='update') as hdu_list:
+
             # Get a new field of view for each file to enable dithering between files
             if dithers is not None:
                 try:
@@ -135,7 +136,8 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
                                                                  resolution=telescope.psf_resolution,
                                                                  dither=dither)
 
-            for index in range(hdu_list[0].header['NAXIS3']):
+            # Generate individual frames
+            for index in trange(hdu_list[0].header['NAXIS3'], desc=f"Generating exposures for file {outfile}"):
                 photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=exposure_time,
                                                         debug=debug)
                 counts = detector.get_counts(photon_rate=photon_rate,
@@ -150,17 +152,13 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
                     pass
 
                 frame_counter += 1
-                print("\rSaving exposure {:4}/{:4} to file {}...".format(frame_counter, n_frames, outfile), end='')
 
-            # Update header entry date
+            # Update header entry DATE
             hdu_list[0].header.set('DATE', str(datetime.now()))
-    print("")
 
 
 def get_objects(parameter_file, debug=False):
     """Get objects from parameter file.
-
-    TODO: Implement more flexibility in the section names
 
     Args:
         parameter_file (str):
@@ -170,7 +168,6 @@ def get_objects(parameter_file, debug=False):
 
     Returns:
         target (Target object):
-            .
         telescope (Telescope object):
         detector (Detector object):
         parameters (dict):
@@ -204,15 +201,16 @@ def get_objects(parameter_file, debug=False):
     else:
         parameters = {}
 
-    # Interpret types of key word arguments
+    # Interpret str-type key word arguments
     for key in parameters.keys():
-        try:
-            parameters[key] = eval(parameters[key])
-            logger.debug(f"Kwarg {key} evaluated as {parameters[key]} ({type(parameters[key])})")
-        except SyntaxError:
-            parameters[key] = Quantity(parameters[key])
-            logger.debug(f"Kwarg {key} evaluated as {parameters[key]} ({type(parameters[key])})")
-        except NameError:
-            logger.debug(f"Kwarg {key} not evaluated {parameters[key]} ({type(parameters[key])})")
+        if isinstance(parameters[key], str):
+            try:
+                parameters[key] = eval(parameters[key])
+                logger.debug(f"Kwarg {key} evaluated as {parameters[key]} ({type(parameters[key])})")
+            except SyntaxError:
+                parameters[key] = Quantity(parameters[key])
+                logger.debug(f"Kwarg {key} evaluated as {parameters[key]} ({type(parameters[key])})")
+            except NameError:
+                logger.debug(f"Kwarg {key} not evaluated {parameters[key]} ({type(parameters[key])})")
 
     return target, telescope, detector, parameters
