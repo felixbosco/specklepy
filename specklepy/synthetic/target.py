@@ -5,6 +5,7 @@ from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
+from specklepy.io.table import read_table
 from specklepy.logging import logger
 
 
@@ -166,9 +167,9 @@ class Target(object):
             file (str):
                 Name of the file to read in.
             format (str, optional):
-                Format of the file to read. Passed to Table.read(). Default is 'ascii'.
+                Format of the table file to read. Default is `None`.
             table_keys (dict, optional):
-                Keyword dict for 'x' and 'y' position, and 'flux'. Default is None and is replaced in the function.
+                Keyword dict for 'x' and 'y' position, and 'flux'. Default is `None` and is replaced in the function.
 
         ToDo:
             * Implemented reading of tables with units.
@@ -180,7 +181,7 @@ class Target(object):
             table_keys = {'x': 'x', 'y': 'y', 'flux': 'flux', 'mag': 'mag'}
 
         # Read table data
-        table = Table.read(file, format=format)
+        table = read_table(file, format=format)
 
         # Get data from table columns
         xx = table[table_keys['x']]
