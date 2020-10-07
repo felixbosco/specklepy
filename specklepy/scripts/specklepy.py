@@ -73,6 +73,8 @@ def main():
             logger.warning(f"Aperture mode {args.mode} not recognized!")
 
     elif args.command is 'extract':
+        if args.out_file is None:
+            args.out_file = 'sources_' + args.file_name.replace('.fits', '.dat')
         extract_sources(image=args.file_name, noise_threshold=args.noise_threshold, fwhm=args.fwhm,
                         write_to=args.out_file)
 
