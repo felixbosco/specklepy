@@ -10,6 +10,7 @@ from specklepy.core.aperture import Aperture
 from specklepy.core.segmentation import Segmentation
 from specklepy.logging import logger
 from specklepy.io.psffile import PSFFile
+from specklepy.io.table import read_table
 from specklepy.utils.combine import weighted_mean
 from specklepy.utils.plot import imshow
 
@@ -39,7 +40,7 @@ class ReferenceStars(object):
 
         # Store attributes
         self.radius = psf_radius
-        self.star_table = Table.read(reference_source_file, format='ascii')
+        self.star_table = read_table(reference_source_file, error=True)
         self.in_files = in_files
         self.save_dir = save_dir
         if in_dir is None:
