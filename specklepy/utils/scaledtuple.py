@@ -1,9 +1,9 @@
 import numpy as np
 
 
-class Position(object):
+class ScaledTuple(object):
 
-    """A class for transforming positions between pixel coordinates and unit coordinates.
+    """A class for transforming tuples (positions and shapes) between pixel coordinates and unit coordinates.
 
     Attributes:
          x (float)
@@ -35,7 +35,7 @@ class Position(object):
                 self._center = center
 
     def __repr__(self):
-        return f"Position({self._x}, {self._y})"
+        return f"ScaledTuple({self._x}, {self._y})"
 
     @property
     def x(self):

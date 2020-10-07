@@ -7,6 +7,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
 from specklepy.io.table import read_table
 from specklepy.logging import logger
+from specklepy.utils.scaledtuple import ScaledTuple
 
 
 class Target(object):
@@ -255,7 +256,7 @@ class Target(object):
         # Derive the array shape
         # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
         shape = (int(self.field_of_view[0] / self.resolution), int(self.field_of_view[1] / self.resolution))
-        center = (shape[0] / 2, shape[1] / 2)
+        center = ScaledTuple(shape[0] / 2, shape[1] / 2, scale=self.resolution)
         self.flux_per_pixel = (self.sky_background_flux * self.resolution**2).decompose()
 
         # Create array with sky background flux
@@ -264,8 +265,12 @@ class Target(object):
         # Add stars from star_table to photon_rate_density
         self.stars = self.read_star_table(self.star_table)
         for row in self.stars:
-            position = (int(center[0] + (row['x'] - phase_center[0]) / self.resolution.to('arcsec').value),
-                        int(center[1] + (row['y'] - phase_center[1]) / self.resolution.to('arcsec').value))
+            # position = (int(center[0] + (row['x'] - phase_center[0]) / self.resolution.to('arcsec').value),
+            #             int(center[1] + (row['y'] - phase_center[1]) / self.resolution.to('arcsec').value))
+            position = ScaledTuple(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=True,
+                                   center=phase_center)
+            position.shift(center)
+            position = position.index
             flux = row['flux']
             try:
                 photon_rate_density.value[position] = np.maximum(photon_rate_density.value[position], flux)
