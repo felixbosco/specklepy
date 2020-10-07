@@ -18,7 +18,7 @@ class Target(object):
 
     Attributes:
         shape (tuple, dtype=int):
-        FoV (tuple, dtype=astropy.units.Quantity):
+        field_of_view (tuple, dtype=astropy.units.Quantity):
         pixel_scale (astropy.Unit):
 
     Optional attributes:
@@ -83,16 +83,24 @@ class Target(object):
         if isinstance(sky_background, str):
             sky_background = eval(sky_background)
         if sky_background is None:
-            self.sky_background_flux = 0.0 / u.arcsec**2
+            self.sky_background_flux = 0.0 / u.Unit('arcsec')**2
         elif isinstance(sky_background, u.Quantity):
             # Interpreting as mag / arcsec**2
             logger.warning("Interpreting sky_background as in units of mag per arcsec**2.")
-            self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / u.arcsec**2
+            self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / u.Unit('arcsec')**2
         elif isinstance(sky_background, (int, float)):
-            logger.warning(f"Interpreting scalar type sky_background as {sky_background * u.mag / u.arcsec**2}")
-            self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.arcsec**2
+            logger.warning(f"Interpreting scalar type sky_background as {sky_background * u.mag / u.Unit('arcsec')**2}")
+            self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.Unit('arcsec')**2
         else:
             raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'u.Quantity')
+
+        # Initialize class attributes
+        self.shape = None
+        self.field_of_view = None
+        self.pixel_scale = None
+        self.resolution = None
+        self.flux_per_pixel = None
+        self.stars = None
 
     @staticmethod
     def from_file(par_file):
@@ -124,13 +132,13 @@ class Target(object):
     def get_reference_flux(self, photometry_file, band, format='ascii'):
         if photometry_file is None:
             fwhm = self.photometry_dict[band]['FWHM']
-            flux = self.photometry_dict[band]['Flux'] * u.Jy
+            flux = self.photometry_dict[band]['Flux'] * u.Unit('Jy')
         else:
             table = Table.read(photometry_file, format=format)
             row_index = np.where(table["Band"] == band)
             fwhm = table['FWHM'][row_index][0]
-            flux = table['Flux'][row_index][0] *u.Jy
-        return (flux / const.h * fwhm * u.ph).decompose()
+            flux = table['Flux'][row_index][0] *u.Unit('Jy')
+        return (flux / const.h * fwhm * u.Unit('photon')).decompose()
 
     def magnitude_to_flux(self, magnitude):
         """Convert magnitudes to flux values.
@@ -211,16 +219,18 @@ class Target(object):
 
         # Input parameters
         if isinstance(field_of_view, u.Quantity):
-            self.FoV = (field_of_view, field_of_view)
-        elif isinstance (field_of_view, tuple):
-            self.FoV = field_of_view
+            self.field_of_view = (field_of_view, field_of_view)
+        elif isinstance(field_of_view, tuple):
+            self.field_of_view = field_of_view
         elif isinstance(field_of_view, (int, float)):
             logger.warning(f"Interpreting float type FoV as {field_of_view} arcsec")
             field_of_view = field_of_view * u.Unit('arcsec')
-            self.FoV = (field_of_view, field_of_view)
+            self.field_of_view = (field_of_view, field_of_view)
         else:
             raise SpecklepyTypeError('get_photon_rate_density', 'field_of_view', type(field_of_view), 'tuple')
-        self.FoV = (self.FoV[0] * 1.1, self.FoV[1] * 1.1) # Add 10% FoV to avoid dark margins
+
+        # Add 10% FoV to avoid dark margins
+        self.field_of_view = (self.field_of_view[0] * 1.1, self.field_of_view[1] * 1.1)
 
         if isinstance(resolution, (int, float)):
             logger.warning(f"Interpreting float type resolution as {resolution} arcsec")
@@ -243,7 +253,7 @@ class Target(object):
 
         # Derive the array shape
         # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
-        shape = (int(self.FoV[0] / self.resolution), int(self.FoV[1] / self.resolution))
+        shape = (int(self.field_of_view[0] / self.resolution), int(self.field_of_view[1] / self.resolution))
         center = (shape[0] / 2, shape[1] / 2)
         self.flux_per_pixel = (self.sky_background_flux * self.resolution**2).decompose()
 
