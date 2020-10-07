@@ -1,6 +1,9 @@
+from IPython import embed
 import numpy as np
+
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
+
 from photutils import DAOStarFinder, IRAFStarFinder
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
@@ -17,7 +20,9 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_
         image (np.ndarray or str):
             Image array or the name of a file containing the image array.
         noise_threshold (float):
+            Multiple of the uncertainty/ standard deviation of the image.
         fwhm (float):
+            Expected full width at half maximum (FWHM) of the sources in units of pixels.
         star_finder (str, optional):
             Choose whether the 'DAO' or 'IRAF' StarFinder implementations from photutils shall be used. Default is
             'DAO'.
@@ -40,6 +45,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', background_
         logger.info("The argument image '{}' is interpreted as file name.".format(image))
         filename = image
         image = fits.getdata(filename)
+        image = image.squeeze()
     else:
         raise SpecklepyTypeError('extract_sources()', argname='image', argtype=type(image),
                                  expected='np.ndarray or str')
