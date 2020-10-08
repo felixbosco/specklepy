@@ -1,4 +1,7 @@
+from copy import copy
+from IPython import embed
 import numpy as np
+
 import astropy.units as u
 import astropy.constants as const
 from astropy.table import Table
@@ -7,7 +10,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
 from specklepy.io.table import read_table
 from specklepy.logging import logger
-from specklepy.utils.scaledtuple import Position, ScaledShape
+from specklepy.utils.scaledtuple import Position, ScaledTuple
 
 
 class Target(object):
@@ -102,7 +105,7 @@ class Target(object):
         self.pixel_scale = None
         self.resolution = None
         self.flux_per_pixel = None
-        self.stars = None
+        self.stars = self.read_star_table(self.star_table)
 
     @staticmethod
     def from_file(par_file):
@@ -220,20 +223,6 @@ class Target(object):
         """
 
         # Input parameters
-        if isinstance(field_of_view, u.Quantity):
-            self.field_of_view = (field_of_view, field_of_view)
-        elif isinstance(field_of_view, tuple):
-            self.field_of_view = field_of_view
-        elif isinstance(field_of_view, (int, float)):
-            logger.warning(f"Interpreting float type FoV as {field_of_view} arcsec")
-            field_of_view = field_of_view * u.Unit('arcsec')
-            self.field_of_view = (field_of_view, field_of_view)
-        else:
-            raise SpecklepyTypeError('get_photon_rate_density', 'field_of_view', type(field_of_view), 'tuple')
-
-        # Add 10% FoV to avoid dark margins
-        self.field_of_view = (self.field_of_view[0] * 1.1, self.field_of_view[1] * 1.1)
-
         if isinstance(resolution, (int, float)):
             logger.warning(f"Interpreting float type resolution as {resolution} arcsec")
             resolution = resolution * u.Unit('arcsec')
@@ -243,33 +232,40 @@ class Target(object):
             raise SpecklepyTypeError('get_photon_rate_density', 'resolution', type(resolution), 'u.Quantity')
         self.resolution = resolution
 
+        if isinstance(field_of_view, (int, float)):
+            logger.warning(f"Interpreting float type FoV as {field_of_view} arcsec")
+            field_of_view = field_of_view * u.Unit('arcsec')
+        elif isinstance(field_of_view, (tuple, list, u.Quantity)):
+            pass
+        else:
+            raise SpecklepyTypeError('get_photon_rate_density', 'field_of_view', type(field_of_view), 'tuple')
+
+        # Add 10% FoV to avoid dark margins
+        self.field_of_view = ScaledTuple(field_of_view, scale=resolution, scaled=True)
+        self.field_of_view *= 1.1
+
         if dither is None:
             phase_center = (0, 0)
         elif isinstance(dither, (tuple, list)):
             if not (isinstance(dither[0], (int, float))):
-                raise TypeError("Dithers should be provided as int or float. These are then interpreted as arcsecconds.")
+                raise TypeError("Dithers should be provided as int or float. These are then interpreted as arcseconds.")
             else:
                 phase_center = dither
         else:
             raise SpecklepyTypeError('get_photon_rate_density', 'dither', type(dither), 'tuple')
 
-        # Derive the array shape
-        # self.FoV = (self.shape[0] * self.resolution, self.shape[1] * self.resolution)
-        shape = (int(self.field_of_view[0] / self.resolution), int(self.field_of_view[1] / self.resolution))
-        center = Position(shape[0] / 2, shape[1] / 2, scale=self.resolution)
-        self.flux_per_pixel = (self.sky_background_flux * self.resolution**2).decompose()
+        # Define image center for centering star positions around the image center
+        center = copy(self.field_of_view) / 2
 
         # Create array with sky background flux
-        photon_rate_density = np.ones(shape=shape) * self.flux_per_pixel
+        self.flux_per_pixel = (self.sky_background_flux * self.resolution**2).decompose()
+        photon_rate_density = np.ones(shape=self.field_of_view.index) * self.flux_per_pixel
 
         # Add stars from star_table to photon_rate_density
-        self.stars = self.read_star_table(self.star_table)
         for row in self.stars:
-            # position = (int(center[0] + (row['x'] - phase_center[0]) / self.resolution.to('arcsec').value),
-            #             int(center[1] + (row['y'] - phase_center[1]) / self.resolution.to('arcsec').value))
-            position = Position(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=True,
-                                   center=phase_center)
+            position = Position(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=True)
             position.offset(center)
+            position.offset(phase_center, scaled=True)
             flux = row['flux']
             try:
                 photon_rate_density.value[position.index] = np.maximum(photon_rate_density.value[position.index], flux)
