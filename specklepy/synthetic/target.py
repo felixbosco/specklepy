@@ -2,7 +2,7 @@ from copy import copy
 from IPython import embed
 import numpy as np
 
-import astropy.units as u
+from astropy.units import Unit, Quantity
 import astropy.constants as const
 from astropy.table import Table
 
@@ -58,7 +58,7 @@ class Target(object):
                 Name of the band. Used for extracting the band specific reference flux for magnitude 0.
             star_table (str, optional):
                 Name of the file with the data of all stars.
-            sky_background (u.Quantity, optional):
+            sky_background (Quantity, optional):
                 Sky background. Int and float inputs will be interpreted as mag / arcsec**2.
             photometry_file (str, optional):
                 Name of the file, from which the band specific reference flux is extracted.
@@ -88,16 +88,16 @@ class Target(object):
         if isinstance(sky_background, str):
             sky_background = eval(sky_background)
         if sky_background is None:
-            self.sky_background_flux = 0.0 / u.Unit('arcsec')**2
-        elif isinstance(sky_background, u.Quantity):
+            self.sky_background_flux = 0.0 / Unit('arcsec')**2
+        elif isinstance(sky_background, Quantity):
             # Interpreting as mag / arcsec**2
             logger.warning("Interpreting sky_background as in units of mag per arcsec**2.")
-            self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / u.Unit('arcsec')**2
+            self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / Unit('arcsec')**2
         elif isinstance(sky_background, (int, float)):
-            logger.warning(f"Interpreting scalar type sky_background as {sky_background * u.mag / u.Unit('arcsec')**2}")
-            self.sky_background_flux = self.magnitude_to_flux(sky_background) / u.Unit('arcsec')**2
+            logger.warning(f"Interpreting scalar type sky_background as {sky_background * Unit('mag') / Unit('arcsec')**2}")
+            self.sky_background_flux = self.magnitude_to_flux(sky_background) / Unit('arcsec')**2
         else:
-            raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'u.Quantity')
+            raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'Quantity')
 
         # Initialize class attributes
         self.shape = None
@@ -137,29 +137,29 @@ class Target(object):
     def get_reference_flux(self, photometry_file, band, format='ascii'):
         if photometry_file is None:
             fwhm = self.photometry_dict[band]['FWHM']
-            flux = self.photometry_dict[band]['Flux'] * u.Unit('Jy')
+            flux = self.photometry_dict[band]['Flux'] * Unit('Jy')
         else:
             table = Table.read(photometry_file, format=format)
             row_index = np.where(table["Band"] == band)
             fwhm = table['FWHM'][row_index][0]
-            flux = table['Flux'][row_index][0] *u.Unit('Jy')
-        return (flux / const.h * fwhm * u.Unit('photon')).decompose()
+            flux = table['Flux'][row_index][0] *Unit('Jy')
+        return (flux / const.h * fwhm * Unit('photon')).decompose()
 
     def magnitude_to_flux(self, magnitude):
         """Convert magnitudes to flux values.
 
         Args:
-            magnitude (int, float, or u.Quantity):
+            magnitude (int, float, or Quantity):
                 Magnitude value
 
         Returns:
-            flux (u.Quantity):
+            flux (Quantity):
                 Brightness converted into flux units.
         """
         if isinstance(magnitude, (int, float, np.ndarray)):
             return 10**(magnitude/-2.5) * self.band_reference_flux
-        elif isinstance(magnitude, u.Quantity):
-            if magnitude.unit != u.Unit('mag'):
+        elif isinstance(magnitude, Quantity):
+            if magnitude.unit != Unit('mag'):
                 raise SpecklepyValueError('magnitude_to_flux()', 'magnitude unit', magnitude.unit, 'mag')
             else:
                 return 10**(magnitude.value/-2.5) * self.band_reference_flux
@@ -189,11 +189,11 @@ class Target(object):
 
         # Get data from table columns
         xx = table[table_keys['x']]
-        if isinstance(xx, u.Quantity):
+        if isinstance(xx, Quantity):
             xx = xx.to('arcsec').value
 
         yy = table[table_keys['y']]
-        if isinstance(yy, u.Quantity):
+        if isinstance(yy, Quantity):
             yy = yy.to('arcsec').value
 
         if 'mag' in table_keys.keys():
@@ -210,32 +210,32 @@ class Target(object):
         """Creates an image of the field of view.
 
         Args:
-            field_of_view (u.Quantity or tuple, dtype=u.Quantity):
+            field_of_view (Quantity or tuple, dtype=Quantity):
                 Size of the field of view that is covered by the output image.
-            resolution (u.Quantity):
+            resolution (Quantity):
                 Resolution of the image. Optimally, set it to Telescope.psf_resolution to avoid resampling the image.
             dither (tuple, optional):
                 Dither position, relative to the (0, 0) standard phase center.
 
         Returns:
-            photon_rate_density (u.Quantity):
+            photon_rate_density (Quantity):
                 2D image of the photon rate density towards the standard phase center or dithered position.
         """
 
         # Input parameters
         if isinstance(resolution, (int, float)):
             logger.warning(f"Interpreting float type resolution as {resolution} arcsec")
-            resolution = resolution * u.Unit('arcsec')
-        elif isinstance(resolution, u.Quantity):
+            resolution = resolution * Unit('arcsec')
+        elif isinstance(resolution, Quantity):
             pass
         else:
-            raise SpecklepyTypeError('get_photon_rate_density', 'resolution', type(resolution), 'u.Quantity')
+            raise SpecklepyTypeError('get_photon_rate_density', 'resolution', type(resolution), 'Quantity')
         self.resolution = resolution
 
         if isinstance(field_of_view, (int, float)):
             logger.warning(f"Interpreting float type FoV as {field_of_view} arcsec")
-            field_of_view = field_of_view * u.Unit('arcsec')
-        elif isinstance(field_of_view, (tuple, list, u.Quantity)):
+            field_of_view = field_of_view * Unit('arcsec')
+        elif isinstance(field_of_view, (tuple, list, Quantity)):
             pass
         else:
             raise SpecklepyTypeError('get_photon_rate_density', 'field_of_view', type(field_of_view), 'tuple')
