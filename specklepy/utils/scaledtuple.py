@@ -1,4 +1,4 @@
-import numpy as np
+from astropy.units import Quantity
 
 
 class ScaledTuple(object):
@@ -15,35 +15,54 @@ class ScaledTuple(object):
          center (tuple)
     """
 
-    def __init__(self, x, y, scale, scaled=False, center=None):
+    def __init__(self, *args, scale, scaled=False):
+        """
+
+        Args:
+            *args (any):
+                Input for the x (and y) values of the tuple. Tuple and list-types are stored as x and y values. Int and
+                float-types are stored and if only one value is parsed, then this is copied to both.
+            scale (int or float or astropy.units.Quantity object):
+                Scaling constant between pixel and the respective other physical unit.
+            scaled (bool, optional):
+                Indicate whether the positional arguments are provided in the scaled or unscaled space.
+        """
+
+        self.unit = None
+
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, (int, float)):
+                x = arg
+                y = arg
+                unit = 1
+            elif isinstance(arg, (list, tuple)):
+                x = arg[0]
+                y = arg[1]
+            elif isinstance(arg, Quantity):
+                if not scaled:
+                    raise TypeError()
+
+            else:
+                raise TypeError(f"Type of positional argument not understood ({type(arg)})!")
+
+        elif len(args) == 2:
+            x = args[0]
+            y = args[1]
+        else:
+            raise ValueError(f"ScaledTuple takes 1 or 2 positional arguments, not {len(args)}!")
 
         if scaled:
-            self._x = x / scale
-            self._y = y / scale
+            self.x = x / scale
+            self.y = y / scale
         else:
-            self._x = x
-            self._y = y
+            self.x = x
+            self.y = y
 
         self.scale = scale
 
-        if center is None:
-            self._center = (0, 0)
-        else:
-            if scaled:
-                self._center = tuple(np.array(center) / scale)
-            else:
-                self._center = center
-
     def __repr__(self):
-        return f"ScaledTuple({self._x}, {self._y})"
-
-    @property
-    def x(self):
-        return self._x - self._center[0]
-
-    @property
-    def y(self):
-        return self._y - self._center[1]
+        return f"ScaledTuple({self.x}, {self.y})"
 
     @property
     def index(self):
@@ -67,14 +86,14 @@ class Position(ScaledTuple):
     def offset(self, other, scaled=False):
         if isinstance(other, tuple):
             if scaled:
-                self._x += other[0] / self.scale
-                self._y += other[1] / self.scale
+                self.x += other[0] / self.scale
+                self.y += other[1] / self.scale
             else:
-                self._x += other[0]
-                self._y += other[1]
+                self.x += other[0]
+                self.y += other[1]
         elif isinstance(other, ScaledTuple):
-            self._x += other._x
-            self._y += other._y
+            self.x += other.x
+            self.y += other.y
 
 
 class ScaledShape(ScaledTuple):
