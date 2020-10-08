@@ -1,5 +1,7 @@
 from astropy.units import Quantity
 
+from specklepy.logging import logger
+
 
 class ScaledTuple(object):
 
@@ -28,30 +30,31 @@ class ScaledTuple(object):
                 Indicate whether the positional arguments are provided in the scaled or unscaled space.
         """
 
-        self.unit = None
-
         if len(args) == 1:
             arg = args[0]
-            if isinstance(arg, (int, float)):
+            if isinstance(arg, (int, float, Quantity)):
                 x = arg
                 y = arg
-                unit = 1
             elif isinstance(arg, (list, tuple)):
                 x = arg[0]
                 y = arg[1]
-            elif isinstance(arg, Quantity):
-                if not scaled:
-                    raise TypeError()
-
             else:
                 raise TypeError(f"Type of positional argument not understood ({type(arg)})!")
-
         elif len(args) == 2:
             x = args[0]
             y = args[1]
         else:
             raise ValueError(f"ScaledTuple takes 1 or 2 positional arguments, not {len(args)}!")
 
+        # Handle Quantity-types
+        if isinstance(x, Quantity) and isinstance(y, Quantity):
+            if not scaled:
+                logger.warn(f"ScaledTuple received positional argument of Quantity-type while scaled=False!")
+            x = float(x / scale)
+            y = float(y / scale)
+            scaled = False
+
+        # Apply scaling before storing x and y
         if scaled:
             self.x = x / scale
             self.y = y / scale
@@ -77,8 +80,15 @@ class ScaledTuple(object):
         return self.y * self.scale
 
     @property
-    def coordinates(self):
+    def scaled(self):
         return self.x_scaled, self.y_scaled
+
+    def to(self, unit):
+        x, y = self.scaled
+        try:
+            return x.to(unit), y.to(unit)
+        except AttributeError:
+            raise TypeError(f"ScaledTuple has attribute scale of type other than Quantity. Unit conversion impossible!")
 
 
 class Position(ScaledTuple):
@@ -94,15 +104,3 @@ class Position(ScaledTuple):
         elif isinstance(other, ScaledTuple):
             self.x += other.x
             self.y += other.y
-
-
-class ScaledShape(ScaledTuple):
-
-    @property
-    def shape(self):
-        return self.index
-
-    @property
-    def scaled_shape(self):
-        return self.coordinates
-
