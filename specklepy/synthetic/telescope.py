@@ -5,8 +5,8 @@ import warnings
 
 from astropy.io import fits
 from astropy.modeling import models
-from astropy import units as u
-from astropy.units import UnitConversionError
+# from astropy import units as u
+from astropy.units import Unit, Quantity, UnitConversionError
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
@@ -50,15 +50,15 @@ class Telescope(object):
 		"""
 
 		# Input parameters
-		if isinstance(diameter, u.Quantity):
+		if isinstance(diameter, Quantity):
 			self.diameter = diameter
 		elif isinstance(diameter, (int, float)):
 			logger.warning(f"Interpreting scalar type diameter as {diameter} m")
-			self.diameter = u.Quantity(f"{diameter} m")
+			self.diameter = Quantity(f"{diameter} m")
 		elif isinstance(diameter, str):
-			self.diameter = u.Quantity(diameter)
+			self.diameter = Quantity(diameter)
 		else:
-			raise SpecklepyTypeError('Telescope', 'diameter', type(diameter), 'u.Quantity')
+			raise SpecklepyTypeError('Telescope', 'diameter', type(diameter), 'Quantity')
 
 		if isinstance(psf_source, str):
 			self.psf_source = psf_source
@@ -140,25 +140,25 @@ class Telescope(object):
 		if not isinstance(model, str):
 			raise SpecklepyTypeError('model_psf', 'model', type(model), 'str')
 
-		if isinstance(radius, u.Quantity):
+		if isinstance(radius, Quantity):
 			self.radius = radius
 		elif isinstance(radius, (int, float)):
 			logger.warning(f"Interpreting scalar type radius as {radius} arcsec")
-			self.radius = u.Quantity(f"{radius} arcsec")
+			self.radius = Quantity(f"{radius} arcsec")
 		elif isinstance(radius, str):
-			self.radius = u.Quantity(radius)
+			self.radius = Quantity(radius)
 		else:
-			raise SpecklepyTypeError('model_psf', 'radius', type(radius), 'u.Quantity')
+			raise SpecklepyTypeError('model_psf', 'radius', type(radius), 'Quantity')
 
-		if isinstance(psf_resolution, u.Quantity):
+		if isinstance(psf_resolution, Quantity):
 			self.psf_resolution = psf_resolution
 		elif isinstance(psf_resolution, (int, float)):
 			logger.warning(f"Interpreting scalar type psf_resolution as {psf_resolution} arcsec")
-			self.psf_resolution = u.Quantity(f"{psf_resolution} arcsec")
+			self.psf_resolution = Quantity(f"{psf_resolution} arcsec")
 		elif isinstance(psf_resolution, str):
-			self.psf_resolution = u.Quantity(psf_resolution)
+			self.psf_resolution = Quantity(psf_resolution)
 		else:
-			raise SpecklepyTypeError('model_psf', 'psf_resolution', type(psf_resolution), 'u.Quantity')
+			raise SpecklepyTypeError('model_psf', 'psf_resolution', type(psf_resolution), 'Quantity')
 
 		if isinstance(shape, int):
 			center = (shape / 2, shape / 2)
@@ -187,7 +187,7 @@ class Telescope(object):
 			filename (str):
 				Name of the FITS file containing the PSF frames.
 			hdu (int, str, optional):
-				Specification of the HDU to read from the file. Default is the first HDU.
+				Specification of the HDU to read from the file. Default is the first HD
 		"""
 
 		# Set
@@ -237,10 +237,10 @@ class Telescope(object):
 			key (str):
 				Key or name of the FITS header card.
 			aliases (dict, optional):
-				The aliases dictionary maps unit strings such that they are understood by u.Unit(str).
+				The aliases dictionary maps unit strings such that they are understood by Unit(str).
 
 		Returns:
-			quantity (u.Quantity):
+			quantity (Quantity):
 				Quantity derived from the combination of the FITS header card value and comment.
 		"""
 
@@ -261,7 +261,7 @@ class Telescope(object):
 		if comment in aliases.keys():
 			comment = aliases[comment]
 
-		return value * u.Unit(comment)
+		return value * Unit(comment)
 
 	def get_photon_rate(self, photon_rate_density, photon_rate_density_resolution=None, integration_time=None,
 						debug=False):
@@ -273,25 +273,25 @@ class Telescope(object):
 		non-static, it will be integrated over the 'integration_time' value.
 
 		Args:
-			photon_rate_density (np.ndarray, dtype=u.Quantity):
-			photon_rate_density_resolution (u.Quantity, optional):
-			integration_time(u.Quantity, optional):
+			photon_rate_density (np.ndarray, dtype=Quantity):
+			photon_rate_density_resolution (Quantity, optional):
+			integration_time(Quantity, optional):
 				Required only if the PSF is non-static.
 			debug (bool, optional):
 				Show additional information for debugging. Default is False.
 
 		Returns:
-			photon_rate (u.Quantity): PSF-convolved photon rate array.
+			photon_rate (Quantity): PSF-convolved photon rate array.
 		"""
 
 		# Input parameters
-		if not isinstance(photon_rate_density, u.Quantity):
-			raise SpecklepyTypeError('get_photon_rate', 'photon_rate_density', type(photon_rate_density), 'u.Quantity')
+		if not isinstance(photon_rate_density, Quantity):
+			raise SpecklepyTypeError('get_photon_rate', 'photon_rate_density', type(photon_rate_density), 'Quantity')
 
 		if photon_rate_density_resolution is not None:
-			if not isinstance(photon_rate_density_resolution, u.Quantity):
+			if not isinstance(photon_rate_density_resolution, Quantity):
 				raise SpecklepyTypeError('get_photon_rate', 'photon_rate_density_resolution',
-										 type(photon_rate_density_resolution), 'u.Quantity')
+										 type(photon_rate_density_resolution), 'Quantity')
 			psf_resample_mode = True
 		else:
 			psf_resample_mode = False
@@ -301,9 +301,9 @@ class Telescope(object):
 							 "integration_time.")
 		elif isinstance(integration_time, (int, float)):
 			logger.warning(f"Interpreting scalar type integration_time as {integration_time} s")
-			integration_time = u.Quantity(f"{integration_time} s")
-		elif not isinstance(integration_time, u.Quantity):
-			raise SpecklepyTypeError('get_photon_rate', 'integration_time', type(integration_time), 'u.Quantity')
+			integration_time = Quantity(f"{integration_time} s")
+		elif not isinstance(integration_time, Quantity):
+			raise SpecklepyTypeError('get_photon_rate', 'integration_time', type(integration_time), 'Quantity')
 
 		# Apply telescope collecting area
 		photon_rate = photon_rate_density * self.area
@@ -386,19 +386,19 @@ class Telescope(object):
 		"""Integrates psf frames over the input time.
 
 		Args:
-			integration_time (u.Quantity):
+			integration_time (Quantity):
 				This is used for computing the number of frames 'n_frames', via floor division by the 'timestep'
 				attribute.
 			hdu (int, str, optional):
-				Specifier of the HDU. Default is None for the first HDU.
+				Specifier of the HD Default is None for the first HD
 		"""
 
 		# Check input parameters
 		if isinstance(integration_time, (int, float)):
 			logger.warning(f"Interpreting scalar type integration_time as {integration_time} s")
-			integration_time = integration_time * u.s
-		elif not isinstance(integration_time, u.Quantity):
-			raise SpecklepyTypeError('integrate_psf', 'integration_time', type(integration_time), 'u.Quantity')
+			integration_time = integration_time * Unit('s')
+		elif not isinstance(integration_time, Quantity):
+			raise SpecklepyTypeError('integrate_psf', 'integration_time', type(integration_time), 'Quantity')
 
 		if integration_time < self.timestep:
 			raise ValueError(f"integrate_psf received integration time {integration_time} shorter than the time "
