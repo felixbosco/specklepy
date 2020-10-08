@@ -8,6 +8,7 @@ from specklepy.exceptions import SpecklepyTypeError
 from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.utils.plot import imshow
+from specklepy.utils.scaledtuple import ScaledTuple
 
 
 class Detector(object):
@@ -141,7 +142,7 @@ class Detector(object):
 
 		# Derive secondary parameters
 		self.array = np.zeros(self.shape)
-		self.field_of_view = (self.shape[0] * self.pixel_scale, self.shape[1] * self.pixel_scale)
+		self.field_of_view = ScaledTuple(self.shape, scale=self.pixel_scale).scaled
 
 	@staticmethod
 	def from_file(par_file):
@@ -212,10 +213,8 @@ class Detector(object):
 		"""
 
 		# Assert that the photon_rate covers a larger field of view than the detector field of view
-		photon_rate_field_of_view = (photon_rate.shape[0] * photon_rate_resolution,
-								   photon_rate.shape[1] * photon_rate_resolution)
-		if photon_rate_field_of_view[0] < self.field_of_view[0] or \
-				photon_rate_field_of_view[1] < self.field_of_view[1]:
+		photon_rate_field_of_view = ScaledTuple(photon_rate.shape, scale=photon_rate_resolution, scaled=False).scaled
+		if photon_rate_field_of_view[0] < self.field_of_view[0] or photon_rate_field_of_view[1] < self.field_of_view[1]:
 			raise ValueError(f"The field of view of the photon rate image ({photon_rate_field_of_view}) is smaller "
 							 f"than that of the detector ({self.field_of_view}) in at least one dimension!")
 
