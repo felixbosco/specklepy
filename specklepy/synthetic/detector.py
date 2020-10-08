@@ -2,7 +2,7 @@ import numpy as np
 from scipy.ndimage import zoom
 import warnings
 
-from astropy import units as u
+from astropy.units import Unit, Quantity
 
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.io import config
@@ -21,12 +21,12 @@ class Detector(object):
 			Angular size of a pixel in arcsec.
 
 	Optional attributes are:
-		quantum_efficiency (u.Quantity):
-		system_gain (u.Quantity):
-		readout_noise (u.Quantity):
-		dark_current (u.Quantity):
-		saturation_level (u.Quantity):
-		optics_transmission (u.Quantity):
+		quantum_efficiency (Quantity):
+		system_gain (Quantity):
+		readout_noise (Quantity):
+		dark_current (Quantity):
+		saturation_level (Quantity):
+		optics_transmission (Quantity):
 
 	Future features:
 		Attribute dictionary 'readout_modes':
@@ -45,20 +45,20 @@ class Detector(object):
 			shape (tuple, dtype=int):
 				Number of the pixels of the detector along two axes. Integer values will create a square detector array
 				with the same number of pixels along both axes.
-			pixel_scale (u.Quantity):
+			pixel_scale (Quantity):
 				Angular size of each pixel.
 			optics_transmission (float, optional):
 				Optical transmission coefficient, scaling between 0.0 and 1.0 (default).
-			quantum_efficiency (float, u.Quantity, optional):
+			quantum_efficiency (float, Quantity, optional):
 				Quantum efficiency of the detector. Scalar type values will be interpreted units of electrons per
 				photon.
-			system_gain (float, u.Quantity, optional):
+			system_gain (float, Quantity, optional):
 				System gain of the detector. Scalar type values will be interpreted units of electrons per ADU.
-			readout_noise (float, u.Quantity, optional):
+			readout_noise (float, Quantity, optional):
 				Read noise of the detector. Scalar type values will be interpreted units of electrons.
-			dark_current (float, u.Quantity, optional):
+			dark_current (float, Quantity, optional):
 				Dark current of the detector. Scalar type values will be interpreted units of electrons per second.
-			saturation_level (float, u.Quantity, optional):
+			saturation_level (float, Quantity, optional):
 				Saturation level of the detector. Scalar type values will be interpreted units of electrons.
 		"""
 
@@ -72,15 +72,15 @@ class Detector(object):
 		else:
 			raise SpecklepyTypeError('Detector', 'shape', type(shape), 'tuple')
 
-		if isinstance(pixel_scale, u.Quantity):
+		if isinstance(pixel_scale, Quantity):
 			self.pixel_scale = pixel_scale
 		elif isinstance(pixel_scale, (int, float)):
 			logger.warning(f"Interpreting float type pixel_scale as {pixel_scale} arcsec")
-			self.pixel_scale = pixel_scale * u.arcsec
+			self.pixel_scale = pixel_scale * Unit('arcsec')
 		elif isinstance(pixel_scale, str):
-			self.pixel_scale = u.Quantity(pixel_scale)
+			self.pixel_scale = Quantity(pixel_scale)
 		else:
-			raise SpecklepyTypeError('Detector', 'pixel_scale', type(pixel_scale), 'u.Quantity')
+			raise SpecklepyTypeError('Detector', 'pixel_scale', type(pixel_scale), 'Quantity')
 
 		if isinstance(optics_transmission, (int, float)):
 			self.optics_transmission = optics_transmission
@@ -89,55 +89,55 @@ class Detector(object):
 		else:
 			raise SpecklepyTypeError('Detector', 'optics_transmission', type(optics_transmission), 'float')
 
-		if isinstance(quantum_efficiency, u.Quantity):
+		if isinstance(quantum_efficiency, Quantity):
 			self.quantum_efficiency = quantum_efficiency
 		elif isinstance(quantum_efficiency, (int, float)):
 			logger.warning(f"Interpreting scalar type quantum_efficiency as {quantum_efficiency} electron/ photon")
-			self.quantum_efficiency = quantum_efficiency * u.electron / u.ph
+			self.quantum_efficiency = quantum_efficiency * Unit('electron / ph')
 		elif isinstance(quantum_efficiency, str):
-			self.quantum_efficiency = u.Quantity(quantum_efficiency)
+			self.quantum_efficiency = Quantity(quantum_efficiency)
 		else:
-			raise SpecklepyTypeError('Detector', 'quantum_efficiency', type(quantum_efficiency), 'u.Quantity')
+			raise SpecklepyTypeError('Detector', 'quantum_efficiency', type(quantum_efficiency), 'Quantity')
 
-		if isinstance(system_gain, u.Quantity):
+		if isinstance(system_gain, Quantity):
 			self.system_gain = system_gain
 		elif isinstance(system_gain, (int, float)):
 			logger.warning(f"Interpreting scalar type system_gain as {system_gain} electron/ ADU")
-			self.system_gain = system_gain * u.electron / u.adu
+			self.system_gain = system_gain * Unit('electron / adu')
 		elif isinstance(system_gain, str):
-			self.system_gain = u.Quantity(system_gain)
+			self.system_gain = Quantity(system_gain)
 		else:
-			raise SpecklepyTypeError('Detector', 'system_gain', type(system_gain), 'u.Quantity')
+			raise SpecklepyTypeError('Detector', 'system_gain', type(system_gain), 'Quantity')
 
-		if dark_current is None or isinstance(dark_current, u.Quantity):
+		if dark_current is None or isinstance(dark_current, Quantity):
 			self.dark_current = dark_current
 		elif isinstance(dark_current, (int, float)):
 			logger.warning(f"Interpreting scalar type dark_current as {dark_current} electron/ s")
-			self.dark_current = dark_current * u.electron / u.s
+			self.dark_current = dark_current * Unit('electron / s')
 		elif isinstance(dark_current, str):
-			self.dark_current = u.Quantity(dark_current)
+			self.dark_current = Quantity(dark_current)
 		else:
-			raise SpecklepyTypeError('Detector', 'dark_current', type(dark_current), 'u.Quantity')
+			raise SpecklepyTypeError('Detector', 'dark_current', type(dark_current), 'Quantity')
 
-		if readout_noise is None or isinstance(readout_noise, u.Quantity):
+		if readout_noise is None or isinstance(readout_noise, Quantity):
 			self.readout_noise = readout_noise
 		elif isinstance(readout_noise, (int, float)):
 			logger.warning(f"Interpreting scalar type readout_noise as {readout_noise} electron")
-			self.readout_noise = readout_noise * u.electron
+			self.readout_noise = readout_noise * Unit('electron')
 		elif isinstance(readout_noise, str):
-			self.readout_noise = u.Quantity(readout_noise)
+			self.readout_noise = Quantity(readout_noise)
 		else:
-			raise SpecklepyTypeError('Detector', 'readout_noise', type(readout_noise), 'u.Quantity')
+			raise SpecklepyTypeError('Detector', 'readout_noise', type(readout_noise), 'Quantity')
 
-		if isinstance(saturation_level, u.Quantity) or saturation_level is None:
+		if isinstance(saturation_level, Quantity) or saturation_level is None:
 			self.saturation_level = saturation_level
 		elif isinstance(saturation_level, (int, float)):
 			logger.warning(f"Interpreting scalar type saturation_level as {saturation_level} electron")
-			self.saturation_level = saturation_level * u.electron
+			self.saturation_level = saturation_level * Unit('electron')
 		elif isinstance(saturation_level, str):
-			self.saturation_level = u.Quantity(saturation_level)
+			self.saturation_level = Quantity(saturation_level)
 		else:
-			raise SpecklepyTypeError('Detector', 'saturation_level', type(saturation_level), 'u.Quantity')
+			raise SpecklepyTypeError('Detector', 'saturation_level', type(saturation_level), 'Quantity')
 
 		# Derive secondary parameters
 		self.array = np.zeros(self.shape)
@@ -182,17 +182,17 @@ class Detector(object):
 		"""Computes the counts array from the photon rate.
 
 		Args:
-			photon_rate (u.Quantity):
+			photon_rate (Quantity):
 				Passed to expose() method.
-			integration_time (u.Quantity):
+			integration_time (Quantity):
 				Passed to expose() and readout() methods.
-			photon_rate_resolution (u.Quantity):
+			photon_rate_resolution (Quantity):
 				Angular resolution of the photon_rate array, used for resampling this to the detectors grid.
 			debug (bool, optional):
 				Set True for debugging. Default is False.
 
 		Returns:
-			counts (u.Quantity):
+			counts (Quantity):
 				Array of the shape of the detector that contains the counts measured within every pixel.
 		"""
 		self.expose(photon_rate=photon_rate, integration_time=integration_time,
@@ -203,11 +203,11 @@ class Detector(object):
 		"""Resamples the photon_rate array to the angular resolution of the detector.
 
 		Args:
-			photon_rate (u.Quantity):
-			photon_rate_resolution (u.Quantity):
+			photon_rate (Quantity):
+			photon_rate_resolution (Quantity):
 
 		Returns:
-			photon_rate_resampled_subset (u.Quantity):
+			photon_rate_resampled_subset (Quantity):
 				Resampled subset of the photon_rate array.
 		"""
 
@@ -238,38 +238,38 @@ class Detector(object):
 		"""Compute the number of electrons in every pixel after the exposure.
 
 		Args:
-			photon_rate (u.Quantity):
+			photon_rate (Quantity):
 				Passed to expose() method.
-			integration_time (u.Quantity):
+			integration_time (Quantity):
 				Passed to expose() and readout() methods.
-			photon_rate_resolution (u.Quantity):
+			photon_rate_resolution (Quantity):
 				Angular resolution of the photon_rate array, used for resampling this to the detectors grid.
 			debug (bool, optional):
 				Set True for debugging. Default is False.
 
 		Returns:
-			electrons (u.Quantity):
+			electrons (Quantity):
 
 		"""
 
 		# Input parameters
 		if isinstance(photon_rate, (int, float)):
 			logger.warning(f"Interpreting scalar type photon_rate as {photon_rate} photon/ s")
-			photon_rate = photon_rate * u.ph / u.s
-		elif not isinstance(photon_rate, u.Quantity):
-			raise SpecklepyTypeError('expose', 'photon_rate', type(photon_rate), 'u.Quantity')
+			photon_rate = photon_rate * Unit('ph / s')
+		elif not isinstance(photon_rate, Quantity):
+			raise SpecklepyTypeError('expose', 'photon_rate', type(photon_rate), 'Quantity')
 
 		if isinstance(integration_time, (int, float)):
 			logger.warning(f"Interpreting scalar type integration_time as {integration_time} s")
-			integration_time = integration_time * u.s
-		elif not isinstance(integration_time, u.Quantity):
-			raise SpecklepyTypeError('expose', 'integration_time', type(integration_time), 'u.Quantity')
+			integration_time = integration_time * Unit('s')
+		elif not isinstance(integration_time, Quantity):
+			raise SpecklepyTypeError('expose', 'integration_time', type(integration_time), 'Quantity')
 
 		if isinstance(photon_rate_resolution, (int, float)):
 			logger.warning(f"Interpreting scalar type photon_rate_resolution as {photon_rate_resolution} arcsec")
-			photon_rate_resolution = photon_rate_resolution * u.arcsec
-		elif not isinstance(photon_rate_resolution, u.Quantity):
-			raise SpecklepyTypeError('expose', 'photon_rate_resolution', type(photon_rate_resolution), 'u.Quantity')
+			photon_rate_resolution = photon_rate_resolution * Unit('arcsec')
+		elif not isinstance(photon_rate_resolution, Quantity):
+			raise SpecklepyTypeError('expose', 'photon_rate_resolution', type(photon_rate_resolution), 'Quantity')
 
 		# Resample the photon rate to the detector resolution
 		photon_rate = self.resample(photon_rate=photon_rate, photon_rate_resolution=photon_rate_resolution)
@@ -298,14 +298,14 @@ class Detector(object):
 		"""Computes the readout of the detector and returns the ADUs for every pixel.
 
 		Args:
-			integration_time (u.Quantity):
+			integration_time (Quantity):
 				Integration time of an individual exposure.
 			reset (bool, optional):
 				If set to True, then the electron count of every pixel is reset to zero for the next exposure. Default
 				is True.
 
 		Returns:
-			counts (u.Quantity):
+			counts (Quantity):
 				Array of the ADUs for every pixel.
 		"""
 
