@@ -99,6 +99,13 @@ class ScaledTuple(object):
 
     __rmul__ = __mul__
 
+    def __truediv__(self, other):
+        if not isinstance(other, (int, float)):
+            raise TypeError(f"Cannot divide ScaledTuple by non-int of type '{type(other)}'")
+        self.x /= other
+        self.y /= other
+        return self
+
 
 class Position(ScaledTuple):
 
