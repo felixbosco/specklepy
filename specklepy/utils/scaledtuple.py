@@ -89,6 +89,15 @@ class ScaledTuple(object):
             return x.to(unit), y.to(unit)
         except AttributeError:
             raise TypeError(f"ScaledTuple has attribute scale of type other than Quantity. Unit conversion impossible!")
+        
+    def __mul__(self, other):
+        if not isinstance(other, (int, float)):
+            raise TypeError(f"Cannot multiply ScaledTuple by non-int of type '{type(other)}'")
+        self.x *= other
+        self.y *= other
+        return self
+
+    __rmul__ = __mul__
 
 
 class Position(ScaledTuple):
