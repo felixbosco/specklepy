@@ -1,3 +1,4 @@
+from IPython import embed
 import numpy as np
 import os
 from scipy import ndimage
