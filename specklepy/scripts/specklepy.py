@@ -75,7 +75,7 @@ def main():
 
     elif args.command is 'extract':
         if args.out_file is None:
-            args.out_file = 'sources_' + args.file_name.replace('.fits', '.dat')
+            args.out_file = 'sources_' + os.path.basename(args.file_name).replace('.fits', '.dat')
         extract_sources(image=args.file_name, noise_threshold=args.noise_threshold, fwhm=args.fwhm, image_var=args.var,
                         write_to=args.out_file)
 
