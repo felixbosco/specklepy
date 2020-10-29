@@ -46,6 +46,11 @@ class Box(object):
                             self.y_max = indexes[1][1]
                         except IndexError:
                             pass
+                elif len(indexes) == 4:
+                    self.x_min = indexes[0]
+                    self.x_max = indexes[1]
+                    self.y_min = indexes[2]
+                    self.y_max = indexes[3]
 
     def __repr__(self):
         return f"[[{self.x_min}, {self.x_max}], [{self.y_min}, {self.y_max}]]"
