@@ -10,6 +10,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
+from specklepy.utils.box import Box
 
 
 class Reconstruction(object):
@@ -23,7 +24,7 @@ class Reconstruction(object):
     supported_modes = ['full', 'same', 'valid']
 
     def __init__(self, in_files, mode='same', reference_image=None, out_file=None, in_dir=None, tmp_dir=None,
-                 alignment_method='collapse', var_ext=None, debug=False):
+                 alignment_method='collapse', var_ext=None, box_indexes=None, debug=False):
         """Create a Reconstruction instance.
 
         Args:
@@ -70,7 +71,8 @@ class Reconstruction(object):
         self.reference_image = reference_image if reference_image is not None else 0
         self.in_dir = in_dir if in_dir is not None else ''
         self.tmp_dir = tmp_dir if tmp_dir is not None else ''
-        self.var_ext = var_ext if var_ext is not None else 'VAR'
+        self.var_ext = var_ext  # if var_ext is not None else 'VAR'
+        self.box = Box(box_indexes) if box_indexes is not None else None
 
         # Retrieve name of reference file
         self.reference_file = self.identify_reference_file()
@@ -105,12 +107,13 @@ class Reconstruction(object):
             self.image = self.initialize_image()
 
         # Initialize the variance map
-        self.var = np.zeros(self.image.shape)
+        self.var = np.zeros(self.image.shape) if self.var_ext is not None else None
 
         # Initialize output file and create an extension for the variance
         self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file, shape=self.image.shape,
                                       in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
-        self.out_file.new_extension(name=self.var_ext, data=self.var)
+        if self.var is not None:
+            self.out_file.new_extension(name=self.var_ext, data=self.var)
 
     def identify_reference_file(self):
 
@@ -162,7 +165,7 @@ class Reconstruction(object):
                 image = np.sum(cube, axis=0)
                 tmp_file = 'int_' + os.path.basename(file)
             elif alignment_method == 'ssa':
-                image, image_var = coadd_frames(cube=cube)
+                image, image_var = coadd_frames(cube=cube, box=self.box)
                 tmp_file = 'ssa_' + os.path.basename(file)
             else:
                 raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
@@ -222,6 +225,7 @@ class Reconstruction(object):
 
         # Update out_file
         self.out_file.data = self.image
-        self.out_file.update_extension(ext_name=self.var_ext, data=self.var)
+        if self.var_ext is not None and self.var is not None:
+            self.out_file.update_extension(ext_name=self.var_ext, data=self.var)
 
         return self.image, self.var
