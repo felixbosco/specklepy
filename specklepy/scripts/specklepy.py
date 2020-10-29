@@ -51,7 +51,8 @@ def main():
         # Prepare path information and execute reconstruction
         if args.tmpdir is not None and not os.path.isdir(args.tmpdir):
             os.mkdir(args.tmpdir)
-        ssa(args.files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, debug=args.debug)
+        ssa(args.files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, box_indexes=args.box_indexes,
+            debug=args.debug)
 
     elif args.command is 'holography':
 

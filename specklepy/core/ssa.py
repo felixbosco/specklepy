@@ -9,10 +9,12 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
+from specklepy.utils.box import Box
+from specklepy.utils.plot import imshow
 
 
-def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, lazy_mode=True, debug=False,
-        **kwargs):
+def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, lazy_mode=True, box_indexes=None,
+        debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
@@ -42,6 +44,9 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
             Path of a directory in which the temporary results are stored in.
         lazy_mode (bool, optional):
             Set to False, to enforce the alignment of a single file with respect to the reference file. Default is True.
+        box_indexes (list, optional):
+            Constraining the search for the intensity peak to the specified box. Searching the full frames if not
+            provided.
         debug (bool, optional):
             Show debugging information. Default is False.
 
@@ -91,6 +96,11 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
     if not isinstance(lazy_mode, bool):
         raise SpecklepyTypeError('ssa()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
 
+    if box_indexes is not None:
+        box = Box(box_indexes)
+    else:
+        box = None
+
     if 'variance_extension_name' in kwargs.keys():
         var_ext = kwargs['variance_extension_name']
     else:
@@ -111,7 +121,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
                 var_cube = hdu_list[var_ext].data
             else:
                 var_cube = None
-            reconstruction, reconstruction_var = coadd_frames(cube, var_cube=var_cube)
+            reconstruction, reconstruction_var = coadd_frames(cube, var_cube=var_cube, box=box)
 
     else:
 
@@ -126,7 +136,11 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
                 else:
                     logger.debug(f"Did not find variance extension {var_ext} in file {file}")
                     var_cube = None
-                tmp, tmp_var = coadd_frames(cube, var_cube=var_cube)
+                tmp, tmp_var = coadd_frames(cube, var_cube=var_cube, box=box)
+
+            if debug:
+                imshow(box(tmp), norm='log')
+
             tmp_file = os.path.basename(file).replace(".fits", "_ssa.fits")
             tmp_file = os.path.join(tmp_dir, tmp_file)
             logger.info("Saving interim SSA reconstruction of cube to {}".format(tmp_file))
@@ -184,7 +198,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
     return reconstruction
 
 
-def coadd_frames(cube, var_cube=None):
+def coadd_frames(cube, var_cube=None, box=None):
     """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
 
     This function uses the SSA algorithm to coadd frames of a cube. If provided, this function coadds the variances
@@ -195,6 +209,9 @@ def coadd_frames(cube, var_cube=None):
             Data cube which is integrated along the zero-th axis.
         var_cube (np.ndarray, ndim=3, optional):
             Data cube of variances which is integrated along the zero-th axis with the same shifts as the cube.
+        box (Box object, optional):
+            Constraining the search for the intensity peak to the specified box. Searching the full frames if not
+            provided.
 
     Returns:
         coadded (np.ndarray, ndim=2):
@@ -223,6 +240,8 @@ def coadd_frames(cube, var_cube=None):
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
+        if box is not None:
+            frame = box(frame)
         peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
 
     # Compute shifts from indizes
