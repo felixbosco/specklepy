@@ -15,6 +15,7 @@ def read_table(file_name, format=None, error=True):
         for _format in ['ascii.fixed_width', 'ascii', None]:
             try:
                 table = Table.read(file_name, format=_format)
+                break
             except IORegistryError:
                 pass
 
