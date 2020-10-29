@@ -12,7 +12,7 @@ def read_table(file_name, format=None, error=True):
         table = Table.read(file_name, format=format)
     else:
         # Try table default table formats
-        for _format in [None, 'ascii.fixed_width', 'ascii']:
+        for _format in ['ascii.fixed_width', 'ascii', None]:
             try:
                 table = Table.read(file_name, format=_format)
             except IORegistryError:
