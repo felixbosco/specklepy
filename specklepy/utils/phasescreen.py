@@ -1,7 +1,5 @@
 import numpy as np
-from scipy.fftpack import fft2, ifft2, fftshift
-
-from specklepy.utils.transferfunctions import psf
+from scipy.fftpack import fft2, fftshift
 
 
 class PhaseScreen(object):
@@ -53,11 +51,9 @@ class PhaseScreen(object):
             return screens
 
 
-class PSFIterator(object):
+class Atmosphere(object):
 
-    def __init__(self, radius, screens, speeds, fractions=None):
-        # Store input
-        self.radius = radius
+    def __init__(self, screens, speeds, fractions=None):
 
         if len(screens) != len(speeds):
             raise ValueError(f"The number of phase screens ({len(screens)}) has to be the same as number of wind "
@@ -72,19 +68,14 @@ class PSFIterator(object):
             self.screen_weights = np.expand_dims(np.array(fractions), axis=(1, 2))
 
         # Initialize secondary parameters
-        self.aperture = self.initialize_circular_aperture()
         self.step = 0
 
     def __repr__(self):
-        return f"PSFIterator(screens={self.n_layers}, step={self.step})"
+        return f"Atmosphere(screens={self.n_layers}, step={self.step})"
 
     @property
-    def size(self):
-        return np.shape(self.screens[0])[0]
-
-    def initialize_circular_aperture(self):
-        xx, yy = np.mgrid[:self.size, :self.size]
-        return np.square(xx - self.size / 2) + np.square(yy - self.size / 2) <= np.square(self.radius)
+    def screen_shape(self):
+        return self.screens[0].shape
 
     @property
     def weighted_screens(self):
@@ -96,8 +87,41 @@ class PSFIterator(object):
     def integrate_layers(self):
         return np.sum(self.weighted_screens, axis=0)
 
-    def complex_aperture(self):
-        return np.multiply(self.aperture, np.exp(1j * self.integrate_layers()))
+    def evolve(self):
+        for n in range(self.n_layers):
+            self.screens[n] = np.roll(self.screens[n], shift=self.speeds[n])
+        self.step += 1
 
+
+class PSFIterator(object):
+
+    def __init__(self, radius, atmosphere):
+        # Store input
+        self.radius = radius
+        self.atmosphere = atmosphere
+
+        # Initialize secondary parameters
+        self.aperture = self.initialize_circular_aperture()
+
+    def __repr__(self):
+        return f"PSFIterator()"
+
+    @property
+    def size(self):
+        return self.atmosphere.screen_shape[0]
+
+    def initialize_circular_aperture(self):
+        xx, yy = np.mgrid[:self.size, :self.size]
+        return np.square(xx - self.size / 2) + np.square(yy - self.size / 2) <= np.square(self.radius)
+
+    @property
+    def complex_aperture(self):
+        return np.multiply(self.aperture, np.exp(1j * self.atmosphere.integrate_layers()))
+
+    @property
     def psf(self):
-        return fftshift(np.square(np.abs(fft2(fftshift(self.complex_aperture())))))
+        return fftshift(np.square(np.abs(fft2(fftshift(self.complex_aperture)))))
+
+    def next(self):
+        self.atmosphere.evolve()
+        return self.psf
