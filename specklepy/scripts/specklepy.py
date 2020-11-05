@@ -81,7 +81,8 @@ def main():
                         write_to=args.out_file)
 
     elif args.command == 'plot':
-        plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, debug=args.debug)
+        plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,
+                              debug=args.debug)
         plot.save()
         plot.show()
 

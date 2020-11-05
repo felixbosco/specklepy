@@ -104,7 +104,8 @@ class GeneralArgParser(object):
         parser_plot.set_defaults(command='plot')
         parser_plot.add_argument('file', type=str, default=None, help='Name of a file with image or table data.')
         parser_plot.add_argument('-e', '--extension', type=str, default=None, help='Name of a FITS file extension.')
-        parser_plot.add_argument('-c', '--columns', type=str, default=None, nargs=2, help='Columns of a table.')
+        parser_plot.add_argument('-f', '--format', type=str, default=None, help='Format of the table.')
+        parser_plot.add_argument('-c', '--columns', type=str, default=None, nargs=2, help='Columns of the table.')
         parser_plot.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for
