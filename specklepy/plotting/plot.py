@@ -1,9 +1,12 @@
 from IPython import embed
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import sys
 
-import matplotlib.pyplot as plt
+from astropy.io import fits
+from astropy.io.registry import IORegistryError
+from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.table import read_table
@@ -29,7 +32,7 @@ class Plot(object):
         self.plot_image()
 
     @classmethod
-    def from_file(cls, file_name, extension=None, columns=None, debug=False):
+    def from_file(cls, file_name, extension=None, columns=None, format=None, debug=False):
         # Does file exist?
         if not os.path.exists(path=file_name):
             sys.tracebacklimit = 0
@@ -41,16 +44,26 @@ class Plot(object):
         image_data = None
         file = cls.default_file_name(input=file_name)
 
+        # Apply fall-back value for format
+        if format is None:
+            format = 'ascii.fixed_width'
+
         # Identify file type and read data
         root, ext = os.path.splitext(file_name)
-        if 'fits' in ext:
-            pass
-        else:
-            table = read_table(file_name=file_name)
+        try:
+            if 'fits' in ext:
+                table = Table.read(file_name, hdu=extension)
+            else:
+                table = Table.read(file_name, format=format)
             if columns is None:
                 columns = table.colnames[0:2]
             x_data = table[columns[0]].data
             y_data = table[columns[1]].data
+        except IORegistryError as e:
+            sys.tracebacklimit = 0
+            raise e
+        except ValueError:
+            image_data = fits.getdata(file_name, extension)
 
         return cls(x_data=x_data, y_data=y_data, image_data=image_data, file=file, debug=debug)
 
