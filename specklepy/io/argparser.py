@@ -106,6 +106,9 @@ class GeneralArgParser(object):
         parser_plot.add_argument('-e', '--extension', type=str, default=None, help='Name of a FITS file extension.')
         parser_plot.add_argument('-f', '--format', type=str, default=None, help='Format of the table.')
         parser_plot.add_argument('-c', '--columns', type=str, default=None, nargs=2, help='Columns of the table.')
+        parser_plot.add_argument('-l', '--layout', type=str, default=None,
+                                 help="Apply a default paper layout. Options are 'text' and 'column' for the requested "
+                                      "image width.")
         parser_plot.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for

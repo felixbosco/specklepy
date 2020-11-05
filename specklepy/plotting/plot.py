@@ -1,6 +1,6 @@
 from IPython import embed
 import matplotlib.pyplot as plt
-import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import os
 import sys
 
@@ -9,19 +9,19 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io.table import read_table
 from specklepy.plotting.plots import save_figure
 
 
 class Plot(object):
 
-    def __init__(self, x_data=None, y_data=None, image_data=None, file=None, debug=False, **kwargs):
+    def __init__(self, x_data=None, y_data=None, image_data=None, file=None, layout=None, debug=False, **kwargs):
 
         # Store data
         self.x_data = x_data
         self.y_data = y_data
         self.image_data = image_data
         self.file = file
+        self.layout = layout
         self.debug = debug
 
         # Create default attributes
@@ -35,7 +35,7 @@ class Plot(object):
         self.plot_image()
 
     @classmethod
-    def from_file(cls, file_name, extension=None, columns=None, format=None, debug=False):
+    def from_file(cls, file_name, extension=None, columns=None, format=None, layout=None, debug=False):
         # Does file exist?
         if not os.path.exists(path=file_name):
             sys.tracebacklimit = 0
@@ -68,9 +68,16 @@ class Plot(object):
         except ValueError:
             image_data = fits.getdata(file_name, extension)
 
-        return cls(x_data=x_data, y_data=y_data, image_data=image_data, file=file, debug=debug)
+        return cls(x_data=x_data, y_data=y_data, image_data=image_data, file=file, layout=layout, debug=debug)
 
     def set_height(self, val):
+        if isinstance(val, str):
+            if val == 'text':
+                val = 10
+            elif val == 'column':
+                val = 5
+            else:
+                raise SpecklepyValueError('Plot.set_height', argname='val', argvalue=val, expected="'text' or 'column'")
         self.figure.set_figheight(val=val)
 
     def set_width(self, val):
@@ -91,16 +98,27 @@ class Plot(object):
 
     def plot_image(self, axis=0, **colorbar_kwargs):
         if self.image_data is not None:
-            img = self.axes[axis].imshow(self.image_data, origin='lower')
+            ax = self.axes[axis]
+            img = ax.imshow(self.image_data, origin='lower')
 
             # Create color bar
             if 'pad' in colorbar_kwargs:
                 pad = colorbar_kwargs['pad']
             else:
                 pad = 0.0
-            self.colorbar = plt.colorbar(img, pad=pad)
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=pad)
+            self.colorbar = plt.colorbar(img, cax=cax, ax=ax, pad=pad)
             if 'label' in colorbar_kwargs:
                 self.colorbar.set_label(colorbar_kwargs['label'])
+
+    def apply_layout(self, layout=None):
+        if layout is None:
+            return
+        else:
+            self.set_width(val=layout)
+            self.set_height(val=layout)
+            plt.rc('font', family='serif', size=10)
 
     def save(self, file=None):
         if file is None:

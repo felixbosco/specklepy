@@ -82,7 +82,8 @@ def main():
 
     elif args.command == 'plot':
         plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,
-                              debug=args.debug)
+                              layout=args.layout, debug=args.debug)
+        plot.apply_layout(layout=args.layout)
         plot.save()
         plot.show()
 
