@@ -4,7 +4,7 @@ from matplotlib.colors import LogNorm
 
 from specklepy.core.aperture import Aperture
 from specklepy.utils.transferfunctions import psf
-from specklepy.plotting.plot import imshow, plot_powerspec1d
+from specklepy.plotting.plots import imshow, plot_powerspec1d
 
 
 class TestTransferFunctions(unittest.TestCase):

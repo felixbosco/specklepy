@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import astropy.units as u
 from specklepy.synthetic.telescope import Telescope
-from specklepy.plotting.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 class TestTelescope(unittest.TestCase):

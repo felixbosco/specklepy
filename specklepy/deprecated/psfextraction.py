@@ -10,7 +10,7 @@ from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
 from specklepy.io.psffile import PSFFile
 from specklepy.core.aperture import Aperture
-from specklepy.plotting.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 class PSFExtraction(object):

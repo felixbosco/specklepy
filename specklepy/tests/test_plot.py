@@ -4,7 +4,7 @@ from matplotlib.colors import LogNorm
 
 from specklepy.core.aperture import Aperture
 from specklepy.utils.transferfunctions import psf
-from specklepy.plotting import plot
+from specklepy.plotting import plots
 
 
 class TestTransferFunctions(unittest.TestCase):
@@ -18,13 +18,13 @@ class TestTransferFunctions(unittest.TestCase):
 
     def test_plot_powerspec1d(self):
         psf_image = psf(self.aperture)
-        plot.imshow(psf_image, title="PSF", norm=LogNorm())
-        plot.plot_powerspec1d(psf_image)
+        plots.imshow(psf_image, title="PSF", norm=LogNorm())
+        plots.plot_powerspec1d(psf_image)
 
     def test_desaturate_color(self):
-        plot.desaturate_color('tab:blue', ncolors=3)
-        plot.desaturate_color('#00FF00', ncolors=3)
-        plot.desaturate_color((0, 1, 0), ncolors=3)
+        plots.desaturate_color('tab:blue', ncolors=3)
+        plots.desaturate_color('#00FF00', ncolors=3)
+        plots.desaturate_color((0, 1, 0), ncolors=3)
 
 if __name__ == "__main__":
     unittest.main()

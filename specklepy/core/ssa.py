@@ -9,7 +9,7 @@ from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
 from specklepy.utils.box import Box
-from specklepy.plotting.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, lazy_mode=True, box_indexes=None,

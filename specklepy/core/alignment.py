@@ -5,7 +5,7 @@ from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
-from specklepy.plotting.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, in_dir=None,

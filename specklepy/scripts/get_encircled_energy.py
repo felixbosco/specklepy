@@ -7,7 +7,7 @@ import numpy as np
 
 from specklepy.core.aperture import Aperture
 from specklepy.logging import logger
-from specklepy.plotting.plot import imshow, encircled_energy_plot
+from specklepy.plotting.plots import imshow, encircled_energy_plot
 
 
 def parser(options=None):
