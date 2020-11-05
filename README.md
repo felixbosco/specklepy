@@ -192,6 +192,7 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
+- *0.5.5dev*: Working on the extraction of multiple PSFs. 
 - *0.5.5*: Added `specklepy plot` command.
 - *0.5.4*: Data reduction is working in scalar background mode
 - *0.5.3*: Implemented calling with commands of a universal script, a la `specklepy reduce --setup`. The synthetic 
