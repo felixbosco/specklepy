@@ -7,7 +7,7 @@ from astropy.units import Unit, Quantity
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.io import config
 from specklepy.logging import logger
-from specklepy.utils.plot import imshow
+from specklepy.plotting.plot import imshow
 from specklepy.utils.scaledtuple import ScaledTuple
 
 

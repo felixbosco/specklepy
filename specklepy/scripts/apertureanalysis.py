@@ -10,7 +10,7 @@ from matplotlib.colors import LogNorm
 
 from specklepy.logging import logger
 from specklepy.core.aperture import Aperture
-from specklepy.utils.plot import imshow, plot_simple
+from specklepy.plotting.plot import imshow, plot_simple
 
 
 

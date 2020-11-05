@@ -3,8 +3,8 @@ import numpy as np
 from matplotlib.colors import LogNorm
 
 from specklepy.core.aperture import Aperture
-from specklepy.utils.transferfunctions import psf, otf, mtf, powerspec
-from specklepy.utils import plot
+from specklepy.utils.transferfunctions import psf
+from specklepy.plotting import plot
 
 
 class TestTransferFunctions(unittest.TestCase):

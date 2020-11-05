@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from specklepy.core.aperture import Aperture
-from specklepy.utils.plot import imshow
+from specklepy.plotting.plot import imshow
 
 
 class TestAperture(unittest.TestCase):

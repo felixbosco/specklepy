@@ -3,12 +3,11 @@
 import argparse
 import os
 import sys
-import warnings
 import numpy as np
 
 from specklepy.core.aperture import Aperture
 from specklepy.logging import logger
-from specklepy.utils.plot import imshow, psf_profile_plot
+from specklepy.plotting.plot import imshow, psf_profile_plot
 
 
 

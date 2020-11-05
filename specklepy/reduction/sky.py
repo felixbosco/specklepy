@@ -1,5 +1,4 @@
 from datetime import datetime
-from IPython import embed
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import trange
@@ -14,7 +13,7 @@ from photutils import make_source_mask
 from specklepy.io.outfile import Outfile
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
-from specklepy.utils.plot import save_figure
+from specklepy.plotting.plot import save_figure
 
 
 def subtract_sky_background(in_files, out_files=None, method='scalar', source='sky', mask_sources=False, file_path=None,
