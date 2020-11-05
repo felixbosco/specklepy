@@ -24,6 +24,9 @@ class Plot(object):
         self.file = file
         self.debug = debug
 
+        # Create default attributes
+        self.colorbar = None
+
         # Create figure
         self.figure, self.axes = plt.subplots(**kwargs)
         if not isinstance(self.axes, list):
@@ -86,9 +89,18 @@ class Plot(object):
         if self.y_data is not None:
             self.axes[axis].plot(self.x_data, self.y_data)
 
-    def plot_image(self, axis=0):
+    def plot_image(self, axis=0, **colorbar_kwargs):
         if self.image_data is not None:
-            self.axes[axis].imshow(self.image_data)
+            img = self.axes[axis].imshow(self.image_data, origin='lower')
+
+            # Create color bar
+            if 'pad' in colorbar_kwargs:
+                pad = colorbar_kwargs['pad']
+            else:
+                pad = 0.0
+            self.colorbar = plt.colorbar(img, pad=pad)
+            if 'label' in colorbar_kwargs:
+                self.colorbar.set_label(colorbar_kwargs['label'])
 
     def save(self, file=None):
         if file is None:
