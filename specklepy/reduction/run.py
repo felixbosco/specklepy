@@ -28,9 +28,8 @@ def inspect(files, keywords, save=None, debug=False):
         for keyword in keywords:
             try:
                 row.append(str(hdr[keyword]))
-            except KeyError as e:
-                sys.tracebacklimit = 0
-                raise e
+            except KeyError:
+                row.append('--')
         out_table.add_row(row)
 
     # Store the table if requested
