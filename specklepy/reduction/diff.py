@@ -15,7 +15,7 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, debug=F
 
         # Make a new copy of the file
         diff_file = 'diff_' + os.path.basename(file)
-        logger.info(f"Creating file {diff_file}")
+        print(f"Creating file {diff_file}")
         os.system(f"cp {file} {diff_file}")
 
         # Load original data and difference
@@ -54,6 +54,6 @@ def estimate_frame_exposure_times(header, common_header_prefix):
     diff_times = np.diff(times)
 
     # Report statistics
-    logger.info(f"Exposure time is: {np.mean(diff_times):.3e} ({np.std(diff_times):.2e})")
+    logger.info(f"Exposure time is: {np.mean(diff_times):.3f} ({np.std(diff_times):.2e})")
 
     return np.mean(diff_times)
