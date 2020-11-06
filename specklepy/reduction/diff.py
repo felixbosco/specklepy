@@ -6,7 +6,7 @@ from astropy.io import fits
 from specklepy.logging import logger
 
 
-def differentiate_cube(files, exposure_time_prefix=None, extension=None, debug=False):
+def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=None, debug=False):
 
     hdu = 0 if extension is None else extension
 
@@ -21,8 +21,10 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, debug=F
         # Load original data and difference
         with fits.open(diff_file, mode='update') as hdu_list:
 
-            # Load original cube
-            cube = hdu_list[hdu].data.astype(int)
+            # Load input data cube
+            cube = hdu_list[hdu].data
+            if dtype is not None:
+                cube = cube.astype(eval(dtype))
 
             # Difference the frames along the time axis
             logger.info("Differencing frames...")
@@ -32,7 +34,7 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, debug=F
             # Update exposure time in header
             if exposure_time_prefix is not None:
                 exptime = estimate_frame_exposure_times(hdu_list[hdu].header, exposure_time_prefix)
-                hdu_list[hdu].header.set('EXPTIME', exptime)
+                hdu_list[hdu].header.set('EXPTIME', np.around(exptime, 3))
 
             # Overwriting data
             logger.info("Storing data to file...")

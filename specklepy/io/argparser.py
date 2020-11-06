@@ -129,6 +129,7 @@ class GeneralArgParser(object):
         parser_diff.add_argument('-k', '--keyword', type=str, default=None,
                                  help='Common part of header keywords for the individual exposure time stamp.')
         parser_diff.add_argument('-e', '--extension', type=str, default=None, help='Extension of the FITS file.')
+        parser_diff.add_argument('--dtype', type=str, default=None, help='Data type to cast the data to before diff.')
         parser_diff.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
 
