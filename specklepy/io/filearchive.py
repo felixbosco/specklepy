@@ -42,18 +42,9 @@ class FileArchive(object):
         """
 
         # Store in and out paths
-        if in_dir is None:
-            self.in_dir = './'
-        else:
-            self.in_dir = in_dir
-        if out_dir is None:
-            self.out_dir = './'
-        else:
-            self.out_dir = out_dir
-        if out_prefix is None:
-            self.out_prefix = ''
-        else:
-            self.out_prefix = out_prefix
+        self.in_dir = in_dir if in_dir is not None else './'
+        self.out_dir = out_dir if out_dir is not None else './'
+        self.out_prefix = out_prefix if out_prefix is not None else ''
 
         # Interpret the file list input
         if isinstance(file_list, str):
@@ -67,16 +58,15 @@ class FileArchive(object):
                 logger.info("FileArchive found {} file(s) matching to {!r}.".format(len(files), file_list))
 
             if len(files) == 1 and not self.is_fits_file(files[0]):
-                logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
+                logger.info("Input file is not FITS type. FileArchive assumes that input file {!r} contains file "
                             "names.".format(files[0]))
                 self.table = self.read_table_file(files[0])
             else:
-                self.table = self.gather_table_from_list(files=files, **kwargs)
-                self.in_dir = os.path.dirname(files[0])
+                self.table, self.in_dir = self.gather_table_from_list(files=files, **kwargs)
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
-            self.table = self.gather_table_from_list(files=file_list, **kwargs)
+            self.table, self.in_dir = self.gather_table_from_list(files=file_list, **kwargs)
 
         else:
             raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'str')
@@ -90,6 +80,10 @@ class FileArchive(object):
         
         # Initialize the list of product files
         self.product_files = None
+
+        # Reduce paths
+        self.in_dir = os.path.normpath(self.in_dir)
+        self.out_dir = os.path.normpath(self.out_dir)
 
     def __iter__(self):
         return self
@@ -199,11 +193,17 @@ class FileArchive(object):
         else:
             table = Table(names=['FILE']+names, dtype=[str]+dtypes)
 
+        # Extract common path
+        common_path = os.path.commonpath(files)
+
         # Read data from files
-        for file in files:
+        for path in files:
+            file = path.replace(common_path, '')
+            file = file[1:] if file[0] == '/' else file
+
             logger.info(f"Retrieving header information from file {file}")
-            hdr = fits.getheader(file)
-            new_row = [os.path.basename(file)]
+            hdr = fits.getheader(path)
+            new_row = [file]
             for card in cards:
                 # Card actually contains two or more cards
                 if ',' in card:
@@ -221,8 +221,7 @@ class FileArchive(object):
                         else:
                             new_row.append(value.upper())
                     else:
-                        logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header "
-                                    f"card ({card}).")
+                        logger.info(f"Skipping file {file} due to at least one missing header card ({card}).")
                         break
             if len(new_row) == len(table.columns):
                 table.add_row(new_row)
@@ -232,7 +231,7 @@ class FileArchive(object):
         if sort_by:
             table.sort(sort_by)
 
-        return table
+        return table, common_path
 
     def write_table(self, file_name):
         """Write the archive's table to a file `file_name`."""
