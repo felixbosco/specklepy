@@ -15,7 +15,7 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, debug=F
 
         # Make a new copy of the file
         diff_file = 'diff_' + os.path.basename(file)
-        print(f"Creating file {diff_file}")
+        logger.info(f"Creating file {diff_file}")
         os.system(f"cp {file} {diff_file}")
 
         # Load original data and difference
