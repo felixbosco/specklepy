@@ -227,7 +227,7 @@ class FileArchive(object):
                 table.add_row(new_row)
 
         # Sort table entries by default properties and user request
-        table.sort('FILE')
+        table.sort('DATE')
         if sort_by:
             table.sort(sort_by)
 
