@@ -220,6 +220,9 @@ class FileArchive(object):
                             new_row.append(value)
                         else:
                             new_row.append(value.upper())
+                    elif card == 'NAXIS3':
+                        logger.warning(f"File {file} is missing header card '{card}'. Number of frames set to 1!")
+                        new_row.append(1)
                     else:
                         logger.info(f"Skipping file {file} due to at least one missing header card ({card}).")
                         break
