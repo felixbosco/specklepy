@@ -123,6 +123,15 @@ class GeneralArgParser(object):
                                     help='Name of the output file containing the table.')
         parser_inspect.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        parser_diff = subparsers.add_parser('diff', help='Differentiate cubes along time axis, for post-correlation.')
+        parser_diff.set_defaults(command='diff')
+        parser_diff.add_argument('files', type=str, default=None, nargs='+', help='List of FITS file names.')
+        parser_diff.add_argument('-k', '--keyword', type=str, default=None,
+                                 help='Common part of header keywords for the individual exposure time stamp.')
+        parser_diff.add_argument('-e', '--extension', type=str, default=None, help='Extension of the FITS file.')
+        parser_diff.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+
+
         # Parser for quick apodization computations
         parser_apodization = subparsers.add_parser('apodization', help='Compute the apodization function parameters.')
         parser_apodization.set_defaults(command='apodization')
