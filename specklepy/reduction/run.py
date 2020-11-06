@@ -40,7 +40,7 @@ def inspect(files, keywords, save=None, debug=False):
     print(out_table)
 
 
-def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
+def setup(path, instrument, par_file=None, list_file=None, sort_by=None, recursive=False):
     """Sets up the data reduction parameter file and file list.
 
     Args:
@@ -91,9 +91,9 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
 
     # Find files
     if '*' in path:
-        files = glob.glob(path)
+        files = glob.glob(path, recursive=recursive)
     else:
-        files = glob.glob(os.path.join(path, '*fits'))
+        files = glob.glob(os.path.join(path, '*fits'), recursive=recursive)
     if len(files):
         logger.info(f"Found {len(files)} file(s)")
         files.sort()

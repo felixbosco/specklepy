@@ -45,6 +45,7 @@ class GeneralArgParser(object):
                                       help="Name of the file containing the file names (for setup mode only).")
         parser_reduction.add_argument('-s', '--sortby', type=str, default=None,
                                       help="Header card to sort the output table by (for setup mode only).")
+        parser_reduction.add_argument('-r', '--recursive', action='store_true', help='Search for files recursively.')
         parser_reduction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for SSA reconstruction
