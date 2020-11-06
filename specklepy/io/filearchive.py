@@ -389,7 +389,7 @@ class FileArchive(object):
         # Copy the science data cubes into outdir (with an additional file prefix)
         for file in self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}):
             src = os.path.join(self.in_dir, file)
-            dest = os.path.join(self.out_dir, self.out_prefix + file)
+            dest = os.path.join(self.out_dir, self.out_prefix + os.path.basename(file))
             logger.info(f"Initializing data product file {dest}")
             os.system(f"cp {src} {dest}")
             with fits.open(dest, mode='update') as hdu_list:
