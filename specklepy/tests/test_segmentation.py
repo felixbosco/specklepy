@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 
 from specklepy.core.segmentation import Segmentation
-from specklepy.utils.plot import imshow
 
 
 class TestSegmentation(unittest.TestCase):

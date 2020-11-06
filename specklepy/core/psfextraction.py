@@ -1,11 +1,9 @@
-from IPython import embed
 import numpy as np
 import os
 from scipy import ndimage
 from tqdm import trange
 
 from astropy.io import fits
-from astropy.table import Table
 
 from specklepy.core.aperture import Aperture
 from specklepy.core.segmentation import Segmentation
@@ -13,7 +11,7 @@ from specklepy.logging import logger
 from specklepy.io.psffile import PSFFile
 from specklepy.io.table import read_table
 from specklepy.utils.combine import weighted_mean
-from specklepy.utils.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 class ReferenceStars(object):

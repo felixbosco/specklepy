@@ -100,6 +100,17 @@ class GeneralArgParser(object):
         parser_aperture.add_argument('-o', '--out_file', type=str, default=None, help='Saves the results to this file.')
         parser_aperture.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        parser_plot = subparsers.add_parser('plot', help='Plot data from an input file.')
+        parser_plot.set_defaults(command='plot')
+        parser_plot.add_argument('file', type=str, default=None, help='Name of a file with image or table data.')
+        parser_plot.add_argument('-e', '--extension', type=str, default=None, help='Name of a FITS file extension.')
+        parser_plot.add_argument('-f', '--format', type=str, default=None, help='Format of the table.')
+        parser_plot.add_argument('-c', '--columns', type=str, default=None, nargs=2, help='Columns of the table.')
+        parser_plot.add_argument('-l', '--layout', type=str, default=None,
+                                 help="Apply a default paper layout. Options are 'text' and 'column' for the requested "
+                                      "image width.")
+        parser_plot.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+
         # Parser for
         parser_apodization = subparsers.add_parser('apodization', help='Compute the apodization function parameters.')
         parser_apodization.set_defaults(command='apodization')

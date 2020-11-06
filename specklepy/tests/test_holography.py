@@ -1,8 +1,6 @@
 import unittest
-import numpy as np
 from specklepy.core import holography as holo
 from specklepy.io.parameterset import ParameterSet
-from specklepy.utils.plot import imshow
 
 
 class TestHolography(unittest.TestCase):

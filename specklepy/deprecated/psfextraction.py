@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.ndimage import shift
-from os import path
 from astropy.io import fits
 from astropy.table import Table
 # from astropy.nddata import NDData
@@ -9,10 +8,9 @@ from astropy.table import Table
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
-from specklepy.io.filearchive import FileArchive
 from specklepy.io.psffile import PSFFile
 from specklepy.core.aperture import Aperture
-from specklepy.utils.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 class PSFExtraction(object):

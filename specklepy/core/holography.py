@@ -1,20 +1,17 @@
-from IPython import embed
 import numpy as np
 
 from astropy.io import fits
 
-from specklepy.core.alignment import get_shifts
 from specklepy.core.aperture import Aperture
 from specklepy.core.fourierobject import FourierObject
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.reconstruction import Reconstruction
 from specklepy.core.sourceextraction import extract_sources
-from specklepy.core.ssa import ssa
 from specklepy.io.filearchive import FileArchive
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
-from specklepy.utils.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 def holography(params, mode='same', debug=False):

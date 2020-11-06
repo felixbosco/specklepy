@@ -9,6 +9,7 @@ from specklepy.core.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
 from specklepy.logging import logger
+from specklepy.plotting.plot import Plot
 from specklepy.reduction import run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 from specklepy.utils.resolution import get_resolution_parameters
@@ -79,7 +80,12 @@ def main():
         extract_sources(image=args.file_name, noise_threshold=args.noise_threshold, fwhm=args.fwhm, image_var=args.var,
                         write_to=args.out_file)
 
+    elif args.command == 'plot':
+        plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,
+                              layout=args.layout, debug=args.debug)
+        plot.apply_layout(layout=args.layout)
+        plot.save()
+        plot.show()
+
     elif args.command is 'apodization':
         get_resolution_parameters(wavelength=args.wavelength, diameter=args.diameter, pixel_scale=args.pixel_scale)
-
-

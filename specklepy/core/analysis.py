@@ -6,7 +6,7 @@ from astropy.table import Table
 
 from specklepy.core.aperture import Aperture
 from specklepy.logging import logger
-from specklepy.utils.plot import imshow
+from specklepy.plotting.plots import imshow
 
 
 def get_psf_1d(file, index, radius, out_file=None, normalize=None, debug=False):

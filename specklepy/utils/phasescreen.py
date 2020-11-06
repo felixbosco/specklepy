@@ -1,7 +1,5 @@
 import numpy as np
-from scipy.fftpack import fft2, ifft2, fftshift
-
-from specklepy.utils.transferfunctions import psf
+from scipy.fftpack import fft2, fftshift
 
 
 class PhaseScreen(object):
@@ -37,75 +35,93 @@ class PhaseScreen(object):
     def psd(self):
         return self.norm * self.amplitude() * np.exp(1j * self.random_phase())
 
-    def generate(self, size=None):
+    def generate_screen(self, size=None):
         if size is not None:
             self.size = size
         self.complex_screen = fft2(fftshift(self.psd()))
+        return self.complex_screen
 
-    def generate_n(self, number_screens, size=None):
-        screens = []
-        for n in range(number_screens):
-            self.generate(size=size)
-            screens.append(self.screen)
-        return screens
+    def generate(self, number=None, size=None):
+        if number is None or number == 1:
+            return self.generate(size=size).real
+        else:
+            screens = []
+            for n in range(number):
+                screens.append(self.generate_screen(size=size).real)
+            return screens
 
 
-class PSFIterator(object):
+class Atmosphere(object):
 
-    def __init__(self, width, screens, speeds, fractions=None):
-        # Store input
-        self.width = width
+    def __init__(self, screens, speeds, fractions=None):
 
         if len(screens) != len(speeds):
             raise ValueError(f"The number of phase screens ({len(screens)}) has to be the same as number of wind "
                              f"speeds ({len(speeds)})!")
-        else:
-            self.screens = screens
-            self.speeds = speeds
-            self.n_layers = len(screens)
+        self.screens = np.array(screens)
+        self.speeds = speeds
+        self.n_layers = len(screens)
 
         if fractions is None:
-            self.fractions = self.initialize_fractions()
+            self.screen_weights = fractions
         else:
-            self.fractions = fractions
+            self.screen_weights = np.expand_dims(np.array(fractions), axis=(1, 2))
 
         # Initialize secondary parameters
-        self.indexes = self.initialize_indexes()
-        self.aperture = self.initialize_circular_aperture()
         self.step = 0
 
     def __repr__(self):
-        return f"PSFIterator(screens={self.n_layers}, step={self.step})"
+        return f"Atmosphere(screens={self.n_layers}, step={self.step})"
 
     @property
-    def radius(self):
-        return self.width // 2
+    def screen_shape(self):
+        return self.screens[0].shape
 
-    def initialize_fractions(self):
-        return [1 / self.n_layers] * self.n_layers
-
-    def initialize_indexes(self):
-        return [(self.width // 2, self.width // 2)] * self.n_layers
-
-    def initialize_circular_aperture(self):
-        xx, yy = np.mgrid[:self.width, :self.width]
-        rr = np.sqrt(np.square(xx - self.radius) + np.square(yy - self.radius))
-        aperture = (rr <= self.radius).astype(float)
-        return aperture #/ np.sum(aperture)
-
-    def grab_layer(self, index):
-        x0, y0 = self.indexes[index]
-        return self.screens[index][x0 - self.radius: x0 + self.radius, y0 - self.radius: y0 + self.radius]
+    @property
+    def weighted_screens(self):
+        if self.screen_weights is None:
+            return self.screens
+        else:
+            return np.multiply(self.screen_weights, self.screens)
 
     def integrate_layers(self):
-        phase = self.grab_layer(0)
-        for layer in range(1, self.n_layers):
-            phase += self.grab_layer(layer) * self.fractions[layer]
-        return phase
+        return np.sum(self.weighted_screens, axis=0)
 
+    def evolve(self):
+        for n in range(self.n_layers):
+            self.screens[n] = np.roll(self.screens[n], shift=self.speeds[n])
+        self.step += 1
+
+
+class PSFIterator(object):
+
+    def __init__(self, radius, atmosphere):
+        # Store input
+        self.radius = radius
+        self.atmosphere = atmosphere
+
+        # Initialize secondary parameters
+        self.aperture = self.initialize_circular_aperture()
+
+    def __repr__(self):
+        return f"PSFIterator()"
+
+    @property
+    def size(self):
+        return self.atmosphere.screen_shape[0]
+
+    def initialize_circular_aperture(self):
+        xx, yy = np.mgrid[:self.size, :self.size]
+        return np.square(xx - self.size / 2) + np.square(yy - self.size / 2) <= np.square(self.radius)
+
+    @property
     def complex_aperture(self):
-        # return np.multiply(self.aperture, np.exp(1j * self.integrate_layers()))
-        return np.add(self.aperture, 1j * self.integrate_layers())
+        return np.multiply(self.aperture, np.exp(1j * self.atmosphere.integrate_layers()))
 
+    @property
     def psf(self):
-        return np.square(np.abs(fftshift(ifft2(self.complex_aperture()))))
+        return fftshift(np.square(np.abs(fft2(fftshift(self.complex_aperture)))))
+
+    def next(self):
+        self.atmosphere.evolve()
+        return self.psf

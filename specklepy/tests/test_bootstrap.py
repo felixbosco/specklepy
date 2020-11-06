@@ -1,7 +1,5 @@
 import unittest
 from specklepy.core import bootstrap
-from specklepy.utils.plot import imshow
-
 
 
 class TestBootstrap(unittest.TestCase):
