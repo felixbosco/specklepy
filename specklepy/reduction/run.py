@@ -1,8 +1,5 @@
-from datetime import datetime
 import glob
-from IPython import embed
 import os
-import sys
 
 from astropy.io import fits
 from astropy.table import Table
