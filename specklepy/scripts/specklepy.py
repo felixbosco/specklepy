@@ -80,6 +80,9 @@ def main():
         extract_sources(image=args.file_name, noise_threshold=args.noise_threshold, fwhm=args.fwhm, image_var=args.var,
                         write_to=args.out_file)
 
+    elif args.command == 'inspect':
+        run.inspect(files=args.files, keywords=args.keywords, save=args.save, debug=args.debug)
+
     elif args.command == 'plot':
         plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,
                               layout=args.layout, debug=args.debug)

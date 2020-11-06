@@ -31,7 +31,7 @@ class GeneralArgParser(object):
         parser_generate.add_argument('parfile', type=str, help='Path to a parameter file.')
         parser_generate.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
-        # Parser for reduction
+        # Parser for data reduction
         parser_reduction = subparsers.add_parser('reduce', help='Data reduction.')
         parser_reduction.set_defaults(command='reduce')
         parser_reduction.add_argument('parfile', type=str,
@@ -100,6 +100,7 @@ class GeneralArgParser(object):
         parser_aperture.add_argument('-o', '--out_file', type=str, default=None, help='Saves the results to this file.')
         parser_aperture.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        # Parser for plotting
         parser_plot = subparsers.add_parser('plot', help='Plot data from an input file.')
         parser_plot.set_defaults(command='plot')
         parser_plot.add_argument('file', type=str, default=None, help='Name of a file with image or table data.')
@@ -111,7 +112,17 @@ class GeneralArgParser(object):
                                       "image width.")
         parser_plot.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
-        # Parser for
+        # Parser for inspecting fits headers
+        parser_inspect = subparsers.add_parser('inspect', help='Inspect FITS headers and list attributes')
+        parser_inspect.set_defaults(command='inspect')
+        parser_inspect.add_argument('files', type=str, default=None, nargs='+', help='List of FITS file names.')
+        parser_inspect.add_argument('-k', '--keywords', type=str, default=None, nargs='+',
+                                    help='List of FITS header keywords.')
+        parser_inspect.add_argument('-s', '--save', type=str, default=None,
+                                    help='Name of the output file containing the table.')
+        parser_inspect.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+
+        # Parser for quick apodization computations
         parser_apodization = subparsers.add_parser('apodization', help='Compute the apodization function parameters.')
         parser_apodization.set_defaults(command='apodization')
         parser_apodization.add_argument('diameter', type=float,
@@ -122,6 +133,7 @@ class GeneralArgParser(object):
                                         help='pixel/ plate scale of the detector in units of mas')
         parser_apodization.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        # Parser for source extraction
         parser_extraction = subparsers.add_parser('extract', help='Extract sources from an image.')
         parser_extraction.set_defaults(command='extract')
         parser_extraction.add_argument('file_name', type=str, help='Name of the image file.')

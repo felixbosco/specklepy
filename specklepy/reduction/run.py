@@ -2,6 +2,7 @@ from datetime import datetime
 import glob
 from IPython import embed
 import os
+import sys
 
 from astropy.io import fits
 from astropy.table import Table
@@ -10,6 +11,34 @@ from specklepy.io import config
 from specklepy.io.filearchive import FileArchive
 from specklepy.logging import logger
 from specklepy.reduction import flat, sky
+
+
+def inspect(files, keywords, save=None, debug=False):
+
+    # Terminal output
+    logger.info(f"Inspecting {len(files)} files for the FITS header keywords: {keywords}")
+
+    # Initialize output table
+    out_table = Table(names=['FILE'] + keywords, dtype=[str] * (1 + len(keywords)))
+
+    # Iterate through files and store header keywords
+    for file in files:
+        hdr = fits.getheader(filename=file)
+        row = [file]
+        for keyword in keywords:
+            try:
+                row.append(str(hdr[keyword]))
+            except KeyError as e:
+                sys.tracebacklimit = 0
+                raise e
+        out_table.add_row(row)
+
+    # Store the table if requested
+    if save is not None:
+        out_table.write(save, format='ascii.fixed_width')
+
+    # Present table
+    print(out_table)
 
 
 def setup(path, instrument, par_file=None, list_file=None, sort_by=None):
