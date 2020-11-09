@@ -72,6 +72,7 @@ class Reconstruction(object):
         self.tmp_dir = tmp_dir if tmp_dir is not None else ''
         self.var_ext = var_ext  # if var_ext is not None else 'VAR'
         self.box = Box(box_indexes) if box_indexes is not None else None
+        self.debug = debug
 
         # Derive shape of individual input frames
         example_frame = fits.getdata(os.path.join(in_dir, self.in_files[0]))
@@ -79,21 +80,21 @@ class Reconstruction(object):
             example_frame = example_frame[0]
         self.frame_shape = example_frame.shape
 
+        # Initialize secondary attributes
+        self.image = None
+        self.image_var = None
+        self.long_exp_files = None
+        self.shifts = None
+        self.pad_vectors = None
+        self.reference_pad_vector = None
+
         # Initialize image
         if self.single_cube_mode:
             self.image = np.zeros(self.frame_shape)
             self.shifts = (0, 0)
         else:
-            # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
-            self.long_exp_files = self.create_long_exposures(alignment_method=alignment_method)
-
-            # Estimate relative shifts
-            self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_index,
-                                               lazy_mode=True, return_image_shape=False, in_dir=tmp_dir, debug=debug)
-
-            # Derive corresponding padding vectors
-            self.pad_vectors, self.reference_pad_vector = \
-                alignment.get_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
+            # Align cubes
+            self.align_cubes(alignment_method=alignment_method)
 
             # Derive corresponding image sizes
             self.image = self.initialize_image()
@@ -168,6 +169,19 @@ class Reconstruction(object):
             long_exposure_files.append(os.path.basename(long_exposure_path))
 
         return long_exposure_files
+
+    def align_cubes(self, alignment_method):
+        # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
+        self.long_exp_files = self.create_long_exposures(alignment_method=alignment_method)
+
+        # Estimate relative shifts
+        self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_index,
+                                           lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
+                                           debug=self.debug)
+
+        # Derive corresponding padding vectors
+        self.pad_vectors, self.reference_pad_vector = \
+            alignment.get_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
 
     def initialize_image(self):
         """Initialize the reconstruction image."""
