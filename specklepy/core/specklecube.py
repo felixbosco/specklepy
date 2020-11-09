@@ -80,6 +80,7 @@ class SpeckleCube(object):
         return hdr
 
     def store(self, path=None):
+        # TODO: implement using an OutFile instance here.
 
         # Stop if image is not computed yet
         if self.image is None:
