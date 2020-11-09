@@ -89,25 +89,11 @@ class Reconstruction(object):
         self.pad_vectors = None
         self.reference_pad_vector = None
 
-        # Initialize image
-        if self.single_cube_mode:
-            self.image = np.zeros(self.frame_shape)
-            self.shifts = (0, 0)
-        else:
-            # Align cubes
-            self.align_cubes()
-
-            # Derive corresponding image sizes
-            self.image = self.initialize_image()
-
-        # Initialize the variance map
-        self.image_var = np.zeros(self.image.shape) if self.var_ext is not None else None
-
         # Initialize output file and create an extension for the variance
-        self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file, shape=self.image.shape,
+        self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file,
                                            in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
-        if self.image_var is not None:
-            self.out_file.new_extension(name=self.var_ext, data=self.image_var)
+        if self.var_ext is not None:
+            self.out_file.new_extension(name=self.var_ext)
 
     @property
     def single_cube_mode(self):
@@ -181,17 +167,24 @@ class Reconstruction(object):
         if integration_method is not None:
             self.integration_method = integration_method
 
-        # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
-        self.long_exp_files = self.create_long_exposures()
+            # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
+            self.long_exp_files = self.create_long_exposures()
 
-        # Estimate relative shifts
-        self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_index,
-                                           lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
-                                           debug=self.debug)
+        # Save time if only one cube is provided
+        if self.single_cube_mode:
+            self.shifts = [(0, 0)]
+            self.pad_vectors = [((0, 0), (0, 0))]
+            self.reference_pad_vector = ((0, 0), (0, 0))
 
-        # Derive corresponding padding vectors
-        self.pad_vectors, self.reference_pad_vector = \
-            alignment.get_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
+        else:
+            # Estimate relative shifts
+            self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_index,
+                                               lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
+                                               debug=self.debug)
+
+            # Derive corresponding padding vectors
+            self.pad_vectors, self.reference_pad_vector = \
+                alignment.get_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
 
     def initialize_image(self):
         """Initialize the reconstruction image."""
@@ -223,6 +216,10 @@ class Reconstruction(object):
         if self.shifts is None or self.pad_vectors is None or self.reference_pad_vector is None:
             self.align_cubes()
 
+        # Initialize the image
+        if self.image is None:
+            self.image = self.initialize_image()
+
         # Iterate over long exposure images
         for index, file in enumerate(self.long_exp_files):
 
@@ -238,6 +235,8 @@ class Reconstruction(object):
             self.image += alignment.pad_array(tmp_image, self.pad_vectors[index], mode=self.mode,
                                               reference_image_pad_vector=self.reference_pad_vector)
             if tmp_image_var is not None:
+                if self.image_var is None:
+                    self.image_var = self.initialize_image()
                 self.image_var += alignment.pad_array(tmp_image_var, self.pad_vectors[index], mode=self.mode,
                                                       reference_image_pad_vector=self.reference_pad_vector)
 
