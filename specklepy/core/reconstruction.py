@@ -199,7 +199,7 @@ class Reconstruction(object):
 
         return image
 
-    def coadd_long_exposures(self):
+    def coadd_long_exposures(self, save=False):
         """Coadd the interim long exposures."""
 
         # Iterate over long exposure images
@@ -221,8 +221,12 @@ class Reconstruction(object):
                                                           reference_image_pad_vector=self.reference_pad_vector)
 
         # Update out_file
+        if save:
+            self.save()
+
+        return self.image, self.var
+
+    def save(self):
         self.out_file.data = self.image
         if self.var_ext is not None and self.var is not None:
             self.out_file.update_extension(ext_name=self.var_ext, data=self.var)
-
-        return self.image, self.var
