@@ -72,13 +72,10 @@ def holography(params, mode='same', debug=False):
                                     box_indexes=params['OPTIONS']['box_indexes'], debug=debug)
 
     # (i-ii) Align cubes
-    # shifts = get_shifts(files=in_files, reference_file=params['PATHS']['alignmentReferenceFile'],
-    #                     lazy_mode=True, return_image_shape=False, in_dir=in_dir, debug=debug)
+    reconstruction.align_cubes()
     shifts = reconstruction.shifts
 
     # (iii) Compute SSA reconstruction
-    # image = ssa(in_files, mode=mode, outfile=out_file, in_dir=in_dir, tmp_dir=tmp_dir,
-    #             variance_extension_name=params['OPTIONS']['varianceExtensionName'])
     image = reconstruction.coadd_long_exposures(save=True)
     if isinstance(image, tuple):
         # SSA returned a reconstruction image and a variance image
