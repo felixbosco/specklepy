@@ -198,9 +198,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
 
     # Save the result to an Outfile
     if outfile is not None:
-        embed()
-        # is isinstance(outfile, str):
-        #     outfile = ReconstructionFile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
+        if isinstance(outfile, str):
+            outfile = ReconstructionFile(files=files, filename=outfile, cards={"RECONSTRUCTION": "SSA"})
         outfile.data = reconstruction_image
         if reconstruction_var is not None:
             outfile.new_extension(name=var_ext, data=reconstruction_var)

@@ -141,7 +141,7 @@ class Reconstruction(object):
                 if os.path.basename(self.reference_file) in tmp_file:
                     self.reference_tmp_file = tmp_file
             if reference_tmp_file is None:
-                embed()
+                # embed()
                 raise RuntimeError(f"Unable to identify reference file in list of temporary reconstructions!")
 
         elif isinstance(self.reference_image, int):
