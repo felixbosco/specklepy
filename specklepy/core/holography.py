@@ -66,7 +66,7 @@ def holography(params, mode='same', debug=False):
 
     # Initialize reconstruction
     reconstruction = Reconstruction(in_files=in_files, mode=mode, alignment_method='ssa',
-                                    reference_image=params['PATHS']['alignmentReferenceFile'],
+                                    reference_file=params['PATHS']['alignmentReferenceFile'],
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=params['PATHS']['outFile'],
                                     var_ext=params['OPTIONS']['varianceExtensionName'],
                                     box_indexes=params['OPTIONS']['box_indexes'], debug=debug)

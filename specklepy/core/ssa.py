@@ -85,7 +85,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
     # Initialize the reconstruction
     logger.info("Starting SSA reconstruction...")
     reconstruction = Reconstruction(in_files=files, mode=mode, alignment_method='ssa',
-                                    reference_image=reference_file,
+                                    reference_file=reference_file,
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=outfile,
                                     var_ext=var_ext,
                                     box_indexes=box_indexes, debug=debug)

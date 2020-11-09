@@ -22,7 +22,7 @@ class Reconstruction(object):
 
     supported_modes = ['full', 'same', 'valid']
 
-    def __init__(self, in_files, mode='same', reference_image=None, out_file=None, in_dir=None, tmp_dir=None,
+    def __init__(self, in_files, mode='same', reference_file=None, out_file=None, in_dir=None, tmp_dir=None,
                  alignment_method='collapse', var_ext=None, box_indexes=None, debug=False):
         """Create a Reconstruction instance.
 
@@ -39,7 +39,7 @@ class Reconstruction(object):
                     The reconstruction image covers the same field of view as the image in the reference file.
                 - `valid`:
                     The reconstruction image covers only that field that is covered by all images in the input files.
-            reference_image (int or str, optional):
+            reference_file (int or str, optional):
                 The index in the `in_files` list or the name of the image serving as reference in 'same' mode.
             out_file (str, optional):
                 Name of an output file to store the reconstructed image in.
@@ -67,36 +67,28 @@ class Reconstruction(object):
         self.in_files = in_files
         self.mode = mode
         self.out_file = out_file if out_file is not None else 'reconstruction.fits'
-        self.reference_index = reference_image if isinstance(reference_image, int) else None
-        self.reference_image = reference_image if reference_image is not None else 0
+        self.reference_index = self.identify_reference_file(reference_file)
         self.in_dir = in_dir if in_dir is not None else ''
         self.tmp_dir = tmp_dir if tmp_dir is not None else ''
         self.var_ext = var_ext  # if var_ext is not None else 'VAR'
         self.box = Box(box_indexes) if box_indexes is not None else None
 
-        # Retrieve name of reference file
-        self.reference_file = self.identify_reference_file()
-
         # Derive shape of individual input frames
-        single_cube_mode = len(self.in_files) == 1
         example_frame = fits.getdata(os.path.join(in_dir, self.in_files[0]))
         if example_frame.ndim == 3:
             example_frame = example_frame[0]
         self.frame_shape = example_frame.shape
 
         # Initialize image
-        if single_cube_mode:
+        if self.single_cube_mode:
             self.image = np.zeros(self.frame_shape)
             self.shifts = (0, 0)
         else:
             # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
             self.long_exp_files = self.create_long_exposures(alignment_method=alignment_method)
 
-            # Identify reference tmp file
-            self.reference_tmp_file = self.identify_reference_long_exposure_file()
-
             # Estimate relative shifts
-            self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_tmp_file,
+            self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_index,
                                                lazy_mode=True, return_image_shape=False, in_dir=tmp_dir, debug=debug)
 
             # Derive corresponding padding vectors
@@ -111,41 +103,40 @@ class Reconstruction(object):
 
         # Initialize output file and create an extension for the variance
         self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file, shape=self.image.shape,
-                                      in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
+                                           in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
         if self.image_var is not None:
             self.out_file.new_extension(name=self.var_ext, data=self.image_var)
 
-    def identify_reference_file(self):
+    @property
+    def single_cube_mode(self):
+        return len(self.in_files) == 1
 
-        # Initialize reference file
-        reference_file = None
+    @property
+    def reference_file(self):
+        return self.in_files[self.reference_index]
+
+    def identify_reference_file(self, reference_file):
+
+        # Initialize reference
+        reference_index = None
 
         # Interpret reference image
-        if isinstance(self.reference_image, str):
-            reference_file = self.reference_image
-        elif isinstance(self.reference_image, int):
-            reference_file = self.in_files[self.reference_image]
+        if reference_file is None:
+            reference_index = 0
+        elif isinstance(reference_file, int):
+            reference_index = reference_file
+        elif isinstance(reference_file, str):
+            for f, file in enumerate(self.in_files):
+                if reference_file == file:
+                    reference_index = f
         else:
-            SpecklepyTypeError('Reconstruction', 'reference_image', type(self.reference_image), 'int or str')
+            SpecklepyTypeError('Reconstruction', 'reference_image', type(reference_file), 'int or str')
 
-        return reference_file
+        return reference_index
 
-    def identify_reference_long_exposure_file(self):
-        """Identify the long exposure file that corresponds to the reference cube"""
-        reference_tmp_file = None
-
-        if isinstance(self.reference_image, str):
-            for tmp_file in self.long_exp_files:
-                if os.path.basename(self.reference_file) in tmp_file:
-                    self.reference_tmp_file = tmp_file
-            if reference_tmp_file is None:
-                # embed()
-                raise RuntimeError(f"Unable to identify reference file in list of temporary reconstructions!")
-
-        elif isinstance(self.reference_image, int):
-            reference_tmp_file = self.long_exp_files[self.reference_image]
-
-        return reference_tmp_file
+    @property
+    def reference_long_exp_file(self):
+        return self.long_exp_files[self.reference_index]
 
     def create_long_exposures(self, alignment_method):
         """Compute long exposures from the input data cubes."""
@@ -213,7 +204,7 @@ class Reconstruction(object):
 
             # Co-add reconstructions and var images
             self.image += alignment.pad_array(tmp_image, self.pad_vectors[index], mode=self.mode,
-                                                  reference_image_pad_vector=self.reference_pad_vector)
+                                              reference_image_pad_vector=self.reference_pad_vector)
             if tmp_image_var is not None:
                 self.image_var += alignment.pad_array(tmp_image_var, self.pad_vectors[index], mode=self.mode,
                                                       reference_image_pad_vector=self.reference_pad_vector)
