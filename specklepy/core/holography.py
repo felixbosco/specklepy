@@ -65,7 +65,7 @@ def holography(params, mode='same', debug=False):
                                   cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
 
     # Initialize reconstruction
-    reconstruction = Reconstruction(in_files=in_files, mode=mode, alignment_method='ssa',
+    reconstruction = Reconstruction(in_files=in_files, mode=mode, integration_method='ssa',
                                     reference_file=params['PATHS']['alignmentReferenceFile'],
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=params['PATHS']['outFile'],
                                     var_ext=params['OPTIONS']['varianceExtensionName'],

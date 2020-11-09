@@ -23,7 +23,7 @@ class Reconstruction(object):
     supported_modes = ['full', 'same', 'valid']
 
     def __init__(self, in_files, mode='same', reference_file=None, out_file=None, in_dir=None, tmp_dir=None,
-                 alignment_method='collapse', var_ext=None, box_indexes=None, debug=False):
+                 integration_method='collapse', var_ext=None, box_indexes=None, debug=False):
         """Create a Reconstruction instance.
 
         Args:
@@ -94,7 +94,7 @@ class Reconstruction(object):
             self.shifts = (0, 0)
         else:
             # Align cubes
-            self.align_cubes(alignment_method=alignment_method)
+            self.align_cubes(integration_method=integration_method)
 
             # Derive corresponding image sizes
             self.image = self.initialize_image()
@@ -139,7 +139,7 @@ class Reconstruction(object):
     def reference_long_exp_file(self):
         return self.long_exp_files[self.reference_index]
 
-    def create_long_exposures(self, alignment_method):
+    def create_long_exposures(self, integration_method):
         """Compute long exposures from the input data cubes."""
 
         # Initialize list of long exposure files
@@ -153,12 +153,12 @@ class Reconstruction(object):
                                        variance_extension=None)
 
             # Compute collapsed or SSA'ed images from the cube
-            if alignment_method == 'collapse':
+            if integration_method == 'collapse':
                 speckle_cube.collapse()
-            elif alignment_method == 'ssa':
+            elif integration_method == 'ssa':
                 speckle_cube.ssa(box=self.box)
             else:
-                raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
+                raise SpecklepyValueError('Reconstruction', 'integration_method', integration_method,
                                           expected="either 'collapse' or 'ssa'")
 
             # Store data to a new Outfile instance
@@ -170,9 +170,9 @@ class Reconstruction(object):
 
         return long_exposure_files
 
-    def align_cubes(self, alignment_method):
+    def align_cubes(self, integration_method):
         # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
-        self.long_exp_files = self.create_long_exposures(alignment_method=alignment_method)
+        self.long_exp_files = self.create_long_exposures(integration_method=integration_method)
 
         # Estimate relative shifts
         self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_index,
@@ -202,8 +202,12 @@ class Reconstruction(object):
 
         return image
 
-    def coadd_long_exposures(self, save=False):
+    def coadd_long_exposures(self, integration_method='ssa', save=False):
         """Coadd the interim long exposures."""
+
+        #
+        if self.shifts is None or self.pad_vectors is None or self.reference_pad_vector is None:
+            self.align_cubes(integration_method=integration_method)
 
         # Iterate over long exposure images
         for index, file in enumerate(self.long_exp_files):
