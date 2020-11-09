@@ -107,13 +107,13 @@ class Reconstruction(object):
             self.image = self.initialize_image()
 
         # Initialize the variance map
-        self.var = np.zeros(self.image.shape) if self.var_ext is not None else None
+        self.image_var = np.zeros(self.image.shape) if self.var_ext is not None else None
 
         # Initialize output file and create an extension for the variance
         self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file, shape=self.image.shape,
                                       in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
-        if self.var is not None:
-            self.out_file.new_extension(name=self.var_ext, data=self.var)
+        if self.image_var is not None:
+            self.out_file.new_extension(name=self.var_ext, data=self.image_var)
 
     def identify_reference_file(self):
 
@@ -215,16 +215,16 @@ class Reconstruction(object):
             self.image += alignment.pad_array(tmp_image, self.pad_vectors[index], mode=self.mode,
                                                   reference_image_pad_vector=self.reference_pad_vector)
             if tmp_image_var is not None:
-                self.var += alignment.pad_array(tmp_image_var, self.pad_vectors[index], mode=self.mode,
-                                                          reference_image_pad_vector=self.reference_pad_vector)
+                self.image_var += alignment.pad_array(tmp_image_var, self.pad_vectors[index], mode=self.mode,
+                                                      reference_image_pad_vector=self.reference_pad_vector)
 
         # Update out_file
         if save:
             self.save()
 
-        return self.image, self.var
+        return self.image, self.image_var
 
     def save(self):
         self.out_file.data = self.image
-        if self.var_ext is not None and self.var is not None:
-            self.out_file.update_extension(ext_name=self.var_ext, data=self.var)
+        if self.var_ext is not None and self.image_var is not None:
+            self.out_file.update_extension(ext_name=self.var_ext, data=self.image_var)
