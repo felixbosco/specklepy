@@ -8,7 +8,7 @@ from specklepy.logging import logger
 
 
 def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, box_indexes=None,
-        debug=False, **kwargs):
+        integration_method='ssa', debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
@@ -30,7 +30,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         reference_file (str, int, optional):
             Path to a reference file or index of the file in files, relative to which the shifts are computed. See
             specklepy.core.aligment.get_shifts for details. Default is 0.
-        outfile (specklepy.io.recfile, optional):
+        outfile (str, optional):
             Object to write the result to, if provided.
         in_dir (str, optional):
             Path to the files. `None` is substituted by an empty string.
@@ -39,6 +39,9 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         box_indexes (list, optional):
             Constraining the search for the intensity peak to the specified box. Searching the full frames if not
             provided.
+        integration_method (str, optional):
+            Method for creating individual long exposures. Using SSA by default, but can also use 'collapse' for a
+            straight integration along the time axis (in case of faint reference sources).
         debug (bool, optional):
             Show debugging information. Default is False.
 
@@ -52,6 +55,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         logger.setLevel('DEBUG')
         logger.handlers[0].setLevel('DEBUG')
         logger.info("Set logging level to DEBUG")
+
     # Check parameters
     if not isinstance(files, (list, np.ndarray)):
         if isinstance(files, str):
@@ -84,7 +88,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
 
     # Initialize the reconstruction
     logger.info("Starting SSA reconstruction...")
-    reconstruction = Reconstruction(in_files=files, mode=mode, integration_method='ssa',
+    reconstruction = Reconstruction(in_files=files, mode=mode, integration_method=integration_method,
                                     reference_file=reference_file,
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=outfile,
                                     var_ext=var_ext,
