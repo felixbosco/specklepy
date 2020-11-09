@@ -2,16 +2,9 @@ from IPython import embed
 import numpy as np
 import os
 
-from astropy.io import fits
-
-from specklepy.core import alignment
 from specklepy.core.reconstruction import Reconstruction
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io.outfile import Outfile
-from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
-from specklepy.utils.box import Box
-from specklepy.plotting.plots import imshow
 
 
 def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, box_indexes=None,

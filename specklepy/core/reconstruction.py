@@ -5,10 +5,8 @@ import os
 from astropy.io import fits
 
 from specklepy.core import alignment
-# from specklepy.core.specklecube import coadd_frames
 from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
 from specklepy.utils.box import Box
