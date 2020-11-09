@@ -158,9 +158,11 @@ class Reconstruction(object):
         # Iterate over input data cubes
         for file in self.in_files:
 
+            # Read data from file
             speckle_cube = SpeckleCube(file_name=file, in_dir=self.in_dir, out_dir=self.tmp_dir,
                                        variance_extension=None)
 
+            # Compute collapsed or SSA'ed images from the cube
             if alignment_method == 'collapse':
                 speckle_cube.collapse()
             elif alignment_method == 'ssa':
@@ -169,32 +171,12 @@ class Reconstruction(object):
                 raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
                                           expected="either 'collapse' or 'ssa'")
 
-            # # Read data from file
-            # cube = fits.getdata(os.path.join(self.in_dir, file))
-            # image = None
-            # image_var = None
-            #
-            # # Compute collapsed or SSA'ed images from the cube
-            # if alignment_method == 'collapse':
-            #     image = np.sum(cube, axis=0)
-            #     tmp_file = 'int_' + os.path.basename(file)
-            # elif alignment_method == 'ssa':
-            #     image, image_var = coadd_frames(cube=cube, box=self.box)
-            #     tmp_file = 'ssa_' + os.path.basename(file)
-            # else:
-            #     raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
-            #                               expected="either 'collapse' or 'ssa'")
-
             # Store data to a new Outfile instance
-            # tmp_path = os.path.join(self.tmp_dir, tmp_file)
             logger.info(f"Saving temporary reconstruction of cube {file} to {speckle_cube.default_save_path()}")
-            # tmp_file_object = Outfile(tmp_path, data=image, verbose=True)
-            # if image_var is not None:
-            #     tmp_file_object.new_extension(name=self.var_ext, data=image_var)
-            long_exposure_file = speckle_cube.store()
+            long_exposure_path = speckle_cube.store()
 
             # Add the recently created file to the list
-            long_exposure_files.append(long_exposure_file)
+            long_exposure_files.append(os.path.basename(long_exposure_path))
 
         return long_exposure_files
 

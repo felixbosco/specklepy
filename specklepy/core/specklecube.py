@@ -100,7 +100,7 @@ class SpeckleCube(object):
             hdu_list.append(var_hdu)
 
         # Store data to file
-        hdu_list.writeto(self.default_save_path())
+        hdu_list.writeto(self.default_save_path(), overwrite=True)
 
         # Return target path
         return self.default_save_path()
