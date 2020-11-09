@@ -97,14 +97,14 @@ def holography(params, mode='same', debug=False):
         input("\tWhen you are done, hit a ENTER.")
 
         # (vi) PSF extraction
-        ref_stars = ReferenceStars(psf_radius=params['PSFEXTRACTION']['psfRadius'],
+        psf_stars = ReferenceStars(psf_radius=params['PSFEXTRACTION']['psfRadius'],
                                    reference_source_file=params['PATHS']['refSourceFile'], in_files=in_files,
                                    save_dir=tmp_dir, in_dir=in_dir,
                                    field_segmentation=params['PSFEXTRACTION']['fieldSegmentation'])
         if params['PSFEXTRACTION']['mode'].lower() == 'epsf':
-            psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
+            psf_files = psf_stars.extract_epsfs(file_shifts=shifts, debug=debug)
         elif params['PSFEXTRACTION']['mode'].lower() in ['mean', 'median', 'weighted_mean']:
-            psf_files = ref_stars.extract_psfs(file_shifts=shifts, mode=params['PSFEXTRACTION']['mode'].lower(),
+            psf_files = psf_stars.extract_psfs(file_shifts=shifts, mode=params['PSFEXTRACTION']['mode'].lower(),
                                                debug=debug)
         else:
             raise RuntimeError(f"PSF extraction mode '{params['PSFEXTRACTION']['mode']}' is not understood!")
