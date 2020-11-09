@@ -1,6 +1,7 @@
 from copy import copy
 from datetime import datetime
 import numpy as np
+import sys
 import warnings
 
 from astropy.io import fits
@@ -71,7 +72,11 @@ class Aperture(object):
         # Handling data input
         if isinstance(data, str):
             logger.debug(f"Aperture argument data '{data}' is interpreted as file name.")
-            data = fits.getdata(data)
+            try:
+                data = fits.getdata(data)
+            except FileNotFoundError as e:
+                sys.tracebacklimit = 0
+                raise e
         if not (data.ndim == 2 or data.ndim == 3):
             raise ValueError(f"Data input of Aperture class must be of dimension 2 or 3, but was provided as "
                              f"data.ndim={data.ndim}.")
