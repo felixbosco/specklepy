@@ -142,7 +142,7 @@ class Reconstruction(object):
             # Read data from file
             speckle_cube = SpeckleCube(file_name=file, in_dir=self.in_dir, out_dir=self.tmp_dir,
                                        variance_extension=None)
-
+            
             # Compute collapsed or SSA'ed images from the cube
             if self.integration_method == 'collapse':
                 speckle_cube.collapse()
@@ -167,8 +167,8 @@ class Reconstruction(object):
         if integration_method is not None:
             self.integration_method = integration_method
 
-            # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
-            self.long_exp_files = self.create_long_exposures()
+        # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
+        self.long_exp_files = self.create_long_exposures()
 
         # Save time if only one cube is provided
         if self.single_cube_mode:
@@ -205,7 +205,7 @@ class Reconstruction(object):
 
         return image
 
-    def coadd_long_exposures(self, integration_method='ssa', save=False):
+    def coadd_long_exposures(self, integration_method=None, save=False):
         """Coadd the interim long exposures."""
 
         # Update integration method, if provided
