@@ -38,7 +38,7 @@ class Aperture(object):
                 Set to True for retrieving more information. Default is True.
         """
 
-        # Interprete the args
+        # Interpret the args
         if len(args) == 2 and (isinstance(args[0], tuple) or isinstance(args[0], list)):
             x0 = args[0][0]
             y0 = args[0][1]
@@ -96,6 +96,9 @@ class Aperture(object):
                 self.vars = np.var(self.data, axis=0)
         else:
             self.vars = None
+
+        # Initialize optional attributes
+        self.power_spectrum_cube = None
 
     @property
     def width(self):
@@ -172,7 +175,7 @@ class Aperture(object):
         self.crop()
 
     def get_integrated(self):
-        """Returns a 2-dimensional represntation of the aperture and integrates
+        """Returns a 2-dimensional representation of the aperture and integrates
         along the time axis if necessary.
         """
         if self.data.ndim == 3:
@@ -185,39 +188,58 @@ class Aperture(object):
         tmp = self.get_integrated()
         return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
 
-    def initialize_Fourier_file(self, infile, Fourier_file):
-        self.infile = infile
-        self.Fourier_file = Fourier_file
-        logger.info("Initializing Fourier file {}".format(self.Fourier_file))
-        header = fits.getheader(self.infile)
-        header.set('HIERARCH specklepy TYPE', 'Fourier transform of an aperture')
-        header.set('HIERARCH specklepy ORIGIN', self.infile)
-        header.set('HIERARCH specklepy APERTURE INDEX', str(self.index))
-        header.set('HIERARCH specklepy APERTURE RADIUS', self.radius)
-        header.set('UPDATED', str(datetime.now()))
-        data = np.zeros(self.data.shape)
-        fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
-        logger.info("Initialized {}".format(self.Fourier_file))
+    # def initialize_Fourier_file(self, infile, Fourier_file):
+    #     self.infile = infile
+    #     self.Fourier_file = Fourier_file
+    #     logger.info("Initializing Fourier file {}".format(self.Fourier_file))
+    #     header = fits.getheader(self.infile)
+    #     header.set('HIERARCH specklepy TYPE', 'Fourier transform of an aperture')
+    #     header.set('HIERARCH specklepy ORIGIN', self.infile)
+    #     header.set('HIERARCH specklepy APERTURE INDEX', str(self.index))
+    #     header.set('HIERARCH specklepy APERTURE RADIUS', self.radius)
+    #     header.set('UPDATED', str(datetime.now()))
+    #     data = np.zeros(self.data.shape)
+    #     fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
+    #     logger.info("Initialized {}".format(self.Fourier_file))
+    #
+    # def powerspec_to_file(self, infile=None, Fourier_file=None):
+    #     if not hasattr(self, 'Fourier_file'):
+    #         self.initialize_Fourier_file(infile, Fourier_file)
+    #
+    #     with fits.open(self.Fourier_file, mode='update') as hdulist:
+    #         for index, frame in enumerate(self.data):
+    #             print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
+    #             hdulist[0].data[index] = tf.powerspec(frame)
+    #             hdulist.flush()
+    #         print()
+    #     logger.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
 
-    def powerspec_to_file(self, infile=None, Fourier_file=None):
-        if not hasattr(self, 'Fourier_file'):
-            self.initialize_Fourier_file(infile, Fourier_file)
-
-        with fits.open(self.Fourier_file, mode='update') as hdulist:
-            for index, frame in enumerate(self.data):
-                print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
-                hdulist[0].data[index] = tf.powerspec(frame)
-                hdulist.flush()
-            print()
-        logger.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
-
-    def powerspec(self):
-        self.Fourier_data = np.zeros(self.data.shape)
+    def get_power_spectrum_cube(self):
+        self.power_spectrum_cube = np.zeros(self.data.shape)
         for index, frame in enumerate(self.data):
-            print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
-            self.Fourier_data[index] = tf.powerspec(frame)
-        print()
+            self.power_spectrum_cube[index] = tf.powerspec(frame)
         logger.info("Computed the Fourier transform of every frame.")
+
+    def get_power_spectrum_profile(self):
+
+        if self.power_spectrum_cube is None:
+            self.get_power_spectrum_cube()
+
+        # Initialize output radii and array
+        radius_map = self.make_radius_map()
+        rdata = np.unique(radius_map)
+        ydata = np.zeros(rdata.shape)
+        edata = np.zeros(rdata.shape)
+
+        # Iterate over aperture radii
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for index, radius in enumerate(rdata):
+                subset = self.power_spectrum_cube[:, np.where(radius_map == radius)]
+                ydata[index] = np.mean(subset)
+                edata[index] = np.std(subset)
+
+        return rdata, ydata, edata
 
     def get_psf_variance(self):
         """Extract a radial variance profile of the speckle PSFs."""
