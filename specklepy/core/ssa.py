@@ -95,8 +95,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         if isinstance(tmp_dir, str) and not os.path.isdir(tmp_dir):
             os.makedirs(tmp_dir)
 
-    if not isinstance(lazy_mode, bool):
-        raise SpecklepyTypeError('ssa()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
+    # if not isinstance(lazy_mode, bool):
+    #     raise SpecklepyTypeError('ssa()', argname='lazy_mode', argtype=type(lazy_mode), expected='bool')
 
     if box_indexes is not None:
         box = Box(box_indexes)
