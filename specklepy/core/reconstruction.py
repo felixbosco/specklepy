@@ -5,7 +5,8 @@ import os
 from astropy.io import fits
 
 from specklepy.core import alignment
-# from specklepy.core.ssa import coadd_frames
+# from specklepy.core.specklecube import coadd_frames
+from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.outfile import Outfile
 from specklepy.io.reconstructionfile import ReconstructionFile
@@ -157,31 +158,43 @@ class Reconstruction(object):
         # Iterate over input data cubes
         for file in self.in_files:
 
-            # Read data from file
-            cube = fits.getdata(os.path.join(self.in_dir, file))
-            image = None
-            image_var = None
+            speckle_cube = SpeckleCube(file_name=file, in_dir=self.in_dir, out_dir=self.tmp_dir,
+                                       variance_extension=None)
 
-            # Compute collapsed or SSA'ed images from the cube
             if alignment_method == 'collapse':
-                image = np.sum(cube, axis=0)
-                tmp_file = 'int_' + os.path.basename(file)
+                speckle_cube.collapse()
             elif alignment_method == 'ssa':
-                image, image_var = coadd_frames(cube=cube, box=self.box)
-                tmp_file = 'ssa_' + os.path.basename(file)
+                speckle_cube.ssa(box=self.box)
             else:
                 raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
                                           expected="either 'collapse' or 'ssa'")
 
+            # # Read data from file
+            # cube = fits.getdata(os.path.join(self.in_dir, file))
+            # image = None
+            # image_var = None
+            #
+            # # Compute collapsed or SSA'ed images from the cube
+            # if alignment_method == 'collapse':
+            #     image = np.sum(cube, axis=0)
+            #     tmp_file = 'int_' + os.path.basename(file)
+            # elif alignment_method == 'ssa':
+            #     image, image_var = coadd_frames(cube=cube, box=self.box)
+            #     tmp_file = 'ssa_' + os.path.basename(file)
+            # else:
+            #     raise SpecklepyValueError('Reconstruction', 'alignment_method', alignment_method,
+            #                               expected="either 'collapse' or 'ssa'")
+
             # Store data to a new Outfile instance
-            tmp_path = os.path.join(self.tmp_dir, tmp_file)
-            logger.info(f"Saving temporary reconstruction of cube {file} to {tmp_path}")
-            tmp_file_object = Outfile(tmp_path, data=image, verbose=True)
-            if image_var is not None:
-                tmp_file_object.new_extension(name=self.var_ext, data=image_var)
+            # tmp_path = os.path.join(self.tmp_dir, tmp_file)
+            logger.info(f"Saving temporary reconstruction of cube {file} to {speckle_cube.default_save_path()}")
+            # tmp_file_object = Outfile(tmp_path, data=image, verbose=True)
+            # if image_var is not None:
+            #     tmp_file_object.new_extension(name=self.var_ext, data=image_var)
+            long_exposure_file = speckle_cube.store()
 
             # Add the recently created file to the list
-            long_exposure_files.append(tmp_file)
+            long_exposure_files.append(long_exposure_file)
 
         return long_exposure_files
 
@@ -231,83 +244,3 @@ class Reconstruction(object):
             self.out_file.update_extension(ext_name=self.var_ext, data=self.var)
 
         return self.image, self.var
-
-
-def coadd_frames(cube, var_cube=None, box=None):
-    """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
-
-    This function uses the SSA algorithm to coadd frames of a cube. If provided, this function coadds the variances
-    within a var cube considering the exact same shifts.
-
-    Args:
-        cube (np.ndarray, ndim=3):
-            Data cube which is integrated along the zero-th axis.
-        var_cube (np.ndarray, ndim=3, optional):
-            Data cube of variances which is integrated along the zero-th axis with the same shifts as the cube.
-        box (Box object, optional):
-            Constraining the search for the intensity peak to the specified box. Searching the full frames if not
-            provided.
-
-    Returns:
-        coadded (np.ndarray, ndim=2):
-            SSA-integrated frames of the input cube.
-        var_coadded (np.ndarray, ndim=2):
-            SSA-integrated variances of the input cube or the variance map itself if provided as a 2D cube.
-    """
-
-    if not isinstance(cube, np.ndarray):
-        raise SpecklepyTypeError('coadd_frames()', argname='cube', argtype=type(cube), expected='np.ndarray')
-    if cube.ndim is not 3:
-        raise SpecklepyValueError('coadd_frames()', argname='cube.ndim', argvalue=cube.ndim, expected='3')
-
-    if var_cube is not None:
-        if not isinstance(var_cube, np.ndarray):
-            raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube),
-                                     expected='np.ndarray')
-        if var_cube.ndim == cube.ndim and var_cube.shape != cube.shape:
-            raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
-                                      expected=str(cube.shape))
-        elif var_cube.ndim == cube.ndim-1:
-            if var_cube.shape[0] != cube.shape[1] or var_cube.shape[1] != cube.shape[2]:
-                raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
-                                          expected=str(cube.shape))
-
-    # Compute shifts
-    peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
-    for index, frame in enumerate(cube):
-        if box is not None:
-            frame = box(frame)
-        peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
-
-    # Compute shifts from indizes
-    peak_indizes = peak_indizes.transpose()
-    xmean, ymean = np.mean(np.array(peak_indizes), axis=1)
-    xmean = int(xmean)
-    ymean = int(ymean)
-    shifts = np.array([xmean - peak_indizes[0], ymean - peak_indizes[1]])
-    shifts = shifts.transpose()
-
-    # Shift frames and add to coadded
-    coadded = np.zeros(cube[0].shape)
-    pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube_mode=False,
-                                                            return_reference_image_pad_vector=True)
-    for index, frame in enumerate(cube):
-        coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
-                                       reference_image_pad_vector=ref_pad_vector)
-
-    # Coadd variance cube (if not an image itself)
-    if var_cube is not None:
-        if var_cube.ndim == 3:
-            var_coadded = np.zeros(coadded.shape)
-            for index, frame in enumerate(var_cube):
-                var_coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
-                                                   reference_image_pad_vector=ref_pad_vector)
-        elif var_cube.ndim == 2:
-            var_coadded = var_cube
-        else:
-            raise RuntimeError(f"var_cube has unexpected shape: {var_cube.shape}")
-    else:
-        var_coadded = None
-
-    return coadded, var_coadded
-
