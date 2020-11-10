@@ -1,4 +1,5 @@
 import glob
+from IPython import embed
 import os
 
 from astropy.io import fits
@@ -54,8 +55,8 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None, recursi
     """
 
     # Defaults
-    default_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'nFRAMES', 'DATE']
-    dtypes = [str, str, str, float, int, str]
+    default_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'DIT', 'nFRAMES', 'DATE', 'SUBWIN']
+    dtypes = [str, str, str, float, float, int, str, str]
     instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
     # Read config
@@ -149,10 +150,11 @@ def full_reduction(params, debug=False):
         os.makedirs(params['PATHS']['outDir'])
     if not os.path.isdir(params['PATHS']['tmpDir']):
         os.makedirs(params['PATHS']['tmpDir'])
-    if 'skip' in params['PATHS'] and params['PATHS']['skip']:
-        product_files = glob.glob(os.path.join(params['PATHS']['outDir'], '*fits'))
-    else:
-        product_files = in_files.initialize_product_files(prefix=params['PATHS']['prefix'])
+    # if 'skip' in params['PATHS'] and params['PATHS']['skip']:
+    #     product_files = glob.glob(os.path.join(params['PATHS']['outDir'], '*fits'))
+    # else:
+    product_files, is_product_file = in_files.make_product_file_names(prefix=params['PATHS']['prefix'],
+                                                                      return_table_mask=True)
 
     # (2) Flat fielding
     if 'skip' in params['FLAT'] and params['FLAT']['skip']:
@@ -166,7 +168,11 @@ def full_reduction(params, debug=False):
             master_flat = flat.MasterFlat(flat_files, file_name=params['FLAT']['masterFlatFile'],
                                           file_path=params['PATHS']['filePath'], out_dir=params['PATHS']['tmpDir'])
             master_flat.combine()
-            master_flat.run_correction(file_list=product_files, file_path=None)
+            for index in range(len(product_files)):
+                product_file = in_files.initialize_product_file(index=index)
+                master_flat.run_correction(file_list=product_file, file_path=None,
+                                           sub_windows=in_files.table['SUBWIN'][is_product_file],
+                                           full_window=params['OPTIONS']['full_window'])
 
     # (3) Linearization
     # TODO: Implement linearization
