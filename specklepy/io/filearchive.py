@@ -224,8 +224,9 @@ class FileArchive(object):
                         logger.warning(f"File {file} is missing header card '{card}'. Number of frames set to 1!")
                         new_row.append(1)
                     else:
-                        logger.info(f"Skipping file {file} due to at least one missing header card ({card}).")
-                        break
+                        # logger.info(f"Skipping file {file} due to at least one missing header card ({card}).")
+                        # break
+                        new_row.append(None)
             if len(new_row) == len(table.columns):
                 table.add_row(new_row)
 
