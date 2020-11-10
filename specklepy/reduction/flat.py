@@ -10,8 +10,8 @@ from astropy.stats import sigma_clip
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.masterfile import MasterFile
-from specklepy.io.reductionfile import ReductionFile
 from specklepy.logging import logger
+from specklepy.reduction.subwindow import SubWindow
 
 
 class MasterFlat(object):
@@ -58,21 +58,24 @@ class MasterFlat(object):
 
         # Read image frames from file
         logger.info("Combining the following file list to a master flat:")
+        flats = None
         for index, file in enumerate(self.files):
-            logger.info("{:4}: {}".format(index, file))
-            data = fits.getdata(os.path.join(self.file_path, file))
+            logger.info(f"{index:4}: {file}")
+            data = fits.getdata(os.path.join(self.file_path, file)).astype(float)
+            logger.debug(f"{file} (dtype: {data.dtype}, shape: {data.shape})")
 
             # Create a master flat
-            if index is 0:
+            if flats is None:
                 flats = data
             else:
-                np.append(flats, data, axis=0)
+                flats = np.append(flats, data, axis=0)
+        logger.debug(f"'flats' cube has shape: {flats.shape}")
 
         # Collapse master flat along axis 0
-        if method is 'median':
+        if method == 'median':
             master_flat = np.median(flats, axis=0)
             master_flat_var = None
-        elif method is 'clip':
+        elif method == 'clip':
             flats = sigma_clip(flats, axis=0, masked=True)
             master_flat = np.mean(flats, axis=0)
             master_flat_var = np.var(flats, axis=0)
@@ -112,7 +115,7 @@ class MasterFlat(object):
             master_flat_normed_var = np.where(master_flat_normed_var.mask, np.nan, master_flat_normed_var)
             self.master_file.new_extension('VAR', data=master_flat_normed_var)
 
-    def run_correction(self, file_list, file_path=None):
+    def run_correction(self, file_list, file_path=None, sub_windows=None, full_window=None):
         """Executes the flat field correction on files in a list.
 
         Args:
@@ -120,11 +123,19 @@ class MasterFlat(object):
                 List of files to receive the flat field correction.
             file_path (str, optional):
                 Path to the files in file_list.
+            sub_windows (list, optional):
+                List of sub-window strings, where the entries indicate, how the individual exposure is positioned
+                within the master flat field. Should be provided as str-types.
+            full_window (str, optional):
+                String describing the full window in the same format as the sub-window strings for providing relative
+                coordinates.
         """
 
         # Input parameters
         if isinstance(file_list, (list, np.ndarray)):
             pass
+        elif isinstance(file_list, str):
+            file_list = [file_list]
         else:
             raise SpecklepyTypeError('MasterFlat', 'file_list', type(file_list), 'list')
 
@@ -136,8 +147,12 @@ class MasterFlat(object):
         else:
             propagate_uncertainties = False
 
+        # Initialize dummy list if sub_windows is not provided
+        if sub_windows is None:
+            sub_windows = [None] * len(file_list)
+
         # Iterate through product files
-        for file in file_list:
+        for file, sub_window_str in zip(file_list, sub_windows):
             logger.info(f"Applying flat field correction on file {file}")
 
             # Add path to file name
@@ -153,10 +168,17 @@ class MasterFlat(object):
                 if cube.ndim == 2:
                     cube = np.expand_dims(cube, 0)
 
+                # Construct sub-window
+                sub_window = SubWindow.from_str(sub_window_str, full=full_window)
+
                 # Normalize image/ cube frames by master flat
                 for f in trange(cube.shape[0], desc='Updating frame'):
-                    frame = hdu_list[extension].data[f]
-                    hdu_list[extension].data[f] = np.divide(frame, master_flat)
+                    frame = cube[f].astype(float)
+                    try:
+                        hdu_list[extension].data[f] = np.divide(frame, sub_window(master_flat))
+                    except ValueError as e:
+                        logger.error(e)
+                        embed()
                     hdu_list.flush()
 
                 # Propagate variance if the master flat has this information
