@@ -16,7 +16,7 @@ class Box(object):
 
         # Interpret indexes input and overwrite
         if indexes is not None:
-            if not isinstance(indexes, list):
+            if not isinstance(indexes, (list, np.ndarray)):
                 raise SpecklepyTypeError('Box', argname='*args', argtype=type(indexes), expected='list')
             else:
                 if len(indexes) == 1:
