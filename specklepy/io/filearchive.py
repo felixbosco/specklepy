@@ -79,6 +79,7 @@ class FileArchive(object):
         self.index = 0
         
         # Initialize the list of product files
+        self.source_files = None
         self.product_files = None
 
         # Reduce paths
@@ -242,7 +243,7 @@ class FileArchive(object):
         logger.info(f"Writing file information to {file_name}")
         self.table.write(file_name, format='ascii.fixed_width', overwrite=True)
 
-    def filter(self, filter_dict, namekey='FILE'):
+    def filter(self, filter_dict, namekey='FILE', return_mask=False):
         """Filter the archive's table by the column properties.
 
         filter_dict = {'name_of_column': [desired_value_1, desired_value_2]}
@@ -253,6 +254,8 @@ class FileArchive(object):
                 corresponding values.
             namekey (str, optional):
                 Name/ key of the out put column that shall be filtered by `filter_dict`.
+            return_mask (bool, optional):
+                Return also the full mask.
 
         Returns:
             filtered (np.array):
@@ -271,6 +274,9 @@ class FileArchive(object):
                 mask &= submask
             else:
                 mask &= (filter_dict[key] == self.table[key])
+
+        if return_mask:
+            return self.table[namekey][mask].data, mask
 
         return self.table[namekey][mask].data
 
@@ -368,16 +374,20 @@ class FileArchive(object):
                                               source=source, object=object, setup=setup))
         return sequences
 
-    def initialize_product_files(self, prefix=None):
+    def make_product_file_names(self, prefix=None, return_table_mask=False):
         """Copy the science data cubes into the stored out directory.
 
         Args:
             prefix (str, optional):
                 File prefix for output files.
+            return_table_mask (bool, optional):
+                Set `True` for returning a mask `input_file in product_files`.
 
         Returns:
             product_files (list):
                 List of paths of the data reduction products.
+            input_file_mask (np.array, optional):
+                Mask for input files, indicating whether a file is used as product file.
         """
 
         # Store update prefix
@@ -385,23 +395,50 @@ class FileArchive(object):
             self.out_prefix = prefix
 
         # Initialize list of data reduction products
-        product_files = []
+        self.product_files = []
+
+        # Extract sky and science files to serve as template for the product files
+        self.source_files, input_file_mask = self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}, return_mask=return_table_mask)
 
         # Copy the science data cubes into outdir (with an additional file prefix)
-        for file in self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}):
-            src = os.path.join(self.in_dir, file)
-            dest = os.path.join(self.out_dir, self.out_prefix + os.path.basename(file))
-            logger.info(f"Initializing data product file {dest}")
-            os.system(f"cp {src} {dest}")
-            with fits.open(dest, mode='update') as hdu_list:
-                hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
-                hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
-                hdu_list.flush()
+        for file in self.source_files:
+            dest = self.out_prefix + os.path.basename(file)
 
             # Store new file in the list of product files
-            product_files.append(dest)
-            
-        # Store list of product files
-        self.product_files = product_files
+            self.product_files.append(dest)
 
-        return product_files
+        if return_table_mask:
+            return self.product_files, input_file_mask
+
+        return self.product_files
+
+    def initialize_product_file(self, index, prefix=None):
+        """Copy the science data cubes into the stored out directory.
+
+        Args:
+            prefix (str, optional):
+                File prefix for output files.
+            return_table_mask (bool, optional):
+                Set `True` for returning a mask `input_file in product_files`.
+
+        Returns:
+            product_files (list):
+                List of paths of the data reduction products.
+        """
+
+        # Initialize list of data reduction products
+        if self.source_files is None or self.product_files is None:
+            self.make_product_file_names(prefix=prefix)
+
+        # Copy the science data cubes into outdir (with an additional file prefix)
+        # for file in self.source_files:
+        src = os.path.join(self.in_dir, self.source_files[index])
+        dest = os.path.join(self.out_dir, self.product_files[index])
+        logger.info(f"Initializing data product file {dest}")
+        os.system(f"cp {src} {dest}")
+        with fits.open(dest, mode='update') as hdu_list:
+            hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
+            hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+            hdu_list.flush()
+
+        return dest
