@@ -82,11 +82,11 @@ class Box(object):
             #     self.x_max = x_max
             #     self.y_min = y_min
             #     self.y_max = y_max
+            #
+            # # Create index sets
+            # x, y = np.meshgrid(range(self.y_min, self.y_max), range(self.x_min, self.x_max))
 
-            # Create index sets
-            x, y = np.meshgrid(range(self.y_min, self.y_max), range(self.x_min, self.x_max))
-
-            return array[y, x]
+            return array[self.x_min: self.x_max, self.y_min: self.y_max]
 
     @property
     def shape(self):
