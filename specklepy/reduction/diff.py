@@ -34,7 +34,7 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=N
             # Update exposure time in header
             if exposure_time_prefix is not None:
                 exptime = estimate_frame_exposure_times(hdu_list[hdu].header, exposure_time_prefix)
-                hdu_list[hdu].header.set('EXPTIME', np.around(exptime, 3))
+                hdu_list[hdu].header.set('FEXPTIME', np.around(exptime, 3))
 
             # Overwriting data
             logger.info("Storing data to file...")
