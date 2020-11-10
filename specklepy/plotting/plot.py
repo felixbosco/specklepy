@@ -7,6 +7,7 @@ import sys
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table
+from astropy.visualization import simple_norm
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.plotting.plots import save_figure
@@ -99,7 +100,8 @@ class Plot(object):
     def plot_image(self, axis=0, **colorbar_kwargs):
         if self.image_data is not None:
             ax = self.axes[axis]
-            img = ax.imshow(self.image_data, origin='lower')
+            norm = simple_norm(data=self.image_data, percent=99.)
+            img = ax.imshow(self.image_data, origin='lower', norm=norm)
 
             # Create color bar
             if 'pad' in colorbar_kwargs:
