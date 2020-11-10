@@ -8,7 +8,7 @@ from specklepy.io.outfile import Outfile
 class MasterFile(Outfile):
 
     def __init__(self, filename, files, shape=None, cards=None, in_dir=None, out_dir=None,
-                 header_card_prefix="HIERARCH SPECKLEPY"):
+                 header_card_prefix="HIERARCH SPECKLEPY", initialize=True):
 
         # Apply fall back value
         if cards is None:
@@ -34,4 +34,4 @@ class MasterFile(Outfile):
 
         # Initialize as parent class instance
         super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, path=out_dir,
-                         header_card_prefix=header_card_prefix)
+                         header_card_prefix=header_card_prefix, initialize=initialize)

@@ -10,7 +10,7 @@ from specklepy.exceptions import SpecklepyTypeError
 class Outfile(object):
 
     def __init__(self, filename, path=None, data=None, shape=None, extensions=None, header=None, cards=None,
-                 timestamp=False, header_card_prefix=None, verbose=True):
+                 initialize=True, timestamp=False, header_card_prefix=None, verbose=True):
         """Instantiate a generic outfile.
 
         Args:
@@ -34,6 +34,8 @@ class Outfile(object):
                 Header that will be used to initialize the new Primary HDU. Default is None.
             cards (dict, optional):
                 Dictionary of cards that will be added to the fits header. Default is None.
+            initialize (bool, optional):
+                Set to `False` to suppress creating a new file.
             timestamp (bool, optional):
                 Set to True to automatically add a time stamp to the file name. Default is False.
             header_card_prefix (str, optional):
@@ -106,6 +108,11 @@ class Outfile(object):
         else:
             raise SpecklepyTypeError('Outfile', 'verbose', type(verbose), 'bool')
 
+        if initialize:
+            self.initialize_file()
+
+    def initialize_file(self, header=None, data=None):
+
         # Initialize primary HDU
         hdu = fits.PrimaryHDU(header=header)
         for key in self.cards:
@@ -141,6 +148,10 @@ class Outfile(object):
                 else:
                     header = None
                 self.new_extension(name=name, data=data, header=header)
+
+    @classmethod
+    def from_file(cls, filename, path=None):
+        return cls(filename=filename, path=path, initialize=False)
 
     @staticmethod
     def time_stamp():
