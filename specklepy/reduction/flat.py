@@ -16,7 +16,7 @@ from specklepy.reduction.subwindow import SubWindow
 
 class MasterFlat(object):
 
-    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None):
+    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, new=True):
 
         # Store input parameters
         if isinstance(file_list, (list, np.ndarray)):
@@ -38,7 +38,8 @@ class MasterFlat(object):
             raise SpecklepyTypeError('MasterFlat', 'file_path', type(file_path), 'str')
 
         # Create an output file
-        self.master_file = MasterFile(self.file_name, files=self.files, in_dir=file_path, out_dir=out_dir)
+        self.master_file = MasterFile(self.file_name, files=self.files, in_dir=file_path, out_dir=out_dir,
+                                      initialize=new)
 
     def combine(self, method='clip'):
         """Combine the frames of the stored files to a master flat.
@@ -72,6 +73,7 @@ class MasterFlat(object):
         logger.debug(f"'flats' cube has shape: {flats.shape}")
 
         # Collapse master flat along axis 0
+        logger.info(f"Combining flats with {method!r} method...")
         if method == 'median':
             master_flat = np.median(flats, axis=0)
             master_flat_var = None
@@ -85,12 +87,12 @@ class MasterFlat(object):
         del flats
 
         # Normalize the master flat
-        logger.info(f"Normalizing master flat in {method} mode...")
-        if method is 'median':
+        logger.info(f"Normalizing master flat in {method!r} mode...")
+        if method == 'median':
             norm = np.median(master_flat)
             master_flat_normed = np.divide(master_flat, norm)
             master_flat_normed_var = None
-        elif method is 'clip':
+        elif method == 'clip':
             norm = np.mean(master_flat)
             norm_var = np.var(master_flat)
             master_flat_normed = np.divide(master_flat, norm)
@@ -100,19 +102,28 @@ class MasterFlat(object):
             master_flat_normed = None
             master_flat_normed_var = None
 
-        # # Store master flat to file
-        # if not hasattr(self, 'masterfile'):
-        #     self.master_file = MasterFile(self.file_name, files=self.files, shape=master_flat_normed.shape,
-        #                                   header_card_prefix='HIERARCH SPECKLEPY')
-
         # Replace masked values by NaNs
-        master_flat_normed = np.where(master_flat_normed.mask, np.nan, master_flat_normed)
-        self.master_file.data = master_flat_normed
+        logger.debug(f"Replacing masked values by Nan...")
+        if master_flat_normed is not None and hasattr(master_flat_normed, 'mask'):
+            if np.sum(master_flat_normed.mask) == 0:
+                master_flat_normed = master_flat_normed.data
+            else:
+                master_flat_normed = np.where(master_flat_normed.mask, np.nan, master_flat_normed)
+                master_flat_normed = master_flat_normed.data
+        if master_flat_normed_var is not None and hasattr(master_flat_normed_var, 'mask'):
+            if np.sum(master_flat_normed_var.mask) == 0:
+                master_flat_normed_var = master_flat_normed_var.data
+            else:
+                master_flat_normed_var = np.where(master_flat_normed_var.mask, np.nan, master_flat_normed_var)
+                master_flat_normed_var = master_flat_normed_var.data
 
         # Store variance in extension
-        if 'master_flat_normed_var' in locals():
-            # Replace masked values by NaNs
-            master_flat_normed_var = np.where(master_flat_normed_var.mask, np.nan, master_flat_normed_var)
+        try:
+            self.master_file.data = master_flat_normed
+        except NotImplementedError as e:
+            logger.error(e)
+            embed()
+        if master_flat_normed_var is not None:
             self.master_file.new_extension('VAR', data=master_flat_normed_var)
 
     def run_correction(self, file_list, file_path=None, sub_windows=None, full_window=None):
@@ -150,6 +161,8 @@ class MasterFlat(object):
         # Initialize dummy list if sub_windows is not provided
         if sub_windows is None:
             sub_windows = [None] * len(file_list)
+        elif isinstance(sub_windows, str):
+            sub_windows = [sub_windows]
 
         # Iterate through product files
         for file, sub_window_str in zip(file_list, sub_windows):
@@ -159,27 +172,27 @@ class MasterFlat(object):
             if file_path:
                 file = os.path.join(file_path, file)
 
+            # Construct sub-window
+            sub_window = SubWindow.from_str(sub_window_str, full=full_window)
+
             # Open the product files and update
             with fits.open(file, mode='update') as hdu_list:
                 extension = 0
-                cube = hdu_list[extension].data
+                cube = hdu_list[extension].data.astype(float)
 
                 # Expand 2D image to a one frame cube
                 if cube.ndim == 2:
-                    cube = np.expand_dims(cube, 0)
-
-                # Construct sub-window
-                sub_window = SubWindow.from_str(sub_window_str, full=full_window)
-
-                # Normalize image/ cube frames by master flat
-                for f in trange(cube.shape[0], desc='Updating frame'):
-                    frame = cube[f].astype(float)
-                    try:
-                        hdu_list[extension].data[f] = np.divide(frame, sub_window(master_flat))
-                    except ValueError as e:
-                        logger.error(e)
-                        embed()
-                    hdu_list.flush()
+                    hdu_list[extension].data = np.divide(cube, sub_window(master_flat))
+                else:
+                    # Normalize image/ cube frames by master flat
+                    for f in trange(cube.shape[0], desc='Updating frame'):
+                        frame = cube[f]
+                        try:
+                            hdu_list[extension].data[f] = np.divide(frame, sub_window(master_flat))
+                        except ValueError as e:
+                            logger.error(e)
+                            embed()
+                        hdu_list.flush()
 
                 # Propagate variance if the master flat has this information
                 if self.master_file.has_extension('VAR'):
