@@ -62,7 +62,8 @@ class MasterFlat(object):
         flats = None
         for index, file in enumerate(self.files):
             logger.info(f"{index:4}: {file}")
-            data = fits.getdata(os.path.join(self.file_path, file)).astype(float)
+            data = fits.getdata(os.path.join(self.file_path, file))
+            data -= np.min(data)  # Avoid negative values that screw up the normalization
             logger.debug(f"{file} (dtype: {data.dtype}, shape: {data.shape})")
 
             # Create a master flat
@@ -93,8 +94,9 @@ class MasterFlat(object):
             master_flat_normed = np.divide(master_flat, norm)
             master_flat_normed_var = None
         elif method == 'clip':
-            norm = np.mean(master_flat)
-            norm_var = np.var(master_flat)
+            clipped = sigma_clip(master_flat)
+            norm = np.mean(clipped)
+            norm_var = np.var(clipped)
             master_flat_normed = np.divide(master_flat, norm)
             master_flat_normed_var = np.divide(master_flat_var, np.square(norm)) + \
                                      np.divide(np.square(master_flat), np.power(norm, 4)) * norm_var
@@ -118,11 +120,7 @@ class MasterFlat(object):
                 master_flat_normed_var = master_flat_normed_var.data
 
         # Store variance in extension
-        try:
-            self.master_file.data = master_flat_normed
-        except NotImplementedError as e:
-            logger.error(e)
-            embed()
+        self.master_file.data = master_flat_normed
         if master_flat_normed_var is not None:
             self.master_file.new_extension('VAR', data=master_flat_normed_var)
 

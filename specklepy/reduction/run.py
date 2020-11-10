@@ -150,9 +150,6 @@ def full_reduction(params, debug=False):
         os.makedirs(params['PATHS']['outDir'])
     if not os.path.isdir(params['PATHS']['tmpDir']):
         os.makedirs(params['PATHS']['tmpDir'])
-    # if 'skip' in params['PATHS'] and params['PATHS']['skip']:
-    #     product_files = glob.glob(os.path.join(params['PATHS']['outDir'], '*fits'))
-    # else:
     product_files, is_product_file = in_files.make_product_file_names(prefix=params['PATHS']['prefix'],
                                                                       return_table_mask=True)
 
@@ -166,12 +163,15 @@ def full_reduction(params, debug=False):
         else:
             logger.info("Starting flat field correction...")
             master_flat = flat.MasterFlat(flat_files, file_name=params['FLAT']['masterFlatFile'],
-                                          file_path=params['PATHS']['filePath'], out_dir=params['PATHS']['tmpDir'])
-            master_flat.combine()
+                                          file_path=params['PATHS']['filePath'], out_dir=params['PATHS']['tmpDir'],
+                                          new=not params['FLAT']['reuse'])
+            if not params['FLAT']['reuse']:
+                master_flat.combine(method=params['FLAT']['method'])
+
             for index in range(len(product_files)):
                 product_file = in_files.initialize_product_file(index=index)
                 master_flat.run_correction(file_list=product_file, file_path=None,
-                                           sub_windows=in_files.table['SUBWIN'][is_product_file],
+                                           sub_windows=in_files.table['SUBWIN'][is_product_file][index],
                                            full_window=params['OPTIONS']['full_window'])
 
     # (3) Linearization
