@@ -286,8 +286,8 @@ class Aperture(object):
         # Iterate over aperture radii
         for index, radius in enumerate(rdata):
             subset = image[np.where(radius_map <= radius)]
-            ydata[index] = np.sum(image)
-            edata[index] = np.sum(image)
+            ydata[index] = np.sum(subset)
+            edata[index] = np.std(subset)
 
         # Save results to file
         if saveto is not None:
