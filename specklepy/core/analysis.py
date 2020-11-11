@@ -2,11 +2,42 @@ import numpy as np
 import os
 
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, Column
 
 from specklepy.core.aperture import Aperture
 from specklepy.logging import logger
 from specklepy.plotting.plots import imshow
+
+
+def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, debug=False):
+
+    if out_file is None:
+        out_file = 'aperture_' + os.path.basename(file)
+
+    # Initialize the aperture
+    aperture = Aperture(index, radius, data=file, crop=True)
+
+    # Initialize the output table
+    out_table = Table()
+
+    # PSF profile analysis
+    radius, flux, flux_err = aperture.get_psf_profile()
+    out_table.add_column(Column(data=radius, name='Radius'))
+    out_table.add_column(Column(data=flux, name='Flux'))
+    out_table.add_column(Column(data=flux_err, name='FluxError'))
+
+    # Power spectrum analysis
+    radius, mean, std = aperture.get_power_spectrum_profile()
+    spat_freq = aperture.spatial_frequency(pixel_scale=pixel_scale)
+    spat_wave = aperture.spatial_wavelength(pixel_scale=pixel_scale)
+    out_table.add_column(Column(data=spat_freq, name='SpatialFrequency'))
+    out_table.add_column(Column(data=spat_wave, name='SpatialWavelength'))
+    out_table.add_column(Column(data=mean, name='AmplitudeMean'))
+    out_table.add_column(Column(data=std, name='AmplitudeStd'))
+
+    # Store output table
+    logger.info(f"Storing table to file {out_file!r}")
+    out_table.write(out_file, overwrite=True, format='ascii.fixed_width')
 
 
 def get_psf_1d(file, index, radius, out_file=None, normalize=None, debug=False):
