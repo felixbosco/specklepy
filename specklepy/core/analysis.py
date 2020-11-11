@@ -12,7 +12,7 @@ from specklepy.plotting.plots import imshow
 def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, debug=False):
 
     if out_file is None:
-        out_file = 'aperture_' + os.path.basename(file)
+        out_file = 'aperture_' + os.path.basename(file).replace(".fits", ".dat")
 
     # Initialize the aperture
     aperture = Aperture(index, radius, data=file, crop=True)
