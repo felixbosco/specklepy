@@ -234,8 +234,10 @@ class Aperture(object):
         # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+            from IPython import embed
             for index, radius in enumerate(rdata):
-                subset = self.power_spectrum_cube[:, np.where(radius_map == radius)]
+                x, y = np.where(radius_map == radius)
+                subset = self.power_spectrum_cube[:, x, y]
                 ydata[index] = np.mean(subset)
                 edata[index] = np.std(subset)
 
@@ -317,3 +319,15 @@ class Aperture(object):
                 edata[index] = np.std(subset)
 
         return rdata, ydata, edata
+
+    def spatial_frequency(self, pixel_scale=1, profile=True):
+        r = self.make_radius_map()
+        if profile:
+            return np.divide(np.unique(r), self.radius) / (2 * pixel_scale)
+        else:
+            return np.divide(r, self.radius) / (2 * pixel_scale)
+
+    def spatial_wavelength(self, pixel_scale=1, profile=True):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return np.divide(1, self.spatial_frequency(pixel_scale=pixel_scale, profile=profile))
