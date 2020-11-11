@@ -265,8 +265,8 @@ class Aperture(object):
             warnings.simplefilter("ignore")
             for index, radius in enumerate(rdata):
                 subset = var_map[np.where(radius_map == radius)]
-                ydata[index] = np.mean(subset)
-                edata[index] = np.mean(subset)
+                ydata[index] = np.sqrt(np.mean(subset))
+                edata[index] = np.sqrt(np.var(subset))
 
         return rdata, ydata, edata
 
