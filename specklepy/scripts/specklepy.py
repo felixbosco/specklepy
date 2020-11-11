@@ -66,7 +66,11 @@ def main():
         holography(params, mode=params['OPTIONS']['reconstructionMode'], debug=args.debug)
 
     elif args.command is 'aperture':
-        if args.mode == 'psf1d':
+        if args.mode == 'all':
+            logger.info("Extract aperture statistics")
+            analysis.aperture_analysis(file=args.file, index=args.index, radius=args.radius, out_file=args.out_file,
+                                       pixel_scale=args.pixel_scale, debug=args.debug)
+        elif args.mode == 'psf1d':
             logger.info("Extract 1D PSF profile")
             analysis.get_psf_1d(args.file, args.index, args.radius, args.out_file, args.normalize, debug=args.debug)
         elif args.mode == 'variance':
