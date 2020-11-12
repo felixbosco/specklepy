@@ -11,10 +11,23 @@ from specklepy.logging import logger
 from specklepy.reduction import flat, sky
 
 
-def inspect(files, keywords, save=None, debug=False):
+def inspect(files, keywords, save=None, recursive=False, debug=False):
+
+    # Find files
+    if len(files) == 1:
+        path = files[0]
+        if '*' in path:
+            files = glob.glob(path, recursive=recursive)
+        else:
+            files = glob.glob(os.path.join(path, '*fits'), recursive=recursive)
 
     # Terminal output
-    logger.info(f"Inspecting {len(files)} files for the FITS header keywords: {keywords}")
+    if len(files):
+        logger.info(f"Inspecting {len(files)} files for the FITS header keywords: {keywords}")
+        files.sort()
+    else:
+        logger.error(f"Found no files in {files}!")
+        raise RuntimeError(f"Found no files in {files}!")
 
     # Initialize output table
     out_table = Table(names=['FILE'] + keywords, dtype=[str] * (1 + len(keywords)))
@@ -52,6 +65,8 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None, recursi
             Name of the output file that contains all the file names and header information.
         sort_by (str, optional):
             Header card that is used for the sorting of files.
+        recursive (bool, optional):
+            Search for files in a recursive way, that is all sub-directories.
     """
 
     # Defaults

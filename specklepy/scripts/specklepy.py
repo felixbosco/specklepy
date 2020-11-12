@@ -86,7 +86,8 @@ def main():
                         write_to=args.out_file)
 
     elif args.command == 'inspect':
-        run.inspect(files=args.files, keywords=args.keywords, save=args.save, debug=args.debug)
+        run.inspect(files=args.files, keywords=args.keywords, save=args.save, recursive=args.recursive,
+                    debug=args.debug)
 
     elif args.command == 'diff':
         differentiate_cube(files=args.files, exposure_time_prefix=args.keyword, extension=args.extension,

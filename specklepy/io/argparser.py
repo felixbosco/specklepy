@@ -114,6 +114,7 @@ class GeneralArgParser(object):
                                     help='List of FITS header keywords.')
         parser_inspect.add_argument('-s', '--save', type=str, default=None,
                                     help='Name of the output file containing the table.')
+        parser_inspect.add_argument('-r', '--recursive', action='store_true', help='Search for files recursively.')
         parser_inspect.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         parser_diff = subparsers.add_parser('diff', help='Differentiate cubes along time axis, for post-correlation.')
