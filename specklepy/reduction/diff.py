@@ -6,8 +6,13 @@ from astropy.io import fits
 from specklepy.logging import logger
 
 
-def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=None, debug=False):
+def differentiate_cube(files, delta=1, exposure_time_prefix=None, extension=None, dtype=None, debug=False):
 
+    # Set logging level
+    if debug:
+        logger.setLevel('DEBUG')
+
+    # Apply fall-back value
     hdu = 0 if extension is None else extension
 
     # Iterate through files
@@ -28,12 +33,12 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=N
 
             # Difference the frames along the time axis
             logger.info("Differencing frames...")
-            cube = np.diff(cube, axis=0)
+            cube = np.diff(cube[::delta], axis=0)
             logger.info(f"New cube has shape {cube.shape}")
 
             # Update exposure time in header
             if exposure_time_prefix is not None:
-                exptime = estimate_frame_exposure_times(hdu_list[hdu].header, exposure_time_prefix)
+                exptime = estimate_frame_exposure_times(hdu_list[hdu].header, exposure_time_prefix, delta=delta)
                 hdu_list[hdu].header.set('FEXPTIME', np.around(exptime, 3), 'Frame exposure time (s)')
 
             # Overwriting data
@@ -45,7 +50,7 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=N
         logger.info(f"Differencing successful for file {diff_file}")
 
 
-def estimate_frame_exposure_times(header, common_header_prefix):
+def estimate_frame_exposure_times(header, common_header_prefix, delta=1):
 
     times = []
     for card in header.cards:
@@ -53,7 +58,7 @@ def estimate_frame_exposure_times(header, common_header_prefix):
             times.append(card.value)
     times.pop(0)
 
-    diff_times = np.diff(times)
+    diff_times = np.diff(times[::delta])
 
     # Report statistics
     logger.info(f"Exposure time is: {np.mean(diff_times):.3f} ({np.std(diff_times):.2e})")

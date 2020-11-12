@@ -90,8 +90,8 @@ def main():
                     debug=args.debug)
 
     elif args.command == 'diff':
-        differentiate_cube(files=args.files, exposure_time_prefix=args.keyword, extension=args.extension,
-                           dtype=args.dtype)
+        differentiate_cube(files=args.files, delta=args.delta, exposure_time_prefix=args.keyword,
+                           extension=args.extension, dtype=args.dtype)
 
     elif args.command == 'plot':
         plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,
