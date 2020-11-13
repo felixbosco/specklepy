@@ -114,19 +114,25 @@ class GeneralArgParser(object):
                                     help='List of FITS header keywords.')
         parser_inspect.add_argument('-s', '--save', type=str, default=None,
                                     help='Name of the output file containing the table.')
+        parser_inspect.add_argument('-r', '--recursive', action='store_true', help='Search for files recursively.')
         parser_inspect.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for differentiating FITS cubes
         parser_diff = subparsers.add_parser('diff', help='Differentiate cubes along time axis, for post-correlation.')
         parser_diff.set_defaults(command='diff')
         parser_diff.add_argument('files', type=str, default=None, nargs='+', help='List of FITS file names.')
+        parser_diff.add_argument('-d', '--delta', type=int, default=1,
+                                 help='Difference in frame number of differentiated frames. By default, every frame is '
+                                      'subtracted from the subsequent one. For creating longer exposures, however, you '
+                                      'can also set delta to larger values and subtract only every n-th frame. The '
+                                      'resulting data cube will be correspondingly smaller.')
         parser_diff.add_argument('-k', '--keyword', type=str, default=None,
                                  help='Common part of header keywords for the individual exposure time stamp.')
         parser_diff.add_argument('-l', '--linear_regression', action='store_true',
                                  help='Apply linear regression instead of straight forward differentiation.')
         parser_diff.add_argument('-e', '--extension', type=str, default=None, help='Extension of the FITS file.')
         parser_diff.add_argument('--dtype', type=str, default=None, help='Data type to cast the data to before diff.')
-        parser_diff.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+        parser_diff.add_argument('--debug', action='store_true', help='show debugging information.')
 
         # Parser for quick apodization computations
         parser_apodization = subparsers.add_parser('apodization', help='Compute the apodization function parameters.')

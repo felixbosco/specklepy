@@ -86,7 +86,8 @@ def main():
                         write_to=args.out_file)
 
     elif args.command == 'inspect':
-        run.inspect(files=args.files, keywords=args.keywords, save=args.save, debug=args.debug)
+        run.inspect(files=args.files, keywords=args.keywords, save=args.save, recursive=args.recursive,
+                    debug=args.debug)
 
     elif args.command == 'diff':
         if not args.linear_regression:
@@ -95,7 +96,6 @@ def main():
         else:
             diff.differentiate_linear_reg(files=args.files, exposure_time_prefix=args.keyword,
                                           extension=args.extension, dtype=args.dtype)
-
     elif args.command == 'plot':
         plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,
                               layout=args.layout, debug=args.debug)

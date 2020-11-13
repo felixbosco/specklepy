@@ -9,7 +9,7 @@ from astropy.stats import sigma_clip, sigma_clipped_stats
 from specklepy.logging import logger
 
 
-def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=None, debug=False):
+def differentiate_cube(files, delta=1, exposure_time_prefix=None, extension=None, dtype=None, debug=False):
 
     # Set logging level
     if debug:
@@ -38,12 +38,12 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=N
 
             # Difference the frames along the time axis
             logger.info("Differencing frames...")
-            cube = np.diff(cube, axis=0)
+            cube = np.diff(cube[::delta], axis=0)
             logger.info(f"New cube has shape {cube.shape}")
 
             # Update exposure time in header
             if exposure_time_prefix is not None:
-                exptime = estimate_frame_exposure_times(hdu_list[extension].header, exposure_time_prefix)
+                exptime = estimate_frame_exposure_times(hdu_list[extension].header, exposure_time_prefix, delta=delta)
                 hdu_list[extension].header.set('FEXPTIME', np.around(exptime, 3), 'Frame exposure time (s)')
 
             # Overwriting data
@@ -138,7 +138,7 @@ def differentiate_linear_reg(files, exposure_time_prefix=None, extension=None, d
         logger.info(f"Differencing successful for file {diff_file}")
 
 
-def estimate_frame_exposure_times(header, common_header_prefix):
+def estimate_frame_exposure_times(header, common_header_prefix, delta=1):
     """Estimate a mean exposure time per frame
 
     Args:
@@ -146,6 +146,8 @@ def estimate_frame_exposure_times(header, common_header_prefix):
             FITS header to search for the time stamps.
         common_header_prefix (str):
             Common prefix among the header keywords storing time stamp information.
+        delta (int, optional):
+            Number of subsequent frames to differentiate from another
 
     Returns:
         mean_exposure_time (float):
@@ -153,7 +155,7 @@ def estimate_frame_exposure_times(header, common_header_prefix):
     """
 
     # Differentiate the time stamp values to obtain time deltas
-    diff_times = np.diff(extract_time_stamps(header, common_header_prefix))
+    diff_times = np.diff(extract_time_stamps(header, common_header_prefix)[::delta])
 
     # Report statistics
     logger.info(f"Exposure time is: {np.mean(diff_times):.3f} ({np.std(diff_times):.2e})")
