@@ -10,7 +10,7 @@ from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.plotting.plot import Plot
-from specklepy.reduction.diff import differentiate_cube
+from specklepy.reduction import diff
 from specklepy.reduction import run
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 from specklepy.utils.resolution import get_resolution_parameters
@@ -89,8 +89,12 @@ def main():
         run.inspect(files=args.files, keywords=args.keywords, save=args.save, debug=args.debug)
 
     elif args.command == 'diff':
-        differentiate_cube(files=args.files, exposure_time_prefix=args.keyword, extension=args.extension,
-                           dtype=args.dtype)
+        if not args.linear_regression:
+            diff.differentiate_cube(files=args.files, exposure_time_prefix=args.keyword, extension=args.extension,
+                                    dtype=args.dtype)
+        else:
+            diff.differentiate_linear_reg(files=args.files, exposure_time_prefix=args.keyword,
+                                          extension=args.extension, dtype=args.dtype)
 
     elif args.command == 'plot':
         plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,

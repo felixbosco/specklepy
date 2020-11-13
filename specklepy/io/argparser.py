@@ -106,8 +106,8 @@ class GeneralArgParser(object):
                                       "image width.")
         parser_plot.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
-        # Parser for inspecting fits headers
-        parser_inspect = subparsers.add_parser('inspect', help='Inspect FITS headers and list attributes')
+        # Parser for inspecting FITS headers
+        parser_inspect = subparsers.add_parser('inspect', help='Inspect FITS headers and list attributes.')
         parser_inspect.set_defaults(command='inspect')
         parser_inspect.add_argument('files', type=str, default=None, nargs='+', help='List of FITS file names.')
         parser_inspect.add_argument('-k', '--keywords', type=str, default=None, nargs='+',
@@ -116,11 +116,14 @@ class GeneralArgParser(object):
                                     help='Name of the output file containing the table.')
         parser_inspect.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        # Parser for differentiating FITS cubes
         parser_diff = subparsers.add_parser('diff', help='Differentiate cubes along time axis, for post-correlation.')
         parser_diff.set_defaults(command='diff')
         parser_diff.add_argument('files', type=str, default=None, nargs='+', help='List of FITS file names.')
         parser_diff.add_argument('-k', '--keyword', type=str, default=None,
                                  help='Common part of header keywords for the individual exposure time stamp.')
+        parser_diff.add_argument('-l', 'linear_regression', action='store_true',
+                                 help='Apply linear regression instead of straight forward differentiation.')
         parser_diff.add_argument('-e', '--extension', type=str, default=None, help='Extension of the FITS file.')
         parser_diff.add_argument('--dtype', type=str, default=None, help='Data type to cast the data to before diff.')
         parser_diff.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
