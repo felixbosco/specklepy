@@ -1,5 +1,7 @@
+from IPython import embed
 import numpy as np
 import os
+from tqdm import trange
 
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
@@ -12,6 +14,10 @@ def differentiate_cube(files, exposure_time_prefix=None, extension=None, dtype=N
     # Set logging level
     if debug:
         logger.setLevel('DEBUG')
+
+    # Apply default
+    if extension is None:
+        extension = 0
 
     # Iterate through files
     for file in files:
@@ -59,6 +65,10 @@ def differentiate_linear_reg(files, exposure_time_prefix=None, extension=None, d
     if debug:
         logger.setLevel('DEBUG')
 
+    # Apply default
+    if extension is None:
+        extension = 0
+
     # Iterate through files
     for file in files:
 
@@ -83,32 +93,45 @@ def differentiate_linear_reg(files, exposure_time_prefix=None, extension=None, d
                 hdu_list[extension].header.set('FEXPTIME', np.around(exptime, 3), 'Frame exposure time (s)')
 
             # Initialize arrays
-            x = extract_time_stamps(header=header, common_header_prefix=exposure_time_prefix)
-            x = np.subtract(x, x[0])
+            time_stamps = extract_time_stamps(header=header, common_header_prefix=exposure_time_prefix)
+            time_stamps = np.subtract(time_stamps, time_stamps[0])
             slopes = np.empty(cube[0].shape)
             # slopes_var = np.empty(cube[0].shape)
             intercepts = np.empty(cube[0].shape)
             # intercepts_var = np.empty(cube[0].shape)
 
             # Linear regression
-            for row in range(cube.shape[1]):
+            logger.info("Applying time-wise linear regression through FITS cube...")
+            for row in trange(cube.shape[1]):
                 for col in range(cube.shape[2]):
-                    y = cube[:, row, col]
-                    coefficients = np.polyfit(x, y, deg=degree)
-                    # coefficients, cov = np.polyfit(x, y, deg=degree, cov=True)
+                    flux = cube[:, row, col]
+                    coefficients = np.polyfit(time_stamps, flux, deg=degree)
+                    # coefficients, cov = np.polyfit(time_stamps, flux, deg=degree, cov=True)
                     slopes[row, col] = coefficients[-2]
                     # slopes_var[row, col] = cov[-2, -2]
                     intercepts[row, col] = coefficients[-1]
                     # intercepts_var[row, col] = cov[-1, -1]
+            logger.debug("Linear regression finished successfully")
+
+            # Evaluate statistics on the slopes
+            clipped_mean, _, _ = sigma_clipped_stats(slopes)
+            logger.info("Subtracting offsets and mean slope...")
+            cube = np.subtract(cube, intercepts)
+            cube = np.swapaxes(np.subtract(np.swapaxes(cube, 0, 2), time_stamps * clipped_mean), 2, 0)
 
             # Create mask
-            mask = sigma_clip(slopes, sigma=slope_mask_sigma).mask
+            logger.info("Creating pixel mask from sigma-clipping the slopes...")
+            clipped = sigma_clip(slopes, sigma=slope_mask_sigma)
+            mask = clipped.mask.astype(int)
             mask_hdu = fits.ImageHDU(data=mask, name='MASK')
+            logger.debug("Pixel mask created successfully")
+            logger.debug("Appending pixel mask HDU..")
+            hdu_list.append(mask_hdu)
 
             # Overwriting data
             logger.info("Storing data to file...")
             hdu_list[extension].data = cube
-            hdu_list.append(mask_hdu)
+            logger.debug(f"Updating HDU list in file {diff_file!r}")
             hdu_list.flush()
 
         # Final terminal output
