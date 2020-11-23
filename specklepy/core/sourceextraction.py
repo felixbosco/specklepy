@@ -51,6 +51,8 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
     Returns:
         sources (astropy.table.Table):
             Table of identified sources, `None` if no sources are detected.
+        selected (list, optional):
+            List of selected sources, returned only if `select==True`.
     """
 
     # Set logger level
@@ -129,13 +131,14 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
     if show:
         plot = StarFinderPlot(image_data=image)
         positions = np.transpose((sources['x'], sources['y']))
-        plot.add_apertures(positions=positions, radius=fwhm / 2)
+        plot.add_apertures(positions=positions, radius=fwhm/2)
         plot.show()
 
     if select:
         plot = StarFinderPlot(image_data=image)
         positions = np.transpose((sources['x'], sources['y']))
-        plot.add_apertures(positions=positions, radius=fwhm / 2)
-        positions = plot.select_apertures()
+        plot.add_apertures(positions=positions, radius=fwhm/2)
+        selected = plot.select_apertures(marker_size=100)
+        return sources, selected
 
     return sources

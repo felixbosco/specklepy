@@ -149,7 +149,7 @@ class StarFinderPlot(Plot):
         aperture_style = {'color': 'red', 'lw': 4}
         apertures.plot(axes=self.axes[axis], **aperture_style)
 
-    def select_apertures(self, axis=0):
+    def select_apertures(self, axis=0, marker_size=1):
 
         # Initialize position list
         positions = []
@@ -163,7 +163,7 @@ class StarFinderPlot(Plot):
         def onclick(event):
             if event.button == 1 and event.dblclick:
                 positions.append([int(event.xdata), int(event.ydata)])
-                self.axes[axis].scatter(event.xdata, event.ydata, marker='+', color='red')
+                self.axes[axis].scatter(event.xdata, event.ydata, marker='+', color='red', s=marker_size)
                 text.set_text(status.format(len(positions)) + instruction)
                 self.figure.canvas.draw()
             if event.button == 3 and event.dblclick:
