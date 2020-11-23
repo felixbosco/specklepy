@@ -13,3 +13,6 @@ if __name__ == '__main__':
         print()
         logger.info("Interrupted by user...")
         sys.exit()
+    except Exception as e:
+        logger.error(e)
+        raise e
