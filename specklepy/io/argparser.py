@@ -156,6 +156,9 @@ class GeneralArgParser(object):
                                             'the variance.')
         parser_extraction.add_argument('-o', '--out_file', type=str, default=None,
                                        help='Name of the file to store the result in.')
+        parser_extraction.add_argument('--dtype', type=str, default=None,
+                                       help='Cast the data type of the input image to another type.')
+        parser_extraction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
     def parse_args(self, *args, **kwargs):
         """Parse command line arguments.

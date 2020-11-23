@@ -8,10 +8,11 @@ from photutils import DAOStarFinder, IRAFStarFinder
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
+from specklepy.utils import save_eval
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
-                    write_to=None, debug=True):
+                    write_to=None, cast_dtype=None, debug=False):
     """Extract sources from an image with a StarFinder routine.
 
     Long description...
@@ -35,6 +36,8 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
             `True`.
         write_to (str, optional):
             If provided as a str, the list of identified sources is saved to this file.
+        cast_dtype (str, optional):
+            Str-representation of a data type to cast the image to, prior to the extraction process.
         debug (bool, optional):
             Show debugging information. Default is `False`.
 
@@ -54,10 +57,15 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         logger.info("The argument image '{}' is interpreted as file name.".format(image))
         filename = image
         image = fits.getdata(filename)
+        logger.debug(f"Data type of file input is {image.dtype}")
         image = image.squeeze()
     else:
         raise SpecklepyTypeError('extract_sources()', argname='image', argtype=type(image),
                                  expected='np.ndarray or str')
+
+    # Cast the image data type if requested
+    if cast_dtype is not None:
+        image = image.astype(save_eval(cast_dtype))
 
     # Prepare noise statistics
     mean, median, std = sigma_clipped_stats(image, sigma=3.0)
