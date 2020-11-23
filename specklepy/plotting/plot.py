@@ -9,6 +9,8 @@ from astropy.io.registry import IORegistryError
 from astropy.table import Table
 from astropy.visualization import simple_norm
 
+from photutils import CircularAperture
+
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.plotting.plots import save_figure
 
@@ -138,3 +140,36 @@ class Plot(object):
         else:
             root, ext = os.path.splitext(os.path.basename(input))
             return "plot_" + root + '.png'
+
+
+class StarFinderPlot(Plot):
+
+    def add_apertures(self, positions, radius=10, axis=0):
+        apertures = CircularAperture(positions, r=radius)
+        aperture_style = {'color': 'red', 'lw': 4}
+        apertures.plot(axes=self.axes[axis], **aperture_style)
+
+    def select_apertures(self):
+
+        # Initialize position list
+        positions = []
+
+        # Plot instructions
+        text = plt.text(0.5, 0.92, 'Current number of selected stars = 0\n'
+                                   'Double click right mouse button to exit',
+                        transform=plt.gcf().transFigure, ha="center")
+
+        def onclick(event):
+            if event.button == 1 and event.dblclick:
+                positions.append([int(event.xdata), int(event.ydata)])
+                plt.scatter(event.xdata, event.ydata, marker='+', color='red')
+                text.set_text(f'Current number of selected stars = {len(positions)}\n'
+                              'Double click left mouse button to select / \n'
+                              'right mouse button to exit')
+                self.figure.canvas.draw()
+            if event.button == 3 and event.dblclick:
+                plt.close()
+
+        self.figure.canvas.mpl_connect('button_press_event', onclick)
+        plt.show()
+        return positions
