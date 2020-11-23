@@ -42,8 +42,8 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
             Show debugging information. Default is `False`.
 
     Returns:
-        sources (astropy.table.Table): Table of identified sources, None if no
-            sources are detected.
+        sources (astropy.table.Table):
+            Table of identified sources, `None` if no sources are detected.
     """
 
     # Set logger level
@@ -101,6 +101,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
 
     # Find stars
     logger.info("Extracting sources...")
+    logger.debug(f"Extraction parameters:\n\tFWHM = {fwhm}\n\tThreshold = {threshold}\n\tSky = {sky}")
     sources = star_finder(image)
 
     # Reformatting sources table
@@ -111,7 +112,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
 
     # Add terminal output
     logger.info(f"Extracted {len(sources)} sources")
-    logger.debug(sources)
+    logger.debug(f"\n{sources}")
 
     # Save sources table to file, if requested
     if write_to is not None:
