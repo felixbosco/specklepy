@@ -154,6 +154,7 @@ class GeneralArgParser(object):
         parser_extraction.add_argument('-v', '--var', type=str, default=None,
                                        help='Value of the image variance or name of the FITS file extension containing '
                                             'the variance.')
+        parser_extraction.add_argument('-s', '--show', type=bool, default=False, help='Show the identified stars.')
         parser_extraction.add_argument('-o', '--out_file', type=str, default=None,
                                        help='Name of the file to store the result in.')
         parser_extraction.add_argument('--dtype', type=str, default=None,
