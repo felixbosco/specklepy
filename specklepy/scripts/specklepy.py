@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 
@@ -19,14 +19,22 @@ from specklepy.gui.window import start
 
 def main():
 
+    # Initial notification
+    logger.debug("Starting Specklepy...")
+
     # Parse args
+    logger.debug("Parsing terminal input...")
     parser = GeneralArgParser()
     args = parser.parse_args()
+    logger.debug(f"Specklepy command: {args.command}")
+    logger.debug(f"Parsed terminal input:\n{args}")
 
+    # Set logging level
     if args.debug:
         logger.setLevel('DEBUG')
         logger.debug(args)
 
+    # Start the GUI
     if args.gui:
         start()
 
