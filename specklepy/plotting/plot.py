@@ -149,23 +149,22 @@ class StarFinderPlot(Plot):
         aperture_style = {'color': 'red', 'lw': 4}
         apertures.plot(axes=self.axes[axis], **aperture_style)
 
-    def select_apertures(self):
+    def select_apertures(self, axis=0):
 
         # Initialize position list
         positions = []
 
         # Plot instructions
-        text = plt.text(0.5, 0.92, 'Current number of selected stars = 0\n'
-                                   'Double click right mouse button to exit',
+        status = "Current number of selected stars = {}\n"
+        instruction = "Double click left mouse button to select \nand right mouse button to exit"
+        text = plt.text(0.5, 0.92, status.format(len(positions)) + instruction,
                         transform=plt.gcf().transFigure, ha="center")
 
         def onclick(event):
             if event.button == 1 and event.dblclick:
                 positions.append([int(event.xdata), int(event.ydata)])
-                plt.scatter(event.xdata, event.ydata, marker='+', color='red')
-                text.set_text(f'Current number of selected stars = {len(positions)}\n'
-                              'Double click left mouse button to select / \n'
-                              'right mouse button to exit')
+                self.axes[axis].scatter(event.xdata, event.ydata, marker='+', color='red')
+                text.set_text(status.format(len(positions)) + instruction)
                 self.figure.canvas.draw()
             if event.button == 3 and event.dblclick:
                 plt.close()
