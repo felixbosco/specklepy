@@ -5,14 +5,16 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 
 from photutils import DAOStarFinder, IRAFStarFinder
+from photutils import CircularAperture
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
+from specklepy.plotting.plot import StarFinderPlot
 from specklepy.utils import save_eval
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
-                    write_to=None, cast_dtype=None, debug=False):
+                    show=False, select=False, write_to=None, cast_dtype=None, debug=False):
     """Extract sources from an image with a StarFinder routine.
 
     Long description...
@@ -34,6 +36,11 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         background_subtraction (bool, optional):
             Let the StarFinder consider the background subtraction. Set False for ignoring background flux. Default is
             `True`.
+        show (bool, optional):
+            Create a plot of the identified sources on the image.
+        select (bool, optional):
+            Create a plot of the identified sources on the image, with the option of selecting apertures for future
+            purposes. These are selected by clicking on the image.
         write_to (str, optional):
             If provided as a str, the list of identified sources is saved to this file.
         cast_dtype (str, optional):
@@ -118,5 +125,17 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
     if write_to is not None:
         logger.info("Writing list of sources to file {}".format(write_to))
         sources.write(write_to, format='ascii.fixed_width', overwrite=True)
+
+    if show:
+        plot = StarFinderPlot(image_data=image)
+        positions = np.transpose((sources['x'], sources['y']))
+        plot.add_apertures(positions=positions, radius=fwhm / 2)
+        plot.show()
+
+    if select:
+        plot = StarFinderPlot(image_data=image)
+        positions = np.transpose((sources['x'], sources['y']))
+        plot.add_apertures(positions=positions, radius=fwhm / 2)
+        positions = plot.select_apertures()
 
     return sources
