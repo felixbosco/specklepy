@@ -12,6 +12,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.masterfile import MasterFile
 from specklepy.logging import logger
 from specklepy.reduction.subwindow import SubWindow
+from specklepy.utils.combine import combine_masks
 
 
 class MasterFlat(object):
@@ -108,8 +109,8 @@ class MasterFlat(object):
             master_flat_normed_var = None
 
         # Replace masked values by fill_value
-        mask = self.combine_masks(sigma_clip(master_flat_normed, masked=True, sigma=self.mask_threshold),
-                                  master_flat_normed, master_flat_normed_var)
+        mask = combine_masks(sigma_clip(master_flat_normed, masked=True, sigma=self.mask_threshold), master_flat_normed,
+                             master_flat_normed_var)
         logger.debug(f"Replacing masked values by {self.fill_value}...")
         if master_flat_normed is not None:
             master_flat_normed.mask = mask
@@ -131,24 +132,6 @@ class MasterFlat(object):
             return masked_array.filled(fill_value=self.fill_value), masked_array.mask
         except AttributeError:
             return masked_array, np.zeros(masked_array.shape, dtype=bool)
-
-    def combine_masks(self, *arrays):
-        mask = self.__get_mask(arrays[0])
-        try:
-            for array in arrays[1:]:
-                mask = np.logical_or(mask, self.__get_mask(array))
-            return mask
-        except IndexError:
-            return mask
-
-    @staticmethod
-    def __get_mask(array):
-        if array is None:
-            return None
-        try:
-            return array.mask
-        except AttributeError:
-            return np.zeros(array.shape, dtype=bool)
 
     def run_correction(self, file_list, file_path=None, sub_windows=None, full_window=None):
         """Executes the flat field correction on files in a list.
