@@ -17,6 +17,7 @@ from specklepy.reduction.subwindow import SubWindow
 class MasterFlat(object):
 
     fill_value = 0  # was np.nan
+    mask_threshold = 100
 
     def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, new=True):
 
@@ -107,12 +108,15 @@ class MasterFlat(object):
             master_flat_normed_var = None
 
         # Replace masked values by fill_value
-        mask = np.zeros(master_flat_normed.shape, dtype=bool)
+        mask = self.combine_masks(sigma_clip(master_flat_normed, masked=True, sigma=self.mask_threshold),
+                                  master_flat_normed, master_flat_normed_var)
         logger.debug(f"Replacing masked values by {self.fill_value}...")
         if master_flat_normed is not None:
+            master_flat_normed.mask = mask
             master_flat_normed, mask_im = self.fill_masked(master_flat_normed)
             mask = np.logical_or(mask, mask_im)
         if master_flat_normed_var is not None:
+            master_flat_normed_var.mask = mask
             master_flat_normed_var, mask_var = self.fill_masked(master_flat_normed_var)
             mask = np.logical_or(mask, mask_var)
 
@@ -127,6 +131,24 @@ class MasterFlat(object):
             return masked_array.filled(fill_value=self.fill_value), masked_array.mask
         except AttributeError:
             return masked_array, np.zeros(masked_array.shape, dtype=bool)
+
+    def combine_masks(self, *arrays):
+        mask = self.__get_mask(arrays[0])
+        try:
+            for array in arrays[1:]:
+                mask = np.logical_or(mask, self.__get_mask(array))
+            return mask
+        except IndexError:
+            return mask
+
+    @staticmethod
+    def __get_mask(array):
+        if array is None:
+            return None
+        try:
+            return array.mask
+        except AttributeError:
+            return np.zeros(array.shape, dtype=bool)
 
     def run_correction(self, file_list, file_path=None, sub_windows=None, full_window=None):
         """Executes the flat field correction on files in a list.
