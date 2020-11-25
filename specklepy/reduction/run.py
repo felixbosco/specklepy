@@ -167,8 +167,10 @@ def full_reduction(params, debug=False):
 
     # (1) Initialize directories and reduction files
     if not os.path.isdir(paths.get('outDir')):
+        logger.debug(f"Making directory {paths.get('outDir')}")
         os.makedirs(paths.get('outDir'))
     if not os.path.isdir(paths.get('tmpDir')):
+        logger.debug(f"Making directory {paths.get('tmpDir')}")
         os.makedirs(paths.get('tmpDir'))
     product_files, is_product_file = in_files.make_product_file_names(prefix=paths.get('prefix'),
                                                                       return_table_mask=True)
@@ -190,8 +192,8 @@ def full_reduction(params, debug=False):
 
             for index in range(len(product_files)):
                 product_file = in_files.initialize_product_file(index=index)
-                master_flat.run_correction(file_list=product_file, file_path=None,
-                                           sub_windows=in_files.table['SUBWIN'][is_product_file][index],
+                sub_window = in_files.table['SUBWIN'][is_product_file][index]
+                master_flat.run_correction(file_list=product_file, file_path=None, sub_windows=sub_window,
                                            full_window=options.get('full_window'))
 
     # (3) Linearization
