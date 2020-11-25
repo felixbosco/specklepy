@@ -11,7 +11,7 @@ from specklepy.io.filearchive import FileArchive
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 def holography(params, mode='same', debug=False):

@@ -12,7 +12,7 @@ from astropy.visualization import simple_norm
 from photutils import CircularAperture
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.plotting.plots import save_figure
+from specklepy.plotting.utils import save_figure
 
 
 class Plot(object):

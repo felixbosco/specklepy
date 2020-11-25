@@ -6,7 +6,7 @@ from astropy.table import Table, Column
 
 from specklepy.core.aperture import Aperture
 from specklepy.logging import logger
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, debug=False):

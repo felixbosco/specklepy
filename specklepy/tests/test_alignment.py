@@ -5,7 +5,7 @@ from astropy.io import fits
 
 from specklepy.io.filearchive import FileArchive
 from specklepy.core import alignment
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 class TestAlignment(unittest.TestCase):

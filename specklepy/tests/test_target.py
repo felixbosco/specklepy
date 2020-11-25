@@ -1,7 +1,7 @@
 import unittest
 import astropy.units as u
 from specklepy.synthetic.target import Target
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 class TestTarget(unittest.TestCase):

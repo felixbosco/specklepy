@@ -1,7 +1,7 @@
 import unittest
 
 from specklepy.utils.zernike import Zernike
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 class TestZernike(unittest.TestCase):

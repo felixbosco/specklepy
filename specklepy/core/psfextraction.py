@@ -11,7 +11,7 @@ from specklepy.logging import logger
 from specklepy.io.psffile import PSFFile
 from specklepy.io.table import read_table
 from specklepy.utils.combine import weighted_mean
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 class ReferenceStars(object):
