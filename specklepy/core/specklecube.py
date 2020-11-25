@@ -38,13 +38,17 @@ class SpeckleCube(object):
 
     @property
     def variance(self):
+        if self.var_ext is None:
+            return None
         try:
             return fits.getdata(self.in_file, self.var_ext)
-        except KeyError:
+        except:
             return None
 
     @property
     def mask(self):
+        if self.mask_ext is None:
+            return None
         try:
             return fits.getdata(self.in_file, self.mask_ext)
         except KeyError:
@@ -57,9 +61,8 @@ class SpeckleCube(object):
 
         # Extract variance image
         if self.var_ext:
-            image_var = fits.getdata(self.in_file, self.var_ext)
-            if image_var.ndim == 2:
-                self.image_var = image_var
+            if self.variance.ndim == 2:
+                self.image_var = self.variance
             else:
                 logger.warning('Image variance data is not an image!')
 
@@ -106,7 +109,7 @@ class SpeckleCube(object):
         hdu_list = fits.HDUList(hdus=[hdu])
 
         # Append variance extension if available
-        if self.image_var:
+        if self.image_var is not None:
             var_hdu = fits.ImageHDU(data=self.image_var, name=self.var_ext)
             hdu_list.append(var_hdu)
 
@@ -131,6 +134,8 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
         box (Box object, optional):
             Constraining the search for the intensity peak to the specified box. Searching the full frames if not
             provided.
+        mask (np.ndarray, optional):
+            Bad pixel mask in the shape of a frame of the cube.
 
     Returns:
         coadded (np.ndarray, ndim=2):
@@ -156,11 +161,17 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
                 raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
                                           expected=str(cube.shape))
 
+    #
+    if cube.ndim == 2:
+        raise NotImplementedError("coadding frames for 2-dim cubes does not make any sense!")
+
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
     for index, frame in enumerate(cube):
         if box is not None:
             frame = box(frame)
+        if mask is not None:
+            frame = np.ma.masked_array(frame, mask=mask).filled(0)
         peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
 
     # Compute shifts from indizes
