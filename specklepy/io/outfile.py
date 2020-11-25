@@ -5,6 +5,7 @@ from datetime import datetime
 
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
+from specklepy.utils.time import default_time_stamp
 
 
 class Outfile(object):
@@ -156,7 +157,7 @@ class Outfile(object):
     @staticmethod
     def time_stamp():
         """Return a time stamp str of format 'YYYYMMDD_HHMMSS'."""
-        return datetime.now().strftime('%Y%m%d_%H%M%S')
+        return default_time_stamp()
 
     @property
     def file_path(self):
