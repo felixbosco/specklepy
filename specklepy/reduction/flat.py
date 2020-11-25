@@ -16,6 +16,8 @@ from specklepy.reduction.subwindow import SubWindow
 
 class MasterFlat(object):
 
+    fill_value = 0  # was np.nan
+
     def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, new=True):
 
         # Store input parameters
@@ -61,7 +63,7 @@ class MasterFlat(object):
         logger.info("Combining the following file list to a master flat:")
         flats = None
         for index, file in enumerate(self.files):
-            logger.info(f"{index:4}: {file}")
+            logger.info(f"{index:4}: {file!r}")
             data = fits.getdata(os.path.join(self.file_path, file))
             data -= np.min(data)  # Avoid negative values that screw up the normalization
             logger.debug(f"{file} (dtype: {data.dtype}, shape: {data.shape})")
@@ -104,25 +106,27 @@ class MasterFlat(object):
             master_flat_normed = None
             master_flat_normed_var = None
 
-        # Replace masked values by NaNs
-        logger.debug(f"Replacing masked values by Nan...")
-        if master_flat_normed is not None and hasattr(master_flat_normed, 'mask'):
-            if np.sum(master_flat_normed.mask) == 0:
-                master_flat_normed = master_flat_normed.data
-            else:
-                master_flat_normed = np.where(master_flat_normed.mask, np.nan, master_flat_normed)
-                master_flat_normed = master_flat_normed.data
-        if master_flat_normed_var is not None and hasattr(master_flat_normed_var, 'mask'):
-            if np.sum(master_flat_normed_var.mask) == 0:
-                master_flat_normed_var = master_flat_normed_var.data
-            else:
-                master_flat_normed_var = np.where(master_flat_normed_var.mask, np.nan, master_flat_normed_var)
-                master_flat_normed_var = master_flat_normed_var.data
+        # Replace masked values by fill_value
+        mask = np.zeros(master_flat_normed.shape, dtype=bool)
+        logger.debug(f"Replacing masked values by {self.fill_value}...")
+        if master_flat_normed is not None:
+            master_flat_normed, mask_im = self.fill_masked(master_flat_normed)
+            mask = np.logical_or(mask, mask_im)
+        if master_flat_normed_var is not None:
+            master_flat_normed_var, mask_var = self.fill_masked(master_flat_normed_var)
+            mask = np.logical_or(mask, mask_var)
 
         # Store variance in extension
         self.master_file.data = master_flat_normed
         if master_flat_normed_var is not None:
             self.master_file.new_extension('VAR', data=master_flat_normed_var)
+        self.master_file.new_extension('MASK', data=mask.astype(np.int16))
+
+    def fill_masked(self, masked_array):
+        try:
+            return masked_array.filled(fill_value=self.fill_value), masked_array.mask
+        except AttributeError:
+            return masked_array, np.zeros(masked_array.shape, dtype=bool)
 
     def run_correction(self, file_list, file_path=None, sub_windows=None, full_window=None):
         """Executes the flat field correction on files in a list.
@@ -152,9 +156,10 @@ class MasterFlat(object):
         master_flat = self.master_file.data
         if self.master_file.has_extension('VAR'):
             master_flat_var = self.master_file['VAR']
-            propagate_uncertainties = True
         else:
-            propagate_uncertainties = False
+            master_flat_var = None
+        mask = self.master_file['MASK']
+        gpm = (mask == 0)
 
         # Initialize dummy list if sub_windows is not provided
         if sub_windows is None:
@@ -180,32 +185,47 @@ class MasterFlat(object):
 
                 # Expand 2D image to a one frame cube
                 if cube.ndim == 2:
-                    hdu_list[extension].data = np.divide(cube, sub_window(master_flat))
+                    hdu_list[extension].data = np.divide(cube, sub_window(master_flat), where=sub_window(gpm))
                 else:
                     # Normalize image/ cube frames by master flat
                     for f in trange(cube.shape[0], desc='Updating frame'):
                         frame = cube[f]
                         try:
-                            hdu_list[extension].data[f] = np.divide(frame, sub_window(master_flat))
+                            hdu_list[extension].data[f] = np.divide(frame, sub_window(master_flat),
+                                                                    where=sub_window(gpm))
                         except ValueError as e:
                             logger.error(e)
                             embed()
                         hdu_list.flush()
 
-                # Propagate variance if the master flat has this information
-                if self.master_file.has_extension('VAR'):
-                    master_flat_var = self.master_file['VAR']
+                # Propagate variance
+                if 'VAR' in hdu_list:
+                    cube_var = hdu_list['VAR'].data
 
-                    # Create VAR HDU or propagate the variances
-                    if 'VAR' in hdu_list:
-                        cube_var = hdu_list['VAR'].data
-                        # TODO double check the variance propagation formula
-                        # hdu_list['VAR'].data = np.multiply(np.square(np.divide(1, np.square(master_flat))),
-                        # master_flat_var)
-                        hdu_list['VAR'].data += master_flat_var
+                    if master_flat_var is None:
+                        # The cube stores its variance map already
+                        pass
                     else:
-                        var_hdu = fits.ImageHDU(data=master_flat_var, name='VAR', header=None)
-                        hdu_list.append(var_hdu)
+                        # Combine variance maps of the cube and the master flat
+                        # TODO double check the variance propagation formula
+                        # out_var = np.multiply(np.square(np.divide(1, np.square(master_flat))), master_flat_var)
+                        out_var = np.add(master_flat_var, cube_var)
+                        hdu_list['VAR'].data = out_var
+                else:
+                    # TODO: Implement a measure for the cube variance
+                    if master_flat_var is None:
+                        # No variance map is available
+                        pass
+                    else:
+                        # Use the variance map of the master flat
+                        hdu_list.append(fits.ImageHDU(name='VAR', data=master_flat_var))
 
+                # Store the mask
+                if 'MASK' in hdu_list:
+                    hdu_list['MASK'] = np.logical_or(hdu_list['MASK'], mask)
+                else:
+                    hdu_list.append(fits.ImageHDU(data=mask))
+
+                # Update FITS header and store updates
                 hdu_list[0].header.set('FLATCORR', str(datetime.now()))
                 hdu_list.flush()
