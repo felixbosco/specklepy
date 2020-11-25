@@ -97,6 +97,9 @@ class DiffCube(object):
 
     def differentiate_linear_reg(self, exposure_time_prefix=None, extension=None, dtype=None, debug=False):
 
+        raise PendingDeprecationWarning("Cube differentiation in linear regression mode is not working yet and will be "
+                                        "deprecated soon!")
+
         # Update extension attribute if requested
         if extension is not None:
             self.extension = extension
