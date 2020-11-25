@@ -56,7 +56,8 @@ class DiffCube(object):
         logger.info(f"Creating file {self.file}")
         os.system(f"cp {self.input_file} {self.file}")
 
-    def differentiate(self, delta=1, exposure_time_prefix=None, extension=None, dtype=None):
+    def differentiate(self, delta=1, exposure_time_prefix=None, extension=None, dtype=None, mask_threshold=20,
+                      fill_value=0):
 
         # Update extension attribute if requested
         if extension is not None:
@@ -75,6 +76,12 @@ class DiffCube(object):
             logger.info("Differencing frames...")
             cube = np.diff(cube[::delta], axis=0)
             logger.info(f"New cube has shape {cube.shape}")
+
+            # Create mask for outliers in the difference cube
+            bpm = sigma_clip(np.mean(cube, axis=0), sigma=mask_threshold, masked=True).mask
+            for f, frame in enumerate(cube):
+                cube[f] = np.ma.masked_array(frame, mask=bpm).filled(fill_value=fill_value)
+            hdu_list.append(fits.ImageHDU(name='MASK', data=bpm.astype(np.int16)))
 
             # Update exposure time in header
             if exposure_time_prefix is not None:
