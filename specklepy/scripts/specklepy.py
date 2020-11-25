@@ -57,12 +57,13 @@ def main():
         get_resolution_parameters(wavelength=args.wavelength, diameter=args.diameter, pixel_scale=args.pixel_scale)
 
     elif args.command == 'diff':
-        if not args.linear_regression:
-            diff.differentiate_cube(files=args.files, exposure_time_prefix=args.keyword, extension=args.extension,
-                                    dtype=args.dtype)
+        # Set differentiation method
+        if args.linear_regression:
+            method = 'linreg'
         else:
-            diff.differentiate_linear_reg(files=args.files, exposure_time_prefix=args.keyword,
-                                          extension=args.extension, dtype=args.dtype)
+            method = 'direct'
+        diff.differentiate_cube(files=args.files, method=method, exposure_time_prefix=args.keyword,
+                                extension=args.extension, dtype=args.dtype)
 
     elif args.command is 'extract':
         if args.out_file is None:
