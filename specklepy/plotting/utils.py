@@ -12,14 +12,6 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.utils import transferfunctions as tf
 
 
-# Define plotting defaults
-plt.rc('figure', figsize=(11.69, 8.27))  # A4 format in inches
-plt.rc('xtick', direction='in')
-plt.rc('ytick', direction='in')
-plt.rc('font', family='serif', size=14)
-DPI = 400
-
-
 def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maximize=False):
     """Shows a 2D image.
 
