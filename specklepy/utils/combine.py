@@ -94,3 +94,22 @@ def get_distance_weights(distances, norm=True):
         weights = np.divide(weights, np.sum(weights))
 
     return weights
+
+
+def combine_masks(*arrays):
+
+    def get_mask(arr):
+        if arr is None:
+            return None
+        try:
+            return arr.mask
+        except AttributeError:
+            return np.zeros(arr.shape, dtype=bool)
+
+    mask = get_mask(arrays[0])
+    try:
+        for array in arrays[1:]:
+            mask = np.logical_or(mask, get_mask(array))
+        return mask
+    except IndexError:
+        return mask
