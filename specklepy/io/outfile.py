@@ -176,7 +176,7 @@ class Outfile(object):
             hdu_list[0].header.set('UPDATED', str(datetime.now()))
             hdu_list.flush()
         if self.verbose:
-            logger.info(f"Updating data in {self.file_path}")
+            logger.info(f"Updating data in {self.file_path!r}")
 
     def __getitem__(self, extension):
         return fits.getdata(self.file_path, extension)  # [index]

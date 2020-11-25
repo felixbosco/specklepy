@@ -153,7 +153,7 @@ class Reconstruction(object):
                                           expected="either 'collapse' or 'ssa'")
 
             # Store data to a new Outfile instance
-            logger.info(f"Saving temporary reconstruction of cube {file} to {speckle_cube.default_save_path()}")
+            logger.info(f"Saving temporary reconstruction of cube {file!r} to {speckle_cube.default_save_path()!r}")
             long_exposure_path = speckle_cube.store()
 
             # Add the recently created file to the list
