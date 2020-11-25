@@ -153,23 +153,28 @@ def full_reduction(params, debug=False):
     if debug:
         logger.setLevel('DEBUG')
 
+    # Extract dictionaries from params
+    paths = params.get('PATHS')
+    flat_fielding = params.get('FLAT')
+    sky_subtraction = params.get('SKY')
+    options = params.get('OPTIONS')
+
+
     # (0) Read file list table
     logger.info("Reading file list ...")
-    in_files = FileArchive(file_list=params['PATHS']['fileList'],
-                           in_dir=params['PATHS']['filePath'],
-                           out_dir=params['PATHS']['outDir'])
+    in_files = FileArchive(file_list=paths.get('fileList'), in_dir=paths.get('filePath'), out_dir=paths.get('outDir'))
     logger.info('\n' + str(in_files.table))
 
     # (1) Initialize directories and reduction files
-    if not os.path.isdir(params['PATHS']['outDir']):
-        os.makedirs(params['PATHS']['outDir'])
-    if not os.path.isdir(params['PATHS']['tmpDir']):
-        os.makedirs(params['PATHS']['tmpDir'])
-    product_files, is_product_file = in_files.make_product_file_names(prefix=params['PATHS']['prefix'],
+    if not os.path.isdir(paths.get('outDir')):
+        os.makedirs(paths.get('outDir'))
+    if not os.path.isdir(paths.get('tmpDir')):
+        os.makedirs(paths.get('tmpDir'))
+    product_files, is_product_file = in_files.make_product_file_names(prefix=paths.get('prefix'),
                                                                       return_table_mask=True)
 
     # (2) Flat fielding
-    if 'skip' in params['FLAT'] and params['FLAT']['skip']:
+    if flat_fielding.get('skip', False):
         logger.info('Skipping flat fielding as requested from parameter file...')
     else:
         flat_files = in_files.get_flats()
@@ -177,29 +182,29 @@ def full_reduction(params, debug=False):
             logger.warning("Did not find any flat field observations. No flat field correction will be applied!")
         else:
             logger.info("Starting flat field correction...")
-            master_flat = flat.MasterFlat(flat_files, file_name=params['FLAT']['masterFlatFile'],
-                                          file_path=params['PATHS']['filePath'], out_dir=params['PATHS']['tmpDir'],
-                                          new=not params['FLAT']['reuse'])
-            if not params['FLAT']['reuse']:
-                master_flat.combine(method=params['FLAT']['method'])
+            master_flat = flat.MasterFlat(flat_files, file_name=flat_fielding.get('masterFlatFile'),
+                                          file_path=paths.get('filePath'), out_dir=paths.get('tmpDir'),
+                                          new=not flat_fielding.get('reuse', False))
+            if not flat_fielding.get('reuse', False):
+                master_flat.combine(method=flat_fielding.get('method'))
 
             for index in range(len(product_files)):
                 product_file = in_files.initialize_product_file(index=index)
                 master_flat.run_correction(file_list=product_file, file_path=None,
                                            sub_windows=in_files.table['SUBWIN'][is_product_file][index],
-                                           full_window=params['OPTIONS']['full_window'])
+                                           full_window=options.get('full_window'))
 
     # (3) Linearization
     # TODO: Implement linearization
 
     # (4) Sky subtraction
-    if 'skip' in params['SKY'] and params['SKY']['skip']:
+    if sky_subtraction.get('skip', False):
         logger.info('Skipping sky background subtraction as requested from parameter file...')
     else:
         logger.info("Starting sky subtraction...")
         try:
-            sky.subtract_sky_background(**params['SKY'], in_files=in_files, out_files=product_files,
-                                        file_path=params['PATHS']['filePath'], tmp_dir=params['PATHS']['tmpDir'])
+            sky.subtract_sky_background(**sky_subtraction, in_files=in_files, out_files=product_files,
+                                        file_path=paths.get('filePath'), tmp_dir=paths.get('tmpDir'))
         except RuntimeError as e:
             raise RuntimeWarning(e)
 
