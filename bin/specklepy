@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Execute Specklepy and call the scripts."""
+"""Start Specklepy and execute the command-dependent scripts."""
 
 import sys
 from specklepy.logging import logger
