@@ -14,6 +14,7 @@ from specklepy.io.outfile import Outfile
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.plotting.utils import save_figure
+from specklepy.utils.combine import combine_masks
 
 
 def subtract_sky_background(in_files, out_files=None, method='scalar', source='sky', mask_sources=False, file_path=None,
@@ -22,6 +23,7 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
     """Estimate and subtract the sky background via different methods and sources.
 
     TODO: Implement sky subtraction from image
+    TODO: Implement propagation of pixel masks
 
     Args:
         in_files (specklepy.FileArchive):
@@ -148,6 +150,7 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
 
 def subtract_scalar_background(files, params, prefix=None, debug=False):
     """Estimate and subtract a scalar background."""
+    # TODO: Implement propagation of masks
 
     if not isinstance(files, (list, np.ndarray)):
         raise SpecklepyTypeError('substract_scalar_background', argtype=type(files), argname='files', expected='list')
@@ -191,14 +194,14 @@ def subtract_scalar_background(files, params, prefix=None, debug=False):
     logger.info("Scalar background subtraction complete!")
 
 
-def estimate_sky_background(data, method='scalar', mask_sources=True, path=None):
+def estimate_sky_background(file, method='scalar', mask_sources=True, path=None):
 
     """Estimate a scalar or image sky background with uncertainties.
 
     Args:
-        data (np.array or str):
-            Image or data cube with sky observations used to extract the sky background mean and uncertainty. Str type
-            input is interpreted as a file name to read the data from.
+        file (str):
+            Name of a FITS file with an image or data cube with sky observations, used to extract the sky background
+            mean and uncertainty.
         method (str, optional):
             Can be `scalar` or `image` for setting the shape of the output.
         mask_sources (bool, optional):
@@ -214,12 +217,10 @@ def estimate_sky_background(data, method='scalar', mask_sources=True, path=None)
             Uncertainty on the sky background estimate as a scalar or image, depending on the method parameter.
     """
 
-    # Handle str type data
-    if isinstance(data, str):
-        file = data
-        if path is not None:
-            file = os.path.join(path, file)
-        data = fits.getdata(filename=file)
+    # Read data from file
+    if path is not None:
+        file = os.path.join(path, file)
+    data = fits.getdata(filename=file)
 
     # Create source mask
     if mask_sources:
@@ -230,6 +231,13 @@ def estimate_sky_background(data, method='scalar', mask_sources=True, path=None)
             mask = make_source_mask(data, nsigma=2, npixels=5, dilate_size=11)
     else:
         mask = None
+
+    # Combine with mask in file
+    try:
+        file_mask = fits.getdata(file, 'MASK')
+        mask = combine_masks(mask, file_mask)
+    except KeyError:
+        pass
 
     # Derive statistics
     if method == 'scalar':
