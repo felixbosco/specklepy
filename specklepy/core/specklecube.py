@@ -11,11 +11,12 @@ from specklepy.logging import logger
 
 class SpeckleCube(object):
 
-    def __init__(self, file_name, variance_extension=None, in_dir=None, out_dir=None):
+    def __init__(self, file_name, variance_extension=None, mask_extension='MASK', in_dir=None, out_dir=None):
 
         # Store input arguments
         self.in_dir, self.file_name = os.path.split(file_name)
         self.var_ext = variance_extension
+        self.mask_ext = mask_extension
         if in_dir:
             self.in_dir = in_dir
         self.out_dir = out_dir if out_dir else ''
@@ -31,13 +32,28 @@ class SpeckleCube(object):
     def in_file(self):
         return os.path.join(self.in_dir, self.file_name)
 
+    @property
+    def cube(self):
+        return fits.getdata(self.in_file)
+
+    @property
+    def variance(self):
+        try:
+            return fits.getdata(self.in_file, self.var_ext)
+        except KeyError:
+            return None
+
+    @property
+    def mask(self):
+        try:
+            return fits.getdata(self.in_file, self.mask_ext)
+        except KeyError:
+            return None
+
     def collapse(self):
 
-        # Read data from file
-        cube = fits.getdata(self.in_file)
-
         # Compute collapsed image from the cube
-        self.image = np.sum(cube, axis=0)
+        self.image = np.sum(self.cube, axis=0)
 
         # Extract variance image
         if self.var_ext:
@@ -52,18 +68,12 @@ class SpeckleCube(object):
 
     def ssa(self, box=None):
 
+        # Update box attribute
         if box:
             self.box = box
 
-        # Read data from file
-        cube = fits.getdata(self.in_file)
-        if self.var_ext:
-            var_cube = fits.getdata(self.in_file, self.var_ext)
-        else:
-            var_cube = None
-
         # Compute SSA'ed image from the cube
-        self.image, self.image_var = coadd_frames(cube=cube, var_cube=var_cube, box=self.box)
+        self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box, mask=self.mask)
         self.method = 'ssa'
 
     def default_save_path(self):
@@ -107,7 +117,7 @@ class SpeckleCube(object):
         return self.default_save_path()
 
 
-def coadd_frames(cube, var_cube=None, box=None):
+def coadd_frames(cube, var_cube=None, box=None, mask=None):
     """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
 
     This function uses the SSA algorithm to coadd frames of a cube. If provided, this function coadds the variances
