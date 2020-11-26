@@ -8,8 +8,8 @@ from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
 
 
-def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, in_dir=None,
-                    debug=False):
+def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False,
+                    in_dir=None, debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -42,11 +42,10 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
     """
 
     # Check input parameters
+    if isinstance(files, str):
+        files = [files]
     if not isinstance(files, (list, np.ndarray)):
-        if isinstance(files, str):
-            files = [files]
-        else:
-            raise SpecklepyTypeError('get_shifts()', argname='files', argtype=type(files), expected='list')
+        raise SpecklepyTypeError('get_shifts()', argname='files', argtype=type(files), expected='list')
 
     if reference_file is None:
         reference_file = files[0]
@@ -55,11 +54,7 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
     elif not isinstance(reference_file, str):
         raise SpecklepyTypeError('get_shifts()', argname='reference_file', argtype=type(reference_file), expected='str')
 
-    if isinstance(mode, str):
-        if mode not in ['correlation', 'maximum', 'peak']:
-            raise SpecklepyValueError('get_shifts()', argname='mode', argvalue=mode,
-                                      expected="'correlation', 'maximum' or 'peak'")
-    else:
+    if not isinstance(mode, str):
         raise SpecklepyTypeError('get_shifts()', argname='mode', argtype=type(mode), expected='str')
 
     if not isinstance(lazy_mode, bool):
