@@ -54,7 +54,7 @@ class PSFFile(Outfile):
             raise SpecklepyTypeError('PSFFile', 'header_card_prefix', type(header_card_prefix), 'str')
 
         # Add name of parent file to header
-        cards["FILE NAME"] = os.path.basename(in_file)
+        cards["SOURCE FILE NAME"] = os.path.basename(in_file)
 
         # Derive data shape
         in_path = os.path.join(in_dir, in_file) if in_dir is not None else in_file

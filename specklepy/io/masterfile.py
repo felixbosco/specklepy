@@ -16,7 +16,7 @@ class MasterFile(Outfile):
 
         # Add list of files to header
         for index, file in enumerate(files):
-            cards["FILE {}".format(index)] = os.path.basename(file)
+            cards[f"SOURCE FILE{index:04} NAME"] = os.path.basename(file)
 
         # Derive frame shape from FITS header
         if shape is None:

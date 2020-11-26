@@ -13,10 +13,10 @@ class ReconstructionFile(Outfile):
 
         # Add list of files to header
         for index, file in enumerate(files):
-            cards[f"FILE{index:04} NAME"] = os.path.basename(file)
+            cards[f"SOURCE FILE{index:04} NAME"] = os.path.basename(file)
             if in_dir:
                 file = os.path.join(in_dir, file)
-            cards[f"FILE{index:04} FRAMES"] = self.extract_frame_number(fits.getheader(file))
+            cards[f"SOURCE FILE{index:04} FRAMES"] = self.extract_frame_number(fits.getheader(file))
 
         # Derive frame shape from FITS header
         if shape is None:
