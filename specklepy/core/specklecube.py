@@ -27,6 +27,7 @@ class SpeckleCube(object):
         self.image_var = None
         self.method = None
         self.box = None
+        self._cube = None
 
     @property
     def in_file(self):
@@ -34,7 +35,9 @@ class SpeckleCube(object):
 
     @property
     def cube(self):
-        return fits.getdata(self.in_file).squeeze()
+        if self._cube is None:
+            self._cube = fits.getdata(self.in_file).squeeze()
+        return self._cube
 
     @property
     def variance(self):
@@ -57,7 +60,12 @@ class SpeckleCube(object):
     def collapse(self):
 
         # Compute collapsed image from the cube
-        self.image = np.sum(self.cube, axis=0)
+        if self.cube.ndim == 2:
+            self.image = self.cube
+        elif self.cube.ndim == 3:
+            self.image = np.sum(self.cube, axis=0)
+        else:
+            raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
 
         # Extract variance image
         if self.var_ext:
@@ -76,15 +84,14 @@ class SpeckleCube(object):
             self.box = box
 
         # Compute SSA'ed image from the cube
-        cube = self.cube
-        if cube.ndim == 2:
-            self.image = cube
+        if self.cube.ndim == 2:
+            self.image = self.cube
             self.image_var = self.variance
-        elif cube.ndim == 3:
+        elif self.cube.ndim == 3:
             self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box,
                                                       mask=self.mask)
         else:
-            raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {cube.ndim!r} axes!")
+            raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
         self.method = 'ssa'
 
     def default_save_path(self):
