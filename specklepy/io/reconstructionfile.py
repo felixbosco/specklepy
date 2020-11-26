@@ -16,18 +16,12 @@ class ReconstructionFile(Outfile):
             cards[f"FILE{index:04} NAME"] = os.path.basename(file)
             if in_dir:
                 file = os.path.join(in_dir, file)
-            cards[f"FILE{index:04} FRAMES"] = fits.getheader(file)['NAXIS3']
+            cards[f"FILE{index:04} FRAMES"] = self.extract_frame_number(fits.getheader(file))
 
-        # Derive shape from FITS header
+        # Derive frame shape from FITS header
         if shape is None:
-            # Read header information
-            if in_dir:
-                hdr_input = fits.getheader(os.path.join(in_dir, files[0]))
-            else:
-                hdr_input = fits.getheader(files[0])
-
-            # Derive shape from header entries
-            shape = self.extract_frame_shape(hdr_input)
+            example_path = os.path.join(in_dir, files[0]) if in_dir is not None else files[0]
+            shape = self.extract_frame_shape(fits.getheader(example_path))
 
         super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False,
                          header_card_prefix=header_card_prefix)

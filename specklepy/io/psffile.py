@@ -57,11 +57,9 @@ class PSFFile(Outfile):
         cards["FILE NAME"] = os.path.basename(in_file)
 
         # Derive data shape
-        if in_dir is not None:
-            hdr_input = fits.getheader(os.path.join(in_dir, in_file))
-        else:
-            hdr_input = fits.getheader(in_file)
-        shape = (hdr_input['NAXIS3'], frame_shape[0], frame_shape[1])
+        in_path = os.path.join(in_dir, in_file) if in_dir is not None else in_file
+        hdr_input = fits.getheader(in_path)
+        shape = (self.extract_frame_number(hdr_input), frame_shape[0], frame_shape[1])
 
         super().__init__(filename=out_file, path=out_dir, shape=shape, cards=cards,
                          header_card_prefix=header_card_prefix)

@@ -236,11 +236,21 @@ class Outfile(object):
     @staticmethod
     def extract_frame_shape(header):
         number_axes = header.get('NAXIS')
-        if number_axes == 2:
-            shape = (header.get('NAXIS1'), header.get('NAXIS2'))
-        elif number_axes == 3:
-            shape = (header.get('NAXIS2'), header.get('NAXIS3'))
+        if number_axes == 2 or number_axes == 3:
+            frame_shape = (header.get('NAXIS1'), header.get('NAXIS2'))
         else:
             raise NotImplementedError(f"Frame shape extraction is not defined for FITS cubes with {number_axes!r} "
                                       f"axes!")
-        return shape
+        return frame_shape
+
+    @staticmethod
+    def extract_frame_number(header):
+        number_axes = header.get('NAXIS')
+        if number_axes == 2:
+            number_frames = 1
+        elif number_axes == 3:
+            number_frames = header.get('NAXIS3')
+        else:
+            raise NotImplementedError(f"Frame number extraction is not defined for FITS cubes with {number_axes!r} "
+                                      f"axes!")
+        return number_frames

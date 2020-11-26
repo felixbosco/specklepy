@@ -18,16 +18,10 @@ class MasterFile(Outfile):
         for index, file in enumerate(files):
             cards["FILE {}".format(index)] = os.path.basename(file)
 
-        # Derive shape from FITS header
+        # Derive frame shape from FITS header
         if shape is None:
-            # Read header information
-            if in_dir:
-                hdr_input = fits.getheader(os.path.join(in_dir, files[0]))
-            else:
-                hdr_input = fits.getheader(files[0])
-
-            # Derive shape from header entries
-            shape = self.extract_frame_shape(hdr_input)
+            example_path = os.path.join(in_dir, files[0]) if in_dir is not None else files[0]
+            shape = self.extract_frame_shape(fits.getheader(example_path))
 
         # Initialize as parent class instance
         super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, path=out_dir,
