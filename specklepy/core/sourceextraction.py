@@ -63,7 +63,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
     if isinstance(image, np.ndarray):
         filename = 'current cube'
     elif isinstance(image, str):
-        logger.info("The argument image '{}' is interpreted as file name.".format(image))
+        logger.info(f"The argument image '{image!r}' is interpreted as file name.")
         filename = image
         image = fits.getdata(filename)
         logger.debug(f"Data type of file input is {image.dtype}")
@@ -125,7 +125,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
 
     # Save sources table to file, if requested
     if write_to is not None:
-        logger.info("Writing list of sources to file {}".format(write_to))
+        logger.info(f"Writing list of sources to file {write_to!r}")
         sources.write(write_to, format='ascii.fixed_width', overwrite=True)
 
     if show:
