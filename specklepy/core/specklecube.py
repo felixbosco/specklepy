@@ -34,14 +34,14 @@ class SpeckleCube(object):
 
     @property
     def cube(self):
-        return fits.getdata(self.in_file)
+        return fits.getdata(self.in_file).squeeze()
 
     @property
     def variance(self):
         if self.var_ext is None:
             return None
         try:
-            return fits.getdata(self.in_file, self.var_ext)
+            return fits.getdata(self.in_file, self.var_ext).squeeze()
         except:
             return None
 
@@ -76,7 +76,15 @@ class SpeckleCube(object):
             self.box = box
 
         # Compute SSA'ed image from the cube
-        self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box, mask=self.mask)
+        cube = self.cube
+        if cube.ndim == 2:
+            self.image = cube
+            self.image_var = self.variance
+        elif cube.ndim == 3:
+            self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box,
+                                                      mask=self.mask)
+        else:
+            raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {cube.ndim!r} axes!")
         self.method = 'ssa'
 
     def default_save_path(self):
@@ -144,11 +152,14 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
             SSA-integrated variances of the input cube or the variance map itself if provided as a 2D cube.
     """
 
-    if not isinstance(cube, np.ndarray):
+    # Assert that cube is a 3-dimensional np.ndarray
+    try:
+        if cube.ndim != 3:
+            raise SpecklepyValueError('coadd_frames()', argname='cube.ndim', argvalue=cube.ndim, expected='2 or 3')
+    except AttributeError:
         raise SpecklepyTypeError('coadd_frames()', argname='cube', argtype=type(cube), expected='np.ndarray')
-    if cube.ndim not in [2, 3]:
-        raise SpecklepyValueError('coadd_frames()', argname='cube.ndim', argvalue=cube.ndim, expected='2 or 3')
 
+    # Check on the shape of var_cube
     if var_cube is not None:
         if not isinstance(var_cube, np.ndarray):
             raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube),
@@ -160,10 +171,6 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
             if var_cube.shape[0] != cube.shape[1] or var_cube.shape[1] != cube.shape[2]:
                 raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
                                           expected=str(cube.shape))
-
-    #
-    if cube.ndim == 2:
-        raise NotImplementedError("coadding frames for 2-dim cubes does not make any sense!")
 
     # Compute shifts
     peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
