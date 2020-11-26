@@ -113,7 +113,7 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
         return shifts
 
 
-def estimate_shift(image, reference_image=None, is_fourier_transformed=False, mode='correlation', debug=False):
+def estimate_shift(image, reference_image, mode='correlation', is_fourier_transformed=False, debug=False):
     """Estimate the shift between an image and a reference image.
 
     Estimate the relative shift between an image and a reference image by means of a 2D correlation
@@ -124,7 +124,7 @@ def estimate_shift(image, reference_image=None, is_fourier_transformed=False, mo
             2D array of the image to be shifted.
         reference_image (np.ndarray):
             2D array of the reference image of the shift.
-        is_fourier_transformed (bool):
+        is_fourier_transformed (bool, optional):
             Indicate whether the reference image is already Fourier transformed. This is implemented to save
             computation by computing that transform only once.
         mode (str, optional):
@@ -142,18 +142,14 @@ def estimate_shift(image, reference_image=None, is_fourier_transformed=False, mo
 
     # Check input parameters
     if not isinstance(image, np.ndarray) or image.ndim is not 2:
-        raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(image)}")
+        raise TypeError(f"Image input must be 2-dim numpy.ndarray, but was provided as {type(image)}")
     if not isinstance(reference_image, np.ndarray) or image.ndim is not 2:
-        raise TypeError(f"Image input must be 2D numpy.ndarray, but was provided as {type(reference_image)}")
+        raise TypeError(f"Image input must be 2-dim numpy.ndarray, but was provided as {type(reference_image)}")
     if not isinstance(is_fourier_transformed, bool):
-        raise SpecklepyTypeError('get_shift()', argname='is_Fourier_transformed', argtype=type(is_fourier_transformed),
-                                 expected='bool')
-    if isinstance(mode, str):
-        if mode not in ['correlation', 'maximum', 'peak']:
-            raise SpecklepyValueError('get_shift()', argname='mode', argvalue=mode,
-                                      expected="'correlation', 'maximum' or 'peak'")
-    else:
-        raise SpecklepyTypeError('get_shift()', argname='mode', argtype=type(mode), expected='str')
+        raise SpecklepyTypeError('estimate_shift()', argname='is_fourier_transformed',
+                                 argtype=type(is_fourier_transformed), expected='bool')
+    if not isinstance(mode, str):
+        raise SpecklepyTypeError('estimate_shift()', argname='mode', argtype=type(mode), expected='str')
 
     # Simple comparison of the peaks in the images
     if mode == 'maximum' or mode == 'peak':
@@ -182,6 +178,9 @@ def estimate_shift(image, reference_image=None, is_fourier_transformed=False, mo
         shift = np.unravel_index(np.argmax(correlation), correlation.shape)
         shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
         return shift
+
+    else:
+        raise NotImplementedError(f"Estimating shift in {mode!r} mode is not implemented!")
 
 
 def derive_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=False):
