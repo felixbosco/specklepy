@@ -27,10 +27,7 @@ class MasterFile(Outfile):
                 hdr_input = fits.getheader(files[0])
 
             # Derive shape from header entries
-            if 'NAXIS3' in hdr_input:
-                shape = (hdr_input['NAXIS2'], hdr_input['NAXIS3'])
-            else:
-                shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
+            shape = self.extract_frame_shape(hdr_input)
 
         # Initialize as parent class instance
         super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False, path=out_dir,

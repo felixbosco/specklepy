@@ -13,10 +13,10 @@ class ReconstructionFile(Outfile):
 
         # Add list of files to header
         for index, file in enumerate(files):
-            cards["FILE {}".format(index)] = os.path.basename(file)
+            cards[f"FILE{index:04} NAME"] = os.path.basename(file)
             if in_dir:
                 file = os.path.join(in_dir, file)
-            cards["FILE {} FRAMES".format(index)] = fits.getheader(file)['NAXIS3']
+            cards[f"FILE{index:04} FRAMES"] = fits.getheader(file)['NAXIS3']
 
         # Derive shape from FITS header
         if shape is None:
@@ -27,12 +27,7 @@ class ReconstructionFile(Outfile):
                 hdr_input = fits.getheader(files[0])
 
             # Derive shape from header entries
-            if 'NAXIS3' in hdr_input:
-                shape = (hdr_input['NAXIS2'], hdr_input['NAXIS3'])
-            else:
-                shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
-            # hdr_input = fits.getheader(files[0])
-            # shape = (hdr_input['NAXIS1'], hdr_input['NAXIS2'])
+            shape = self.extract_frame_shape(hdr_input)
 
         super().__init__(filename=filename, shape=shape, extensions=None, cards=cards, timestamp=False,
                          header_card_prefix=header_card_prefix)

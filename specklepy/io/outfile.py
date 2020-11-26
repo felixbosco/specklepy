@@ -232,3 +232,15 @@ class Outfile(object):
     def has_extension(self, ext_name):
         with fits.open(self.file_path) as hdu_list:
             return ext_name in hdu_list
+
+    @staticmethod
+    def extract_frame_shape(header):
+        number_axes = header.get('NAXIS')
+        if number_axes == 2:
+            shape = (header.get('NAXIS1'), header.get('NAXIS2'))
+        elif number_axes == 3:
+            shape = (header.get('NAXIS2'), header.get('NAXIS3'))
+        else:
+            raise NotImplementedError(f"Frame shape extraction is not defined for FITS cubes with {number_axes!r} "
+                                      f"axes!")
+        return shape
