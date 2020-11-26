@@ -204,11 +204,8 @@ def full_reduction(params, debug=False):
         logger.info('Skipping sky background subtraction as requested from parameter file...')
     else:
         logger.info("Starting sky subtraction...")
-        try:
-            sky.subtract_sky_background(**sky_subtraction, in_files=in_files, out_files=product_files,
-                                        file_path=paths.get('filePath'), tmp_dir=paths.get('tmpDir'))
-        except RuntimeError as e:
-            raise RuntimeWarning(e)
+        sky.subtract_sky_background(**sky_subtraction, in_files=in_files, out_files=product_files,
+                                    file_path=paths.get('filePath'), tmp_dir=paths.get('tmpDir'))
 
     # Close reduction
-    logger.info("Reduction finished...")
+    logger.info("Reduction finished!")
