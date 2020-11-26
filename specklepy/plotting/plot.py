@@ -42,7 +42,7 @@ class Plot(object):
         # Does file exist?
         if not os.path.exists(path=file_name):
             sys.tracebacklimit = 0
-            raise FileNotFoundError(f"File {file_name} not found!")
+            raise FileNotFoundError(f"File {file_name!r} not found!")
 
         # Set data defaults
         x_data = None
