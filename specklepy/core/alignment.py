@@ -148,8 +148,8 @@ def estimate_shift(image, reference_image, mode='correlation', is_fourier_transf
 
     # Simple comparison of the peaks in the images
     if mode == 'maximum' or mode == 'peak':
-        peak_image = np.unravel_index(np.argmax(image, axis=None), image.shape)
-        peak_ref_image = np.unravel_index(np.argmax(reference_image, axis=None), reference_image.shape)
+        peak_image = peak_index(image)
+        peak_ref_image = peak_index(reference_image)
         return peak_ref_image[0] - peak_image[0], peak_ref_image[1] - peak_image[1]
 
     # Using correlation of the two images
@@ -309,3 +309,7 @@ def _adapt_max_coordinate(index):
         return None
     else:
         return - index
+
+
+def peak_index(array):
+    return np.unravel_index(np.argmax(array, axis=None), array.shape)

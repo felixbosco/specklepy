@@ -180,36 +180,33 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
                                           expected=str(cube.shape))
 
     # Compute shifts
-    peak_indizes = np.zeros((cube.shape[0], 2), dtype=int)
-    for index, frame in enumerate(cube):
+    peak_indexes = np.zeros((cube.shape[0], 2), dtype=int)
+    for f, frame in enumerate(cube):
         if box is not None:
             frame = box(frame)
         if mask is not None:
             frame = np.ma.masked_array(frame, mask=mask).filled(0)
-        peak_indizes[index] = np.array(np.unravel_index(np.argmax(frame, axis=None), frame.shape), dtype=int)
+        peak_indexes[f] = np.array(alignment.peak_index(frame), dtype=int)
 
-    # Compute shifts from indizes
-    peak_indizes = peak_indizes.transpose()
-    xmean, ymean = np.mean(np.array(peak_indizes), axis=1)
-    xmean = int(xmean)
-    ymean = int(ymean)
-    shifts = np.array([xmean - peak_indizes[0], ymean - peak_indizes[1]])
+    # Compute shifts from indexes
+    peak_indexes = peak_indexes.transpose()
+    mean_index = np.mean(np.array(peak_indexes), axis=1)
+    shifts = np.array([int(mean_index[0]) - peak_indexes[0], int(mean_index[1]) - peak_indexes[1]])
     shifts = shifts.transpose()
 
     # Shift frames and add to coadded
     coadded = np.zeros(cube[0].shape)
     pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False,
                                                                return_reference_image_pad_vector=True)
-    for index, frame in enumerate(cube):
-        coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
-                                       reference_image_pad_vector=ref_pad_vector)
+    for f, frame in enumerate(cube):
+        coadded += alignment.pad_array(frame, pad_vectors[f], mode='same', reference_image_pad_vector=ref_pad_vector)
 
     # Coadd variance cube (if not an image itself)
     if var_cube is not None:
         if var_cube.ndim == 3:
             var_coadded = np.zeros(coadded.shape)
-            for index, frame in enumerate(var_cube):
-                var_coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
+            for f, frame in enumerate(var_cube):
+                var_coadded += alignment.pad_array(frame, pad_vectors[f], mode='same',
                                                    reference_image_pad_vector=ref_pad_vector)
         elif var_cube.ndim == 2:
             var_coadded = var_cube
