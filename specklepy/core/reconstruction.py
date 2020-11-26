@@ -179,13 +179,13 @@ class Reconstruction(object):
 
         else:
             # Estimate relative shifts
-            self.shifts = alignment.get_shifts(files=self.long_exp_files, reference_file=self.reference_index,
-                                               lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
-                                               debug=self.debug)
+            self.shifts = alignment.estimate_shifts(files=self.long_exp_files, reference_file=self.reference_index,
+                                                    lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
+                                                    debug=self.debug)
 
             # Derive corresponding padding vectors
             self.pad_vectors, self.reference_pad_vector = \
-                alignment.get_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
+                alignment.derive_pad_vectors(shifts=self.shifts, cube_mode=False, return_reference_image_pad_vector=True)
 
     def initialize_image(self):
         """Initialize the reconstruction image."""

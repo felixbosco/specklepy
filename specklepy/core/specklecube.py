@@ -198,8 +198,8 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
 
     # Shift frames and add to coadded
     coadded = np.zeros(cube[0].shape)
-    pad_vectors, ref_pad_vector = alignment.get_pad_vectors(shifts, cube_mode=False,
-                                                            return_reference_image_pad_vector=True)
+    pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False,
+                                                               return_reference_image_pad_vector=True)
     for index, frame in enumerate(cube):
         coadded += alignment.pad_array(frame, pad_vectors[index], mode='same',
                                        reference_image_pad_vector=ref_pad_vector)

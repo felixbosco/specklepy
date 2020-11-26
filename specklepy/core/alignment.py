@@ -8,8 +8,8 @@ from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
 
 
-def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, in_dir=None,
-               debug=False):
+def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False, in_dir=None,
+                    debug=False):
     """Computes the the relative shift of data cubes relative to a reference
     image.
 
@@ -101,8 +101,8 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
                 image = fits.getdata(os.path.join(in_dir, file))
                 if image.ndim == 3:
                     image = np.sum(image, axis=0)
-                shift = get_shift(image, reference_image=f_reference_image, is_fourier_transformed=True, mode=mode,
-                                  debug=debug)
+                shift = estimate_shift(image, reference_image=f_reference_image, is_fourier_transformed=True, mode=mode,
+                                       debug=debug)
             shifts.append(shift)
             logger.info(f"Identified a shift of {shift} for file {file}")
         logger.info(f"Identified the following shifts:\n\t{shifts}")
@@ -113,7 +113,7 @@ def get_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, r
         return shifts
 
 
-def get_shift(image, reference_image=None, is_fourier_transformed=False, mode='correlation', debug=False):
+def estimate_shift(image, reference_image=None, is_fourier_transformed=False, mode='correlation', debug=False):
     """Estimate the shift between an image and a reference image.
 
     Estimate the relative shift between an image and a reference image by means of a 2D correlation
@@ -184,7 +184,7 @@ def get_shift(image, reference_image=None, is_fourier_transformed=False, mode='c
         return shift
 
 
-def get_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=False):
+def derive_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=False):
     """Computes padding vectors from the relative shifts between files.
 
     Args:
