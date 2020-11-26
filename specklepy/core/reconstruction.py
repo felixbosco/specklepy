@@ -168,7 +168,8 @@ class Reconstruction(object):
             self.integration_method = integration_method
 
         # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
-        self.long_exp_files = self.create_long_exposures()
+        if self.long_exp_files is None:
+            self.long_exp_files = self.create_long_exposures()
 
         # Save time if only one cube is provided
         if self.single_cube_mode:
