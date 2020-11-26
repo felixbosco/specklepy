@@ -227,7 +227,8 @@ class MasterFlat(object):
 
                 # Store the mask
                 if 'MASK' in hdu_list:
-                    hdu_list['MASK'] = np.logical_or(hdu_list['MASK'], mask)
+                    hdu_list['MASK'].data = np.logical_or(hdu_list['MASK'].data.astype(bool),
+                                                          sub_window(gpm)).astype(np.int16)
                 else:
                     hdu_list.append(fits.ImageHDU(data=mask))
 
