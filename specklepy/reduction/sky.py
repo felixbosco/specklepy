@@ -151,47 +151,48 @@ def subtract_sky_background(in_files, out_files=None, method='scalar', source='s
 def subtract_scalar_background(files, params, prefix=None, debug=False):
     """Estimate and subtract a scalar background."""
     # TODO: Implement propagation of masks
+    raise DeprecationWarning("subtract_scalar_background is based on an outdated data model and is thus deprecated!")
 
-    if not isinstance(files, (list, np.ndarray)):
-        raise SpecklepyTypeError('substract_scalar_background', argtype=type(files), argname='files', expected='list')
-    else:
-        if len(files) == 0:
-            raise RuntimeError("Sky subtraction received an empty list of files!")
-
-    logger.info("Estimating scalar background and subtract...")
-    for file_index, file in enumerate(files):
-
-        image, header = fits.getdata(os.path.join(params.paths.filePath, file), header=True)
-
-        # Update header for and initialize the outfile
-        header.set('PIPELINE', 'SPECKLEPY')
-        header.set('SKYCORR', str(datetime.now()))
-        corrected_file = prefix + file
-        corrected_file = os.path.join(params.paths.filePath, corrected_file)
-        outfile = Outfile(filename=corrected_file, header=header, shape=image.shape)
-
-        # Estimate scalar background and uncertainties, and subtract
-        if image.ndim == 2:
-            mean, median, std = sigma_clipped_stats(image, sigma=params.sky.backgroundSigmaClip)
-            outfile.data = image - mean
-            image_var = np.ones(image.shape) * np.square(std)
-            outfile.new_extension(name='VAR', data=image_var)
-        elif image.ndim == 3:
-            means, medians, stds = sigma_clipped_stats(image, sigma=params.sky.backgroundSigmaClip, axis=(1, 2))
-            logger.info(f"Sigma clipped stats:\t{np.mean(means):.2f} +- {np.mean(stds):.2f}")
-            outfile.new_extension(name='VAR', data=np.zeros(image.shape))
-            tmp_frame = np.ones(image[0].shape)
-
-            for frame_index, frame in enumerate(image):
-                print(f"\r\tUpdating frame {frame_index+1:3}...", end='')
-                outfile.update_frame(frame_index=frame_index, data=np.subtract(frame, means[frame_index]))
-                outfile.update_frame(frame_index=frame_index, data=tmp_frame * np.square(stds[frame_index]),
-                                     extension='VAR')
-            print()
-        else:
-            raise RuntimeError(f"Images are supposed to have 2 or 3 dimensions but this one has {image.ndim}!")
-
-    logger.info("Scalar background subtraction complete!")
+    # if not isinstance(files, (list, np.ndarray)):
+    #     raise SpecklepyTypeError('substract_scalar_background', argtype=type(files), argname='files', expected='list')
+    # else:
+    #     if len(files) == 0:
+    #         raise RuntimeError("Sky subtraction received an empty list of files!")
+    #
+    # logger.info("Estimating scalar background and subtract...")
+    # for file_index, file in enumerate(files):
+    #
+    #     image, header = fits.getdata(os.path.join(params.paths.filePath, file), header=True)
+    #
+    #     # Update header for and initialize the outfile
+    #     header.set('PIPELINE', 'SPECKLEPY')
+    #     header.set('SKYCORR', str(datetime.now()))
+    #     corrected_file = prefix + file
+    #     corrected_file = os.path.join(params.paths.filePath, corrected_file)
+    #     outfile = Outfile(filename=corrected_file, header=header, shape=image.shape)
+    #
+    #     # Estimate scalar background and uncertainties, and subtract
+    #     if image.ndim == 2:
+    #         mean, median, std = sigma_clipped_stats(image, sigma=params.sky.backgroundSigmaClip)
+    #         outfile.data = image - mean
+    #         image_var = np.ones(image.shape) * np.square(std)
+    #         outfile.new_extension(name='VAR', data=image_var)
+    #     elif image.ndim == 3:
+    #         means, medians, stds = sigma_clipped_stats(image, sigma=params.sky.backgroundSigmaClip, axis=(1, 2))
+    #         logger.info(f"Sigma clipped stats:\t{np.mean(means):.2f} +- {np.mean(stds):.2f}")
+    #         outfile.new_extension(name='VAR', data=np.zeros(image.shape))
+    #         tmp_frame = np.ones(image[0].shape)
+    #
+    #         for frame_index, frame in enumerate(image):
+    #             print(f"\r\tUpdating frame {frame_index+1:3}...", end='')
+    #             outfile.update_frame(frame_index=frame_index, data=np.subtract(frame, means[frame_index]))
+    #             outfile.update_frame(frame_index=frame_index, data=tmp_frame * np.square(stds[frame_index]),
+    #                                  extension='VAR')
+    #         print()
+    #     else:
+    #         raise RuntimeError(f"Images are supposed to have 2 or 3 dimensions but this one has {image.ndim}!")
+    #
+    # logger.info("Scalar background subtraction complete!")
 
 
 def estimate_sky_background(file, method='scalar', mask_sources=True, path=None):
