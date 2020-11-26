@@ -214,7 +214,7 @@ class MasterFlat(object):
                         # Combine variance maps of the cube and the master flat
                         # TODO double check the variance propagation formula
                         # out_var = np.multiply(np.square(np.divide(1, np.square(master_flat))), master_flat_var)
-                        out_var = np.add(master_flat_var, cube_var)
+                        out_var = np.add(sub_window(master_flat_var), cube_var)
                         hdu_list['VAR'].data = out_var
                 else:
                     # TODO: Implement a measure for the cube variance
@@ -223,14 +223,14 @@ class MasterFlat(object):
                         pass
                     else:
                         # Use the variance map of the master flat
-                        hdu_list.append(fits.ImageHDU(name='VAR', data=master_flat_var))
+                        hdu_list.append(fits.ImageHDU(name='VAR', data=sub_window(master_flat_var)))
 
                 # Store the mask
                 if 'MASK' in hdu_list:
                     hdu_list['MASK'].data = np.logical_or(hdu_list['MASK'].data.astype(bool),
                                                           sub_window(gpm)).astype(np.int16)
                 else:
-                    hdu_list.append(fits.ImageHDU(data=mask, name='MASK'))
+                    hdu_list.append(fits.ImageHDU(data=sub_window(mask), name='MASK'))
 
                 # Update FITS header and store updates
                 hdu_list[0].header.set('FLATCORR', str(datetime.now()))
