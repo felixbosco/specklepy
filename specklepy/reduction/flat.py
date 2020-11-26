@@ -230,7 +230,7 @@ class MasterFlat(object):
                     hdu_list['MASK'].data = np.logical_or(hdu_list['MASK'].data.astype(bool),
                                                           sub_window(gpm)).astype(np.int16)
                 else:
-                    hdu_list.append(fits.ImageHDU(data=mask))
+                    hdu_list.append(fits.ImageHDU(data=mask, name='MASK'))
 
                 # Update FITS header and store updates
                 hdu_list[0].header.set('FLATCORR', str(datetime.now()))
