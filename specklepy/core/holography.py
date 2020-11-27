@@ -85,16 +85,17 @@ def holography(params, mode='same', debug=False):
     # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
+        # (v) Select reference stars
         extract_sources(image=image,
                         fwhm=params['STARFINDER']['starfinderFwhm'],
                         noise_threshold=params['STARFINDER']['noiseThreshold'],
                         background_subtraction=True,
                         write_to=params['PATHS']['allStarsFile'],
-                        star_finder='DAO', debug=debug)
+                        star_finder='DAO', select=params['PATHS']['refSourceFile'], debug=debug)
 
-        # (v) Select reference stars
-        print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
-        input("\tWhen you are done, hit a ENTER.")
+
+        # print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
+        # input("\tWhen you are done, hit a ENTER.")
 
         # (vi) PSF extraction
         psf_stars = ReferenceStars(psf_radius=params['PSFEXTRACTION']['psfRadius'],
