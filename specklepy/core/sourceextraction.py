@@ -68,8 +68,8 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
     # Reset parameters if requested
     if image_var is not None:
         if isinstance(image_var, str):
-            logger.warning(f"'image_var' was provided as str-type. Interpreting as the name of a FITS extension containing"
-                        f" the image variance.")
+            logger.warning(f"'image_var' was provided as str-type. Interpreting as the name of a FITS extension "
+                           f"containing the image variance.")
             logger.info(f"Reading data from {extractor.image.filename!r} [{image_var}]")
             image_var = fits.getdata(extractor.image.filename, image_var)
             image_var = np.sqrt(np.mean(image_var))
