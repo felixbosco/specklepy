@@ -3,7 +3,6 @@ import numpy as np
 import os
 
 from astropy.io import fits
-from astropy.table import Table
 from astropy.stats import sigma_clipped_stats
 
 from photutils import DAOStarFinder, IRAFStarFinder
