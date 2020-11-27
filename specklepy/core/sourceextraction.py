@@ -167,6 +167,14 @@ class SourceExtractor(object):
     def threshold(self):
         return self.sigma * self.image.stddev
 
+    @property
+    def sky_bkg(self):
+        return self.image.sky_bkg
+
+    @sky_bkg.setter
+    def sky_bkg(self, value):
+        self.image.sky_bkg = value
+
     def initialize_image(self, source, extension=None, dtype=None):
         if isinstance(source, str):
             self.image = StarFinderImage.from_file(source, extension=extension)
