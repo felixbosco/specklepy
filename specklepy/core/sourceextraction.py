@@ -142,3 +142,119 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         return sources, selected
 
     return sources
+
+
+class SourceExtractor(object):
+
+    def __init__(self, fwhm, algorithm='DAO', sigma=5.0):
+
+        # Store input
+        self.fwhm = fwhm
+        self.sigma = sigma
+        self.algorithm = algorithm
+
+        # Initialize attributes
+        self.star_finder = None
+        self.image = None
+        self.sources = None
+
+    def __call__(self, source, extension=None, dtype=None):
+        self.initialize_image(source, extension=extension, dtype=dtype)
+        self.initialize_star_finder()
+        return self.find_sources()
+
+    @property
+    def threshold(self):
+        return self.sigma * self.image.stddev
+
+    def initialize_image(self, source, extension=None, dtype=None):
+        if isinstance(source, str):
+            self.image = StarFinderImage.from_file(source, extension=extension)
+        else:
+            self.image = StarFinderImage(source)
+
+        # Cast data type
+        if dtype is not None:
+            self.image.data = self.image.data.astype(save_eval(dtype))
+
+        # Initialize statistics
+        self.image.sigma_clipped_statistics()
+
+    def initialize_star_finder(self):
+
+        # Build parameter dictionary
+        params = {'fwhm': self.fwhm,'threshold': self.threshold, 'sky': self.image.sky_bkg}
+
+        # Type and value check on algorithm
+        if not isinstance(self.algorithm, str):
+            raise SpecklepyTypeError('extract_sources', argname='starfinder', argtype=type(self.algorithm),
+                                     expected='str')
+        if 'dao' in self.algorithm.lower():
+            self.star_finder = DAOStarFinder(**params)
+        elif 'iraf' in self.algorithm.lower():
+            self.star_finder = IRAFStarFinder(**params)
+        else:
+            raise SpecklepyValueError('extract_sources', argname='star_finder', argvalue=self.algorithm,
+                                      expected="'DAO' or 'IRAF")
+
+        return self.star_finder
+
+    def find_sources(self):
+        # Find stars
+        logger.info("Extracting sources...")
+        logger.debug(f"Extraction parameters:"
+                     f"\n\tFWHM = {self.fwhm}"
+                     f"\n\tThreshold = {self.threshold}"
+                     f"\n\tSky = {self.image.sky_bkg}")
+        sources = self.star_finder(self.image.data)
+
+        # Reformatting sources table
+        sources.sort('flux', reverse=True)
+        sources.rename_column('xcentroid', 'x')
+        sources.rename_column('ycentroid', 'y')
+        sources.keep_columns(['x', 'y', 'flux'])
+
+        # Add terminal output
+        logger.info(f"Extracted {len(sources)} sources")
+        logger.debug(f"\n{sources}")
+
+        # Store source table
+        self.sources = sources
+        return sources
+
+
+class StarFinderImage(object):
+
+    def __init__(self, image, filename=None):
+        self.data = image
+        self.filename = filename
+        self._stddev = None
+        self._sky_bkg = None
+
+    @property
+    def stddev(self):
+        if self._stddev is None:
+            self.sigma_clipped_statistics()
+        return self._stddev
+
+    @property
+    def sky_bkg(self):
+        if self._sky_bkg is None:
+            self.sigma_clipped_statistics()
+        return self._sky_bkg
+
+    @classmethod
+    def from_file(cls, filename, extension=None):
+        logger.info(f"Read FITS image from file {filename!r} [{str(extension)}]")
+        image = fits.getdata(filename, extension)
+        logger.debug(f"Data type of file input is {image.dtype}")
+        image = image.squeeze()
+        return cls(image=image, filename=filename)
+
+    def sigma_clipped_statistics(self, sigma=3.0):
+        mean, median, std = sigma_clipped_stats(data=self.data, sigma=sigma)
+        logger.info(f"Noise statistics for {self.filename!r}:"
+                    f"\n\tMean = {mean:.3}\n\tMedian = {median:.3}\n\tStdDev = {std:.3}")
+        self._sky_bkg = mean
+        self._stddev = std
+        return mean, std
