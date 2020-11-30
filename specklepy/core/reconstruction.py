@@ -154,7 +154,7 @@ class Reconstruction(object):
 
             # Store data to a new Outfile instance
             logger.info(f"Saving temporary reconstruction of cube {file!r} to {speckle_cube.default_save_path()!r}")
-            long_exposure_path = speckle_cube.store()
+            long_exposure_path = speckle_cube.write()
 
             # Add the recently created file to the list
             long_exposure_files.append(os.path.basename(long_exposure_path))

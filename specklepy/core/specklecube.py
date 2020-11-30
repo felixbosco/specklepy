@@ -107,7 +107,7 @@ class SpeckleCube(object):
         hdr = fits.getheader(os.path.join(self.in_dir, self.file_name))
         return hdr
 
-    def store(self, path=None):
+    def write(self, path=None):
         # TODO: implement using an OutFile instance here.
 
         # Stop if image is not computed yet
@@ -129,7 +129,10 @@ class SpeckleCube(object):
             hdu_list.append(var_hdu)
 
         # Store data to file
-        hdu_list.writeto(self.default_save_path(), overwrite=True)
+        try:
+            hdu_list.writeto(self.default_save_path(), overwrite=True)
+        except fits.verify.VerifyError:
+            pass
 
         # Return target path
         return self.default_save_path()
