@@ -163,8 +163,7 @@ class FileArchive(object):
 
         return table
 
-    @staticmethod
-    def gather_table_from_list(files, cards, dtypes, names=None, sort_by=None):
+    def gather_table_from_list(self, files, cards, dtypes, names=None, sort_by=None):
         """Gather file header information to fill the table
 
         Args:
@@ -195,10 +194,7 @@ class FileArchive(object):
             table = Table(names=['FILE']+names, dtype=[str]+dtypes)
 
         # Extract common path
-        if len(files) == 1:
-            common_path = os.path.dirname(files[0])
-        else:
-            common_path = os.path.commonpath(files)
+        common_path = self.common_path(files)
 
         # Read data from files
         for path in files:
@@ -243,6 +239,13 @@ class FileArchive(object):
             table.sort(sort_by)
 
         return table, common_path
+
+    @staticmethod
+    def common_path(files):
+        if len(files) == 1:
+            return os.path.dirname(files[0])
+        else:
+            return os.path.commonpath(files)
 
     def write_table(self, file_name):
         """Write the archive's table to a file `file_name`."""
