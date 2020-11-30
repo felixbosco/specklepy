@@ -109,6 +109,7 @@ def main():
             # params = config.read(args.parfile)
             # run.full_reduction(params, debug=args.debug)
             data_reduction = DataReduction.from_file(args.parfile)
+            data_reduction.run()
 
     elif args.command is 'ssa':
 
