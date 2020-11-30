@@ -212,7 +212,7 @@ class SourceExtractor(object):
         selected = self.cross_match(selected)
 
         # Save results
-        if save_to is not None:
+        if save_to is not None and len(selected) > 0:
             selected.write(save_to, format='ascii.fixed_width', overwrite=True)
         return selected
 
