@@ -119,14 +119,6 @@ class FileArchive(object):
     def files(self):
         return self.table['FILE'].data
 
-    @property
-    def setups(self):
-        return np.unique(self.table['SETUP'].data)
-
-    @property
-    def objects(self):
-        return np.unique(self.table['OBJECT'].data)
-
     @staticmethod
     def is_fits_file(filename):
         _, extension = os.path.splitext(filename)
@@ -154,7 +146,7 @@ class FileArchive(object):
                 table = Table.read(file, format='ascii.no_header')
         except:
             files = []
-            logger.info("Reading file names from input file {}.".format(file))
+            logger.info(f"Reading file names from input file {file!r}.")
             with open(file, 'r') as f:
                 for filename in f.readlines():
                     filename = filename.replace('\n', '')
@@ -201,7 +193,7 @@ class FileArchive(object):
             file = path.replace(common_path, '')
             file = file[1:] if file[0] == '/' else file
 
-            logger.info(f"Retrieving header information from file {file}")
+            logger.info(f"Retrieving header information from file {file!r}")
             hdr = fits.getheader(path)
             new_row = [file]
             for card in cards:
@@ -221,7 +213,7 @@ class FileArchive(object):
                         else:
                             new_row.append(value.upper())
                     elif card == 'NAXIS3':
-                        logger.warning(f"File {file} is missing header card '{card}'. Number of frames set to 1!")
+                        logger.warning(f"File {file!r} is missing header card {card!r}. Number of frames set to 1!")
                         new_row.append(1)
                     else:
                         # logger.info(f"Skipping file {file} due to at least one missing header card ({card}).")
@@ -249,8 +241,19 @@ class FileArchive(object):
 
     def write_table(self, file_name):
         """Write the archive's table to a file `file_name`."""
-        logger.info(f"Writing file information to {file_name}")
+        logger.info(f"Writing file information to {file_name!r}")
         self.table.write(file_name, format='ascii.fixed_width', overwrite=True)
+
+
+class ReductionFileArchive(FileArchive):
+
+    @property
+    def setups(self):
+        return np.unique(self.table['SETUP'].data)
+
+    @property
+    def objects(self):
+        return np.unique(self.table['OBJECT'].data)
 
     def filter(self, filter_dict, namekey='FILE', return_mask=False):
         """Filter the archive's table by the column properties.

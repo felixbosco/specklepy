@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 from specklepy.io import config
-from specklepy.io.filearchive import FileArchive
+from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
 from specklepy.reduction import flat, sky
 
@@ -115,7 +115,7 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None, recursi
         raise RuntimeError(f"Found no files in {path}!")
 
     # Initialize a file archive
-    raw_files = FileArchive(files, cards=cards, dtypes=dtypes, names=default_cards, sort_by=sort_by)
+    raw_files = ReductionFileArchive(files, cards=cards, dtypes=dtypes, names=default_cards, sort_by=sort_by)
     raw_files.identify_setups(['FILTER', 'EXPTIME'])
     raw_files.write_table(file_name=list_file)
 
@@ -162,7 +162,8 @@ def full_reduction(params, debug=False):
 
     # (0) Read file list table
     logger.info("Reading file list ...")
-    in_files = FileArchive(file_list=paths.get('fileList'), in_dir=paths.get('filePath'), out_dir=paths.get('outDir'))
+    in_files = ReductionFileArchive(file_list=paths.get('fileList'), in_dir=paths.get('filePath'),
+                                    out_dir=paths.get('outDir'))
     logger.info('\n' + str(in_files.table))
 
     # (1) Initialize directories and reduction files
