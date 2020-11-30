@@ -131,8 +131,12 @@ class SpeckleCube(object):
         # Store data to file
         try:
             hdu_list.writeto(self.default_save_path(), overwrite=True)
-        except fits.verify.VerifyError:
-            pass
+        except fits.verify.VerifyError as e:
+            # Something is weird in the FITS header, so reset
+            logger.error(e)
+            logger.error("Amend this and try again!")
+            embed()
+            hdu_list.writeto(self.default_save_path(), overwrite=True)
 
         # Return target path
         return self.default_save_path()
