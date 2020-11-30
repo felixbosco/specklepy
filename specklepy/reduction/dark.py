@@ -8,7 +8,7 @@ from specklepy.logging import logger
 
 class MasterDark(object):
 
-    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, new=True):
+    def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, new=True):
         self.files = file_list
         self.file_name = file_name
         self.file_path = file_path
@@ -22,6 +22,7 @@ class MasterDark(object):
 
     def combine(self):
         logger.info("Combining master dark frame...")
+        self.means = []
 
         # Iterate through files
         for file in self.files:
