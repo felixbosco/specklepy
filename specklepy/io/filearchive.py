@@ -53,13 +53,13 @@ class FileArchive(object):
             files.sort()
             if len(files) == 0:
                 sys.tracebacklimit = 0
-                raise FileNotFoundError("FileArchive did not find any file matching to{!r}.".format(file_list))
+                raise FileNotFoundError(f"FileArchive did not find any file matching to {file_list!r}.")
             else:
-                logger.info("FileArchive found {} file(s) matching to {!r}.".format(len(files), file_list))
+                logger.info(f"FileArchive found {len(files)} file(s) matching to {file_list!r}.")
 
             if len(files) == 1 and not self.is_fits_file(files[0]):
-                logger.info("Input file is not FITS type. FileArchive assumes that input file {!r} contains file "
-                            "names.".format(files[0]))
+                logger.info(f"Input file is not FITS type. FileArchive assumes that input file {files[0]!r} contains "
+                            f"file names.")
                 self.table = self.read_table_file(files[0])
             else:
                 self.table, self.in_dir = self.gather_table_from_list(files=files, **kwargs)
