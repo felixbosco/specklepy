@@ -103,6 +103,20 @@ class Reconstruction(object):
     def reference_file(self):
         return self.in_files[self.reference_index]
 
+    def assert_dirs(self, error=True):
+        for name, dir in zip(['in_dir', 'tmp_dir'], [self.in_dir, self.tmp_dir]):
+            # Check for None-types
+            if dir is None:
+                if error:
+                    raise ValueError(f"{name}-directory is not provided!")
+                else:
+                    continue
+
+            # Create directory if not existing yet
+            if not os.path.isdir(dir):
+                logger.info(f"Creating {name} {dir!r}")
+                os.makedirs(dir)
+
     def identify_reference_file(self, reference_file=None):
 
         # Initialize reference
