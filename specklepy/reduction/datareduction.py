@@ -54,6 +54,9 @@ class DataReduction(object):
             logger.debug(f"Making directory {self.paths.get('tmpDir')}")
             os.makedirs(self.paths.get('tmpDir'))
 
+    def set_up(self):
+        pass
+
     def run_post_correlation(self):
         pass
 
