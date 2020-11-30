@@ -12,6 +12,7 @@ from specklepy.logging import logger
 from specklepy.plotting.plot import Plot
 from specklepy.reduction import diff
 from specklepy.reduction import run
+from specklepy.reduction.datareduction import DataReduction
 from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
 from specklepy.utils.resolution import get_resolution_parameters
 from specklepy.gui.window import start
@@ -105,8 +106,9 @@ def main():
                       sort_by=args.sortby, recursive=args.recursive)
         # Else start reduction following the parameter file
         else:
-            params = config.read(args.parfile)
-            run.full_reduction(params, debug=args.debug)
+            # params = config.read(args.parfile)
+            # run.full_reduction(params, debug=args.debug)
+            data_reduction = DataReduction.from_file(args.parfile)
 
     elif args.command is 'ssa':
 
