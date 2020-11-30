@@ -12,6 +12,8 @@ class DataReduction(object):
         self.options = kwargs.get('OPTIONS')
 
     def run(self):
+        self.run_post_correlation()
+        self.run_dark_correction()
         self.initialize_directories()
         self.run_flat_fielding()
         self.run_linearization()
@@ -27,6 +29,12 @@ class DataReduction(object):
         if not os.path.isdir(self.paths.get('tmpDir')):
             logger.debug(f"Making directory {self.paths.get('tmpDir')}")
             os.makedirs(self.paths.get('tmpDir'))
+
+    def run_post_correlation(self):
+        pass
+
+    def run_dark_correction(self):
+        pass
 
     def run_flat_fielding(self):
         pass
