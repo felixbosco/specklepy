@@ -151,7 +151,7 @@ class SourceExtractor(object):
     def initialize_star_finder(self):
 
         # Build parameter dictionary
-        params = {'fwhm': self.fwhm,'threshold': self.threshold, 'sky': self.image.sky_bkg}
+        params = {'fwhm': self.fwhm,'threshold': self.threshold}#, 'sky': self.image.sky_bkg}
 
         # Type and value check on algorithm
         if not isinstance(self.algorithm, str):
@@ -174,7 +174,7 @@ class SourceExtractor(object):
                      f"\n\tFWHM = {self.fwhm}"
                      f"\n\tThreshold = {self.threshold}"
                      f"\n\tSky = {self.image.sky_bkg}")
-        sources = self.star_finder(self.image.data)
+        sources = self.star_finder(self.image.data - self.image.sky_bkg)
 
         # Reformatting sources table
         sources.sort('flux', reverse=True)
