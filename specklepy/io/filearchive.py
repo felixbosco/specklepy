@@ -195,7 +195,10 @@ class FileArchive(object):
             table = Table(names=['FILE']+names, dtype=[str]+dtypes)
 
         # Extract common path
-        common_path = os.path.commonpath(files)
+        if len(files) == 1:
+            common_path = os.path.dirname(files[0])
+        else:
+            common_path = os.path.commonpath(files)
 
         # Read data from files
         for path in files:
@@ -232,7 +235,10 @@ class FileArchive(object):
                 table.add_row(new_row)
 
         # Sort table entries by default properties and user request
-        table.sort('DATE')
+        try:
+            table.sort('DATE')
+        except ValueError:
+            pass  # 'DATE' is not a valid column in table
         if sort_by:
             table.sort(sort_by)
 
