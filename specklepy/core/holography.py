@@ -70,6 +70,7 @@ def holography(params, mode='same', debug=False):
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=params['PATHS']['outFile'],
                                     var_ext=params['OPTIONS']['varianceExtensionName'],
                                     box_indexes=params['OPTIONS']['box_indexes'], debug=debug)
+    reconstruction.assert_dirs()
 
     # (i-ii) Align cubes
     reconstruction.align_cubes()
