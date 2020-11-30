@@ -22,8 +22,8 @@ class DataReduction(object):
                 setattr(self, attr, kwargs.get(attr.upper()))
 
         # Initialize file archive
-        # self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
-        #                                   out_dir=self.paths.get('outDir'))
+        self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
+                                          out_dir=self.paths.get('outDir'))
 
     @classmethod
     def from_file(cls, file_name):
@@ -61,7 +61,7 @@ class DataReduction(object):
         pass
 
     def run_dark_correction(self):
-        pass
+        embed()
 
     def run_flat_fielding(self):
         pass
