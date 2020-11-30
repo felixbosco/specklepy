@@ -146,7 +146,7 @@ class StarFinderPlot(Plot):
 
     def add_apertures(self, positions, radius=10, axis=0):
         apertures = CircularAperture(positions, r=radius)
-        aperture_style = {'color': 'red', 'lw': 4}
+        aperture_style = {'color': 'tab:orange', 'lw': 4}
         apertures.plot(axes=self.axes[axis], **aperture_style)
 
     def select_apertures(self, axis=0, marker_size=1):
