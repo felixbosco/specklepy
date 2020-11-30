@@ -1,20 +1,39 @@
+from IPython import embed
 import os
 
+from specklepy.io.config import read
 from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
 
 
 class DataReduction(object):
 
-    def __init__(self, **kwargs):
-        self.paths = kwargs.get('PATHS')
-        self.flat_fielding = kwargs.get('FLAT')
-        self.sky_subtraction = kwargs.get('SKY')
-        self.options = kwargs.get('OPTIONS')
+    config_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../config/reduction.cfg'))
+
+    def __init__(self, paths=None, dark=None, flat=None, sky=None, options=None, **kwargs):
+        self.paths = paths
+        self.dark = dark
+        self.flat = flat
+        self.sky = sky
+        self.options = options
+        for attr in ['paths', 'dark', 'flat', 'sky', 'options']:
+            if getattr(self, attr) is None:
+                logger.debug(f"Transforming parameters from section {attr.upper()!r} in the config file to {attr!r}...")
+                setattr(self, attr, kwargs.get(attr.upper()))
 
         # Initialize file archive
-        self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
-                                          out_dir=self.paths.get('outDir'))
+        # self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
+        #                                   out_dir=self.paths.get('outDir'))
+
+    @classmethod
+    def from_file(cls, file_name):
+        logger.info(f"Configuring data reduction from config file {cls.config_file!r}")
+        config = read(par_file=cls.config_file)
+        logger.info(f"Updating data reduction configuration from parameter file {file_name!r}")
+        params = read(par_file=file_name)
+        for section in params:
+            config[section].update(**params[section])
+        return cls(**config)
 
     def run(self):
         self.run_post_correlation()
