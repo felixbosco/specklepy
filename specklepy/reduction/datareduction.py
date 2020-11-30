@@ -1,5 +1,6 @@
 import os
 
+from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
 
 
@@ -10,6 +11,10 @@ class DataReduction(object):
         self.flat_fielding = kwargs.get('FLAT')
         self.sky_subtraction = kwargs.get('SKY')
         self.options = kwargs.get('OPTIONS')
+
+        # Initialize file archive
+        self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
+                                          out_dir=self.paths.get('outDir'))
 
     def run(self):
         self.run_post_correlation()
