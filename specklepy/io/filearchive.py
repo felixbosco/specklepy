@@ -428,10 +428,10 @@ class ReductionFileArchive(FileArchive):
         """Copy the science data cubes into the stored out directory.
 
         Args:
+            index (int):
+                Index of the file to be initialized in the list of `self.source_files`.
             prefix (str, optional):
                 File prefix for output files.
-            return_table_mask (bool, optional):
-                Set `True` for returning a mask `input_file in product_files`.
 
         Returns:
             product_files (list):
