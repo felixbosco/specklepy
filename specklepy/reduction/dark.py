@@ -8,6 +8,8 @@ from specklepy.logging import logger
 
 class MasterDark(object):
 
+    extensions = {'variance': 'VAR', 'mask': 'MASK'}
+
     def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, new=True):
         self.files = file_list
         self.file_name = file_name
@@ -49,5 +51,27 @@ class MasterDark(object):
         else:
             np.logical_or(self.mask, new_mask)
 
-    def write(self):
-        pass
+    def write(self, overwrite=True):
+
+        # Build primary HDU
+        header = fits.Header()
+        for index, file in enumerate(self.files):
+            header.set(f"HIERARCH SPECKLEPY SOURCE FILE{index:04} NAME", os.path.basename(file))
+        primary = fits.PrimaryHDU(data=self.image, header=header)
+
+        # Build HDU list
+        hdu_list = fits.HDUList([primary])
+
+        # Build variance HDU
+        if self.var is not None:
+            var_hdu = fits.ImageHDU(data=self.var, name=self.extensions.get('variance'))
+            hdu_list.append(var_hdu)
+
+        # Build mask HDU
+        if self.mask is not None:
+            mask_hdu = fits.ImageHDU(data=self.mask, name=self.extensions.get('mask'))
+            hdu_list.append(mask_hdu)
+
+        # Write HDU list to file
+        logger.info(f"Writing master dark frame to file {self.file_name!r}")
+        hdu_list.writeto(self.file_name, overwrite=overwrite)
