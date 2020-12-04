@@ -4,7 +4,7 @@ import os
 from astropy.io import fits
 
 from specklepy.logging import logger
-from specklepy.utils.stats import sigma_clip
+from astropy.stats import sigma_clipped_stats
 
 
 class MasterDark(object):
@@ -23,8 +23,10 @@ class MasterDark(object):
         self.var = None
         self.mask = None
 
-    def combine(self):
+    def combine(self, number_frames=None):
         logger.info("Combining master dark frame...")
+        if number_frames is not None:
+            logger.debug(f"Using only the first {number_frames} frames of each cube")
         self.means = []
 
         # Iterate through files
@@ -33,17 +35,15 @@ class MasterDark(object):
             path = os.path.join(self.file_path, file)
             with fits.open(path) as hdu_list:
                 cube = hdu_list[0].data
-                logger.info("Sigma clipping data cube...")
-                clipped = sigma_clip(cube=cube)
-                logger.info("Computing statistics of sigma-slipped data cube...")
-                mean = np.mean(clipped, axis=0)
-                var = np.var(clipped, axis=0)
+                logger.info("Computing sigma-slipped statistics of data cube...")
+                mean, _, std = sigma_clipped_stats(data=cube[:number_frames], axis=0)
 
                 self.means.append(mean)
-                self.combine_var(var)
-                self.combine_mask(var == 0)
+                self.combine_var(np.square(std))
+                self.combine_mask(std == 0)
 
         self.image = np.mean(np.array(self.means), axis=0)
+        self.var /= np.square(len(self.files))  # For correctly propagating the uncertainties
 
     def combine_var(self, new_var):
         if self.var is None:
@@ -55,7 +55,7 @@ class MasterDark(object):
         if self.mask is None:
             self.mask = new_mask
         else:
-            np.logical_or(self.mask, new_mask)
+            self.mask = np.logical_or(self.mask, new_mask)
 
     def write(self, overwrite=True):
 
