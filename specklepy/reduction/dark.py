@@ -75,7 +75,7 @@ class MasterDark(object):
 
         # Build mask HDU
         if self.mask is not None:
-            mask_hdu = fits.ImageHDU(data=self.mask, name=self.extensions.get('mask'))
+            mask_hdu = fits.ImageHDU(data=self.mask.astype(np.int16), name=self.extensions.get('mask'))
             hdu_list.append(mask_hdu)
 
         # Write HDU list to file
