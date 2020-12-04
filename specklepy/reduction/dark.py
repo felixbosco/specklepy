@@ -14,8 +14,8 @@ class MasterDark(object):
     def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, new=True):
         self.files = file_list
         self.file_name = file_name
-        self.file_path = file_path
-        self.out_dir = out_dir
+        self.file_path = file_path if file_path is not None else ''
+        self.out_dir = out_dir if out_dir is not None else ''
 
         # Initialize maps
         self.means = None
