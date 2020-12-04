@@ -4,6 +4,7 @@ import os
 from specklepy.io.config import read
 from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
+from specklepy.reduction import dark
 
 
 class DataReduction(object):
@@ -61,6 +62,8 @@ class DataReduction(object):
         pass
 
     def run_dark_correction(self):
+        darks = self.files.filter({'OBSTYPE': 'DARK'})
+        master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir, out_dir=self.paths.get('tmpDir'))
         embed()
 
     def run_flat_fielding(self):

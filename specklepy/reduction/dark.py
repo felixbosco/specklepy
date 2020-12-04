@@ -4,7 +4,7 @@ import os
 from astropy.io import fits
 
 from specklepy.logging import logger
-from specklepy.utils.stats import sigma_clipped_stats
+from specklepy.utils.stats import sigma_clip
 
 
 class MasterDark(object):
@@ -33,11 +33,15 @@ class MasterDark(object):
             path = os.path.join(self.file_path, file)
             with fits.open(path) as hdu_list:
                 cube = hdu_list[0].data
-                mean, _, std = sigma_clipped_stats(cube=cube)
+                logger.info("Sigma clipping data cube...")
+                clipped = sigma_clip(cube=cube)
+                logger.info("Computing statistics of sigma-slipped data cube...")
+                mean = np.mean(clipped, axis=0)
+                var = np.var(clipped, axis=0)
 
                 self.means.append(mean)
-                self.combine_var(np.square(std))
-                self.combine_mask(std == 0)
+                self.combine_var(var)
+                self.combine_mask(var == 0)
 
         self.image = np.mean(np.array(self.means), axis=0)
 
