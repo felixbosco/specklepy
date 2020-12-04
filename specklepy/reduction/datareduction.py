@@ -63,8 +63,10 @@ class DataReduction(object):
 
     def run_dark_correction(self):
         darks = self.files.filter({'OBSTYPE': 'DARK'})
-        master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir, out_dir=self.paths.get('tmpDir'))
-        embed()
+        master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir,
+                                      file_name=self.dark.get('masterDarkFile'), out_dir=self.paths.get('tmpDir'))
+        master_dark.combine(number_frames=self.dark.get('numberFrames'))
+        master_dark.write()
 
     def run_flat_fielding(self):
         pass
