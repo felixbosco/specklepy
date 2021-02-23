@@ -12,4 +12,5 @@
 /data/test/*fits
 /data/example/*dat
 /dist/*
+/venv/*
 .idea/*
