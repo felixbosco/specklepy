@@ -91,6 +91,8 @@ class GeneralArgParser(object):
         parser_aperture.add_argument('-n', '--normalize', type=str, default=None,
                                      help='Normalize the flux values, to either "peak", "aperture" or leave as `None` '
                                           'for not normalizing.')
+        parser_aperture.add_argument('-c', '--collapse', action='store_true',
+                                     help='Collapse a data cube along the third axis.')
         parser_aperture.add_argument('-o', '--out_file', type=str, default=None, help='Saves the results to this file.')
         parser_aperture.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 

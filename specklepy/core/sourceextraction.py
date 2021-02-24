@@ -14,7 +14,7 @@ from specklepy.utils import save_eval
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
-                    show=False, select=False, write_to=None, cast_dtype=None, debug=False):
+                    show=False, select=False, collapse=False, write_to=None, cast_dtype=None, debug=False):
     """Extract sources from an image with a StarFinder routine.
 
     Long description...
@@ -41,6 +41,8 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         select (bool, optional):
             Create a plot of the identified sources on the image, with the option of selecting apertures for future
             purposes. These are selected by clicking on the image.
+        collapse (bool, optional):
+            Collapse the a data cube along the third axis prior to analysis.
         write_to (str, optional):
             If provided as a str, the list of identified sources is saved to this file.
         cast_dtype (str, optional):
@@ -61,7 +63,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
 
     # Initialize the extractor
     extractor = SourceExtractor(algorithm=star_finder, fwhm=fwhm, sigma=noise_threshold)
-    extractor.initialize_image(image, extension=None, dtype=cast_dtype)
+    extractor.initialize_image(image, extension=None, dtype=cast_dtype, collapse=collapse)
     extractor.initialize_star_finder()
 
     # Reset parameters if requested
@@ -110,8 +112,8 @@ class SourceExtractor(object):
         self.image = None
         self.sources = None
 
-    def __call__(self, source, extension=None, dtype=None):
-        self.initialize_image(source, extension=extension, dtype=dtype)
+    def __call__(self, source, extension=None, dtype=None, collapse=False):
+        self.initialize_image(source, extension=extension, dtype=dtype, collapse=collapse)
         self.initialize_star_finder()
         return self.find_sources()
 
@@ -135,7 +137,7 @@ class SourceExtractor(object):
     def stddev(self, value):
         self.image.std_dev = value
 
-    def initialize_image(self, source, extension=None, dtype=None):
+    def initialize_image(self, source, extension=None, dtype=None, collapse=False):
         if isinstance(source, str):
             self.image = StarFinderImage.from_file(source, extension=extension)
         else:
@@ -144,6 +146,10 @@ class SourceExtractor(object):
         # Cast data type
         if dtype is not None:
             self.image.data = self.image.data.astype(save_eval(dtype))
+
+        # Collapse data cube
+        if collapse:
+            self.image.collapse_image()
 
         # Initialize statistics
         self.image.sigma_clipped_statistics()
@@ -276,6 +282,9 @@ class StarFinderImage(object):
         logger.debug(f"Data type of file input is {image.dtype}")
         image = image.squeeze()
         return cls(image=image, filename=filename)
+
+    def collapse_image(self):
+        self.data = np.sum(self.data, axis=0)
 
     def sigma_clipped_statistics(self, sigma=3.0):
         mean, median, std = sigma_clipped_stats(data=self.data, sigma=sigma)

@@ -70,7 +70,8 @@ def main():
         if args.out_file is None:
             args.out_file = 'default'
         extract_sources(image=args.file_name, noise_threshold=args.noise_threshold, fwhm=args.fwhm, image_var=args.var,
-                        show=args.show, write_to=args.out_file, cast_dtype=args.dtype, debug=args.debug)
+                        show=args.show, collapse=args.collapse, write_to=args.out_file, cast_dtype=args.dtype,
+                        debug=args.debug)
 
     elif args.command is 'generate':
 
