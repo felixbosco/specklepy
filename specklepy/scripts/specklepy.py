@@ -40,7 +40,7 @@ def main():
         start()
 
     # Execute the script of the corresponding command
-    if args.command is 'aperture':
+    if args.command == 'aperture':
         if args.mode == 'all':
             logger.info("Extract aperture statistics")
             analysis.aperture_analysis(file=args.file, index=args.index, radius=args.radius, out_file=args.out_file,
@@ -54,7 +54,7 @@ def main():
         else:
             logger.warning(f"Aperture mode {args.mode} not recognized!")
 
-    elif args.command is 'apodization':
+    elif args.command == 'apodization':
         get_resolution_parameters(wavelength=args.wavelength, diameter=args.diameter, pixel_scale=args.pixel_scale)
 
     elif args.command == 'diff':
@@ -66,20 +66,20 @@ def main():
         diff.differentiate_cube(files=args.files, method=method, exposure_time_prefix=args.keyword,
                                 extension=args.extension, dtype=args.dtype)
 
-    elif args.command is 'extract':
+    elif args.command == 'extract':
         if args.out_file is None:
             args.out_file = 'default'
         extract_sources(image=args.file_name, noise_threshold=args.noise_threshold, fwhm=args.fwhm, image_var=args.var,
                         show=args.show, collapse=args.collapse, write_to=args.out_file, cast_dtype=args.dtype,
                         debug=args.debug)
 
-    elif args.command is 'generate':
+    elif args.command == 'generate':
 
         # Read parameters from file and generate exposures
         target, telescope, detector, parameters = get_objects(args.parfile, debug=args.debug)
         generate_exposure(target=target, telescope=telescope, detector=detector, debug=args.debug, **parameters)
 
-    elif args.command is 'holography':
+    elif args.command == 'holography':
 
         # Read parameters from file and execute reconstruction
         defaults_file = os.path.join(os.path.dirname(__file__), '../config/holography.cfg')
@@ -99,7 +99,7 @@ def main():
         plot.save()
         plot.show()
 
-    elif args.command is 'reduce':
+    elif args.command == 'reduce':
 
         # In setup mode
         if args.setup:
@@ -112,7 +112,7 @@ def main():
             data_reduction = DataReduction.from_file(args.parfile)
             data_reduction.run()
 
-    elif args.command is 'ssa':
+    elif args.command == 'ssa':
 
         # Prepare path information and execute reconstruction
         if args.tmpdir is not None and not os.path.isdir(args.tmpdir):
