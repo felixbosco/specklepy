@@ -59,6 +59,8 @@ class GeneralArgParser(object):
                                      "the size of the first input image. In 'full' mode, every patch of the sky that "
                                      "is covered by at least one exposure will be part of the output image. In 'valid' "
                                      "mode, the output image will only cover the cross section of all exposures.")
+        parser_ssa.add_argument('-r', '--reference', type=str, default=None,
+                                help="Name of the reference file, serving as reference frame for frame alignment.")
         parser_ssa.add_argument('-b', '--box_indexes', type=int, nargs=4, default=None,
                                 help='Coordinates of a box constraining the search of the emission peak for frame '
                                      'alignment. Provide as a list [x_min, x_max, y_min, y_max].')

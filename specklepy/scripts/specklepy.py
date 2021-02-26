@@ -117,5 +117,5 @@ def main():
         # Prepare path information and execute reconstruction
         if args.tmpdir is not None and not os.path.isdir(args.tmpdir):
             os.mkdir(args.tmpdir)
-        ssa(files=args.files, mode=args.mode, tmp_dir=args.tmpdir, outfile=args.outfile, box_indexes=args.box_indexes,
-            integration_method=args.integration_method, debug=args.debug)
+        ssa(files=args.files, mode=args.mode, reference_file=args.reference, tmp_dir=args.tmpdir, outfile=args.outfile,
+            box_indexes=args.box_indexes, integration_method=args.integration_method, debug=args.debug)
