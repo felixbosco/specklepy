@@ -27,13 +27,16 @@ def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, debug=F
     out_table.add_column(Column(data=flux_err, name='FluxError'))
 
     # Power spectrum analysis
-    radius, mean, std = aperture.get_power_spectrum_profile()
-    spat_freq = aperture.spatial_frequency(pixel_scale=pixel_scale)
-    spat_wave = aperture.spatial_wavelength(pixel_scale=pixel_scale)
-    out_table.add_column(Column(data=spat_freq, name='SpatialFrequency'))
-    out_table.add_column(Column(data=spat_wave, name='SpatialWavelength'))
-    out_table.add_column(Column(data=mean, name='AmplitudeMean'))
-    out_table.add_column(Column(data=std, name='AmplitudeStd'))
+    try:
+        radius, mean, std = aperture.get_power_spectrum_profile()
+        spat_freq = aperture.spatial_frequency(pixel_scale=pixel_scale)
+        spat_wave = aperture.spatial_wavelength(pixel_scale=pixel_scale)
+        out_table.add_column(Column(data=spat_freq, name='SpatialFrequency'))
+        out_table.add_column(Column(data=spat_wave, name='SpatialWavelength'))
+        out_table.add_column(Column(data=mean, name='AmplitudeMean'))
+        out_table.add_column(Column(data=std, name='AmplitudeStd'))
+    except IndexError:
+        logger.error("Image data is not a cube. Skipping time evolution")
 
     # Store output table
     logger.info(f"Storing table to file {out_file!r}")
