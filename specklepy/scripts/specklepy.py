@@ -63,7 +63,7 @@ def main():
             method = 'linreg'
         else:
             method = 'direct'
-        diff.differentiate_cube(files=args.files, method=method, exposure_time_prefix=args.keyword,
+        diff.differentiate_cube(files=args.files, delta=args.delta, method=method, exposure_time_prefix=args.keyword,
                                 extension=args.extension, dtype=args.dtype)
 
     elif args.command == 'extract':
