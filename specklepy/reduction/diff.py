@@ -1,6 +1,7 @@
 from IPython import embed
 import numpy as np
 import os
+import sys
 from tqdm import trange
 
 from astropy.io import fits
@@ -182,7 +183,11 @@ class DiffCube(object):
         """
 
         # Differentiate the time stamp values to obtain time deltas
-        diff_times = np.diff(self.extract_time_stamps(header, common_header_prefix)[::delta])
+        try:
+            diff_times = np.diff(self.extract_time_stamps(header, common_header_prefix)[::delta])
+        except IOError as e:
+            sys.tracebacklimit = 0
+            raise e
 
         # Report statistics
         logger.info(f"Exposure time is: {np.mean(diff_times):.3f} ({np.std(diff_times):.2e})")
@@ -211,6 +216,10 @@ class DiffCube(object):
         for keyword, value in header.items():
             if common_header_prefix in keyword:
                 time_stamps.append(value)
+
+        # Check whether the time stamps have been found
+        if len(time_stamps) == 0:
+            raise IOError(f"Header is missing keywords matching the prefix {common_header_prefix!r}")
 
         # Remove the zero-th entry
         time_stamps.pop(0)
