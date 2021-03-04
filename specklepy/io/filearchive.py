@@ -278,14 +278,14 @@ class ReductionFileArchive(FileArchive):
             raise SpecklepyTypeError('FileArchive.filter', 'filter_dict', type(filter_dict), 'dict')
 
         mask = [True] * len(self.table[namekey])
-        for index, key in enumerate(filter_dict.keys()):
-            if isinstance(filter_dict[key], list):
+        for key, search_value in filter_dict.items():
+            if isinstance(search_value, list):
                 submask = [False] * len(self.table[namekey])
-                for correct in filter_dict[key]:
+                for correct in search_value:
                     submask |= (self.table[key] == correct)
                 mask &= submask
             else:
-                mask &= (filter_dict[key] == self.table[key])
+                mask &= (search_value == self.table[key])
 
         if return_mask:
             return self.table[namekey][mask].data, mask
