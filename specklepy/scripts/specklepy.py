@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 
 from specklepy.core import analysis
 from specklepy.core.holography import holography
@@ -27,7 +28,11 @@ def main():
     logger.debug("Parsing terminal input...")
     parser = GeneralArgParser()
     args = parser.parse_args()
-    logger.debug(f"Specklepy command: {args.command}")
+    try:
+        logger.debug(f"Specklepy command: {args.command}")
+    except AttributeError:
+        sys.tracebacklimit = 0
+        raise RuntimeError("No command was provided. Execute 'specklepy -h' for help!")
     logger.debug(f"Parsed terminal input:\n{args}")
 
     # Set logging level
