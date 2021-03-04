@@ -38,10 +38,13 @@ class DataReduction(object):
 
     def run(self):
         self.initialize_directories()
-        self.run_dark_correction()
-        self.run_flat_fielding()
-        self.run_linearization()
-        self.run_sky_subtraction()
+        if not self.dark.get('skip'):
+            self.run_dark_correction()
+        if not self.flat.get('skip'):
+            self.run_flat_fielding()
+        # self.run_linearization()
+        if not self.sky.get('skip'):
+            self.run_sky_subtraction()
 
         # Close reduction
         logger.info("Reduction finished!")
