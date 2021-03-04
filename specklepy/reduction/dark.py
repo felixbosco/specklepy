@@ -11,9 +11,9 @@ class MasterDark(object):
 
     extensions = {'variance': 'VAR', 'mask': 'MASK'}
 
-    def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, new=True):
+    def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, setup=None, new=True):
         self.files = file_list
-        self.file_name = file_name
+        self.file_name = self.insert_setup_to_file_name(file_name=file_name, setup=setup)
         self.file_path = file_path if file_path is not None else ''
         self.out_dir = out_dir if out_dir is not None else ''
 
@@ -22,6 +22,14 @@ class MasterDark(object):
         self.image = None
         self.var = None
         self.mask = None
+
+    @staticmethod
+    def insert_setup_to_file_name(file_name, setup=None):
+        if setup is None:
+            return file_name
+        else:
+            base, ext = os.path.splitext(file_name)
+            return f"{base}_{setup}{ext}"
 
     def combine(self, number_frames=None):
         logger.info("Combining master dark frame...")
