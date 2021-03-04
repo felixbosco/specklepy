@@ -15,11 +15,12 @@ def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, recente
         out_file = 'aperture_' + os.path.basename(file).replace(".fits", ".dat")
 
     # Initialize the aperture
-    aperture = Aperture(index, radius, data=file, crop=True)
+    aperture = Aperture(index, radius, data=file, crop=not recenter)
 
     # Recenter aperture on peak
     if recenter:
         aperture.center_on_peak()
+        aperture.crop()
 
     # Initialize the output table
     out_table = Table()
@@ -50,8 +51,8 @@ def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, recente
 def get_psf_1d(file, index, radius, out_file=None, normalize=None, debug=False):
 
     if isinstance(index, list):
-        if len(index) is 1:
-            if index[0] is 0:
+        if len(index) == 1:
+            if index[0] == 0:
                 logger.info(f"Estimate image intensity peak and use as aperture index")
                 image = fits.getdata(file)
                 index = np.unravel_index(np.argmax(image), image.shape)
@@ -93,8 +94,8 @@ def get_psf_1d(file, index, radius, out_file=None, normalize=None, debug=False):
 
 def get_psf_variation(file, index, radius, out_file=None, normalize=None, debug=False):
     if isinstance(index, list):
-        if len(index) is 1:
-            if index[0] is 0:
+        if len(index) == 1:
+            if index[0] == 0:
                 logger.info(f"Estimate image intensity peak and use as aperture index")
                 image = fits.getdata(file)
                 if image.ndim == 3:
