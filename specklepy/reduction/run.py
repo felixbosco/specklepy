@@ -131,7 +131,7 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None, recursi
     else:
         logger.info(f"Creating default reduction INI parameter file {par_file}")
         par_file_content = f"[PATHS]\nfilePath = {raw_files.in_dir}\nfileList = {list_file}\noutDir = Science/" \
-                           f"\ntmpDir = Master/\nprefix = r" \ 
+                           f"\ntmpDir = Master/\nprefix = r" \
                            f"\n\n[DARK]\nmasterDarkFile = MasterDark.fits" \
                            f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
                            f"\n\n[SKY]\nmethod = scalar"
