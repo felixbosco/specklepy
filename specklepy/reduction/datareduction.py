@@ -38,7 +38,6 @@ class DataReduction(object):
 
     def run(self):
         self.initialize_directories()
-        # self.run_post_correlation()
         self.run_dark_correction()
         self.run_flat_fielding()
         self.run_linearization()
@@ -58,15 +57,18 @@ class DataReduction(object):
     def set_up(self):
         pass
 
-    def run_post_correlation(self):
-        pass
-
     def run_dark_correction(self):
-        darks = self.files.filter({'OBSTYPE': 'DARK'})
-        master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir,
-                                      file_name=self.dark.get('masterDarkFile'), out_dir=self.paths.get('tmpDir'))
-        master_dark.combine(number_frames=self.dark.get('numberFrames'))
-        master_dark.write()
+
+        # Identify dark setups
+        dark_setups = self.files.get_dark_setups()
+
+        # Create a master dark for each setup
+        for setup in dark_setups:
+            darks = self.files.filter({'OBSTYPE': 'DARK'})
+            master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir, setup=setup,
+                                          file_name=self.dark.get('masterDarkFile'), out_dir=self.paths.get('tmpDir'))
+            master_dark.combine(number_frames=self.dark.get('numberFrames'))
+            master_dark.write()
 
     def run_flat_fielding(self):
         pass
