@@ -90,6 +90,8 @@ class GeneralArgParser(object):
                                      help='Radius of the aperture to analyse in pix.')
         parser_aperture.add_argument('-p', '--pixel_scale', type=float, default=1,
                                      help='Pixel scale of the data in units of arcsec.')
+        parser_aperture.add_argument('-c', '--centering', action='store_true',
+                                     help='Centers the aperture on the intensity peak.')
         parser_aperture.add_argument('-n', '--normalize', type=str, default=None,
                                      help='Normalize the flux values, to either "peak", "aperture" or leave as `None` '
                                           'for not normalizing.')

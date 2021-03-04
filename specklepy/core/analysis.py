@@ -9,13 +9,17 @@ from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
 
 
-def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, debug=False):
+def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, recenter=False, debug=False):
 
     if out_file is None:
         out_file = 'aperture_' + os.path.basename(file).replace(".fits", ".dat")
 
     # Initialize the aperture
     aperture = Aperture(index, radius, data=file, crop=True)
+
+    # Recenter aperture on peak
+    if recenter:
+        aperture.center_on_peak()
 
     # Initialize the output table
     out_table = Table()
