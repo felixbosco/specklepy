@@ -147,6 +147,9 @@ class DataReduction(object):
         with open(par_file, 'w+') as par_file:
             par_file.write(par_file_content)
 
+    def create_product_files(self):
+        self.files.create_product_files()
+
     def run_dark_correction(self):
 
         # Identify dark setups
