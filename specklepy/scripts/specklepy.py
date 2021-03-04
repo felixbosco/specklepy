@@ -108,8 +108,8 @@ def main():
 
         # In setup mode
         if args.setup:
-            run.setup(path=args.path, instrument=args.instrument, par_file=args.parfile, list_file=args.filelist,
-                      sort_by=args.sortby, recursive=args.recursive)
+            DataReduction.set_up(path=args.path, instrument=args.instrument, par_file=args.parfile,
+                                 list_file=args.filelist, sort_by=args.sortby, recursive=args.recursive)
         # Else start reduction following the parameter file
         else:
             # params = config.read(args.parfile)

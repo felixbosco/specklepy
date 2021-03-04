@@ -1,6 +1,7 @@
-from IPython import embed
+import glob
 import os
 
+from specklepy.io import config
 from specklepy.io.config import read
 from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
@@ -57,8 +58,93 @@ class DataReduction(object):
             logger.debug(f"Making directory {self.paths.get('tmpDir')}")
             os.makedirs(self.paths.get('tmpDir'))
 
-    def set_up(self):
-        pass
+    @classmethod
+    def set_up(cls, path, instrument, par_file=None, list_file=None, sort_by=None, recursive=False):
+        """Sets up the data reduction parameter file and file list.
+
+        Args:
+            path (str):
+                Path to the files.
+            instrument (str):
+                Name of the instrument that took the data. This must be covered by config/instruments.cfg.
+            par_file (str, optional):
+                Name of the output default parameter file for the reduction.
+            list_file (str):
+                Name of the output file that contains all the file names and header information.
+            sort_by (str, optional):
+                Header card that is used for the sorting of files.
+            recursive (bool, optional):
+                Search for files in a recursive way, that is all sub-directories.
+        """
+
+        # Defaults
+        default_cards = ['OBSTYPE', 'OBJECT', 'FILTER', 'EXPTIME', 'DIT', 'nFRAMES', 'DATE', 'SUBWIN']
+        dtypes = [str, str, str, float, float, int, str, str]
+        instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
+
+        # Read config
+        configs = config.read(instrument_config_file)
+        instrument_cards = configs[instrument.upper()]
+
+        # Double check whether all aliases are defined
+        cards = []
+        for card in default_cards:
+            try:
+                cards.append(instrument_cards[card])
+            except KeyError:
+                logger.info(
+                    f"Dropping header card {card} from setup identification, as there is no description in the config file."
+                    f"\nCheck out {instrument_config_file} for details.")
+                cards.append(None)
+        for card, dtype, header_card in zip(cards, dtypes, default_cards):
+            if card is None:
+                cards.remove(card)
+                dtypes.remove(dtype)
+                default_cards.remove(header_card)
+
+        # Apply fall back values
+        if path is None:
+            path = '.'
+        if list_file is None:
+            list_file = 'files.tab'
+        if par_file is None:
+            par_file = 'reduction.yaml'
+
+        # Find files
+        if '*' in path:
+            files = glob.glob(path, recursive=recursive)
+        else:
+            files = glob.glob(os.path.join(path, '*fits'), recursive=recursive)
+        if len(files):
+            logger.info(f"Found {len(files)} file(s)")
+            files.sort()
+        else:
+            logger.error(f"Found no files in {path}!")
+            raise RuntimeError(f"Found no files in {path}!")
+
+        # Initialize a file archive
+        raw_files = ReductionFileArchive(files, cards=cards, dtypes=dtypes, names=default_cards, sort_by=sort_by)
+        raw_files.identify_setups(['FILTER', 'EXPTIME'])
+        raw_files.write_table(file_name=list_file)
+
+        # Write dummy parameter file for the reduction
+        _, ext = os.path.splitext(par_file)
+        if 'yaml' in ext:
+            logger.info(f"Creating default reduction YAML parameter file {par_file}")
+            par_file_content = f"PATHS:\n  filePath: {raw_files.in_dir}\n  fileList: {list_file}\n  outDir: Science/" \
+                               f"\n  tmpDir: Master//\n  prefix: r" \
+                               f"\n\nDARK:\n  masterDarkFile: MasterDark.fits" \
+                               f"\n\nFLAT:\n  masterFlatFile: MasterFlat.fits" \
+                               f"\n\nSKY:\n  method: scalar"
+        else:
+            logger.info(f"Creating default reduction INI parameter file {par_file}")
+            par_file_content = f"[PATHS]\nfilePath = {raw_files.in_dir}\nfileList = {list_file}\noutDir = Science/" \
+                               f"\ntmpDir = Master/\nprefix = r" \
+                               f"\n\n[DARK]\nmasterDarkFile = MasterDark.fits" \
+                               f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
+                               f"\n\n[SKY]\nmethod = scalar"
+        with open(par_file, 'w+') as par_file:
+            par_file.write(par_file_content)
 
     def run_dark_correction(self):
 
