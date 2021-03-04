@@ -89,6 +89,7 @@ class DiffCube(object):
                 exptime = self.estimate_frame_exposure_times(hdu_list[self.extension].header, exposure_time_prefix,
                                                              delta=delta)
                 hdu_list[self.extension].header.set('FEXPTIME', np.around(exptime, 3), 'Frame exposure time (s)')
+            hdu_list[self.extension].header.set('FDELTA', delta, 'Index-delta of subsequently subtracted frames')
 
             # Overwriting data
             logger.info("Storing data to file...")
