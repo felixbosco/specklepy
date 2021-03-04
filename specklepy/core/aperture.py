@@ -88,7 +88,8 @@ class Aperture(object):
             self.crop()
 
         # Create a mask
-        mask = self.make_mask(mode=mask)
+        self.mask_mode = mask
+        mask = self.make_mask(mode=self.mask_mode)
         self.data = np.ma.masked_array(self.data, mask=mask)
 
         if vars is None:
@@ -187,6 +188,25 @@ class Aperture(object):
         """Returns the coordinates of the emission peak in the aperture."""
         tmp = self.get_integrated()
         return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
+
+    def center_on_peak(self):
+        # Make sure that the margins around the aperture are available
+        if self.cropped:
+            raise NotImplementedError("Centering cropped apertures is not implemented yet!")
+
+        # Estimate intensity peak
+        peak = self.get_aperture_peak()
+        logger.info(f"Re-centering the aperture from ({self.x0, self.y0}) to {peak}")
+
+        # Update properties
+        self.x0 = peak[0]
+        self.y0 = peak[1]
+        self.xoffset = 0
+        self.yoffset = 0
+
+        # Update mask
+        mask = self.make_mask(mode=self.mask_mode)
+        self.data = np.ma.masked_array(self.data, mask=mask)
 
     # def initialize_Fourier_file(self, infile, Fourier_file):
     #     self.infile = infile
