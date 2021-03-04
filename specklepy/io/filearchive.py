@@ -296,6 +296,15 @@ class ReductionFileArchive(FileArchive):
         is_dark = self.table['OBSTYPE'] == 'DARK'
         return np.unique(self.table['SETUP'][is_dark].data)
 
+    def add_dark_column(self):
+        dark_col = Column(name='DARK', dtype=object, length=len(self.table))
+        dark_setups = self.get_dark_setups()
+        for setup in dark_setups:
+            exp_times = self.filter({'OBSTYPE': 'DARK', 'SETUP': setup}, namekey='EXPTIME')
+            exp_time = np.unique(exp_times)[0]
+            dark_col[self.table['EXPTIME'] == exp_time] = setup
+        self.table.add_column(dark_col)
+
     def get_flats(self):
         return self.filter({'OBSTYPE': 'FLAT'})
 

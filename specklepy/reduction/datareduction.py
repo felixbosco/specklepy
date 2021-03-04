@@ -125,6 +125,7 @@ class DataReduction(object):
         # Initialize a file archive
         raw_files = ReductionFileArchive(files, cards=cards, dtypes=dtypes, names=default_cards, sort_by=sort_by)
         raw_files.identify_setups(['FILTER', 'EXPTIME'])
+        raw_files.add_dark_column()
         raw_files.write_table(file_name=list_file)
 
         # Write dummy parameter file for the reduction
