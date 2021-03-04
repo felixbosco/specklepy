@@ -37,9 +37,9 @@ class DataReduction(object):
         return cls(**config)
 
     def run(self):
-        self.run_post_correlation()
-        self.run_dark_correction()
         self.initialize_directories()
+        # self.run_post_correlation()
+        self.run_dark_correction()
         self.run_flat_fielding()
         self.run_linearization()
         self.run_sky_subtraction()
