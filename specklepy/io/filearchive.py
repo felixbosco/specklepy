@@ -292,6 +292,10 @@ class ReductionFileArchive(FileArchive):
 
         return self.table[namekey][mask].data
 
+    def get_dark_setups(self):
+        is_dark = self.table['OBSTYPE'] == 'DARK'
+        return np.unique(self.table['SETUP'][is_dark].data)
+
     def get_flats(self):
         return self.filter({'OBSTYPE': 'FLAT'})
 
