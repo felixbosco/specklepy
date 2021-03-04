@@ -87,5 +87,6 @@ class MasterDark(object):
             hdu_list.append(mask_hdu)
 
         # Write HDU list to file
-        logger.info(f"Writing master dark frame to file {self.file_name!r}")
-        hdu_list.writeto(self.file_name, overwrite=overwrite)
+        save_path = os.path.join(self.out_dir, self.file_name)
+        logger.info(f"Writing master dark frame to file {save_path!r}")
+        hdu_list.writeto(save_path, overwrite=overwrite)
