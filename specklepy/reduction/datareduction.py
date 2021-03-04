@@ -64,7 +64,7 @@ class DataReduction(object):
 
         # Create a master dark for each setup
         for setup in dark_setups:
-            darks = self.files.filter({'OBSTYPE': 'DARK'})
+            darks = self.files.filter({'OBSTYPE': 'DARK', 'SETUP': setup})
             master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir, setup=setup,
                                           file_name=self.dark.get('masterDarkFile'), out_dir=self.paths.get('tmpDir'))
             master_dark.combine(number_frames=self.dark.get('numberFrames'))
