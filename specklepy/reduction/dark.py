@@ -23,6 +23,27 @@ class MasterDark(object):
         self.var = None
         self.mask = None
 
+    @classmethod
+    def from_file(cls, file_path):
+        # Create object from path information
+        out_dir, file_name = os.path.split(file_path)
+        obj = cls(file_list=None, file_name=file_name, out_dir=out_dir, setup=None)
+
+        # Load data from file
+        obj.image = fits.getdata(obj.path)
+        try:
+            obj.var = fits.getdata(obj.path, obj.extensions.get('variance'))
+        except KeyError:
+            logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('variance')!r} "
+                         f"extension")
+        try:
+            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask'))
+        except KeyError:
+            logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
+                         f"extension")
+
+        return obj
+
     @property
     def path(self):
         return os.path.join(self.out_dir, self.file_name)
@@ -93,3 +114,6 @@ class MasterDark(object):
         # Write HDU list to file
         logger.info(f"Writing master dark frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
+
+    def subtract(self):
+        pass
