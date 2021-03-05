@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from specklepy.utils.combine import weighted_mean, time_difference
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 class TestCombine(unittest.TestCase):

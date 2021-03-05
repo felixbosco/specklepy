@@ -7,9 +7,12 @@ import sys
 from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Table
+from astropy.visualization import simple_norm
+
+from photutils import CircularAperture
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.plotting.plots import save_figure
+from specklepy.plotting.utils import save_figure
 
 
 class Plot(object):
@@ -39,7 +42,7 @@ class Plot(object):
         # Does file exist?
         if not os.path.exists(path=file_name):
             sys.tracebacklimit = 0
-            raise FileNotFoundError(f"File {file_name} not found!")
+            raise FileNotFoundError(f"File {file_name!r} not found!")
 
         # Set data defaults
         x_data = None
@@ -99,7 +102,8 @@ class Plot(object):
     def plot_image(self, axis=0, **colorbar_kwargs):
         if self.image_data is not None:
             ax = self.axes[axis]
-            img = ax.imshow(self.image_data, origin='lower')
+            norm = simple_norm(data=self.image_data, percent=99.)
+            img = ax.imshow(self.image_data, origin='lower', norm=norm)
 
             # Create color bar
             if 'pad' in colorbar_kwargs:
@@ -136,3 +140,35 @@ class Plot(object):
         else:
             root, ext = os.path.splitext(os.path.basename(input))
             return "plot_" + root + '.png'
+
+
+class StarFinderPlot(Plot):
+
+    def add_apertures(self, positions, radius=10, axis=0):
+        apertures = CircularAperture(positions, r=radius)
+        aperture_style = {'color': 'tab:orange', 'lw': 4}
+        apertures.plot(axes=self.axes[axis], **aperture_style)
+
+    def select_apertures(self, axis=0, marker_size=1):
+
+        # Initialize position list
+        positions = []
+
+        # Plot instructions
+        status = "Current number of selected stars = {}\n"
+        instruction = "Double click left mouse button to select \nand right mouse button to exit"
+        text = plt.text(0.5, 0.92, status.format(len(positions)) + instruction,
+                        transform=plt.gcf().transFigure, ha="center")
+
+        def onclick(event):
+            if event.button == 1 and event.dblclick:
+                positions.append([int(event.xdata), int(event.ydata)])
+                self.axes[axis].scatter(event.xdata, event.ydata, marker='+', color='red', s=marker_size)
+                text.set_text(status.format(len(positions)) + instruction)
+                self.figure.canvas.draw()
+            if event.button == 3 and event.dblclick:
+                plt.close()
+
+        self.figure.canvas.mpl_connect('button_press_event', onclick)
+        plt.show()
+        return positions

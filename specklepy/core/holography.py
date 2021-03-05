@@ -11,7 +11,7 @@ from specklepy.io.filearchive import FileArchive
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 def holography(params, mode='same', debug=False):
@@ -37,49 +37,56 @@ def holography(params, mode='same', debug=False):
     """
 
     logger.info(f"Starting holographic reconstruction...")
-    file_archive = FileArchive(file_list=params['PATHS']['inDir'], cards=[], dtypes=[])
+
+    # Extract individual parameter dictionaries
+    paths = params.get('PATHS')
+    apodization = params.get('APODIZATION')
+    psf_extraction = params.get('PSFEXTRACTION')
+    source_extraction = params.get('STARFINDER')
+
+    # Create file archive and export paths to be directly available
+    file_archive = FileArchive(file_list=paths.get('inDir'), cards=[], dtypes=[])
     in_files = file_archive.files
     in_dir = file_archive.in_dir
-    tmp_dir = params['PATHS']['tmpDir']
+    tmp_dir = paths.get('tmpDir')
 
-    # Input check
+    # Check input mode
     if mode not in ['same', 'full', 'valid']:
         raise SpecklepyValueError('holography()', argname='mode', argvalue=mode,
                                   expected="either 'same', 'full', or 'valid'")
 
-    if 'apodizationType' in params['APODIZATION']:
+    # Check apodization parameters
+    if 'apodizationType' in apodization:
         # Catch deprecated parameter name
         logger.warning("Parameter 'apodizationType' is deprecated. Use 'type' instead!")
-        params['APODIZATION']['type'] = params['APODIZATION']['apodizationType']
-    if 'apodizationWidth' in params['APODIZATION']:
+        apodization['type'] = apodization['apodizationType']
+    if 'apodizationWidth' in apodization:
         # Catch deprecated parameter name
         logger.warning("Parameter 'apodizationWidth' is deprecated. Use 'radius' instead!")
-        params['APODIZATION']['radius'] = params['APODIZATION']['apodizationWidth']
-    if params['APODIZATION']['type'] is None or params['APODIZATION']['type'].lower() not in ['gaussian', 'airy']:
-        logger.error(f"Apodization type has not been set or of wrong type ({params['APODIZATION']['type']})")
-    if params['APODIZATION']['radius'] is None or not isinstance(params['APODIZATION']['radius'], (int, float)):
-        logger.error(f"Apodization radius has not been set or of wrong type ({params['APODIZATION']['radius']})")
+        apodization['radius'] = apodization['apodizationWidth']
+    if apodization['type'] is None or apodization['type'].lower() not in ['gaussian', 'airy']:
+        logger.error(f"Apodization type has not been set or of wrong type ({apodization['type']})")
+    if apodization['radius'] is None or not isinstance(apodization['radius'], (int, float)):
+        logger.error(f"Apodization radius has not been set or of wrong type ({apodization['radius']})")
 
     # Initialize the outfile
-    out_file = ReconstructionFile(filename=params['PATHS']['outFile'], files=in_files,
+    out_file = ReconstructionFile(filename=paths.get('outFile'), files=in_files,
                                   cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
 
     # Initialize reconstruction
-    reconstruction = Reconstruction(in_files=in_files, mode=mode, alignment_method='ssa',
-                                    reference_image=params['PATHS']['alignmentReferenceFile'],
-                                    in_dir=in_dir, tmp_dir=tmp_dir, out_file=params['PATHS']['outFile'],
+    reconstruction = Reconstruction(in_files=in_files, mode=mode, integration_method='ssa',
+                                    reference_file=paths.get('alignmentReferenceFile'),
+                                    in_dir=in_dir, tmp_dir=tmp_dir, out_file=paths.get('outFile'),
                                     var_ext=params['OPTIONS']['varianceExtensionName'],
                                     box_indexes=params['OPTIONS']['box_indexes'], debug=debug)
+    reconstruction.assert_dirs()
 
     # (i-ii) Align cubes
-    # shifts = get_shifts(files=in_files, reference_file=params['PATHS']['alignmentReferenceFile'],
-    #                     lazy_mode=True, return_image_shape=False, in_dir=in_dir, debug=debug)
+    reconstruction.align_cubes()
     shifts = reconstruction.shifts
 
     # (iii) Compute SSA reconstruction
-    # image = ssa(in_files, mode=mode, outfile=out_file, in_dir=in_dir, tmp_dir=tmp_dir,
-    #             variance_extension_name=params['OPTIONS']['varianceExtensionName'])
-    image = reconstruction.coadd_long_exposures()
+    image = reconstruction.coadd_long_exposures(save=True)
     if isinstance(image, tuple):
         # SSA returned a reconstruction image and a variance image
         image, image_var = image
@@ -88,29 +95,28 @@ def holography(params, mode='same', debug=False):
     # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
-        extract_sources(image=image,
-                        fwhm=params['STARFINDER']['starfinderFwhm'],
-                        noise_threshold=params['STARFINDER']['noiseThreshold'],
-                        background_subtraction=True,
-                        write_to=params['PATHS']['allStarsFile'],
-                        star_finder='DAO', debug=debug)
-
         # (v) Select reference stars
-        print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
-        input("\tWhen you are done, hit a ENTER.")
+        extract_sources(image=image,
+                        fwhm=source_extraction.get('starfinderFwhm'),
+                        noise_threshold=source_extraction.get('noiseThreshold'),
+                        background_subtraction=True,
+                        write_to=paths.get('allStarsFile'),
+                        star_finder='DAO', select=paths.get('refSourceFile'), debug=debug)
+        # print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
+        # input("\tWhen you are done, hit a ENTER.")
 
         # (vi) PSF extraction
-        ref_stars = ReferenceStars(psf_radius=params['PSFEXTRACTION']['psfRadius'],
-                                   reference_source_file=params['PATHS']['refSourceFile'], in_files=in_files,
+        psf_stars = ReferenceStars(psf_radius=psf_extraction.get('psfRadius'),
+                                   reference_source_file=paths.get('refSourceFile'), in_files=in_files,
                                    save_dir=tmp_dir, in_dir=in_dir,
-                                   field_segmentation=params['PSFEXTRACTION']['fieldSegmentation'])
-        if params['PSFEXTRACTION']['mode'].lower() == 'epsf':
-            psf_files = ref_stars.extract_epsfs(file_shifts=shifts, debug=debug)
-        elif params['PSFEXTRACTION']['mode'].lower() in ['mean', 'median', 'weighted_mean']:
-            psf_files = ref_stars.extract_psfs(file_shifts=shifts, mode=params['PSFEXTRACTION']['mode'].lower(),
+                                   field_segmentation=psf_extraction.get('fieldSegmentation'))
+        if psf_extraction.get('mode').lower() == 'epsf':
+            psf_files = psf_stars.extract_epsfs(file_shifts=shifts, debug=debug)
+        elif psf_extraction.get('mode').lower() in ['mean', 'median', 'weighted_mean']:
+            psf_files = psf_stars.extract_psfs(file_shifts=shifts, mode=psf_extraction.get('mode').lower(),
                                                debug=debug)
         else:
-            raise RuntimeError(f"PSF extraction mode '{params['PSFEXTRACTION']['mode']}' is not understood!")
+            raise RuntimeError(f"PSF extraction mode '{psf_extraction.get('mode')}' is not understood!")
         logger.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
@@ -121,13 +127,13 @@ def holography(params, mode='same', debug=False):
                 if psf_noise_mask is None:
                     psf_noise_mask = get_noise_mask(hdu_list[0].data[0],
                                                     noise_reference_margin=
-                                                    params['PSFEXTRACTION']['noiseReferenceMargin'])
+                                                    psf_extraction.get('noiseReferenceMargin'))
                 for index in range(n_frames):
                     reference = np.ma.masked_array(hdu_list[0].data[index], mask=psf_noise_mask)
                     background = np.mean(reference)
                     noise = np.std(reference)
                     update = np.maximum(hdu_list[0].data[index] - background -
-                                        params['PSFEXTRACTION']['noiseThreshold'] * noise, 0.0)
+                                        psf_extraction.get('noiseThreshold') * noise, 0.0)
                     if np.sum(update) == 0.0:
                         raise ValueError("After background subtraction and noise thresholding, no signal is leftover. "
                                          "Please reduce the noiseThreshold!")
@@ -144,7 +150,7 @@ def holography(params, mode='same', debug=False):
         f_object.coadd_fft()
 
         # (x) Apodization
-        f_object.apodize(type=params['APODIZATION']['type'], radius=params['APODIZATION']['radius'])
+        f_object.apodize(type=apodization.get('type'), radius=apodization.get('radius'))
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
         image = f_object.ifft(total_flux=total_flux)
@@ -162,9 +168,9 @@ def holography(params, mode='same', debug=False):
             break
 
     # Repeat astrometry and photometry, i.e. StarFinder on final image
-    extract_sources(image=image, fwhm=params['STARFINDER']['starfinderFwhm'],
-                    noise_threshold=params['STARFINDER']['noiseThreshold'], background_subtraction=True,
-                    write_to=params['PATHS']['allStarsFile'], star_finder='DAO', debug=debug)
+    extract_sources(image=image, fwhm=source_extraction.get('starfinderFwhm'),
+                    noise_threshold=source_extraction.get('noiseThreshold'), background_subtraction=True,
+                    write_to=paths.get('allStarsFile'), star_finder='DAO', debug=debug)
 
     # Finally return the image
     return image

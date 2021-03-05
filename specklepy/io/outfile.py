@@ -5,12 +5,13 @@ from datetime import datetime
 
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
+from specklepy.utils.time import default_time_stamp
 
 
 class Outfile(object):
 
     def __init__(self, filename, path=None, data=None, shape=None, extensions=None, header=None, cards=None,
-                 timestamp=False, header_card_prefix=None, verbose=True):
+                 initialize=True, timestamp=False, header_card_prefix=None, verbose=True):
         """Instantiate a generic outfile.
 
         Args:
@@ -34,6 +35,8 @@ class Outfile(object):
                 Header that will be used to initialize the new Primary HDU. Default is None.
             cards (dict, optional):
                 Dictionary of cards that will be added to the fits header. Default is None.
+            initialize (bool, optional):
+                Set to `False` to suppress creating a new file.
             timestamp (bool, optional):
                 Set to True to automatically add a time stamp to the file name. Default is False.
             header_card_prefix (str, optional):
@@ -106,6 +109,11 @@ class Outfile(object):
         else:
             raise SpecklepyTypeError('Outfile', 'verbose', type(verbose), 'bool')
 
+        if initialize:
+            self.initialize_file()
+
+    def initialize_file(self, header=None, data=None):
+
         # Initialize primary HDU
         hdu = fits.PrimaryHDU(header=header)
         for key in self.cards:
@@ -142,10 +150,14 @@ class Outfile(object):
                     header = None
                 self.new_extension(name=name, data=data, header=header)
 
+    @classmethod
+    def from_file(cls, filename, path=None):
+        return cls(filename=filename, path=path, initialize=False)
+
     @staticmethod
     def time_stamp():
         """Return a time stamp str of format 'YYYYMMDD_HHMMSS'."""
-        return datetime.now().strftime('%Y%m%d_%H%M%S')
+        return default_time_stamp()
 
     @property
     def file_path(self):
@@ -165,7 +177,7 @@ class Outfile(object):
             hdu_list[0].header.set('UPDATED', str(datetime.now()))
             hdu_list.flush()
         if self.verbose:
-            logger.info(f"Updating data in {self.file_path}")
+            logger.info(f"Updating data in {self.file_path!r}")
 
     def __getitem__(self, extension):
         return fits.getdata(self.file_path, extension)  # [index]
@@ -220,3 +232,25 @@ class Outfile(object):
     def has_extension(self, ext_name):
         with fits.open(self.file_path) as hdu_list:
             return ext_name in hdu_list
+
+    @staticmethod
+    def extract_frame_shape(header):
+        number_axes = header.get('NAXIS')
+        if number_axes == 2 or number_axes == 3:
+            frame_shape = (header.get('NAXIS1'), header.get('NAXIS2'))
+        else:
+            raise NotImplementedError(f"Frame shape extraction is not defined for FITS cubes with {number_axes!r} "
+                                      f"axes!")
+        return frame_shape
+
+    @staticmethod
+    def extract_frame_number(header):
+        number_axes = header.get('NAXIS')
+        if number_axes == 2:
+            number_frames = 1
+        elif number_axes == 3:
+            number_frames = header.get('NAXIS3')
+        else:
+            raise NotImplementedError(f"Frame number extraction is not defined for FITS cubes with {number_axes!r} "
+                                      f"axes!")
+        return number_frames

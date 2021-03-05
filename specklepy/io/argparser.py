@@ -31,7 +31,7 @@ class GeneralArgParser(object):
         parser_generate.add_argument('parfile', type=str, help='Path to a parameter file.')
         parser_generate.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
-        # Parser for reduction
+        # Parser for data reduction
         parser_reduction = subparsers.add_parser('reduce', help='Data reduction.')
         parser_reduction.set_defaults(command='reduce')
         parser_reduction.add_argument('parfile', type=str,
@@ -45,6 +45,10 @@ class GeneralArgParser(object):
                                       help="Name of the file containing the file names (for setup mode only).")
         parser_reduction.add_argument('-s', '--sortby', type=str, default=None,
                                       help="Header card to sort the output table by (for setup mode only).")
+        parser_reduction.add_argument('-r', '--recursive', action='store_true',
+                                      help="Search for files recursively. Note that you should provide the path in "
+                                           "quotation marks and the '/**/' marker to indicate, where the recursion "
+                                           "should start.")
         parser_reduction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
         # Parser for SSA reconstruction
@@ -52,15 +56,21 @@ class GeneralArgParser(object):
         parser_ssa.set_defaults(command='ssa')
         parser_ssa.add_argument('files', nargs='+',
                                 help='Generic FITS file name or list of files to consider for the SSA reconstruction.')
+        parser_ssa.add_argument('-o', '--outfile', type=str, default='ssa.fits', help='Name of the output file.')
         parser_ssa.add_argument('-m', '--mode', type=str, default='same', choices=['same', 'full', 'valid'],
                                 help="The mode defines the final image size. In 'same' mode, the final image will have "
                                      "the size of the first input image. In 'full' mode, every patch of the sky that "
                                      "is covered by at least one exposure will be part of the output image. In 'valid' "
                                      "mode, the output image will only cover the cross section of all exposures.")
+        parser_ssa.add_argument('-r', '--reference', type=str, default=None,
+                                help="Name of the reference file, serving as reference frame for frame alignment.")
         parser_ssa.add_argument('-b', '--box_indexes', type=int, nargs=4, default=None,
                                 help='Coordinates of a box constraining the search of the emission peak for frame '
                                      'alignment. Provide as a list [x_min, x_max, y_min, y_max].')
-        parser_ssa.add_argument('-o', '--outfile', type=str, default='ssa.fits', help='Name of the output file.')
+        parser_ssa.add_argument('-c', '--collapse', dest='integration_method', action='store_const', const='collapse',
+                                default='ssa',
+                                help='Collapse the individual data cubes instead of using SSA. This option is useful '
+                                     'for very faint objects.')
         parser_ssa.add_argument('-t', '--tmpdir', type=str, default='tmp/', help='Path for saving temporary files.')
         parser_ssa.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
@@ -71,35 +81,27 @@ class GeneralArgParser(object):
         parser_holography.add_argument('parfile', type=str, help='Path to a parameter file.')
         parser_holography.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
-        # Parser for extracting 1D PSF profiles
-        # parser_psf_1d = subparsers.add_parser('psf1d', help='Extract 1D PSF profiles.')
-        # parser_psf_1d.set_defaults(command='psf1d')
-        # parser_psf_1d.add_argument('file', type=str, default=None, help='File name to analyse.')
-        # parser_psf_1d.add_argument('-i', '--index', nargs='+', type=int,
-        #                            help='Center index of the aperture to analyse. Provide this as "--index 123 456".')
-        # parser_psf_1d.add_argument('-r', '--radius', type=int, default=10,
-        #                            help='Radius of the aperture to analyse in pix.')
-        # parser_psf_1d.add_argument('-n', '--normalize', type=str, default=None,
-        #                            help='Normalize the flux values, to either "peak", "aperture" or leave as `None` for '
-        #                                 'not normalizing.')
-        # parser_psf_1d.add_argument('-o', '--out_file', type=str, default=None, help='Saves the results to this file.')
-        # parser_psf_1d.add_argument('-d', '--debug', action='store_true', help='Set to inspect intermediate results.')
-
         # Parser for aperture analysis
         parser_aperture = subparsers.add_parser('aperture', help='Aperture analysis in the image data.')
         parser_aperture.set_defaults(command='aperture')
-        parser_aperture.add_argument('mode', choices=['psf1d', 'variance'], help='Modes for the aperture analysis')
+        parser_aperture.add_argument('mode', choices=['psf1d', 'variance', 'all'], default='all',
+                                     help='Modes for the aperture analysis')
         parser_aperture.add_argument('file', type=str, default=None, help='File name to analyse.')
         parser_aperture.add_argument('-i', '--index', nargs='+', type=int,
-                                   help='Center index of the aperture to analyse. Provide this as "--index 123 456".')
+                                     help='Center index of the aperture to analyse. Provide this as "--index 123 456".')
         parser_aperture.add_argument('-r', '--radius', type=int, default=10,
-                                   help='Radius of the aperture to analyse in pix.')
+                                     help='Radius of the aperture to analyse in pix.')
+        parser_aperture.add_argument('-p', '--pixel_scale', type=float, default=1,
+                                     help='Pixel scale of the data in units of arcsec.')
+        parser_aperture.add_argument('-c', '--centering', action='store_true',
+                                     help='Centers the aperture on the intensity peak.')
         parser_aperture.add_argument('-n', '--normalize', type=str, default=None,
-                                   help='Normalize the flux values, to either "peak", "aperture" or leave as `None` for '
-                                        'not normalizing.')
+                                     help='Normalize the flux values, to either "peak", "aperture" or leave as `None` '
+                                          'for not normalizing.')
         parser_aperture.add_argument('-o', '--out_file', type=str, default=None, help='Saves the results to this file.')
         parser_aperture.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        # Parser for plotting
         parser_plot = subparsers.add_parser('plot', help='Plot data from an input file.')
         parser_plot.set_defaults(command='plot')
         parser_plot.add_argument('file', type=str, default=None, help='Name of a file with image or table data.')
@@ -111,7 +113,35 @@ class GeneralArgParser(object):
                                       "image width.")
         parser_plot.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
-        # Parser for
+        # Parser for inspecting FITS headers
+        parser_inspect = subparsers.add_parser('inspect', help='Inspect FITS headers and list attributes.')
+        parser_inspect.set_defaults(command='inspect')
+        parser_inspect.add_argument('files', type=str, default=None, nargs='+', help='List of FITS file names.')
+        parser_inspect.add_argument('-k', '--keywords', type=str, default=None, nargs='+',
+                                    help='List of FITS header keywords.')
+        parser_inspect.add_argument('-s', '--save', type=str, default=None,
+                                    help='Name of the output file containing the table.')
+        parser_inspect.add_argument('-r', '--recursive', action='store_true', help='Search for files recursively.')
+        parser_inspect.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+
+        # Parser for differentiating FITS cubes
+        parser_diff = subparsers.add_parser('diff', help='Differentiate cubes along time axis, for post-correlation.')
+        parser_diff.set_defaults(command='diff')
+        parser_diff.add_argument('files', type=str, default=None, nargs='+', help='List of FITS file names.')
+        parser_diff.add_argument('-d', '--delta', type=int, default=1,
+                                 help='Difference in frame number of differentiated frames. By default, every frame is '
+                                      'subtracted from the subsequent one. For creating longer exposures, however, you '
+                                      'can also set delta to larger values and subtract only every n-th frame. The '
+                                      'resulting data cube will be correspondingly smaller.')
+        parser_diff.add_argument('-k', '--keyword', type=str, default=None,
+                                 help='Common part of header keywords for the individual exposure time stamp.')
+        parser_diff.add_argument('-l', '--linear_regression', action='store_true',
+                                 help='Apply linear regression instead of straight forward differentiation.')
+        parser_diff.add_argument('-e', '--extension', type=str, default=None, help='Extension of the FITS file.')
+        parser_diff.add_argument('--dtype', type=str, default=None, help='Data type to cast the data to before diff.')
+        parser_diff.add_argument('--debug', action='store_true', help='show debugging information.')
+
+        # Parser for quick apodization computations
         parser_apodization = subparsers.add_parser('apodization', help='Compute the apodization function parameters.')
         parser_apodization.set_defaults(command='apodization')
         parser_apodization.add_argument('diameter', type=float,
@@ -122,6 +152,7 @@ class GeneralArgParser(object):
                                         help='pixel/ plate scale of the detector in units of mas')
         parser_apodization.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
+        # Parser for source extraction
         parser_extraction = subparsers.add_parser('extract', help='Extract sources from an image.')
         parser_extraction.set_defaults(command='extract')
         parser_extraction.add_argument('file_name', type=str, help='Name of the image file.')
@@ -130,8 +161,14 @@ class GeneralArgParser(object):
         parser_extraction.add_argument('-v', '--var', type=str, default=None,
                                        help='Value of the image variance or name of the FITS file extension containing '
                                             'the variance.')
+        parser_extraction.add_argument('-s', '--show', action='store_true', help='Show the identified stars.')
         parser_extraction.add_argument('-o', '--out_file', type=str, default=None,
                                        help='Name of the file to store the result in.')
+        parser_extraction.add_argument('--dtype', type=str, default=None,
+                                       help='Cast the data type of the input image to another type.')
+        parser_extraction.add_argument('-c', '--collapse', action='store_true',
+                                       help='Collapse a data cube along the third axis.')
+        parser_extraction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
     def parse_args(self, *args, **kwargs):
         """Parse command line arguments.

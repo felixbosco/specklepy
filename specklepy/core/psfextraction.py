@@ -11,7 +11,7 @@ from specklepy.logging import logger
 from specklepy.io.psffile import PSFFile
 from specklepy.io.table import read_table
 from specklepy.utils.combine import weighted_mean
-from specklepy.plotting.plots import imshow
+from specklepy.plotting.utils import imshow
 
 
 class ReferenceStars(object):
@@ -42,10 +42,7 @@ class ReferenceStars(object):
         self.star_table = read_table(reference_source_file, error=True)
         self.in_files = in_files
         self.save_dir = save_dir
-        if in_dir is None:
-            self.in_dir = ''
-        else:
-            self.in_dir = in_dir
+        self.in_dir = in_dir if in_dir is not None else ''
 
         if field_segmentation:
             example_image_shape = fits.getdata(self.in_files[0])[0].shape
@@ -63,6 +60,16 @@ class ReferenceStars(object):
     @property
     def box_size(self):
         return self.radius * 2 + 1
+
+    def frame_shape(self, oversampling=1):
+        return self.box_size * oversampling, self.box_size * oversampling
+
+    @property
+    def number_files(self):
+        return len(self.in_files)
+
+    def extract_frame_number(self, file):
+        return fits.getheader(os.path.join(self.in_dir, file)).get('NAXIS3')
 
     def init_apertures(self, filename, shift=None):
 
@@ -104,33 +111,33 @@ class ReferenceStars(object):
         elif mode == 'weighted_mean':
             func = weighted_mean
         else:
-            raise ValueError('ReferenceStars received unknown mode for extract method ({}).'.format(mode))
+            raise ValueError(f"ReferenceStars received unknown mode {mode!r} for extract method!")
+
+        if file_shifts is None:
+            file_shifts = [None] * self.number_files
 
         # Create a list of psf files and store it to params
         psf_files = []
 
         # Iterate over input files
-        for file_index, file in enumerate(self.in_files):
+        for file, shift in zip(self.in_files, file_shifts):
             # Initialize file by file
-            logger.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=(self.box_size, self.box_size),
-                               in_dir=self.in_dir, header_card_prefix="HIERARCH SPECKLEPY ")
+            logger.info(f"Extracting PSFs from file {file!r}")
+            psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=self.frame_shape(), in_dir=self.in_dir,
+                               header_card_prefix="HIERARCH SPECKLEPY ")
             psf_files.append(psf_file.file_path)
 
-            # Consider alignment of cubes when initializing the apertures, i.e.
-            # the position of the aperture in the shifted cube
-            if file_shifts is None:
-                apertures = self.init_apertures(file)
-            else:
-                apertures = self.init_apertures(file, shift=file_shifts[file_index])
+            # Consider alignment of cubes when initializing the apertures, i.e. the position of the aperture in the
+            # shifted cube
+            apertures = self.init_apertures(file, shift=shift)
 
             # Extract the number of frames in the FITS file from the header
-            frame_number = fits.getheader(os.path.join(self.in_dir, file))['NAXIS3']
+            frame_number = self.extract_frame_number(file)
 
             # Check apertures visually
             if debug:
                 for index, aperture in enumerate(apertures):
-                    imshow(aperture.get_integrated(), title="Inspect reference aperture {}".format(index + 1))
+                    imshow(aperture.get_integrated(), title=f"Inspect reference aperture {index + 1}")
 
             # Extract the PSF by combining the aperture frames in the desired mode
             for frame_index in trange(frame_number, desc="Extracting PSF frame"):
@@ -174,26 +181,27 @@ class ReferenceStars(object):
             psf_files (list):
                 List of file names where the PSFs are stored in.
         """
+
+        if file_shifts is None:
+            file_shifts = [None] * self.number_files
+
         # Create a list of psf files and store it to params
         psf_files = []
 
         # Iterate over input files
-        for file_index, file in enumerate(self.in_files):
+        for file, shift in zip(self.in_files, file_shifts):
             # Initialize file by file
-            logger.info("Extracting PSFs from file {}".format(file))
-            psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=(self.box_size, self.box_size),
-                               in_dir=self.in_dir, header_card_prefix="HIERARCH SPECKLEPY")
+            logger.info(f"Extracting PSFs from file {file!r}")
+            psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=self.frame_shape(), in_dir=self.in_dir,
+                               header_card_prefix="HIERARCH SPECKLEPY")
             psf_files.append(psf_file.filename)
 
-            # Consider alignment of cubes when initializing the apertures, i.e.
-            # the position of the aperture in the shifted cube
-            if file_shifts is None:
-                apertures = self.init_apertures(file)
-            else:
-                apertures = self.init_apertures(file, shift=file_shifts[file_index])
+            # Consider alignment of cubes when initializing the apertures, i.e. the position of the aperture in the
+            # shifted cube
+            apertures = self.init_apertures(file, shift=shift)
 
             # Extract the number of frames in the FITS file from the header
-            frame_number = fits.getheader(os.path.join(self.in_dir, file))['NAXIS3']
+            frame_number = self.extract_frame_number(file)
 
             # Extract the PSF by combining the aperture frames in the desired mode
             for frame_index in trange(frame_number, desc="Extracting PSF from frames"):
@@ -203,8 +211,8 @@ class ReferenceStars(object):
                         break
 
                 # Initialize oversampled grids
-                epsf_oversampled = np.zeros((self.box_size * oversampling, self.box_size * oversampling))
-                ivar_oversampled = np.zeros((self.box_size * oversampling, self.box_size * oversampling))
+                epsf_oversampled = np.zeros(self.frame_shape(oversampling=oversampling))
+                ivar_oversampled = np.zeros(self.frame_shape(oversampling=oversampling))
 
                 for aperture_index, aperture in enumerate(apertures):
                     xoff = np.floor(aperture.xoffset * oversampling).astype(int) + oversampling // 2

@@ -98,7 +98,7 @@ class HolographicReconstruction(object):
         finder = SourceExtraction()
         finder.extract_sources(image=self.image, starfinder_fwhm=self.params.starfinderFwhm, noise_threshold=self.params.noiseThreshold,
                                background_subtraction=background_subtraction, verbose=False)
-        finder.writeto(self.params.allStarsFile)
+        finder.write(self.params.allStarsFile)
 
 
     def select_reference_stars(self):

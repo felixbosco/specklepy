@@ -1,23 +1,29 @@
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift
 
+
 def otf(psf, inverse=False):
     if inverse:
         return fftshift(ifft2(psf))
     else:
         return fftshift(fft2(psf))
 
+
 def mtf(psf):
     return np.abs(otf(psf))
+
 
 def powerspec(array):
     return np.square(mtf(array))
 
+
 def psf(aperture):
     return powerspec(aperture)
 
+
 def ft(arg):
     return otf(arg)
+
 
 def powerspec1d(array, flatten=True, average=True, pixel_scale=None):
     center = (array.shape[0] / 2, array.shape[1] / 2)

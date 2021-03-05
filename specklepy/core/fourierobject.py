@@ -5,7 +5,7 @@ from tqdm import trange
 
 from astropy.io import fits
 
-from specklepy.core.alignment import get_pad_vectors, pad_array
+from specklepy.core.alignment import derive_pad_vectors, pad_array
 from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
@@ -59,9 +59,9 @@ class FourierObject(object):
         # Extract padding vectors for images and reference image
         logger.info("Initializing padding vectors")
         # files_contain_data_cubes = fits.getdata(in_files[0]).ndim == 3
-        self.pad_vectors, self.reference_image_pad_vector = get_pad_vectors(shifts=shifts,
-                                                                            cube_mode=False,
-                                                                            return_reference_image_pad_vector=True)
+        self.pad_vectors, self.reference_image_pad_vector = derive_pad_vectors(shifts=shifts,
+                                                                               cube_mode=False,
+                                                                               return_reference_image_pad_vector=True)
         file_index = 0
         image_pad_vector = self.pad_vectors[file_index]
 

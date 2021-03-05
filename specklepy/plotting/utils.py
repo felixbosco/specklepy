@@ -4,19 +4,12 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as clrs
 import os
 
-import astropy.units as u
+from astropy.units import Quantity
+from astropy.visualization import simple_norm
 
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.utils import transferfunctions as tf
-
-
-# Define plotting defaults
-plt.rc('figure', figsize=(11.69, 8.27))  # A4 format in inches
-plt.rc('xtick', direction='in')
-plt.rc('ytick', direction='in')
-plt.rc('font', family='serif', size=14)
-DPI = 400
 
 
 def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maximize=False):
@@ -41,7 +34,7 @@ def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maxim
     if isinstance(image, np.ndarray):
         if image.ndim != 2:
             raise SpecklepyValueError('imshow()', 'image.ndim', image.ndim, '2')
-        if isinstance(image, u.Quantity):
+        if isinstance(image, Quantity):
             unit = image.unit
             colorbar_label = "({})".format(unit)
             image = image.value
@@ -50,13 +43,15 @@ def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maxim
 
     if norm == 'log':
         norm = clrs.LogNorm()
+    else:
+        norm = simple_norm(data=image, percent=99.)
     plt.figure()
     plt.imshow(image, norm=norm, origin='lower')
     plt.title(title)
     if maximize:
         maximize_plot()
 
-    # Colorbar
+    # Color bar
     cbar = plt.colorbar(pad=0.0)
     if colorbar_label is not None:
         cbar.set_label(colorbar_label)

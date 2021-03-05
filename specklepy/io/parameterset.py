@@ -48,24 +48,18 @@ class ParameterSet(object):
 
         # Check input parameters
         if isinstance(parameter_file, str):
-            # Check whether file exist
-            # if not os.path.isfile(parameter_file):
-            #     raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
             self.parameter_file = os.path.abspath(parameter_file)
         else:
             raise SpecklepyTypeError('ParameterSet', argname='parameter_file',
                                      argtype=type(parameter_file), expected='str')
 
         if isinstance(defaults_file, str):
-            # if not os.path.isfile(defaults_file):
-            #     raise FileNotFoundError(f"Defaults file {defaults_file} not found!")
             self.defaults_file = os.path.abspath(defaults_file)
         elif defaults_file is None:
-            self.defaults_file = defaults_file
+            self.defaults_file = None
         else:
             raise SpecklepyTypeError('ParameterSet', argname='defaults_file',
                                      argtype=type(defaults_file), expected='str')
-
 
         if essential_attributes is None:
             essential_attributes = {}
@@ -93,7 +87,7 @@ class ParameterSet(object):
             for section in parser.sections():
                 setattr(self, section.lower(), dict(parser[section]))
         else:
-            raise RuntimeError(f"Storing mode {store_mode} is unknown!")
+            raise ValueError(f"Storing mode {store_mode} is unknown!")
 
         # Check for the essential parameters
         for section in essential_attributes.keys():
@@ -236,5 +230,5 @@ class GeneratorParameterSet(ParameterSet):
         embed()
 
         self.target = Target(**self.target)
-        self.telescope = Target(**self.telescope)
-        self.detector = Target(**self.detector)
+        self.telescope = Telescope(**self.telescope)
+        self.detector = Detector(**self.detector)

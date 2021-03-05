@@ -24,7 +24,7 @@ def find_packages():
 
 
 setup(name='specklepy',
-      version='0.5.5',
+      version='0.5.5dev',
       description='Specklepy Holographic Data Reduction',
       long_description=read_long_description(),
       long_description_content_type="text/markdown",
@@ -50,6 +50,7 @@ setup(name='specklepy',
           'tqdm',
           'photutils',
           'python-dateutil',
+          'PyQt5',
       ],
       packages=find_packages(),
       scripts=find_scripts(),

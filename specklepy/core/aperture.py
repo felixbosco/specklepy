@@ -1,6 +1,7 @@
 from copy import copy
 from datetime import datetime
 import numpy as np
+import sys
 import warnings
 
 from astropy.io import fits
@@ -37,7 +38,7 @@ class Aperture(object):
                 Set to True for retrieving more information. Default is True.
         """
 
-        # Interprete the args
+        # Interpret the args
         if len(args) == 2 and (isinstance(args[0], tuple) or isinstance(args[0], list)):
             x0 = args[0][0]
             y0 = args[0][1]
@@ -71,7 +72,11 @@ class Aperture(object):
         # Handling data input
         if isinstance(data, str):
             logger.debug(f"Aperture argument data '{data}' is interpreted as file name.")
-            data = fits.getdata(data)
+            try:
+                data = fits.getdata(data)
+            except FileNotFoundError as e:
+                sys.tracebacklimit = 0
+                raise e
         if not (data.ndim == 2 or data.ndim == 3):
             raise ValueError(f"Data input of Aperture class must be of dimension 2 or 3, but was provided as "
                              f"data.ndim={data.ndim}.")
@@ -83,7 +88,8 @@ class Aperture(object):
             self.crop()
 
         # Create a mask
-        mask = self.make_mask(mode=mask)
+        self.mask_mode = mask
+        mask = self.make_mask(mode=self.mask_mode)
         self.data = np.ma.masked_array(self.data, mask=mask)
 
         if vars is None:
@@ -91,6 +97,9 @@ class Aperture(object):
                 self.vars = np.var(self.data, axis=0)
         else:
             self.vars = None
+
+        # Initialize optional attributes
+        self.power_spectrum_cube = None
 
     @property
     def width(self):
@@ -167,7 +176,7 @@ class Aperture(object):
         self.crop()
 
     def get_integrated(self):
-        """Returns a 2-dimensional represntation of the aperture and integrates
+        """Returns a 2-dimensional representation of the aperture and integrates
         along the time axis if necessary.
         """
         if self.data.ndim == 3:
@@ -180,39 +189,79 @@ class Aperture(object):
         tmp = self.get_integrated()
         return np.unravel_index(np.argmax(tmp, axis=None), tmp.shape)
 
-    def initialize_Fourier_file(self, infile, Fourier_file):
-        self.infile = infile
-        self.Fourier_file = Fourier_file
-        logger.info("Initializing Fourier file {}".format(self.Fourier_file))
-        header = fits.getheader(self.infile)
-        header.set('HIERARCH specklepy TYPE', 'Fourier transform of an aperture')
-        header.set('HIERARCH specklepy ORIGIN', self.infile)
-        header.set('HIERARCH specklepy APERTURE INDEX', str(self.index))
-        header.set('HIERARCH specklepy APERTURE RADIUS', self.radius)
-        header.set('UPDATED', str(datetime.now()))
-        data = np.zeros(self.data.shape)
-        fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
-        logger.info("Initialized {}".format(self.Fourier_file))
+    def center_on_peak(self):
+        # Make sure that the margins around the aperture are available
+        if self.cropped:
+            raise NotImplementedError("Centering cropped apertures is not implemented yet!")
 
-    def powerspec_to_file(self, infile=None, Fourier_file=None):
-        if not hasattr(self, 'Fourier_file'):
-            self.initialize_Fourier_file(infile, Fourier_file)
+        # Estimate intensity peak
+        peak = self.get_aperture_peak()
+        logger.info(f"Re-centering the aperture from ({self.x0, self.y0}) to {peak}")
 
-        with fits.open(self.Fourier_file, mode='update') as hdulist:
-            for index, frame in enumerate(self.data):
-                print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
-                hdulist[0].data[index] = tf.powerspec(frame)
-                hdulist.flush()
-            print()
-        logger.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
+        # Update properties
+        self.x0 = peak[0]
+        self.y0 = peak[1]
+        self.xoffset = 0
+        self.yoffset = 0
 
-    def powerspec(self):
-        self.Fourier_data = np.zeros(self.data.shape)
+        # Update mask
+        mask = self.make_mask(mode=self.mask_mode)
+        self.data = np.ma.masked_array(self.data, mask=mask)
+
+    # def initialize_Fourier_file(self, infile, Fourier_file):
+    #     self.infile = infile
+    #     self.Fourier_file = Fourier_file
+    #     logger.info("Initializing Fourier file {}".format(self.Fourier_file))
+    #     header = fits.getheader(self.infile)
+    #     header.set('HIERARCH specklepy TYPE', 'Fourier transform of an aperture')
+    #     header.set('HIERARCH specklepy ORIGIN', self.infile)
+    #     header.set('HIERARCH specklepy APERTURE INDEX', str(self.index))
+    #     header.set('HIERARCH specklepy APERTURE RADIUS', self.radius)
+    #     header.set('UPDATED', str(datetime.now()))
+    #     data = np.zeros(self.data.shape)
+    #     fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
+    #     logger.info("Initialized {}".format(self.Fourier_file))
+    #
+    # def powerspec_to_file(self, infile=None, Fourier_file=None):
+    #     if not hasattr(self, 'Fourier_file'):
+    #         self.initialize_Fourier_file(infile, Fourier_file)
+    #
+    #     with fits.open(self.Fourier_file, mode='update') as hdulist:
+    #         for index, frame in enumerate(self.data):
+    #             print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
+    #             hdulist[0].data[index] = tf.powerspec(frame)
+    #             hdulist.flush()
+    #         print()
+    #     logger.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
+
+    def get_power_spectrum_cube(self):
+        self.power_spectrum_cube = np.zeros(self.data.shape)
         for index, frame in enumerate(self.data):
-            print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
-            self.Fourier_data[index] = tf.powerspec(frame)
-        print()
+            self.power_spectrum_cube[index] = tf.powerspec(frame)
         logger.info("Computed the Fourier transform of every frame.")
+
+    def get_power_spectrum_profile(self):
+
+        if self.power_spectrum_cube is None:
+            self.get_power_spectrum_cube()
+
+        # Initialize output radii and array
+        radius_map = self.make_radius_map()
+        rdata = np.unique(radius_map)
+        ydata = np.zeros(rdata.shape)
+        edata = np.zeros(rdata.shape)
+
+        # Iterate over aperture radii
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            from IPython import embed
+            for index, radius in enumerate(rdata):
+                x, y = np.where(radius_map == radius)
+                subset = self.power_spectrum_cube[:, x, y]
+                ydata[index] = np.mean(subset)
+                edata[index] = np.std(subset)
+
+        return rdata, ydata, edata
 
     def get_psf_variance(self):
         """Extract a radial variance profile of the speckle PSFs."""
@@ -236,8 +285,8 @@ class Aperture(object):
             warnings.simplefilter("ignore")
             for index, radius in enumerate(rdata):
                 subset = var_map[np.where(radius_map == radius)]
-                ydata[index] = np.mean(subset)
-                edata[index] = np.mean(subset)
+                ydata[index] = np.sqrt(np.mean(subset))
+                edata[index] = np.sqrt(np.var(subset))
 
         return rdata, ydata, edata
 
@@ -257,8 +306,8 @@ class Aperture(object):
         # Iterate over aperture radii
         for index, radius in enumerate(rdata):
             subset = image[np.where(radius_map <= radius)]
-            ydata[index] = np.sum(image)
-            edata[index] = np.sum(image)
+            ydata[index] = np.sum(subset)
+            edata[index] = np.std(subset)
 
         # Save results to file
         if saveto is not None:
@@ -290,3 +339,15 @@ class Aperture(object):
                 edata[index] = np.std(subset)
 
         return rdata, ydata, edata
+
+    def spatial_frequency(self, pixel_scale=1, profile=True):
+        r = self.make_radius_map()
+        if profile:
+            return np.divide(np.unique(r), self.radius) / (2 * pixel_scale)
+        else:
+            return np.divide(r, self.radius) / (2 * pixel_scale)
+
+    def spatial_wavelength(self, pixel_scale=1, profile=True):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return np.divide(1, self.spatial_frequency(pixel_scale=pixel_scale, profile=profile))

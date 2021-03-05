@@ -42,18 +42,9 @@ class FileArchive(object):
         """
 
         # Store in and out paths
-        if in_dir is None:
-            self.in_dir = './'
-        else:
-            self.in_dir = in_dir
-        if out_dir is None:
-            self.out_dir = './'
-        else:
-            self.out_dir = out_dir
-        if out_prefix is None:
-            self.out_prefix = ''
-        else:
-            self.out_prefix = out_prefix
+        self.in_dir = in_dir if in_dir is not None else './'
+        self.out_dir = out_dir if out_dir is not None else './'
+        self.out_prefix = out_prefix if out_prefix is not None else ''
 
         # Interpret the file list input
         if isinstance(file_list, str):
@@ -62,21 +53,20 @@ class FileArchive(object):
             files.sort()
             if len(files) == 0:
                 sys.tracebacklimit = 0
-                raise FileNotFoundError("FileArchive did not find any file matching to{!r}.".format(file_list))
+                raise FileNotFoundError(f"FileArchive did not find any file matching to {file_list!r}.")
             else:
-                logger.info("FileArchive found {} file(s) matching to {!r}.".format(len(files), file_list))
+                logger.info(f"FileArchive found {len(files)} file(s) matching to {file_list!r}.")
 
             if len(files) == 1 and not self.is_fits_file(files[0]):
-                logger.info("Input file is not fits type. FileArchive assumes that input file {!r} contains file "
-                            "names.".format(files[0]))
+                logger.info(f"Input file is not FITS type. FileArchive assumes that input file {files[0]!r} contains "
+                            f"file names.")
                 self.table = self.read_table_file(files[0])
             else:
-                self.table = self.gather_table_from_list(files=files, **kwargs)
-                self.in_dir = os.path.dirname(files[0])
+                self.table, self.in_dir = self.gather_table_from_list(files=files, **kwargs)
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
-            self.table = self.gather_table_from_list(files=file_list, **kwargs)
+            self.table, self.in_dir = self.gather_table_from_list(files=file_list, **kwargs)
 
         else:
             raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'str')
@@ -89,7 +79,12 @@ class FileArchive(object):
         self.index = 0
         
         # Initialize the list of product files
-        self.product_files = None
+        # self.source_files = None
+        # self.product_files = None
+
+        # Reduce paths
+        self.in_dir = os.path.normpath(self.in_dir)
+        self.out_dir = os.path.normpath(self.out_dir)
 
     def __iter__(self):
         return self
@@ -124,14 +119,6 @@ class FileArchive(object):
     def files(self):
         return self.table['FILE'].data
 
-    @property
-    def setups(self):
-        return np.unique(self.table['SETUP'].data)
-
-    @property
-    def objects(self):
-        return np.unique(self.table['OBJECT'].data)
-
     @staticmethod
     def is_fits_file(filename):
         _, extension = os.path.splitext(filename)
@@ -159,7 +146,7 @@ class FileArchive(object):
                 table = Table.read(file, format='ascii.no_header')
         except:
             files = []
-            logger.info("Reading file names from input file {}.".format(file))
+            logger.info(f"Reading file names from input file {file!r}.")
             with open(file, 'r') as f:
                 for filename in f.readlines():
                     filename = filename.replace('\n', '')
@@ -168,8 +155,7 @@ class FileArchive(object):
 
         return table
 
-    @staticmethod
-    def gather_table_from_list(files, cards, dtypes, names=None, sort_by=None):
+    def gather_table_from_list(self, files, cards, dtypes, names=None, sort_by=None):
         """Gather file header information to fill the table
 
         Args:
@@ -199,11 +185,17 @@ class FileArchive(object):
         else:
             table = Table(names=['FILE']+names, dtype=[str]+dtypes)
 
+        # Extract common path
+        common_path = self.common_path(files)
+
         # Read data from files
-        for file in files:
-            logger.info(f"Retrieving header information from file {file}")
-            hdr = fits.getheader(file)
-            new_row = [os.path.basename(file)]
+        for path in files:
+            file = path.replace(common_path, '')
+            file = file[1:] if file[0] == '/' else file
+
+            logger.info(f"Retrieving header information from file {file!r}")
+            hdr = fits.getheader(path)
+            new_row = [file]
             for card in cards:
                 # Card actually contains two or more cards
                 if ',' in card:
@@ -220,26 +212,78 @@ class FileArchive(object):
                             new_row.append(value)
                         else:
                             new_row.append(value.upper())
+                    elif card == 'NAXIS3':
+                        logger.warning(f"File {file!r} is missing header card {card!r}. Number of frames set to 1!")
+                        new_row.append(1)
                     else:
-                        logger.info(f"Skipping file {os.path.basename(file)} due to at least one missing header "
-                                    f"card ({card}).")
-                        break
+                        # logger.info(f"Skipping file {file} due to at least one missing header card ({card}).")
+                        # break
+                        new_row.append(None)
             if len(new_row) == len(table.columns):
                 table.add_row(new_row)
 
         # Sort table entries by default properties and user request
-        table.sort('FILE')
+        try:
+            table.sort('DATE')
+        except ValueError:
+            pass  # 'DATE' is not a valid column in table
         if sort_by:
             table.sort(sort_by)
 
-        return table
+        return table, common_path
+
+    @staticmethod
+    def common_path(files):
+        if len(files) == 1:
+            return os.path.dirname(files[0])
+        else:
+            return os.path.commonpath(files)
 
     def write_table(self, file_name):
         """Write the archive's table to a file `file_name`."""
-        logger.info(f"Writing file information to {file_name}")
+        logger.info(f"Writing file information to {file_name!r}")
         self.table.write(file_name, format='ascii.fixed_width', overwrite=True)
 
-    def filter(self, filter_dict, namekey='FILE'):
+
+class ReductionFileArchive(FileArchive):
+
+    @property
+    def setups(self):
+        return np.unique(self.table['SETUP'].data)
+
+    @property
+    def objects(self):
+        return np.unique(self.table['OBJECT'].data)
+
+    @property
+    def source_files(self):
+        return self.table['FILE'].data
+
+    @property
+    def source_file_paths(self):
+        paths = []
+        for source_file in self.source_files:
+            paths.append(os.path.join(self.in_dir, source_file))
+        return paths
+
+    @property
+    def product_files(self):
+        try:
+            out =  self.table['PRODUCT'].data
+        except KeyError:
+            self.add_product_file_column()
+            out = self.table['PRODUCT'].data
+        return out[out != np.array(None)]  # Filter out None's
+
+    @property
+    def product_file_paths(self):
+        paths = []
+        for product_file in self.product_files:
+            product_file_path = os.path.join(self.out_dir, product_file)
+            paths.append(product_file_path)
+        return paths
+
+    def filter(self, filter_dict, namekey='FILE', return_mask=False):
         """Filter the archive's table by the column properties.
 
         filter_dict = {'name_of_column': [desired_value_1, desired_value_2]}
@@ -250,6 +294,8 @@ class FileArchive(object):
                 corresponding values.
             namekey (str, optional):
                 Name/ key of the out put column that shall be filtered by `filter_dict`.
+            return_mask (bool, optional):
+                Return also the full mask.
 
         Returns:
             filtered (np.array):
@@ -260,19 +306,39 @@ class FileArchive(object):
             raise SpecklepyTypeError('FileArchive.filter', 'filter_dict', type(filter_dict), 'dict')
 
         mask = [True] * len(self.table[namekey])
-        for index, key in enumerate(filter_dict.keys()):
-            if isinstance(filter_dict[key], list):
+        for key, search_value in filter_dict.items():
+            if isinstance(search_value, list):
                 submask = [False] * len(self.table[namekey])
-                for correct in filter_dict[key]:
+                for correct in search_value:
                     submask |= (self.table[key] == correct)
                 mask &= submask
             else:
-                mask &= (filter_dict[key] == self.table[key])
+                mask &= (search_value == self.table[key])
+
+        if return_mask:
+            return self.table[namekey][mask].data, mask
 
         return self.table[namekey][mask].data
 
+    def get_dark_setups(self):
+        is_dark = self.table['OBSTYPE'] == 'DARK'
+        return np.unique(self.table['SETUP'][is_dark].data)
+
+    def add_dark_column(self):
+        dark_col = Column(name='DARK', dtype=object, length=len(self.table))
+        dark_setups = self.get_dark_setups()
+        for setup in dark_setups:
+            exp_times = self.filter({'OBSTYPE': 'DARK', 'SETUP': setup}, namekey='EXPTIME')
+            exp_time = np.unique(exp_times)[0]
+            dark_col[self.table['EXPTIME'] == exp_time] = setup
+        self.table.add_column(dark_col)
+
     def get_flats(self):
         return self.filter({'OBSTYPE': 'FLAT'})
+
+    def get_flat_filters(self):
+        is_flat = self.table['OBSTYPE'] == 'FLAT'
+        return np.unique(self.table['FILTER'][is_flat].data)
 
     def get_science(self):
         return self.filter({'OBSTYPE': 'SCIENCE'})
@@ -365,10 +431,81 @@ class FileArchive(object):
                                               source=source, object=object, setup=setup))
         return sequences
 
-    def initialize_product_files(self, prefix=None):
+    # def make_product_file_names(self, prefix=None, return_table_mask=False):
+    #     """Copy the science data cubes into the stored out directory.
+    #
+    #     Args:
+    #         prefix (str, optional):
+    #             File prefix for output files.
+    #         return_table_mask (bool, optional):
+    #             Set `True` for returning a mask `input_file in product_files`.
+    #
+    #     Returns:
+    #         product_files (list):
+    #             List of paths of the data reduction products.
+    #         input_file_mask (np.array, optional):
+    #             Mask for input files, indicating whether a file is used as product file.
+    #     """
+    #
+    #     # Store update prefix
+    #     if prefix:
+    #         self.out_prefix = prefix
+    #
+    #     # Initialize list of data reduction products
+    #     self.product_files = []
+    #
+    #     # Extract sky and science files to serve as template for the product files
+    #     self.source_files, input_file_mask = self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}, return_mask=return_table_mask)
+    #
+    #     # Copy the science data cubes into outdir (with an additional file prefix)
+    #     for file in self.source_files:
+    #         dest = self.out_prefix + os.path.basename(file)
+    #
+    #         # Store new file in the list of product files
+    #         self.product_files.append(dest)
+    #
+    #     if return_table_mask:
+    #         return self.product_files, input_file_mask
+    #
+    #     return self.product_files
+
+    def add_product_file_column(self, prefix=None):
+        """Add a column of product file names to the table.
+
+        Arguments:
+            prefix (str, optional):
+                .
+        """
+
+        # Store update prefix
+        if prefix:
+            self.out_prefix = prefix
+
+        # Initialize column
+        product_file_column = Column(name='PRODUCT', dtype=object, length=len(self.table))
+
+        # Define list of obs-types, considered for product files
+        obs_types = ['SCIENCE', 'SKY', 'FLAT']
+
+        # Iterate through table and fill column
+        for r, row in enumerate(self.table):
+            if row['OBSTYPE'] in obs_types:
+                dest = self.out_prefix + os.path.basename(row['FILE'])
+                product_file_column[r] = dest
+
+        # Fill empty fields
+        is_empty = product_file_column == 0
+        product_file_column[is_empty] = None
+
+        # Store the new column of product file names to the table
+        self.table.add_column(product_file_column)
+
+    def initialize_product_file(self, index, prefix=None):
         """Copy the science data cubes into the stored out directory.
 
         Args:
+            index (int):
+                Index of the file to be initialized in the list of `self.source_files`.
             prefix (str, optional):
                 File prefix for output files.
 
@@ -377,28 +514,18 @@ class FileArchive(object):
                 List of paths of the data reduction products.
         """
 
-        # Store update prefix
-        if prefix:
-            self.out_prefix = prefix
-
-        # Initialize list of data reduction products
-        product_files = []
+        # # Initialize list of data reduction products
+        # if self.source_files is None or self.product_files is None:
+        #     self.make_product_file_names(prefix=prefix)
 
         # Copy the science data cubes into outdir (with an additional file prefix)
-        for file in self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}):
-            src = os.path.join(self.in_dir, file)
-            dest = os.path.join(self.out_dir, self.out_prefix + file)
-            logger.info(f"Initializing data product file {dest}")
-            os.system(f"cp {src} {dest}")
-            with fits.open(dest, mode='update') as hdu_list:
-                hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
-                hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
-                hdu_list.flush()
+        src = self.source_file_paths[index]
+        dest = self.product_file_paths[index]
+        logger.info(f"Initializing data product file {dest}")
+        os.system(f"cp {src} {dest}")
+        with fits.open(dest, mode='update') as hdu_list:
+            hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
+            hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+            hdu_list.flush()
 
-            # Store new file in the list of product files
-            product_files.append(dest)
-            
-        # Store list of product files
-        self.product_files = product_files
-
-        return product_files
+        return dest
