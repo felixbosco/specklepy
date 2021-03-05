@@ -5,7 +5,7 @@ from specklepy.io import config
 from specklepy.io.config import read
 from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
-from specklepy.reduction import dark
+from specklepy.reduction import dark, flat
 
 
 class DataReduction(object):
@@ -190,7 +190,40 @@ class DataReduction(object):
                 master_dark.subtract(product_file_path)
 
     def run_flat_fielding(self):
-        raise NotImplementedError("Flat fielding is not implemented yet!")
+
+        # Identify flat filters
+        flat_filters = self.files.get_flat_filters()
+        master_flats = {}
+
+        # Create a master flat for each filter
+        if not self.flat.get('reuse'):
+            for filter in flat_filters:
+                flats = self.files.filter({'OBSTYPE': 'FLAT', 'FILTER': filter}, namekey='PRODUCT')
+                master_flat = flat.MasterFlat(file_list=flats, file_name=self.flat.get('masterFlatFile'),
+                                              file_path=self.files.in_dir, out_dir=self.paths.get('tmpDir'),
+                                              filter=filter)
+                master_flat.combine(method=self.flat.get('method'))
+                master_flat.write()
+                master_flats[filter] = master_flat.path
+
+        # Apply flat field correction
+        for filter in flat_filters:
+            master_flat = flat.MasterFlat.from_file(master_flats[filter])
+            for p, product_file_path in enumerate(self.files.product_file_paths):
+                # Skip files from different filter
+                if self.files.table['FILTER'][p] != filter:
+                    continue
+
+                # Initialize file if not existing
+                if not os.path.isfile(product_file_path):
+                    self.files.initialize_product_file(index=p)
+
+                # Extract sub-window for file
+                sub_window = self.files.table['SUBWIN'].data[p]
+
+                # Normalize product file with master flat
+                master_flat.run_correction(file_list=[product_file_path], sub_windows=[sub_window],
+                                           full_window=self.options.get('full_window'))
 
     def run_linearization(self):
         raise NotImplementedError("Linearization is not implemented yet!")

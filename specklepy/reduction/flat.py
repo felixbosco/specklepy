@@ -20,7 +20,7 @@ class MasterFlat(object):
     fill_value = 0  # was np.nan
     mask_threshold = 100
 
-    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, new=True):
+    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, filter=None, new=True):
 
         # Store input parameters
         if isinstance(file_list, (list, np.ndarray)):
@@ -32,7 +32,7 @@ class MasterFlat(object):
             raise SpecklepyTypeError('MasterFlat', 'file_list', type(file_list), 'astropy.table.Table')
 
         if isinstance(file_name, str):
-            self.file_name = file_name
+            self.file_name = self.insert_filter_to_file_name(file_name, filter=filter)
         else:
             raise SpecklepyTypeError('MasterFlat', 'file_name', type(file_name), 'str')
 
@@ -40,10 +40,23 @@ class MasterFlat(object):
             self.file_path = file_path
         else:
             raise SpecklepyTypeError('MasterFlat', 'file_path', type(file_path), 'str')
+        self.out_dir = out_dir
 
         # Create an output file
         self.master_file = MasterFile(self.file_name, files=self.files, in_dir=file_path, out_dir=out_dir,
                                       initialize=new)
+
+    @property
+    def path(self):
+        return os.path.join(self.out_dir, self.file_name)
+
+    @staticmethod
+    def insert_filter_to_file_name(file_name, filter=None):
+        if filter is None:
+            return file_name
+        else:
+            base, ext = os.path.splitext(file_name)
+            return f"{base}_{filter}{ext}"
 
     def combine(self, method='clip'):
         """Combine the frames of the stored files to a master flat.

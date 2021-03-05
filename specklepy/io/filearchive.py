@@ -334,6 +334,10 @@ class ReductionFileArchive(FileArchive):
     def get_flats(self):
         return self.filter({'OBSTYPE': 'FLAT'})
 
+    def get_flat_filters(self):
+        is_flat = self.table['OBSTYPE'] == 'FLAT'
+        return np.unique(self.table['FILTER'][is_flat].data)
+
     def get_science(self):
         return self.filter({'OBSTYPE': 'SCIENCE'})
 
