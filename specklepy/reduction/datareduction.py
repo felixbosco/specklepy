@@ -12,13 +12,14 @@ class DataReduction(object):
 
     config_file = os.path.abspath(os.path.join(os.path.dirname(__file__), '../config/reduction.cfg'))
 
-    def __init__(self, paths=None, dark=None, flat=None, sky=None, options=None, **kwargs):
+    def __init__(self, paths=None, dark=None, linear=None, flat=None, sky=None, options=None, **kwargs):
         self.paths = paths
         self.dark = dark
+        self.linear = linear
         self.flat = flat
         self.sky = sky
         self.options = options
-        for attr in ['paths', 'dark', 'flat', 'sky', 'options']:
+        for attr in ['paths', 'dark', 'linear', 'flat', 'sky', 'options']:
             if getattr(self, attr) is None:
                 logger.debug(f"Transforming parameters from section {attr.upper()!r} in the config file to {attr!r}...")
                 setattr(self, attr, kwargs.get(attr.upper()))
@@ -41,7 +42,7 @@ class DataReduction(object):
         self.initialize_directories()
         if not self.dark.get('skip'):
             self.run_dark_correction()
-        if not self.linearization.get('skip'):
+        if not self.linear.get('skip'):
             self.run_linearization()
         if not self.flat.get('skip'):
             self.run_flat_fielding()
