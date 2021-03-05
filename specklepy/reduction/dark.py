@@ -175,8 +175,7 @@ class MasterDark(object):
 
             # Mask data
             if has_mask_hdu:
-                hdu_list[self.extensions.get('mask')] = mask.as
-type(np.int16)
+                hdu_list[self.extensions.get('mask')] = mask.astype(np.int16)
             else:
                 mask_hdu = fits.ImageHDU(data=mask.astype(np.int16), name=self.extensions.get('mask'))
                 hdu_list.append(mask_hdu)
