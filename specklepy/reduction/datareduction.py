@@ -189,8 +189,12 @@ class DataReduction(object):
                 if not os.path.isfile(product_file_path):
                     self.files.initialize_product_file(index=p)
 
+                # Extract sub-window for file
+                sub_window = self.files.table['SUBWIN'].data[p]
+
                 # Subtract master dark from file
-                master_dark.subtract(product_file_path)
+                master_dark.subtract(product_file_path, sub_window=sub_window,
+                                     full_window=self.options.get('full_window'))
 
     def run_flat_fielding(self):
 
