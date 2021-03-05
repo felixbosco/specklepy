@@ -34,7 +34,7 @@ class MasterFlat(object):
         """
 
         # Store input parameters
-        if isinstance(file_list, (list, np.ndarray)):
+        if isinstance(file_list, (list, np.ndarray)) or file_list is None:
             self.files = file_list
         elif isinstance(file_list, Table):
             is_flat_file = file_list['OBSTYPE'] == 'FLAT'
