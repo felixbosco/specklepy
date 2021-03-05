@@ -23,7 +23,15 @@ class MasterFlat(object):
 
     extensions = {'variance': 'VAR', 'mask': 'MASK'}
 
-    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, filter=None, new=True):
+    def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, filter=None,
+                 sub_window=None, new=True):
+        """
+
+        Arguments:
+            sub_window (str, optional):
+                String describing the full window in the same format as the sub-window strings for providing relative
+                coordinates.
+        """
 
         # Store input parameters
         if isinstance(file_list, (list, np.ndarray)):
@@ -44,6 +52,12 @@ class MasterFlat(object):
         else:
             raise SpecklepyTypeError('MasterFlat', 'file_path', type(file_path), 'str')
         self.out_dir = out_dir
+
+        # Store sub-window
+        if isinstance(sub_window, str):
+            self.sub_window = sub_window
+        else:
+            self.sub_window = np.unique(sub_window)[0]
 
         # Create an output file
         # self.master_file = MasterFile(self.file_name, files=self.files, in_dir=file_path, out_dir=out_dir,
@@ -76,6 +90,7 @@ class MasterFlat(object):
         except KeyError:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
+        obj.sub_window = fits.getheader(obj.path)["HIERARCH SPECKLEPY REDUCTION SUBWIN"]
 
         return obj
 
@@ -209,6 +224,7 @@ class MasterFlat(object):
         header = fits.Header()
         for index, file in enumerate(self.files):
             header.set(f"HIERARCH SPECKLEPY SOURCE FILE{index:04} NAME", os.path.basename(file))
+        header.set("HIERARCH SPECKLEPY REDUCTION SUBWIN", self.sub_window)
         primary = fits.PrimaryHDU(data=self.image, header=header)
 
         # Build HDU list
@@ -228,7 +244,7 @@ class MasterFlat(object):
         logger.info(f"Writing master flat frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
 
-    def run_correction(self, file_list, file_path=None, sub_windows=None, full_window=None):
+    def run_correction(self, file_list, file_path=None, sub_windows=None):
         """Executes the flat field correction on files in a list.
 
         Args:
@@ -239,9 +255,6 @@ class MasterFlat(object):
             sub_windows (list, optional):
                 List of sub-window strings, where the entries indicate, how the individual exposure is positioned
                 within the master flat field. Should be provided as str-types.
-            full_window (str, optional):
-                String describing the full window in the same format as the sub-window strings for providing relative
-                coordinates.
         """
 
         # Input parameters
@@ -270,7 +283,7 @@ class MasterFlat(object):
                 file = os.path.join(file_path, file)
 
             # Construct sub-window
-            sub_window = SubWindow.from_str(sub_window_str, full=full_window)
+            sub_window = SubWindow.from_str(sub_window_str, full=self.sub_window)
 
             # Open the product files and update
             with fits.open(file, mode='update') as hdu_list:

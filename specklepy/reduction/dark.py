@@ -13,11 +13,18 @@ class MasterDark(object):
 
     extensions = {'variance': 'VAR', 'mask': 'MASK'}
 
-    def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, setup=None, new=True):
+    def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, setup=None,
+                 sub_window=None, new=True):
         self.files = file_list
         self.file_name = self.insert_setup_to_file_name(file_name=file_name, setup=setup)
         self.file_path = file_path if file_path is not None else ''
         self.out_dir = out_dir if out_dir is not None else ''
+
+        # Store sub-window
+        if isinstance(sub_window, str):
+            self.sub_window = sub_window
+        else:
+            self.sub_window = np.unique(sub_window)[0]
 
         # Initialize maps
         self.means = None
@@ -43,6 +50,7 @@ class MasterDark(object):
         except KeyError:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
+        obj.sub_window = fits.getheader(obj.path)["HIERARCH SPECKLEPY REDUCTION SUBWIN"]
 
         return obj
 
@@ -98,6 +106,7 @@ class MasterDark(object):
         header = fits.Header()
         for index, file in enumerate(self.files):
             header.set(f"HIERARCH SPECKLEPY SOURCE FILE{index:04} NAME", os.path.basename(file))
+        header.set("HIERARCH SPECKLEPY REDUCTION SUBWIN", self.sub_window)
         primary = fits.PrimaryHDU(data=self.image, header=header)
 
         # Build HDU list
@@ -117,7 +126,7 @@ class MasterDark(object):
         logger.info(f"Writing master dark frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
 
-    def subtract(self, file_path, extension=None, sub_window=None, full_window=None):
+    def subtract(self, file_path, extension=None, sub_window=None):
         """Subtract the master dark from a file containing image data.
 
         The master dark is subtracted from the image or each frame in a data cube. Then uncertainties are propagated.
@@ -132,7 +141,7 @@ class MasterDark(object):
         logger.info(f"Subtracting master dark {self.file_name} from file at {file_path!r}")
 
         # Construct sub-window
-        sub_window = SubWindow.from_str(sub_window, full=full_window)
+        sub_window = SubWindow.from_str(sub_window, full=self.sub_window)
         print('>>>>>', sub_window)
 
         # Load image data

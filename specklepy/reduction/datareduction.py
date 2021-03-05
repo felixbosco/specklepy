@@ -193,8 +193,7 @@ class DataReduction(object):
                 sub_window = self.files.table['SUBWIN'].data[p]
 
                 # Subtract master dark from file
-                master_dark.subtract(product_file_path, sub_window=sub_window,
-                                     full_window=self.options.get('fullWindow'))
+                master_dark.subtract(product_file_path, sub_window=sub_window)
 
     def run_flat_fielding(self):
 
@@ -229,8 +228,7 @@ class DataReduction(object):
                 sub_window = self.files.table['SUBWIN'].data[p]
 
                 # Normalize product file with master flat
-                master_flat.run_correction(file_list=[product_file_path], sub_windows=[sub_window],
-                                           full_window=self.options.get('fullWindow'))
+                master_flat.run_correction(file_list=[product_file_path], sub_windows=[sub_window])
 
     def run_linearization(self):
         raise NotImplementedError("Linearization is not implemented yet!")
