@@ -278,6 +278,7 @@ class ReductionFileArchive(FileArchive):
     def product_file_paths(self):
         paths = []
         for product_file in self.product_files:
+            embed()
             paths.append(os.path.join(self.out_dir, product_file))
         return paths
 
