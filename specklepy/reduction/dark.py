@@ -116,7 +116,7 @@ class MasterDark(object):
         logger.info(f"Writing master dark frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
 
-    def subtract(self, file_path, extension=None, overwrite=True):
+    def subtract(self, file_path, extension=None):
         """Subtract the master dark from a file containing image data.
 
         The master dark is subtracted from the image or each frame in a data cube. Then uncertainties are propagated.
@@ -182,4 +182,4 @@ class MasterDark(object):
 
             # Write HDU list to file
             logger.info(f"Updating dark subtraction in file {file_path!r}")
-            hdu_list.writeto(file_path, overwrite=overwrite)
+            hdu_list.flush()
