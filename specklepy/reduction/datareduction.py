@@ -158,6 +158,7 @@ class DataReduction(object):
             for product_file_path in self.files.product_file_paths:
                 try:
                     os.remove(product_file_path)
+                    logger.info(f"Removed product file {product_file_path!r} from earlier reduction")
                 except FileNotFoundError:
                     pass
 
