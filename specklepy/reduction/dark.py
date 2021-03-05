@@ -182,14 +182,14 @@ class MasterDark(object):
 
             # Variance data
             if has_var_hdu:
-                hdu_list[self.extensions.get('variance')] = var
+                hdu_list[self.extensions.get('variance')].data = var
             else:
                 var_hdu = fits.ImageHDU(data=var, name=self.extensions.get('variance'))
                 hdu_list.append(var_hdu)
 
             # Mask data
             if has_mask_hdu:
-                hdu_list[self.extensions.get('mask')] = mask.astype(np.int16)
+                hdu_list[self.extensions.get('mask')].data = mask.astype(np.int16)
             else:
                 mask_hdu = fits.ImageHDU(data=mask.astype(np.int16), name=self.extensions.get('mask'))
                 hdu_list.append(mask_hdu)
