@@ -38,7 +38,7 @@ class MasterDark(object):
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('variance')!r} "
                          f"extension")
         try:
-            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).as_type(bool)
+            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).astype(bool)
         except KeyError:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
@@ -151,7 +151,7 @@ class MasterDark(object):
 
         # Propagate mask
         try:
-            mask = fits.getdata(file_path, self.extensions.get('mask')).as_type(bool)
+            mask = fits.getdata(file_path, self.extensions.get('mask')).astype(bool)
             has_mask_hdu = True
             mask = np.logical_or(mask, self.mask)
         except KeyError:
@@ -175,7 +175,8 @@ class MasterDark(object):
 
             # Mask data
             if has_mask_hdu:
-                hdu_list[self.extensions.get('mask')] = mask.as_type(np.int16)
+                hdu_list[self.extensions.get('mask')] = mask.as
+type(np.int16)
             else:
                 mask_hdu = fits.ImageHDU(data=mask.astype(np.int16), name=self.extensions.get('mask'))
                 hdu_list.append(mask_hdu)

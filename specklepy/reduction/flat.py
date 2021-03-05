@@ -72,7 +72,7 @@ class MasterFlat(object):
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('variance')!r} "
                          f"extension")
         try:
-            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).as_type(bool)
+            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).astype(bool)
         except KeyError:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
