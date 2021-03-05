@@ -23,6 +23,10 @@ class MasterDark(object):
         self.var = None
         self.mask = None
 
+    @property
+    def path(self):
+        return os.path.join(self.out_dir, self.file_name)
+
     @staticmethod
     def insert_setup_to_file_name(file_name, setup=None):
         if setup is None:
@@ -87,6 +91,5 @@ class MasterDark(object):
             hdu_list.append(mask_hdu)
 
         # Write HDU list to file
-        save_path = os.path.join(self.out_dir, self.file_name)
-        logger.info(f"Writing master dark frame to file {save_path!r}")
-        hdu_list.writeto(save_path, overwrite=overwrite)
+        logger.info(f"Writing master dark frame to file {self.path!r}")
+        hdu_list.writeto(self.path, overwrite=overwrite)
