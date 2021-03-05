@@ -2,9 +2,10 @@ import numpy as np
 import os
 
 from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
 
 from specklepy.logging import logger
-from astropy.stats import sigma_clipped_stats
+from specklepy.utils.time import default_time_stamp
 
 
 class MasterDark(object):
@@ -37,7 +38,7 @@ class MasterDark(object):
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('variance')!r} "
                          f"extension")
         try:
-            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask'))
+            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).as_type(bool)
         except KeyError:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
@@ -115,5 +116,70 @@ class MasterDark(object):
         logger.info(f"Writing master dark frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
 
-    def subtract(self):
-        pass
+    def subtract(self, file_path, extension=None, overwrite=True):
+        """Subtract the master dark from a file containing image data.
+
+        The master dark is subtracted from the image or each frame in a data cube. Then uncertainties are propagated.
+
+        Arguments:
+            file_path (str):
+                Path to the file, containing image data.
+            extension (str, optional):
+                Classifier for the image data extension.
+        """
+
+        logger.info(f"Subtracting master dark {self.file_name} from file at {file_path!r}")
+
+        # Load image data
+        data = fits.getdata(file_path, extension)
+
+        # Subtract
+        if data.ndim == 2:
+            data = data - self.image
+        elif data.ndim == 3:
+            for f, frame in enumerate(data):
+                data[f] = frame - self.image
+
+        # Propagate variances
+        try:
+            var = fits.getdata(file_path, self.extensions.get('variance'))
+            has_var_hdu = True
+            var += self.var
+        except KeyError:
+            has_var_hdu = False
+            var = self.var
+
+        # Propagate mask
+        try:
+            mask = fits.getdata(file_path, self.extensions.get('mask')).as_type(bool)
+            has_mask_hdu = True
+            mask = np.logical_or(mask, self.mask)
+        except KeyError:
+            has_mask_hdu = False
+            mask = self.mask
+
+        # Store data to cube
+        with fits.open(file_path, mode='update') as hdu_list:
+            # Update header
+            hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION DARKCORR', default_time_stamp())
+
+            # Image data
+            hdu_list[0].data = data
+
+            # Variance data
+            if has_var_hdu:
+                hdu_list[self.extensions.get('variance')] = var
+            else:
+                var_hdu = fits.ImageHDU(data=var, name=self.extensions.get('variance'))
+                hdu_list.append(var_hdu)
+
+            # Mask data
+            if has_mask_hdu:
+                hdu_list[self.extensions.get('mask')] = mask.as_type(np.int16)
+            else:
+                mask_hdu = fits.ImageHDU(data=mask.astype(np.int16), name=self.extensions.get('mask'))
+                hdu_list.append(mask_hdu)
+
+            # Write HDU list to file
+            logger.info(f"Updating dark subtraction in file {file_path!r}")
+            hdu_list.writeto(file_path, overwrite=overwrite)
