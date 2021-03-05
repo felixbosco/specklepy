@@ -142,7 +142,6 @@ class MasterDark(object):
 
         # Construct sub-window
         sub_window = SubWindow.from_str(sub_window, full=self.sub_window)
-        print('>>>>>', sub_window)
 
         # Load image data
         data = fits.getdata(file_path, extension)
