@@ -19,7 +19,6 @@ class SubWindow(Box):
         # Provide indexes relative to a full window
         if full is not None:
             full = cls.unravel_string(s=full)
-            print('>>>>', indexes, full, indexes - full)
             indexes = indexes - full
             indexes = np.where(indexes == 0, None, indexes)  # Avoid IndexErrors by substituting the edges by Nones
 
