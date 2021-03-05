@@ -152,7 +152,7 @@ class DataReduction(object):
 
     def initialize_product_files(self):
         self.files.add_product_file_column(prefix=self.paths.get('filePrefix'))
-        logger.info(self.files.table)
+        logger.info(f"Overview of the considered files:\n{self.files.table}")
         if self.options.get('clearEarlierProductFiles', False):
             logger.info("Removing data product files from earlier reductions...")
             for product_file_path in self.files.product_file_paths:
