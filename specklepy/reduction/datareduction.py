@@ -155,7 +155,10 @@ class DataReduction(object):
         if self.options.get('clearEarlierProductFiles', False):
             logger.info("Removing data product files from earlier reductions...")
             for product_file_path in self.files.product_file_paths:
-                os.remove(product_file_path)
+                try:
+                    os.remove(product_file_path)
+                except FileNotFoundError:
+                    pass
 
     def run_dark_correction(self):
 
