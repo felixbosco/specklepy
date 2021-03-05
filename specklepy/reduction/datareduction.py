@@ -41,9 +41,10 @@ class DataReduction(object):
         self.initialize_directories()
         if not self.dark.get('skip'):
             self.run_dark_correction()
+        if not self.linearization.get('skip'):
+            self.run_linearization()
         if not self.flat.get('skip'):
             self.run_flat_fielding()
-        # self.run_linearization()
         if not self.sky.get('skip'):
             self.run_sky_subtraction()
 
@@ -147,8 +148,8 @@ class DataReduction(object):
         with open(par_file, 'w+') as par_file:
             par_file.write(par_file_content)
 
-    def create_product_files(self):
-        self.files.create_product_files()
+    def initialize_product_files(self):
+        self.files.add_product_file_column()
 
     def run_dark_correction(self):
 

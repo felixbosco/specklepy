@@ -437,6 +437,33 @@ class ReductionFileArchive(FileArchive):
 
         return self.product_files
 
+    def add_product_file_column(self, prefix=None):
+        """Add a column of product file names to the table.
+
+        Arguments:
+            prefix (str, optional):
+                .
+        """
+
+        # Store update prefix
+        if prefix:
+            self.out_prefix = prefix
+
+        # Initialize column
+        product_file_column = Column(name='PRODUCT', dtype=object, length=len(self.table))
+
+        # Define list of obs-types, considered for product files
+        obs_types = ['SCIENCE', 'SKY', 'FLAT']
+
+        # Iterate through table and fill column
+        for r, row in enumerate(self.table):
+            if row['OBSTYPE'] in obs_types:
+                dest = self.out_prefix + os.path.basename(row['FILE'])
+                product_file_column[r] = dest
+
+        # Store the new column of product file names to the table
+        self.table.add_column(product_file_column)
+
     def initialize_product_file(self, index, prefix=None):
         """Copy the science data cubes into the stored out directory.
 
