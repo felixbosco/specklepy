@@ -493,8 +493,8 @@ class ReductionFileArchive(FileArchive):
                 dest = self.out_prefix + os.path.basename(row['FILE'])
                 product_file_column[r] = dest
             else:
-                print(f"Ignoring file {row['FILE']!r} for its OBSTYPE {row['OBSTYPE']} not being in the list of "
-                      f"considered files: {obs_types}")
+                logger.debug(f"Ignoring file {row['FILE']!r} for its OBSTYPE {row['OBSTYPE']!r} not being in the list "
+                             f"of considered types: {obs_types}")
 
         # Fill empty fields
         is_empty = product_file_column == 0
