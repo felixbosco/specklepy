@@ -291,7 +291,8 @@ class MasterFlat(object):
                 cube = hdu_list[extension].data.astype(float)
 
                 # Check sizes of frames and sub-window
-                if cube.shape[-2] != sub_window.shape[-2] or cube.shape[-1] != sub_window.shape[-1]:
+                if sub_window.shape is not None and \
+                        (cube.shape[-2] > sub_window.shape[-2] or cube.shape[-1] > sub_window.shape[-1]):
                     logger.warning(f"Unable to apply flat field correction to file {file!r}. Reason may be that "
                                    f"the sub-window covered by the master flat is smaller than the image.")
                     continue
