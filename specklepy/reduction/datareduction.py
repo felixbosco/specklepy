@@ -170,9 +170,10 @@ class DataReduction(object):
         if not self.dark.get('reuse'):
             for setup in dark_setups:
                 darks = self.files.filter({'OBSTYPE': 'DARK', 'SETUP': setup})
+                sub_window = self.files.filter({'OBSTYPE': 'DARK', 'SETUP': setup}, namekey='SUBWIN')
                 master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir, setup=setup,
                                               file_name=self.dark.get('masterDarkFile'),
-                                              out_dir=self.paths.get('tmpDir'))
+                                              out_dir=self.paths.get('tmpDir'), sub_window=sub_window)
                 master_dark.combine(number_frames=self.dark.get('numberFrames'))
                 master_dark.write()
                 master_darks[setup] = master_dark.path
@@ -205,9 +206,10 @@ class DataReduction(object):
         if not self.flat.get('reuse'):
             for filter in flat_filters:
                 flats = self.files.filter({'OBSTYPE': 'FLAT', 'FILTER': filter}, namekey='PRODUCT')
+                sub_window = self.files.filter({'OBSTYPE': 'FLAT', 'FILTER': filter}, namekey='SUBWIN')
                 master_flat = flat.MasterFlat(file_list=flats, file_name=self.flat.get('masterFlatFile'),
                                               file_path=self.files.in_dir, out_dir=self.paths.get('tmpDir'),
-                                              filter=filter)
+                                              filter=filter, sub_window=sub_window)
                 master_flat.combine(method=self.flat.get('method'))
                 master_flat.write()
                 master_flats[filter] = master_flat.path
