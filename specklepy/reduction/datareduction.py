@@ -192,8 +192,7 @@ class DataReduction(object):
 
                 # Initialize file if not existing
                 if not os.path.isfile(product_file_path):
-                    print(product_file_path)
-                    print(self.files.initialize_product_file(index=p))
+                    self.files.initialize_product_file(index=p)
 
                 # Extract sub-window for file
                 sub_window = self.files.table['SUBWIN'].data[p]
