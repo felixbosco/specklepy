@@ -269,17 +269,18 @@ class ReductionFileArchive(FileArchive):
     @property
     def product_files(self):
         try:
-            return self.table['PRODUCT'].data
+            out =  self.table['PRODUCT'].data
         except KeyError:
             self.add_product_file_column()
-            return self.table['PRODUCT'].data
+            out = self.table['PRODUCT'].data
+        return out[out != np.array(None)]  # Filter out None's
 
     @property
     def product_file_paths(self):
         paths = []
         for product_file in self.product_files:
-            embed()
-            paths.append(os.path.join(self.out_dir, product_file))
+            product_file_path = os.path.join(self.out_dir, product_file)
+            paths.append(product_file_path)
         return paths
 
     def filter(self, filter_dict, namekey='FILE', return_mask=False):
@@ -491,6 +492,10 @@ class ReductionFileArchive(FileArchive):
             if row['OBSTYPE'] in obs_types:
                 dest = self.out_prefix + os.path.basename(row['FILE'])
                 product_file_column[r] = dest
+
+        # Fill empty fields
+        is_empty = product_file_column == 0
+        product_file_column[is_empty] = None
 
         # Store the new column of product file names to the table
         self.table.add_column(product_file_column)
