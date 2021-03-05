@@ -157,6 +157,7 @@ class DataReduction(object):
 
         # Identify dark setups
         dark_setups = self.files.get_dark_setups()
+        master_darks = {}
 
         # Create a master dark for each setup
         if not self.dark.get('reuse'):
@@ -167,6 +168,22 @@ class DataReduction(object):
                                               out_dir=self.paths.get('tmpDir'))
                 master_dark.combine(number_frames=self.dark.get('numberFrames'))
                 master_dark.write()
+                master_darks[setup] = master_dark.path
+
+        # Apply dark subtraction
+        for setup in dark_setups:
+            master_dark = dark.MasterDark.from_file(master_darks[setup])
+            for p, product_file_path in enumerate(self.files.product_file_paths):
+                # Skip files not allocated
+                if self.files.table['DARK'][p] != setup:
+                    continue
+
+                # Initialize file if not existing
+                if not os.path.isfile(product_file_path):
+                    self.files.initialize_product_file(index=p)
+
+                # Subtract master dark from file
+                master_dark.subtract(product_file_path)
 
     def run_flat_fielding(self):
         raise NotImplementedError("Flat fielding is not implemented yet!")
