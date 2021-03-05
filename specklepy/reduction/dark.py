@@ -5,6 +5,7 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 
 from specklepy.logging import logger
+from specklepy.reduction.subwindow import SubWindow
 from specklepy.utils.time import default_time_stamp
 
 
@@ -116,7 +117,7 @@ class MasterDark(object):
         logger.info(f"Writing master dark frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
 
-    def subtract(self, file_path, extension=None):
+    def subtract(self, file_path, extension=None, sub_window=None, full_window=None):
         """Subtract the master dark from a file containing image data.
 
         The master dark is subtracted from the image or each frame in a data cube. Then uncertainties are propagated.
@@ -130,33 +131,36 @@ class MasterDark(object):
 
         logger.info(f"Subtracting master dark {self.file_name} from file at {file_path!r}")
 
+        # Construct sub-window
+        sub_window = SubWindow.from_str(sub_window, full=full_window)
+
         # Load image data
         data = fits.getdata(file_path, extension)
 
         # Subtract
         if data.ndim == 2:
-            data = data - self.image
+            data = data - sub_window(self.image)
         elif data.ndim == 3:
             for f, frame in enumerate(data):
-                data[f] = frame - self.image
+                data[f] = frame - sub_window(self.image)
 
         # Propagate variances
         try:
             var = fits.getdata(file_path, self.extensions.get('variance'))
             has_var_hdu = True
-            var += self.var
+            var = np.add(var, sub_window(self.var))
         except KeyError:
             has_var_hdu = False
-            var = self.var
+            var = sub_window(self.var)
 
         # Propagate mask
         try:
             mask = fits.getdata(file_path, self.extensions.get('mask')).astype(bool)
             has_mask_hdu = True
-            mask = np.logical_or(mask, self.mask)
+            mask = np.logical_or(mask, sub_window(self.mask))
         except KeyError:
             has_mask_hdu = False
-            mask = self.mask
+            mask = sub_window(self.mask)
 
         # Store data to cube
         with fits.open(file_path, mode='update') as hdu_list:
