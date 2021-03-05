@@ -208,7 +208,7 @@ class DataReduction(object):
                 flats = self.files.filter({'OBSTYPE': 'FLAT', 'FILTER': filter}, namekey='PRODUCT')
                 sub_window = self.files.filter({'OBSTYPE': 'FLAT', 'FILTER': filter}, namekey='SUBWIN')
                 master_flat = flat.MasterFlat(file_list=flats, file_name=self.flat.get('masterFlatFile'),
-                                              file_path=self.files.in_dir, out_dir=self.paths.get('tmpDir'),
+                                              file_path=self.files.out_dir, out_dir=self.paths.get('tmpDir'),
                                               filter=filter, sub_window=sub_window)
                 master_flat.combine(method=self.flat.get('method'))
                 master_flat.write()
