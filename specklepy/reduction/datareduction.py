@@ -166,10 +166,10 @@ class DataReduction(object):
             master_dark.write()
 
     def run_flat_fielding(self):
-        pass
+        raise NotImplementedError("Flat fielding is not implemented yet!")
 
     def run_linearization(self):
-        pass
+        raise NotImplementedError("Linearization is not implemented yet!")
 
     def run_sky_subtraction(self):
-        pass
+        raise NotImplementedError("Sky subtraction is not implemented yet!")
