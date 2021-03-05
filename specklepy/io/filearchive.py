@@ -273,13 +273,16 @@ class ReductionFileArchive(FileArchive):
         except KeyError:
             self.add_product_file_column()
             out = self.table['PRODUCT'].data
-        return out[out != np.array(None)]  # Filter out None's
+        return out
 
     @property
     def product_file_paths(self):
         paths = []
         for product_file in self.product_files:
-            product_file_path = os.path.join(self.out_dir, product_file)
+            if product_file is not None:
+                product_file_path = os.path.join(self.out_dir, product_file)
+            else:
+                product_file_path = None
             paths.append(product_file_path)
         return paths
 

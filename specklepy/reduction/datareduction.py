@@ -156,9 +156,11 @@ class DataReduction(object):
         if self.options.get('clearEarlierProductFiles', False):
             logger.info("Removing data product files from earlier reductions...")
             for product_file_path in self.files.product_file_paths:
+                if product_file_path is None:
+                    continue
                 try:
                     os.remove(product_file_path)
-                    logger.info(f"Removed product file {product_file_path!r} from earlier reduction")
+                    logger.debug(f"Removed product file {product_file_path!r} from earlier reduction")
                 except FileNotFoundError:
                     pass
 
@@ -185,7 +187,7 @@ class DataReduction(object):
             master_dark = dark.MasterDark.from_file(master_darks[setup])
             for p, product_file_path in enumerate(self.files.product_file_paths):
                 # Skip files not allocated
-                if self.files.table['DARK'][p] != setup:
+                if product_file_path is None or self.files.table['DARK'][p] != setup:
                     continue
 
                 # Initialize file if not existing
@@ -222,7 +224,7 @@ class DataReduction(object):
             master_flat = flat.MasterFlat.from_file(master_flats[filter])
             for p, product_file_path in enumerate(self.files.product_file_paths):
                 # Skip files from different filter
-                if self.files.table['FILTER'][p] != filter:
+                if product_file_path is None or self.files.table['FILTER'][p] != filter:
                     continue
 
                 # Initialize file if not existing
