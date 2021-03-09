@@ -233,7 +233,7 @@ class DataReduction(object):
                 # Skip files from different filter
                 if product_file_path is None \
                         or self.files.table['FILTER'][p] != filter \
-                        or self.files.table['OBSTYPE'] in ['DARK', 'FLAT']:
+                        or self.files.table['OBSTYPE'][p] in ['DARK', 'FLAT']:
                     continue
 
                 # Initialize file if not existing
