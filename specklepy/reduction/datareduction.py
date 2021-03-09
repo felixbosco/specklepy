@@ -174,6 +174,8 @@ class DataReduction(object):
 
     def run_dark_correction(self):
 
+        logger.info(f"{'>' * 15} DARK SUBTRACTION {'<' * 15}")
+
         # Identify dark setups
         dark_setups = self.files.get_dark_setups()
         master_darks = {}
@@ -208,7 +210,11 @@ class DataReduction(object):
                 # Subtract master dark from file
                 master_dark.subtract(product_file_path, sub_window=sub_window)
 
+        logger.info(f"{'>' * 11} DARK SUBTRACTION COMPLETE {'<' * 11}")
+
     def run_flat_fielding(self):
+
+        logger.info(f"{'>' * 15} FLAT FIELDING {'<' * 15}")
 
         # Identify flat filters
         flat_filters = self.files.get_flat_filters()
@@ -246,10 +252,14 @@ class DataReduction(object):
                 # Normalize product file with master flat
                 master_flat.run_correction(file_list=[product_file_path], sub_windows=[sub_window])
 
+        logger.info(f"{'>' * 11} FLAT FIELDING COMPLETE {'<' * 11}")
+
     def run_linearization(self):
         raise NotImplementedError("Linearization is not implemented yet!")
 
     def run_sky_subtraction(self):
+
+        logger.info(f"{'>' * 15} SKY SUBTRACTION {'<' * 15}")
 
         # Choose sky source
         if self.sky.get('source') == 'self' or self.sky.get('source') == 'default':
@@ -283,3 +293,5 @@ class DataReduction(object):
 
         else:
             raise NotImplementedError(f"Sky subtraction from source {self.sky.get('source')!r} is not implemented yet!")
+
+        logger.info(f"{'>' * 11} SKY SUBTRACTION COMPLETE {'<' * 11}")
