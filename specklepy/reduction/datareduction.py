@@ -1,11 +1,14 @@
 import glob
+import numpy as np
 import os
+
+from astropy.io import fits
 
 from specklepy.io import config
 from specklepy.io.config import read
 from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
-from specklepy.reduction import dark, flat
+from specklepy.reduction import dark, flat, sky
 
 
 class DataReduction(object):
@@ -242,4 +245,36 @@ class DataReduction(object):
         raise NotImplementedError("Linearization is not implemented yet!")
 
     def run_sky_subtraction(self):
-        raise NotImplementedError("Sky subtraction is not implemented yet!")
+
+        # Choose sky source
+        if self.sky.get('source') == 'self' or self.sky.get('source') == 'default':
+
+            # Identify science files to measure sky background in themselves
+            science_files = self.files.filter({'OBSTYPE': 'SCIENCE'}, namekey='PRODUCT')
+
+            # Iterate through science files
+            for science_file in science_files:
+
+                logger.info(f"Estimating sky background for file {science_file!r}...")
+
+                sky_mean, sky_std = sky.estimate_sky_background(science_file, method=self.sky.get('method'),
+                                                                path=self.paths.get('tmpDir'))
+
+                if self.sky.get('method') != 'scalar':
+                    raise NotImplementedError(f"Sky subtraction with {self.sky.get('method')} method is not "
+                                              f"implemented yet!")
+
+                with fits.open(science_file, mode='update') as hdu_list:
+
+                    hdu_list[0].data = hdu_list[0].data - sky_mean
+
+                    try:
+                        hdu_list['VAR'].data = np.add(hdu_list['VAR'].data, np.square(sky_std))
+                    except KeyError:
+                        var_hdu = fits.ImageHDU(data=np.square(sky_std), name='VAR')
+                        hdu_list.append(var_hdu)
+
+                    hdu_list.flush()
+
+        else:
+            raise NotImplementedError(f"Sky subtraction from source {self.sky.get('source')!r} is not implemented yet!")
