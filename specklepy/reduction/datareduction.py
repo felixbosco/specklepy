@@ -223,7 +223,9 @@ class DataReduction(object):
             master_flat = flat.MasterFlat.from_file(master_flats[filter])
             for p, product_file_path in enumerate(self.files.product_file_paths):
                 # Skip files from different filter
-                if product_file_path is None or self.files.table['FILTER'][p] != filter:
+                if product_file_path is None \
+                        or self.files.table['FILTER'][p] != filter \
+                        or self.files.table['OBSTYPE'] in ['DARK', 'FLAT']:
                     continue
 
                 # Initialize file if not existing
