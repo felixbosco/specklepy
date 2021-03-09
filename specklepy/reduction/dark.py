@@ -66,10 +66,10 @@ class MasterDark(object):
             base, ext = os.path.splitext(file_name)
             return f"{base}_{setup}{ext}"
 
-    def combine(self, number_frames=None):
+    def combine(self, max_number_frames=None):
         logger.info("Combining master dark frame...")
-        if number_frames is not None:
-            logger.debug(f"Using only the first {number_frames} frames of each cube")
+        if max_number_frames is not None:
+            logger.debug(f"Using only the first {max_number_frames} frames of each cube")
         self.means = []
 
         # Iterate through files
@@ -79,7 +79,7 @@ class MasterDark(object):
             with fits.open(path) as hdu_list:
                 cube = hdu_list[0].data
                 logger.info("Computing sigma-slipped statistics of data cube...")
-                mean, _, std = sigma_clipped_stats(data=cube[:number_frames], axis=0)
+                mean, _, std = sigma_clipped_stats(data=cube[:max_number_frames], axis=0)
 
                 self.means.append(mean)
                 self.combine_var(np.square(std))
