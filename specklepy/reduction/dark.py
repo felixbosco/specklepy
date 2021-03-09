@@ -75,7 +75,7 @@ class MasterDark(object):
 
         # Iterate through files
         for file in self.files:
-            logger.info(f"Reading dark frames from file {file!r}...")
+            logger.info(f"Reading DARK frames from file {file!r}...")
             path = os.path.join(self.file_path, file)
             with fits.open(path) as hdu_list:
                 data = hdu_list[0].data.squeeze()
@@ -83,7 +83,7 @@ class MasterDark(object):
                 if data.ndim == 2:
                     means.append(data)
                     vars.append(np.zeros(data.shape))
-                    self.combine_mask(np.zeros(data.shape, dtype=bool))
+                    # self.combine_mask(np.zeros(data.shape, dtype=bool))
                     number_frames.append(1)
 
                 elif data.ndim == 3:
@@ -112,9 +112,9 @@ class MasterDark(object):
                     std = sigma_clip(std, sigma=rejection_threshold, masked=True)
 
                     # Store results into lists
-                    means.append(mean.data)
-                    vars.append(np.square(std.data))
-                    self.combine_mask(np.logical_or(mean.mask, std.mask))
+                    means.append(mean)
+                    vars.append(np.square(std))
+                    # self.combine_mask(np.logical_or(mean.mask, std.mask))
                     number_frames.append(data.shape[0])
 
                 else:
@@ -125,17 +125,22 @@ class MasterDark(object):
         self.image = np.average(np.array(means), axis=0, weights=number_frames)
         self.var = np.average(np.array(vars), axis=0, weights=number_frames)
 
-    def combine_var(self, new_var):
-        if self.var is None:
-            self.var = new_var
-        else:
-            self.var = np.add(self.var, new_var)
+        # Combine mask
+        self.mask = np.logical_or(self.image.mask, self.var.mask)
+        self.image = self.image.data
+        self.var = self.var.data
 
-    def combine_mask(self, new_mask):
-        if self.mask is None:
-            self.mask = new_mask
-        else:
-            self.mask = np.logical_or(self.mask, new_mask)
+    # def combine_var(self, new_var):
+    #     if self.var is None:
+    #         self.var = new_var
+    #     else:
+    #         self.var = np.add(self.var, new_var)
+    #
+    # def combine_mask(self, new_mask):
+    #     if self.mask is None:
+    #         self.mask = new_mask
+    #     else:
+    #         self.mask = np.logical_or(self.mask, new_mask)
 
     def write(self, overwrite=True):
 
@@ -175,26 +180,32 @@ class MasterDark(object):
                 Classifier for the image data extension.
         """
 
-        logger.info(f"Subtracting master dark {self.file_name} from file at {file_path!r}")
+        logger.info(f"Subtracting master dark {self.file_name!r} from file at {file_path!r}")
 
         # Construct sub-window
         sub_window = SubWindow.from_str(sub_window, full=self.sub_window)
+
+        # Construct good pixel mask
+        if self.mask is None:
+            gpm = np.ones(sub_window(self.image).shape, dtype=bool)
+        else:
+            gpm = ~self.mask
 
         # Load image data
         data = fits.getdata(file_path, extension)
 
         # Subtract
         if data.ndim == 2:
-            data = data - sub_window(self.image)
+            data = np.subtract(data, sub_window(self.image), where=gpm)
         elif data.ndim == 3:
             for f, frame in enumerate(data):
-                data[f] = frame - sub_window(self.image)
+                data[f] = np.subtract(frame, sub_window(self.image), where=gpm)
 
         # Propagate variances
         try:
             var = fits.getdata(file_path, self.extensions.get('variance'))
             has_var_hdu = True
-            var = np.add(var, sub_window(self.var))
+            var = np.add(var, sub_window(self.var), where=gpm)
         except KeyError:
             has_var_hdu = False
             var = sub_window(self.var)
