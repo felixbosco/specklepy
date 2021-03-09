@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 from astropy.io import fits
-from astropy.stats import sigma_clipped_stats
+from astropy.stats import sigma_clip, sigma_clipped_stats
 
 from specklepy.logging import logger
 from specklepy.reduction.subwindow import SubWindow
@@ -27,7 +27,6 @@ class MasterDark(object):
             self.sub_window = np.unique(sub_window)[0]
 
         # Initialize maps
-        self.means = None
         self.image = None
         self.var = None
         self.mask = None
@@ -66,27 +65,65 @@ class MasterDark(object):
             base, ext = os.path.splitext(file_name)
             return f"{base}_{setup}{ext}"
 
-    def combine(self, max_number_frames=None):
+    def combine(self, max_number_frames=None, rejection_threshold=10):
         logger.info("Combining master dark frame...")
-        if max_number_frames is not None:
-            logger.debug(f"Using only the first {max_number_frames} frames of each cube")
-        self.means = []
+        # if max_number_frames is not None:
+        #     logger.debug(f"Using only the first {max_number_frames} frames of each cube")
+        means = []
+        vars = []
+        number_frames = []
 
         # Iterate through files
         for file in self.files:
             logger.info(f"Reading dark frames from file {file!r}...")
             path = os.path.join(self.file_path, file)
             with fits.open(path) as hdu_list:
-                cube = hdu_list[0].data
-                logger.info("Computing sigma-slipped statistics of data cube...")
-                mean, _, std = sigma_clipped_stats(data=cube[:max_number_frames], axis=0)
+                data = hdu_list[0].data.squeeze()
 
-                self.means.append(mean)
-                self.combine_var(np.square(std))
-                self.combine_mask(std == 0)
+                if data.ndim == 2:
+                    means.append(data)
+                    vars.append(np.zeros(data.shape))
+                    self.combine_mask(np.zeros(data.shape, dtype=bool))
+                    number_frames.append(1)
 
-        self.image = np.mean(np.array(self.means), axis=0)
-        self.var /= np.square(len(self.files))  # For correctly propagating the uncertainties
+                elif data.ndim == 3:
+                    logger.info("Computing statistics of data cube...")
+                    mean = np.mean(data, axis=0)
+                    std = np.std(data, axis=0)
+
+                    # Identify outliers based on sigma-clipping
+                    mean_mask = sigma_clip(mean, sigma=rejection_threshold, masked=True).mask
+                    std_mask = sigma_clip(std, sigma=rejection_threshold, masked=True).mask
+                    mask = np.logical_or(mean_mask, std_mask)
+                    mask_indexes = np.array(np.where(mask)).transpose()
+
+                    # Re-compute the identified pixels
+                    logger.info(f"Re-measuring {len(mask_indexes)} outliers...")
+                    for mask_index in mask_indexes:
+                        # Extract t-series for the masked pixel
+                        arr = data[:, mask_index[0], mask_index[1]]
+
+                        # Compute sigma-clipped statistics for this pixel
+                        arr_mean, _, arr_std = sigma_clipped_stats(arr, sigma=rejection_threshold)
+                        mean[mask_index[0], mask_index[1]] = arr_mean
+                        std[mask_index[0], mask_index[1]] = arr_std
+
+                    mean = sigma_clip(mean, sigma=rejection_threshold, masked=True)
+                    std = sigma_clip(std, sigma=rejection_threshold, masked=True)
+
+                    # Store results into lists
+                    means.append(mean.data)
+                    vars.append(np.square(std.data))
+                    self.combine_mask(np.logical_or(mean.mask, std.mask))
+                    number_frames.append(data.shape[0])
+
+                else:
+                    raise ValueError(f"Shape of data {data.shape} is not understood. Data must be either 2 or "
+                                     f"3-dimensional!")
+
+        # Combine data and propagate the uncertainties
+        self.image = np.average(np.array(means), axis=0, weights=number_frames)
+        self.var = np.average(np.array(vars), axis=0, weights=number_frames)
 
     def combine_var(self, new_var):
         if self.var is None:

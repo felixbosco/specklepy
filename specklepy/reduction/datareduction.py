@@ -178,7 +178,7 @@ class DataReduction(object):
                 master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir, setup=setup,
                                               file_name=self.dark.get('masterDarkFile'),
                                               out_dir=self.paths.get('tmpDir'), sub_window=sub_window)
-                master_dark.combine(max_number_frames=self.dark.get('numberFrames'))
+                master_dark.combine()
                 master_dark.write()
                 master_darks[setup] = master_dark.path
 
