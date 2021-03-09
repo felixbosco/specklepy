@@ -157,6 +157,7 @@ class DataReduction(object):
         self.files.add_product_file_column(prefix=self.paths.get('filePrefix'))
         logger.info(f"Overview of the considered files:\n{self.files.table}")
         if self.options.get('clearEarlierProductFiles', False):
+            # Remove product files
             logger.info("Removing data product files from earlier reductions...")
             for product_file_path in self.files.product_file_paths:
                 if product_file_path is None:
@@ -166,6 +167,10 @@ class DataReduction(object):
                     logger.debug(f"Removed product file {product_file_path!r} from earlier reduction")
                 except FileNotFoundError:
                     pass
+
+            # Remove masters
+            logger.info("Removing master files from earlier reductions...")
+            os.system(f"rm {os.path.join(self.paths.tmp_dir, '*.fits')}")
 
     def run_dark_correction(self):
 
