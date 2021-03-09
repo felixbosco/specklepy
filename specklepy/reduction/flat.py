@@ -263,6 +263,9 @@ class MasterFlat(object):
             self.var, mask_var = self.fill_masked(self.var)
             self.mask = np.logical_or(self.mask, mask_var)
 
+
+
+
         # # Store variance in extension
         # self.master_file.data = master_flat_normed
         # if master_flat_normed_var is not None:
