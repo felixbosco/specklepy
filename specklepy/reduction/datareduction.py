@@ -273,7 +273,7 @@ class DataReduction(object):
                 logger.info(f"Estimating sky background for file {science_file!r}...")
 
                 sky_mean, sky_std = sky.estimate_sky_background(science_file, method=self.sky.get('method'),
-                                                                path=self.paths.get('tmpDir'))
+                                                                path=self.paths.get('outDir'))
 
                 if self.sky.get('method') != 'scalar':
                     raise NotImplementedError(f"Sky subtraction with {self.sky.get('method')} method is not "
