@@ -170,7 +170,7 @@ class DataReduction(object):
 
             # Remove masters
             logger.info("Removing master files from earlier reductions...")
-            os.system(f"rm {os.path.join(self.paths.tmp_dir, '*.fits')}")
+            os.system(f"rm {os.path.join(self.paths.get('tmpDir'), '*.fits')}")
 
     def run_dark_correction(self):
 
