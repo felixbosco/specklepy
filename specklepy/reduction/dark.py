@@ -122,8 +122,8 @@ class MasterDark(object):
                                      f"3-dimensional!")
 
         # Combine data and propagate the uncertainties
-        self.image = np.average(np.array(means), axis=0, weights=number_frames)
-        self.var = np.average(np.array(vars), axis=0, weights=number_frames)
+        self.image = np.average(np.ma.masked_array(means), axis=0, weights=number_frames)
+        self.var = np.average(np.ma.masked_array(vars), axis=0, weights=number_frames)
 
         # Combine mask
         self.mask = np.logical_or(self.image.mask, self.var.mask)

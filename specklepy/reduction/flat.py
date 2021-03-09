@@ -221,8 +221,8 @@ class MasterFlat(object):
             self.var = np.var(flats, axis=0)
             # master_flat_var = np.var(flats, axis=0)
         elif method == 'average':
-            self.image = np.average(means, axis=0, weights=number_frames)
-            self.var = np.average(vars, axis=0, weights=number_frames)
+            self.image = np.average(np.ma.masked_array(means), axis=0, weights=number_frames)
+            self.var = np.average(np.ma.masked_array(vars), axis=0, weights=number_frames)
         else:
             raise SpecklepyValueError('MasterFlat.combine()', argname='method', argvalue=method,
                                       expected="'clip' or 'median'")
