@@ -64,7 +64,6 @@ class MasterFlat(object):
         #                               initialize=new)
 
         # Initialize maps
-        self.means = None
         self.image = None
         self.var = None
         self.mask = None
@@ -118,7 +117,7 @@ class MasterFlat(object):
         else:
             self.mask = np.logical_or(self.mask, new_mask)
 
-    def combine(self, method='clip'):
+    def combine(self, method='average', rejection_threshold=10):
         """Combine the frames of the stored files to a master flat.
 
         Args:
@@ -128,6 +127,8 @@ class MasterFlat(object):
                 uncertainties (since the median does not allow for this) or
                 'clip' for sigma clipping and a subsequent estimate of the
                 variance of the cube, followed by a mean combination.
+            rejection_threshold (float, optional):
+                Threshold for sigma-clipping.
         """
 
         # Type check
@@ -135,27 +136,72 @@ class MasterFlat(object):
             raise SpecklepyTypeError('MasterFlat.combine()', argname='method', argtype=type(method), expected='str')
 
         # Read image frames from file
-        logger.info("Combining the following files to a master flat:")
-        self.means = []
+        means = []
+        vars = []
+        number_frames = []
 
-        # flats = None
+        # Iterate through files
         for index, file in enumerate(self.files):
-            logger.info(f"{index:4}: {file!r}")
-            data = fits.getdata(os.path.join(self.file_path, file))
-            # data -= np.min(data)  # Avoid negative values that screw up the normalization
-            logger.debug(f"{file} (dtype: {data.dtype}, shape: {data.shape})")
+            logger.info(f"Reading FLAT frames from file {file!r}...")
+            with fits.open(os.path.join(self.file_path, file)) as hdu_list:
+                data = hdu_list[0].data.squeeze()
+                # data -= np.min(data)  # Avoid negative values that screw up the normalization
+                logger.debug(f"{file} (dtype: {data.dtype}, shape: {data.shape})")
 
-            if data.ndim == 2:
-                self.means.append(data)
-                self.combine_var(np.zeros(data.shape))
-                self.combine_mask(np.zeros(data.shape, dtype=bool))
+                # Extract variance of data for propagation of uncertainties
+                try:
+                    data_var = hdu_list[self.extensions.get('variance')].data
+                except KeyError:
+                    data_var = None
 
-            elif data.ndim == 3:
-                logger.info("Computing sigma-slipped statistics of data cube...")
-                mean, _, std = sigma_clipped_stats(data=data, axis=0)
-                self.means.append(mean)
-                self.combine_var(np.square(std))
-                self.combine_mask(np.zeros(data.shape, dtype=bool))
+                if data.ndim == 2:
+                    means.append(data)
+                    if data_var is None:
+                        vars.append(np.zeros(data.shape))
+                    else:
+                        vars.append(data_var)
+                    number_frames.append(1)
+
+                elif data.ndim == 3:
+                    logger.info("Computing statistics of data cube...")
+                    mean = np.mean(data, axis=0)
+                    std = np.std(data, axis=0)
+
+                    # Identify outliers based on sigma-clipping
+                    mean_mask = sigma_clip(mean, sigma=rejection_threshold, masked=True).mask
+                    std_mask = sigma_clip(std, sigma=rejection_threshold, masked=True).mask
+                    mask = np.logical_or(mean_mask, std_mask)
+                    mask_indexes = np.array(np.where(mask)).transpose()
+
+                    # Re-compute the identified pixels
+                    logger.info(f"Re-measuring {len(mask_indexes)} outliers...")
+                    for mask_index in mask_indexes:
+                        # Extract t-series for the masked pixel
+                        arr = data[:, mask_index[0], mask_index[1]]
+
+                        # Compute sigma-clipped statistics for this pixel
+                        arr_mean, _, arr_std = sigma_clipped_stats(arr, sigma=rejection_threshold)
+                        mean[mask_index[0], mask_index[1]] = arr_mean
+                        std[mask_index[0], mask_index[1]] = arr_std
+
+                    mean = sigma_clip(mean, sigma=rejection_threshold, masked=True)
+                    std = sigma_clip(std, sigma=rejection_threshold, masked=True)
+
+                    # Combine variance
+                    if data_var is None:
+                        var = np.square(std.data)
+                    else:
+                        var = np.add(np.square(std.data), data_var)
+
+                    # Store results into lists
+                    means.append(mean)
+                    vars.append(var)
+                    # self.combine_mask(np.logical_or(mean.mask, std.mask))
+                    number_frames.append(data.shape[0])
+
+                else:
+                    raise ValueError(f"Shape of data {data.shape} is not understood. Data must be either 2 or "
+                                     f"3-dimensional!")
 
         #     # Create a master flat
         #     if flats is None:
@@ -167,12 +213,16 @@ class MasterFlat(object):
         # Collapse master flat along axis 0
         logger.info(f"Combining flats with {method!r} method...")
         if method == 'median':
-            self.image = np.median(np.array(self.means), axis=0)
+            self.image = np.median(np.array(means), axis=0)
             # master_flat_var = None
         elif method == 'clip':
-            flats = sigma_clip(np.array(self.means), axis=0, masked=True)
+            flats = sigma_clip(np.array(means), axis=0, masked=True)
             self.image = np.mean(flats, axis=0)
+            self.var = np.var(flats, axis=0)
             # master_flat_var = np.var(flats, axis=0)
+        elif method == 'average':
+            self.image = np.average(means, axis=0, weights=number_frames)
+            self.var = np.average(vars, axis=0, weights=number_frames)
         else:
             raise SpecklepyValueError('MasterFlat.combine()', argname='method', argvalue=method,
                                       expected="'clip' or 'median'")
@@ -193,6 +243,13 @@ class MasterFlat(object):
                                      np.divide(np.square(self.image), np.power(norm, 4)) * norm_var
             self.image = master_flat_normed
             self.normalized = True
+        elif method == 'average':
+            weights = np.reciprocal(self.var)
+            norm = np.average(self.image, weights=weights)
+            norm_var = np.reciprocal(np.sum(weights))
+            self.var = np.divide(self.var, np.square(norm)) + \
+                                     np.divide(np.square(self.image), np.power(norm, 4)) * norm_var
+            self.image = np.divide(self.image, norm)
 
         # Replace masked values by fill_value
         self.mask = combine_masks(sigma_clip(self.image, masked=True, sigma=self.mask_threshold), self.image, self.var)
