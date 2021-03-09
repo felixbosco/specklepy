@@ -189,7 +189,7 @@ class MasterDark(object):
         if self.mask is None:
             gpm = np.ones(sub_window(self.image).shape, dtype=bool)
         else:
-            gpm = ~self.mask
+            gpm = sub_window(~self.mask)
 
         # Load image data
         data = fits.getdata(file_path, extension)
