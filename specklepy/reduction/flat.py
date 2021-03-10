@@ -244,12 +244,17 @@ class MasterFlat(object):
             self.image = master_flat_normed
             self.normalized = True
         elif method == 'average':
-            weights = np.reciprocal(self.var)
+            gpm = self.var > 0.0
+            weights = np.reciprocal(self.var, where=gpm)
             norm = np.average(self.image, weights=weights)
             norm_var = np.reciprocal(np.sum(weights))
             self.var = np.divide(self.var, np.square(norm)) + \
                                      np.divide(np.square(self.image), np.power(norm, 4)) * norm_var
             self.image = np.divide(self.image, norm)
+
+            # Store good pixel mask to arrays
+            self.var = np.ma.masked_array(self.var, mask=~gpm)
+            self.image = np.ma.masked_array(self.image, mask=~gpm)
 
         # Replace masked values by fill_value
         self.mask = combine_masks(sigma_clip(self.image, masked=True, sigma=self.mask_threshold), self.image, self.var)
