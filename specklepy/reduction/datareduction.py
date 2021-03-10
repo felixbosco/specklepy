@@ -262,7 +262,7 @@ class DataReduction(object):
         logger.info(f"{'>' * 15} SKY SUBTRACTION {'<' * 15}")
 
         # Choose sky source
-        if self.sky.get('source') == 'self' or self.sky.get('source') == 'default':
+        if self.sky.get('source').lower() in ['default', 'self', 'science']:
 
             # Identify science files to measure sky background in themselves
             science_files = self.files.filter({'OBSTYPE': 'SCIENCE'}, namekey='PRODUCT')
