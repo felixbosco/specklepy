@@ -270,25 +270,32 @@ class DataReduction(object):
             # Iterate through science files
             for science_file in science_files:
 
-                logger.info(f"Estimating sky background for file {science_file!r}...")
+                # Build path
+                science_path = os.path.join(self.paths.get('outDir'), science_file)
 
-                sky_mean, sky_std = sky.estimate_sky_background(science_file, method=self.sky.get('method'),
-                                                                path=self.paths.get('outDir'))
-
+                # Catch not implemented methods
                 if self.sky.get('method') != 'scalar':
                     raise NotImplementedError(f"Sky subtraction with {self.sky.get('method')} method is not "
                                               f"implemented yet!")
 
-                with fits.open(science_file, mode='update') as hdu_list:
+                # Estimate sky background
+                logger.info(f"Estimating sky background for file {science_path!r}...")
+                sky_mean, sky_std = sky.estimate_sky_background(science_path, method=self.sky.get('method'))
 
+                # Subtract sky background from data
+                with fits.open(science_path, mode='update') as hdu_list:
+
+                    # Subtract sky
                     hdu_list[0].data = hdu_list[0].data - sky_mean
 
+                    # Propagate uncertainties
                     try:
                         hdu_list['VAR'].data = np.add(hdu_list['VAR'].data, np.square(sky_std))
                     except KeyError:
                         var_hdu = fits.ImageHDU(data=np.square(sky_std), name='VAR')
                         hdu_list.append(var_hdu)
 
+                    # Store updates
                     hdu_list.flush()
 
         else:
