@@ -67,7 +67,7 @@ class FourierObject(object):
 
         # Get example image frame, used as final image size
         image_file = in_files[file_index]
-        logger.info(f"\tUsing example image frame from {image_file}")
+        logger.info(f"\tUsing example image frame from {image_file!r}")
         img = fits.getdata(os.path.join(self.in_dir, image_file))[0]  # Remove time axis padding
         img = pad_array(array=img, pad_vector=image_pad_vector, mode=mode,
                         reference_image_pad_vector=self.reference_image_pad_vector)
@@ -76,7 +76,7 @@ class FourierObject(object):
 
         # Get example PSF frame
         psf_file = psf_files[file_index]
-        logger.info(f"\tUsing example PSF frame from {psf_file}")
+        logger.info(f"\tUsing example PSF frame from {psf_file!r}")
         psf = fits.getdata(psf_file)[0]
         logger.info(f"\tShape: {psf.shape}")
 
