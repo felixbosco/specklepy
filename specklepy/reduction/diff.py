@@ -38,7 +38,7 @@ def differentiate_cube(files, delta=1, method='direct', exposure_time_prefix=Non
             raise ValueError(f"Differentiation method {method!r} not understood!")
 
         # Final terminal output
-        logger.info(f"Differencing successful for file {diff_cube.file}")
+        logger.info(f"Differencing successful for file {diff_cube.file!r}")
 
 
 class DiffCube(object):
@@ -54,7 +54,7 @@ class DiffCube(object):
         return 'diff_' + os.path.basename(input_file)
 
     def initialize_file(self):
-        logger.info(f"Creating file {self.file}")
+        logger.info(f"Creating file {self.file!r}")
         os.system(f"cp {self.input_file} {self.file}")
 
     def differentiate(self, delta=1, exposure_time_prefix=None, extension=None, dtype=None, mask_threshold=None,
