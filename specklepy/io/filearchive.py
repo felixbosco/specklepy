@@ -1,6 +1,5 @@
 from datetime import datetime
 import glob
-from IPython import embed
 import numpy as np
 import os
 import string
@@ -13,6 +12,7 @@ from astropy.table import Column, Table
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.reduction.sequence import Sequence
+from specklepy.utils.time import default_time_stamp
 
 
 class FileArchive(object):
@@ -531,7 +531,7 @@ class ReductionFileArchive(FileArchive):
         os.system(f"cp {src} {dest}")
         with fits.open(dest, mode='update') as hdu_list:
             hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
-            hdu_list[0].header.set('REDUCED', datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+            hdu_list[0].header.set('REDUCED', default_time_stamp)
             hdu_list.flush()
 
         return dest
