@@ -531,7 +531,7 @@ class ReductionFileArchive(FileArchive):
         os.system(f"cp {src} {dest}")
         with fits.open(dest, mode='update') as hdu_list:
             hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
-            hdu_list[0].header.set('REDUCED', default_time_stamp)
+            hdu_list[0].header.set('REDUCED', default_time_stamp())
             hdu_list.flush()
 
         return dest
