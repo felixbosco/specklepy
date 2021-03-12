@@ -50,3 +50,9 @@ def mask_variable_pixels(cube, var, threshold=5):
 
 def fill_variable_pixels(cube, var, fill_value=0, threshold=5):
     return mask_variable_pixels(cube=cube, var=var, threshold=threshold).filled(fill_value)
+
+
+def bad_pixel_mask(cube, var, threshold=5):
+    hpm = hot_pixel_mask(np.sum(cube, axis=0), threshold=threshold)
+    vpm = variable_pixel_mask(cube=cube, var=var, threshold=threshold)
+    return np.logical_or(hpm, vpm)
