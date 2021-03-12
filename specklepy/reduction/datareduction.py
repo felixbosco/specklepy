@@ -264,8 +264,7 @@ class DataReduction(object):
         # Choose sky source
         if self.sky.get('source').lower() in ['default', 'self', 'science']:
 
-            # Identify science files to measure sky background in themselves
-            science_files = self.files.filter({'OBSTYPE': 'SCIENCE'}, namekey='PRODUCT')
+            logger.info("Estimating sky brightness from the SCIENCE frames themselves")
 
             # Iterate through science files
             for p, product_file_path in enumerate(self.files.product_file_paths):
