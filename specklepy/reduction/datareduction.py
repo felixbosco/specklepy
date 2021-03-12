@@ -328,7 +328,7 @@ class DataReduction(object):
                     if 'MASK' not in hdu_list:
                         mask = np.zeros(frame_shape(hdu_list[0].data), dtype=np.int16)
                         mask_hdu = fits.ImageHDU(data=mask, name='MASK')
-                        hdu_list.appen(mask_hdu)
+                        hdu_list.append(mask_hdu)
 
                     # Store updates
                     hdu_list.flush()
