@@ -9,6 +9,8 @@ from specklepy.io.config import read
 from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
 from specklepy.reduction import dark, flat, sky
+from specklepy.utils.array import frame_shape
+from specklepy.utils.time import default_time_stamp
 
 
 class DataReduction(object):
@@ -294,12 +296,23 @@ class DataReduction(object):
                     # Subtract sky
                     hdu_list[0].data = hdu_list[0].data - sky_mean
 
+                    # Update header
+                    hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION SKYBKG', default_time_stamp())
+
                     # Propagate uncertainties
                     try:
                         hdu_list['VAR'].data = np.add(hdu_list['VAR'].data, np.square(sky_std))
                     except KeyError:
-                        var_hdu = fits.ImageHDU(data=np.square(sky_std), name='VAR')
+                        # Create VAR image and HDU
+                        sky_std_image = np.full(frame_shape(hdu_list[0].data), np.square(sky_std))
+                        var_hdu = fits.ImageHDU(data=sky_std_image, name='VAR')
                         hdu_list.append(var_hdu)
+
+                    # Propagate mask
+                    if 'MASK' not in hdu_list:
+                        mask = np.zeros(frame_shape(hdu_list[0].data), dtype=np.int16)
+                        mask_hdu = fits.ImageHDU(data=mask, name='MASK')
+                        hdu_list.appen(mask_hdu)
 
                     # Store updates
                     hdu_list.flush()
