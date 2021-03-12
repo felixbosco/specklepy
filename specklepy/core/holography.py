@@ -50,8 +50,6 @@ def holography(params, mode='same', debug=False):
     in_files = file_archive.files
     in_dir = file_archive.in_dir
     tmp_dir = paths.get('tmpDir')
-    from IPython import embed
-    embed()
 
     # Check input mode
     if mode not in ['same', 'full', 'valid']:

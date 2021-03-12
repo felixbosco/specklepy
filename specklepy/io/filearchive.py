@@ -157,7 +157,7 @@ class FileArchive(object):
         files = list(table['FILE'].data)
         common_path = self.common_path(files=files)
         for r, row in enumerate(table):
-            row['FILE'] = row['FILE'].replace(common_path, '')
+            row['FILE'] = row['FILE'].replace(common_path, '').strip('/')
 
         return table, common_path
 
