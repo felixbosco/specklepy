@@ -268,23 +268,29 @@ class DataReduction(object):
             science_files = self.files.filter({'OBSTYPE': 'SCIENCE'}, namekey='PRODUCT')
 
             # Iterate through science files
-            for science_file in science_files:
+            for p, product_file_path in enumerate(self.files.product_file_paths):
 
-                # Build path
-                science_path = os.path.join(self.paths.get('outDir'), science_file)
+                # Skip files from different filter
+                if product_file_path is None \
+                        or self.files.table['OBSTYPE'][p] in ['DARK', 'FLAT', 'SKY']:
+                    continue
 
                 # Catch not implemented methods
                 if self.sky.get('method') != 'scalar':
                     raise NotImplementedError(f"Sky subtraction with {self.sky.get('method')} method is not "
                                               f"implemented yet!")
 
+                # Initialize file if not existing
+                if not os.path.isfile(product_file_path):
+                    self.files.initialize_product_file(index=p)
+
                 # Estimate sky background
-                logger.info(f"Estimating sky background for file {science_path!r}...")
-                sky_mean, sky_std = sky.estimate_sky_background(science_path, method=self.sky.get('method'))
+                logger.info(f"Estimating sky background for file {product_file_path!r}...")
+                sky_mean, sky_std = sky.estimate_sky_background(product_file_path, method=self.sky.get('method'))
 
                 # Subtract sky background from data
                 logger.info(f"Subtracting sky background...")
-                with fits.open(science_path, mode='update') as hdu_list:
+                with fits.open(product_file_path, mode='update') as hdu_list:
 
                     # Subtract sky
                     hdu_list[0].data = hdu_list[0].data - sky_mean
