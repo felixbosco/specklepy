@@ -45,7 +45,8 @@ def holography(params, mode='same', debug=False):
     source_extraction = params.get('STARFINDER')
 
     # Create file archive and export paths to be directly available
-    file_archive = FileArchive(file_list=paths.get('inDir'), cards=[], dtypes=[])
+    file_archive = FileArchive(file_list=paths.get('inDir'), cards=[], dtypes=[],
+                               table_format=paths.get('tableFormat', 'ascii.no_header'))
     in_files = file_archive.files
     in_dir = file_archive.in_dir
     tmp_dir = paths.get('tmpDir')

@@ -48,6 +48,7 @@ class FileArchive(object):
 
         # Interpret the file list input
         if isinstance(file_list, str):
+
             # Search for files
             files = glob.glob(file_list)
             files.sort()
@@ -57,10 +58,11 @@ class FileArchive(object):
             else:
                 logger.info(f"FileArchive found {len(files)} file(s) matching to {file_list!r}.")
 
+            # Read table files for gather files directly
             if len(files) == 1 and not self.is_fits_file(files[0]):
                 logger.info(f"Input file is not FITS type. FileArchive assumes that input file {files[0]!r} contains "
                             f"file names.")
-                self.table = self.read_table_file(files[0])
+                self.table = self.read_table_file(files[0], format=kwargs.get('table_format'))
             else:
                 self.table, self.in_dir = self.gather_table_from_list(files=files, **kwargs)
 
@@ -125,33 +127,30 @@ class FileArchive(object):
         return extension == '.fits'
 
     @staticmethod
-    def read_table_file(file):
+    def read_table_file(file, format='ascii.no_header'):
         """Interprets text in a file input.
 
         Args:
             file (str):
                 Name of the file containing the table.
+            format (str, optional):
+                Format string of the input table.
 
         Returns:
             table (astropy.Table):
                 Table based on file input.
         """
 
+        logger.info(f"Reading file names from input file {file!r}")
+
         try:
-            table = Table.read(file)
-        except IORegistryError:
-            try:
-                table = Table.read(file, format='ascii.fixed_width')
-            except IORegistryError:
-                table = Table.read(file, format='ascii.no_header')
-        except:
-            files = []
-            logger.info(f"Reading file names from input file {file!r}.")
-            with open(file, 'r') as f:
-                for filename in f.readlines():
-                    filename = filename.replace('\n', '')
-                    files.append(filename)
-            table = Table(data=[files], names=['FILE'], dtype=[object])
+            table = Table.read(file, format=format)
+            if format == 'ascii.no_header':
+                default_column_name = table.colnames[0]
+                table[default_column_name].name = 'FILE'
+        except IORegistryError as e:
+            sys.tracebacklimit = 0
+            raise e
 
         return table
 
