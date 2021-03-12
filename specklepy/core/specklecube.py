@@ -1,4 +1,3 @@
-from IPython import embed
 import numpy as np
 import os
 
@@ -7,6 +6,7 @@ from astropy.io import fits
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import alignment
 from specklepy.logging import logger
+from specklepy.reduction.filter import bad_pixel_mask
 
 
 class SpeckleCube(object):
@@ -45,7 +45,7 @@ class SpeckleCube(object):
             return None
         try:
             return fits.getdata(self.in_file, self.var_ext).squeeze()
-        except:
+        except KeyError:
             return None
 
     @property
@@ -53,7 +53,7 @@ class SpeckleCube(object):
         if self.mask_ext is None:
             return None
         try:
-            return fits.getdata(self.in_file, self.mask_ext)
+            return fits.getdata(self.in_file, self.mask_ext).astype(bool)
         except KeyError:
             return None
 
@@ -88,8 +88,12 @@ class SpeckleCube(object):
             self.image = self.cube
             self.image_var = self.variance
         elif self.cube.ndim == 3:
+            # Build bad pixel mask
+            bpm = bad_pixel_mask(cube=self.cube, var=self.variance)
+
+            # Coadd frames
             self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box,
-                                                      mask=self.mask)
+                                                      mask=np.logical_or(self.mask, bpm))
         else:
             raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
         self.method = 'ssa'
