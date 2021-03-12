@@ -164,37 +164,38 @@ class MasterFlat(object):
 
                 elif data.ndim == 3:
                     logger.info("Computing statistics of data cube...")
-                    mean = np.mean(data, axis=0)
-                    std = np.std(data, axis=0)
-
-                    # Identify outliers based on sigma-clipping
-                    mean_mask = sigma_clip(mean, sigma=rejection_threshold, masked=True).mask
-                    std_mask = sigma_clip(std, sigma=rejection_threshold, masked=True).mask
-                    mask = np.logical_or(mean_mask, std_mask)
-                    mask_indexes = np.array(np.where(mask)).transpose()
-
-                    # Re-compute the identified pixels
-                    logger.info(f"Re-measuring {len(mask_indexes)} outliers...")
-                    for mask_index in mask_indexes:
-                        # Extract t-series for the masked pixel
-                        arr = data[:, mask_index[0], mask_index[1]]
-
-                        # Compute sigma-clipped statistics for this pixel
-                        arr_mean, _, arr_std = sigma_clipped_stats(arr, sigma=rejection_threshold)
-                        mean[mask_index[0], mask_index[1]] = arr_mean
-                        std[mask_index[0], mask_index[1]] = arr_std
-
-                    mean = sigma_clip(mean, sigma=rejection_threshold, masked=True)
-                    std = sigma_clip(std, sigma=rejection_threshold, masked=True)
+                    clipped_mean, _, clipped_std = sigma_clipped_stats(data=data, sigma=rejection_threshold, axis=0)
+                    # mean = np.mean(data, axis=0)
+                    # std = np.std(data, axis=0)
+                    #
+                    # # Identify outliers based on sigma-clipping
+                    # mean_mask = sigma_clip(mean, sigma=rejection_threshold, masked=True).mask
+                    # std_mask = sigma_clip(std, sigma=rejection_threshold, masked=True).mask
+                    # mask = np.logical_or(mean_mask, std_mask)
+                    # mask_indexes = np.array(np.where(mask)).transpose()
+                    #
+                    # # Re-compute the identified pixels
+                    # logger.info(f"Re-measuring {len(mask_indexes)} outliers...")
+                    # for mask_index in mask_indexes:
+                    #     # Extract t-series for the masked pixel
+                    #     arr = data[:, mask_index[0], mask_index[1]]
+                    #
+                    #     # Compute sigma-clipped statistics for this pixel
+                    #     arr_mean, _, arr_std = sigma_clipped_stats(arr, sigma=rejection_threshold)
+                    #     mean[mask_index[0], mask_index[1]] = arr_mean
+                    #     std[mask_index[0], mask_index[1]] = arr_std
+                    #
+                    # mean = sigma_clip(mean, sigma=rejection_threshold, masked=True)
+                    # std = sigma_clip(std, sigma=rejection_threshold, masked=True)
 
                     # Combine variance
                     if data_var is None:
-                        var = np.square(std.data)
+                        var = np.square(clipped_std.data)
                     else:
-                        var = np.add(np.square(std.data), data_var)
+                        var = np.add(np.square(clipped_std.data), data_var)
 
                     # Store results into lists
-                    means.append(mean)
+                    means.append(clipped_mean)
                     vars.append(var)
                     # self.combine_mask(np.logical_or(mean.mask, std.mask))
                     number_frames.append(data.shape[0])
@@ -221,8 +222,31 @@ class MasterFlat(object):
             self.var = np.var(flats, axis=0)
             # master_flat_var = np.var(flats, axis=0)
         elif method == 'average':
-            self.image = np.average(np.ma.masked_array(means), axis=0, weights=number_frames)
-            self.var = np.average(np.ma.masked_array(vars), axis=0, weights=number_frames)
+            # self.image = np.average(np.ma.masked_array(means), axis=0, weights=number_frames)
+            # self.var = np.average(np.ma.masked_array(vars), axis=0, weights=number_frames)
+
+            # Cast list of arrays into 3-dim arrays
+            means = np.array(means)
+            vars = np.array(vars)
+
+            # Combine variances
+            if (vars == 0).all():  # catch case, where all frames have no variance
+                self.var = np.var(means, axis=0)
+            else:
+                self.var = np.average(vars, axis=0, weights=number_frames)
+
+            # Build mask based on variances
+            bpm = self.var == 0  # Bad pixel mask
+            if bpm.all():  # Catch case, where all frames have no variance
+                bpm = np.zeros(bpm.shape, dtype=bool)
+            gpm = ~bpm  # Good pixel mask
+
+            # Build weights based on variance, and combine images
+            weights = np.multiply(np.reciprocal(self.var, where=gpm), np.expand_dims(number_frames, (1, 2)))
+            self.image = np.average(means, axis=0, weights=weights)
+
+            # Combine mask
+            self.mask = bpm
         else:
             raise SpecklepyValueError('MasterFlat.combine()', argname='method', argvalue=method,
                                       expected="'clip' or 'median'")
