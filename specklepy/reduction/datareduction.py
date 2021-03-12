@@ -283,6 +283,7 @@ class DataReduction(object):
                 sky_mean, sky_std = sky.estimate_sky_background(science_path, method=self.sky.get('method'))
 
                 # Subtract sky background from data
+                logger.info(f"Subtracting sky background...")
                 with fits.open(science_path, mode='update') as hdu_list:
 
                     # Subtract sky
