@@ -62,7 +62,7 @@ class FileArchive(object):
             if len(files) == 1 and not self.is_fits_file(files[0]):
                 logger.info(f"Input file is not FITS type. FileArchive assumes that input file {files[0]!r} contains "
                             f"file names.")
-                self.table = self.read_table_file(files[0], format=kwargs.get('table_format'))
+                self.table, self.in_dir = self.read_table_file(files[0], format=kwargs.get('table_format'))
             else:
                 self.table, self.in_dir = self.gather_table_from_list(files=files, **kwargs)
 
@@ -126,8 +126,7 @@ class FileArchive(object):
         _, extension = os.path.splitext(filename)
         return extension == '.fits'
 
-    @staticmethod
-    def read_table_file(file, format='ascii.no_header'):
+    def read_table_file(self, file, format='ascii.no_header'):
         """Interprets text in a file input.
 
         Args:
@@ -139,6 +138,8 @@ class FileArchive(object):
         Returns:
             table (astropy.Table):
                 Table based on file input.
+            common_path (str):
+                Common path to the files in the table.
         """
 
         logger.info(f"Reading file names from input file {file!r}")
@@ -152,7 +153,12 @@ class FileArchive(object):
             sys.tracebacklimit = 0
             raise e
 
-        return table
+        # Extract the common path
+        common_path = self.common_path(table['FILE'].data)
+        for r, row in enumerate(table):
+            row['FILE'] = row['FILE'].replace(common_path, '')
+
+        return table, common_path
 
     def gather_table_from_list(self, files, cards, dtypes, names=None, sort_by=None):
         """Gather file header information to fill the table
