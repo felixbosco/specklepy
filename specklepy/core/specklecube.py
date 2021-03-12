@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import sys
 
 from astropy.io import fits
 
@@ -139,7 +140,6 @@ class SpeckleCube(object):
             # Something is weird in the FITS header, so reset
             logger.error(e)
             logger.error("Amend this and try again!")
-            embed()
             hdu_list.writeto(self.default_save_path(), overwrite=True)
 
         # Return target path
@@ -193,11 +193,16 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
     # Compute shifts
     peak_indexes = np.zeros((cube.shape[0], 2), dtype=int)
     for f, frame in enumerate(cube):
-        if box is not None:
-            frame = box(frame)
         if mask is not None:
             frame = np.ma.masked_array(frame, mask=mask).filled(0)
-        peak_indexes[f] = np.array(alignment.peak_index(frame), dtype=int)
+        if box is not None:
+            frame = box(frame)
+        try:
+            peak_indexes[f] = np.array(alignment.peak_index(frame), dtype=int)
+        except ValueError as e:
+            sys.tracebacklimit = 0
+            logger.warning(f"The box {box} might be set inappropriate!")
+            raise e
 
     # Compute shifts from indexes
     peak_indexes = peak_indexes.transpose()
