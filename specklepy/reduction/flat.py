@@ -376,7 +376,12 @@ class MasterFlat(object):
                 extension = 0
                 cube = hdu_list[extension].data.astype(float)
 
-                try:
+                # Extract array shapes
+                sub_window_shape = sub_window(self.image)
+                frame_shape = cube.shape[-2], cube.shape[-1]
+
+                # Correct only if array shapes match
+                if sub_window_shape == frame_shape:
 
                     # Expand 2D image to a one frame cube
                     if cube.ndim == 2:
@@ -421,7 +426,6 @@ class MasterFlat(object):
                     hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION FLATCORR', default_time_stamp())
                     hdu_list.flush()
 
-                except ValueError as e:
+                else:
                     logger.warning(f"Unable to apply flat field correction to file {file!r}. Reason may be that "
                                    f"the sub-window covered by the master flat is smaller than the image.")
-                    logger.warning(e)
