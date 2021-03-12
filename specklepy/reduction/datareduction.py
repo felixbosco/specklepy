@@ -196,7 +196,12 @@ class DataReduction(object):
 
         # Apply dark subtraction
         for setup in dark_setups:
+
+            # Load master dark for this setup
             master_dark = dark.MasterDark.from_file(master_darks[setup])
+            counter = 0
+
+            # Iterate through product files
             for p, product_file_path in enumerate(self.files.product_file_paths):
                 # Skip files not allocated
                 if product_file_path is None or self.files.table['DARK'][p] != setup:
@@ -211,6 +216,9 @@ class DataReduction(object):
 
                 # Subtract master dark from file
                 master_dark.subtract(product_file_path, sub_window=sub_window)
+                counter += 1
+
+            logger.info(f"Dark subtraction complete for {counter} files in setup {setup!r}")
 
         logger.info(f"{'>' * 11} DARK SUBTRACTION COMPLETE {'<' * 11}")
 
@@ -236,7 +244,12 @@ class DataReduction(object):
 
         # Apply flat field correction
         for filter in flat_filters:
+
+            # Load master flat for this filter
             master_flat = flat.MasterFlat.from_file(master_flats[filter])
+            counter = 0
+
+            # Iterate through product files
             for p, product_file_path in enumerate(self.files.product_file_paths):
                 # Skip files from different filter
                 if product_file_path is None \
@@ -253,6 +266,9 @@ class DataReduction(object):
 
                 # Normalize product file with master flat
                 master_flat.run_correction(file_list=[product_file_path], sub_windows=[sub_window])
+                counter += 1
+
+            logger.info(f"Flat fielding complete for {counter} files in {filter!r} band")
 
         logger.info(f"{'>' * 11} FLAT FIELDING COMPLETE {'<' * 11}")
 
