@@ -168,6 +168,9 @@ class GeneralArgParser(object):
                                        help='Cast the data type of the input image to another type.')
         parser_extraction.add_argument('-c', '--collapse', action='store_true',
                                        help='Collapse a data cube along the third axis.')
+        parser_extraction.add_argument('--select', type=str, default=False,
+                                       help='Provide a file name to visually select identified stars and save them to '
+                                            'this file.')
         parser_extraction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
     def parse_args(self, *args, **kwargs):
