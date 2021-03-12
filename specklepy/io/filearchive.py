@@ -154,9 +154,8 @@ class FileArchive(object):
             raise e
 
         # Extract the common path
-        from IPython import embed
-        embed()
-        common_path = self.common_path(table['FILE'].data)
+        files = list(table['FILE'].data)
+        common_path = self.common_path(files=files)
         for r, row in enumerate(table):
             row['FILE'] = row['FILE'].replace(common_path, '')
 
