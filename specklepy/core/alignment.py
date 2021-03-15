@@ -80,31 +80,37 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
 
         # Identify reference file and Fourier transform the integrated image
         logger.info(f"Computing relative shifts between data cubes. Reference file is {reference_file!r}")
-        reference_image = fits.getdata(os.path.join(in_dir, reference_file))
+        reference_image = fits.getdata(os.path.join(in_dir, reference_file)).squeeze()
+        image_shape = reference_image.shape
+        logger.debug(f"Reference image has shape {image_shape}")
 
         # Collapse cube by integrating over time axis if reference image is a cube
         if reference_image.ndim == 3:
             reference_image = np.sum(reference_image, axis=0)
 
-        # Fourier transform image
-        f_reference_image = np.fft.fft2(reference_image)
-        image_shape = reference_image.shape
-        del reference_image
+        # Fourier transform image for `correlation` mode
+        if mode == 'correlation':
+            reference_image = np.fft.fft2(reference_image)
+            ref_image_ft = True
+        else:
+            ref_image_ft = False
 
-        # Iterate over files and estimate shift via 2D correlation of the integrated cubes
+        # Iterate through files and estimate shift via 2D correlation of the integrated cubes
         for index, file in enumerate(files):
             if file == reference_file:
                 shift = (0, 0)
             else:
-                image = fits.getdata(os.path.join(in_dir, file))
+                image = fits.getdata(os.path.join(in_dir, file)).squeeze()
                 if image.ndim == 3:
                     image = np.sum(image, axis=0)
-                shift = estimate_shift(image, reference_image=f_reference_image, is_fourier_transformed=True, mode=mode,
-                                       debug=debug)
-            shifts.append(shift)
-            logger.info(f"Identified a shift of {shift} for file {file!r}")
-        # logger.info(f"Identified the following shifts:\n\t{shifts}")
+                shift = estimate_shift(image, reference_image=reference_image, is_fourier_transformed=ref_image_ft,
+                                       mode=mode, debug=debug)
 
+            # Store estimate
+            logger.info(f"Estimated a shift of {shift} for file {file!r}")
+            shifts.append(shift)
+
+    # Return
     if return_image_shape:
         return shifts, image_shape
     else:
