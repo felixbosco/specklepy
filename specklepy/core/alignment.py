@@ -107,6 +107,7 @@ class ShiftEstimator(object):
                     image = self.load_collapsed(path=path)
                     peak = peak_index(image)
                     shift = reference_peak[0] - peak[0], reference_peak[1] - peak[1]
+                logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
 
         elif mode == 'correlation':
