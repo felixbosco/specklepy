@@ -107,6 +107,7 @@ class ShiftEstimator(object):
                     image = self.load_collapsed(path=path)
                     peak = peak_index(image)
                     shift = reference_peak[0] - peak[0], reference_peak[1] - peak[1]
+
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
 
@@ -132,6 +133,8 @@ class ShiftEstimator(object):
                     # Derive the shift from the correlation
                     correlation_peak = self.peak_index(correlation)
                     shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(correlation_peak))
+
+                logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
 
         elif mode == 'star':
@@ -162,6 +165,7 @@ class ShiftEstimator(object):
                     # Derive shift
                     shift = reference_position[0] - pos[0], reference_position[1] - pos[1]
 
+                logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
 
         else:
