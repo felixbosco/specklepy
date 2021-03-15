@@ -161,14 +161,7 @@ class ShiftEstimator(object):
                     extractor.initialize_star_finder()
                     extractor.find_sources()
 
-                    # # Extract position of the reference star graphically
-                    # pos = extractor.select()[0]
-                    # logger.info(f"The star resides at\n{pos}\nin this image")
-
-                    # Derive shift
-                    # shift = int(round(reference_position[1] - pos[1])), int(round(reference_position[0] - pos[0]))
-                    # shift = int(round(reference_position['y'] - pos['y'])), \
-                    #         int(round(reference_position['x'] - pos['x']))
+                    # Derive shift from cross matching the identified sources to the reference stars
                     shift = extractor.cross_match_table(reference_stars)
                     shift = tuple([int(round(x)) for x in shift])
 
