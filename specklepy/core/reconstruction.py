@@ -196,8 +196,6 @@ class Reconstruction(object):
             #                                         lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
             #                                         debug=self.debug)
             shift_estimator = alignment.ShiftEstimator()
-            from IPython import embed
-            embed()
             self.shifts = shift_estimator.estimate_shifts(file_names=self.long_exp_files, in_dir=self.tmp_dir,
                                                           reference_file_index=self.reference_index,
                                                           mode=alignment_mode, debug=self.debug)
