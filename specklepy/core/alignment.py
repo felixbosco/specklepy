@@ -142,6 +142,7 @@ class ShiftEstimator(object):
             extractor = SourceExtractor(fwhm=10)
             extractor.initialize_image(source=self.reference_image_path)
             extractor.initialize_star_finder()
+            extractor.find_sources()
 
             # Extract the position of the reference star in the reference image
             logger.info("Select the star that shall be used for estimating the shifts!")
