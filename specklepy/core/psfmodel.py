@@ -7,7 +7,7 @@ from specklepy.exceptions import SpecklepyValueError
 
 class PSFModel(object):
 
-    def __init__(self, type, shape=None, **kwargs):
+    def __init__(self, type, radius, shape=None):
 
         # Store input
         self.type = type
@@ -21,15 +21,10 @@ class PSFModel(object):
 
         # Initialize model
         if 'gauss' in self.type.lower():
-            if 'radius' in kwargs:
-                # Copying the radius keyword argument into the proper Gaussian2D keywords
-                kwargs['x_stddev'] = kwargs['radius']
-                kwargs['y_stddev'] = kwargs['radius']
-                del kwargs['radius']
-            self.model = Gaussian2D(x_mean=self.center[0], y_mean=self.center[1], **kwargs)
+            self.model = Gaussian2D(x_mean=self.center[0], y_mean=self.center[1], x_stddev=radius, y_stddev=radius)
 
         elif 'airy' in self.type.lower():
-            self.model = AiryDisk2D(x_0=self.center[0], y_0=self.center[1], **kwargs)
+            self.model = AiryDisk2D(x_0=self.center[0], y_0=self.center[1], radius=radius)
 
         else:
             raise SpecklepyValueError('PSFModel', argname='type', argvalue=type, expected="either 'Gaussian' or 'Airy'")
@@ -38,10 +33,9 @@ class PSFModel(object):
 
         # Update shape and center according to input shape
         self.shape = shape
-        self.center = ((self.shape[0] + 1) / 2, (self.shape[1] + 1) / 2)
+        self.center = ((self.shape[1] + 1) / 2, (self.shape[0] + 1) / 2)
 
         # Update self.model center coordinates
-        from IPython import embed
         if isinstance(self.model, Gaussian2D):
             self.model.x_mean, self.model.y_mean = list(self.center)
         elif isinstance(self.model, AiryDisk2D):
