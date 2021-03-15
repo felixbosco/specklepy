@@ -83,8 +83,9 @@ def holography(params, mode='same', debug=False):
     reconstruction.assert_dirs()
 
     # (i-ii) Align cubes
-    reconstruction.align_cubes(integration_method=params.get('ALIGNMENT').get('integrationMode', 'ssa'),
-                               alignment_mode=params.get('ALIGNMENT').get('mode', 'correlation'))
+    reconstruction.align_cubes(integration_method=params.get('ALIGNMENT', {}).get('integrationMode', 'ssa'),
+                               alignment_mode=params.get('ALIGNMENT', {}).get('mode', 'correlation'),
+                               mask_hot_pixels=params.get('ALIGNMENT', {}).get('maskHotPixels', False))
     shifts = reconstruction.shifts
 
     # (iii) Compute SSA reconstruction

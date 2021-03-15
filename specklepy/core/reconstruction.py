@@ -179,7 +179,7 @@ class Reconstruction(object):
 
         return long_exposure_files
 
-    def align_cubes(self, integration_method=None, alignment_mode='correlation'):
+    def align_cubes(self, integration_method=None, alignment_mode='correlation', mask_hot_pixels=False):
 
         # Update integration method, if provided
         if integration_method is not None:
@@ -187,7 +187,7 @@ class Reconstruction(object):
 
         # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
         if self.long_exp_files is None:
-            self.long_exp_files = self.create_long_exposures()
+            self.long_exp_files = self.create_long_exposures(mask_hot_pixels=mask_hot_pixels)
 
         # Save time if only one cube is provided
         if self.single_cube_mode:
