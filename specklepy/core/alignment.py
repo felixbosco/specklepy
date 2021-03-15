@@ -21,6 +21,9 @@ class ShiftEstimator(object):
         # Initialize shifts
         self.shifts = None
 
+    def __repr__(self):
+        return f"ShiftEstimator ({self.reference_image_path})"
+
     @property
     def reference_image_path(self):
         if self.in_dir is None:
