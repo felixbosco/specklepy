@@ -79,11 +79,14 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
         shifts = []
 
         # Identify reference file and Fourier transform the integrated image
-        logger.info(f"Computing relative shifts between data cubes. Reference file is {reference_file}")
+        logger.info(f"Computing relative shifts between data cubes. Reference file is {reference_file!r}")
         reference_image = fits.getdata(os.path.join(in_dir, reference_file))
+
+        # Collapse cube by integrating over time axis if reference image is a cube
         if reference_image.ndim == 3:
-            # Integrating over time axis if reference image is a cube
             reference_image = np.sum(reference_image, axis=0)
+
+        # Fourier transform image
         f_reference_image = np.fft.fft2(reference_image)
         image_shape = reference_image.shape
         del reference_image
@@ -99,8 +102,8 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
                 shift = estimate_shift(image, reference_image=f_reference_image, is_fourier_transformed=True, mode=mode,
                                        debug=debug)
             shifts.append(shift)
-            logger.info(f"Identified a shift of {shift} for file {file}")
-        logger.info(f"Identified the following shifts:\n\t{shifts}")
+            logger.info(f"Identified a shift of {shift} for file {file!r}")
+        # logger.info(f"Identified the following shifts:\n\t{shifts}")
 
     if return_image_shape:
         return shifts, image_shape
