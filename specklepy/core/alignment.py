@@ -72,13 +72,15 @@ class ShiftEstimator(object):
 
     def estimate_shifts(self, file_names, mode='correlation', in_dir=None, reference_file_index=None, debug=False):
 
-        # Transfrom str-type file names into a list
+        # Transform str-type file names into a list
         if isinstance(file_names, str):
             file_names = [file_names]
 
-        # Update reference file if provided
+        # Update reference file and input directory if provided
         if reference_file_index is not None:
             self.reference_file = file_names[reference_file_index]
+        if in_dir is not None:
+            self.in_dir = in_dir
 
         # Reset stored shifts
         self.shifts = []
@@ -98,7 +100,7 @@ class ShiftEstimator(object):
                 if file == self.reference_file:
                     shift = (0, 0)
                 else:
-                    path = self.make_path(file, in_dir=in_dir)
+                    path = self.make_path(file, in_dir=self.in_dir)
                     image = self.load_collapsed(path=path)
                     peak = peak_index(image)
                     shift = reference_peak[0] - peak[0], reference_peak[1] - peak[1]
@@ -114,7 +116,7 @@ class ShiftEstimator(object):
                     shift = (0, 0)
                 else:
                     # Load and Fourier transform the image
-                    path = self.make_path(file, in_dir=in_dir)
+                    path = self.make_path(file, in_dir=self.in_dir)
                     image = self.load_collapsed(path=path)
                     f_image = np.conjugate(np.fft.fft2(image))
 
@@ -144,7 +146,7 @@ class ShiftEstimator(object):
                     shift = (0, 0)
                 else:
                     # Load the image into the source extractor
-                    path = self.make_path(file, in_dir=in_dir)
+                    path = self.make_path(file, in_dir=self.in_dir)
                     image = self.load_collapsed(path=path)
                     extractor.initialize_image(source=image)
                     extractor.initialize_star_finder()

@@ -1,4 +1,3 @@
-from IPython import embed
 import numpy as np
 import os
 
@@ -175,7 +174,7 @@ class Reconstruction(object):
 
         return long_exposure_files
 
-    def align_cubes(self, integration_method=None):
+    def align_cubes(self, integration_method=None, alignment_mode='correlation'):
 
         # Update integration method, if provided
         if integration_method is not None:
@@ -193,9 +192,13 @@ class Reconstruction(object):
 
         else:
             # Estimate relative shifts
-            self.shifts = alignment.estimate_shifts(files=self.long_exp_files, reference_file=self.reference_index,
-                                                    lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
-                                                    debug=self.debug)
+            # self.shifts = alignment.estimate_shifts(files=self.long_exp_files, reference_file=self.reference_index,
+            #                                         lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
+            #                                         debug=self.debug)
+            shift_estimator = alignment.ShiftEstimator()
+            self.shifts = shift_estimator.estimate_shifts(file_names=self.long_exp_files, in_dir=self.tmp_dir,
+                                                          reference_file_index=self.reference_index,
+                                                          mode=alignment_mode, debug=self.debug)
 
             # Derive corresponding padding vectors
             self.pad_vectors, self.reference_pad_vector = \
