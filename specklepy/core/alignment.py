@@ -164,7 +164,7 @@ class ShiftEstimator(object):
                     pos = extractor.select()[0]
 
                     # Derive shift
-                    shift = round(reference_position[0] - pos[0]), round(reference_position[1] - pos[1])
+                    shift = int(round(reference_position[0] - pos[0])), int(round(reference_position[1] - pos[1]))
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
