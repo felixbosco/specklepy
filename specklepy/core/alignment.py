@@ -147,7 +147,7 @@ class ShiftEstimator(object):
             # Extract the position of the reference star in the reference image
             logger.info("Select the star that shall be used for estimating the shifts!")
             reference_position = extractor.select()[0]
-            logger.info(f"The star resides at {reference_position} in the reference image")
+            logger.info(f"The star resides at\n{reference_position}\nin the reference image")
 
             # Iterate through files
             for file in file_names:
@@ -163,11 +163,11 @@ class ShiftEstimator(object):
 
                     # Extract position of the reference star graphically
                     pos = extractor.select()[0]
-                    logger.info(f"The star resides at {pos} in this image")
+                    logger.info(f"The star resides at\n{pos}\nin this image")
 
                     # Derive shift
                     # shift = int(round(reference_position[1] - pos[1])), int(round(reference_position[0] - pos[0]))
-                    shift = int(round(pos[0] - reference_position[0])), int(round(pos[1] - reference_position[1]))
+                    shift = int(round(reference_position[0] - pos[0])), int(round(reference_position[1] - pos[1]))
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
