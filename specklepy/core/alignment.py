@@ -154,6 +154,7 @@ class ShiftEstimator(object):
                     image = self.load_collapsed(path=path)
                     extractor.initialize_image(source=image)
                     extractor.initialize_star_finder()
+                    extractor.find_sources()
 
                     # Extract position of the reference star graphically
                     pos = extractor.select()[0]
