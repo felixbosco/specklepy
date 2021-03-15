@@ -246,6 +246,35 @@ class SourceExtractor(object):
         dy = position[1] - self.sources['y'].data
         return np.sqrt(np.add(np.square(dx), np.square(dy)))
 
+    def cross_match_table(self, table):
+
+        # Initialize array of summed distances
+        minimum_distances_total = np.empty((len(self.sources)))
+
+        # Reference pattern: Stellar positions relative to first star
+        table_dx = table['x'] - table['x'][0]
+        table_dy = table['y'] - table['y'][0]
+
+        # Iterate through sources to identify reference star from `table`
+        for j in range(len(self.sources)):
+            # Stellar positions relative to source `j`
+            sources_dx = self.sources['x'] - self.sources['x'][j]
+            sources_dy = self.sources['y'] - self.sources['y'][j]
+
+            # Compute distances
+            for i, (xi, yi) in enumerate(zip(table_dx, table_dy)):
+                ri = np.sqrt((xi - sources_dx) ** 2 + (yi - sources_dy) ** 2)
+                j_min = np.argmin(ri)
+                minimum_distances_total[j] += ri[j_min]
+
+        # Estimate distance-minimizing counter part to reference star
+        best_match = np.argmin(minimum_distances_total)
+
+        # Estimate shift
+        shift = table[0]['y'] - self.sources[best_match]['y'], table[0]['x'] - self.sources[best_match]['x']
+
+        return shift
+
 
 class StarFinderImage(object):
 
