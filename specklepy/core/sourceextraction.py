@@ -93,6 +93,8 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
     if select:
         save_selected_to = select if isinstance(select, str) else None
         selected = extractor.select(save_selected_to)
+        logger.info(f"Selected {len(selected)} sources")
+        logger.debug(f"\n{selected}")
         return sources, selected
 
     return sources
