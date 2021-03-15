@@ -3,9 +3,166 @@ import os
 
 from astropy.io import fits
 
+from specklepy.core.sourceextraction import SourceExtractor
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
+
+
+class ShiftEstimator(object):
+
+    def __init__(self, reference_file=None, reference_image=None, in_dir=None):
+
+        # Store reference image
+        self.reference_file = reference_file
+        self._reference_image = reference_image
+        self.in_dir = in_dir
+
+        # Initialize shifts
+        self.shifts = None
+
+    @property
+    def reference_image_path(self):
+        if self.in_dir is None:
+            return self.reference_file
+        else:
+            return os.path.join(self.in_dir, self.reference_file)
+
+    @property
+    def reference_image(self):
+        if self._reference_image is None:
+            self._reference_image = self.load_collapsed(self.reference_image_path)
+        return self._reference_image
+
+    @property
+    def image_shape(self):
+        return self._reference_image.shape
+
+    @staticmethod
+    def load_collapsed(path):
+        """Load and collapse a data cube by integrating over time axis if not 2D image
+
+        Arguments:
+            path (str):
+                Path to the file.
+
+        Returns:
+            data (np.ndarray):
+                2D array, obtained from the input file.
+        """
+
+        logger.debug(f"Loading data from file {path!r}")
+        data = fits.getdata(path).squeeze()
+
+        if data.ndim == 3:
+            data = np.sum(data, axis=0)
+
+        return data
+
+    @staticmethod
+    def peak_index(array):
+        return np.unravel_index(np.argmax(array, axis=None), array.shape)
+
+    @staticmethod
+    def make_path(file_name, in_dir=None):
+        try:
+            return os.path.join(in_dir, file_name)
+        except TypeError:
+            return file_name
+
+    def estimate_shifts(self, file_names, mode='correlation', in_dir=None, reference_file_index=None, debug=False):
+
+        # Transfrom str-type file names into a list
+        if isinstance(file_names, str):
+            file_names = [file_names]
+
+        # Update reference file if provided
+        if reference_file_index is not None:
+            self.reference_file = file_names[reference_file_index]
+
+        # Reset stored shifts
+        self.shifts = []
+
+        # Be lazy and do not compute anything, if only one file is provided
+        if len(file_names) == 1 and file_names[0] == os.path.basename(self.reference_file):
+            logger.info("Only one data cube is provided, nothing to align.")
+            self.shifts = [(0, 0)]
+            return self.shifts
+
+        # Estimate shifts in the requested modes
+        if mode == 'peak':
+            reference_peak = peak_index(self.reference_image)
+
+            # Iterate through files
+            for file in file_names:
+                if file == self.reference_file:
+                    shift = (0, 0)
+                else:
+                    path = self.make_path(file, in_dir=in_dir)
+                    image = self.load_collapsed(path=path)
+                    peak = peak_index(image)
+                    shift = reference_peak[0] - peak[0], reference_peak[1] - peak[1]
+                self.shifts.append(shift)
+
+        elif mode == 'correlation':
+            # Get the Fourier transformed reference image for cross-correlation
+            f_reference_image = np.fft.fft2(self.reference_image)
+
+            # Iterate through files
+            for file in file_names:
+                if file == self.reference_file:
+                    shift = (0, 0)
+                else:
+                    # Load and Fourier transform the image
+                    path = self.make_path(file, in_dir=in_dir)
+                    image = self.load_collapsed(path=path)
+                    f_image = np.conjugate(np.fft.fft2(image))
+
+                    # Compute the 2-dimensional correlation
+                    correlation = np.fft.fftshift(np.fft.ifft2(np.multiply(f_reference_image, f_image)))
+                    if debug:
+                        imshow(np.abs(correlation), title='FFT shifted correlation')
+
+                    # Derive the shift from the correlation
+                    correlation_peak = self.peak_index(correlation)
+                    shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(correlation_peak))
+                self.shifts.append(shift)
+
+        elif mode == 'star':
+            # Initialize SourceExtractor
+            extractor = SourceExtractor(fwhm=10)
+            extractor.initialize_image(source=self.reference_image_path)
+            extractor.initialize_star_finder()
+
+            # Extract the position of the reference star in the reference image
+            logger.info("Select the star that shall be used for estimating the shifts!")
+            reference_position = extractor.select()[0]
+
+            # Iterate through files
+            for file in file_names:
+                if file == self.reference_file:
+                    shift = (0, 0)
+                else:
+                    # Load the image into the source extractor
+                    path = self.make_path(file, in_dir=in_dir)
+                    image = self.load_collapsed(path=path)
+                    extractor.initialize_image(source=image)
+                    extractor.initialize_star_finder()
+
+                    # Extract position of the reference star graphically
+                    pos = extractor.select()[0]
+
+                    # Derive shift
+                    shift = reference_position[0] - pos[0], reference_position[1] - pos[1]
+
+                self.shifts.append(shift)
+
+        else:
+            raise ValueError(f"Mode {mode!r} for estimating shifts is not understood! Choose from 'peak', "
+                             f"'correlation' and 'star'!")
+
+        # Return
+        return self.shifts
 
 
 def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=True, return_image_shape=False,
