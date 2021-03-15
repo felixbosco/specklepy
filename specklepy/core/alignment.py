@@ -137,7 +137,7 @@ class ShiftEstimator(object):
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
 
-        elif mode == 'star':
+        elif mode == 'sources':
             # Initialize SourceExtractor
             extractor = SourceExtractor(fwhm=10)
             extractor.initialize_image(source=self.reference_image_path)
@@ -145,9 +145,9 @@ class ShiftEstimator(object):
             extractor.find_sources()
 
             # Extract the position of the reference star in the reference image
-            logger.info("Select the star that shall be used for estimating the shifts!")
-            reference_position = extractor.select()[0]
-            logger.info(f"The star resides at\n{reference_position}\nin the reference image")
+            logger.info("Select the sources that shall be used for correlating the source lists!")
+            reference_stars = extractor.select()
+            logger.info(f"The sources reside at\n{reference_stars}\nin the reference image")
 
             # Iterate through files
             for file in file_names:
@@ -161,21 +161,23 @@ class ShiftEstimator(object):
                     extractor.initialize_star_finder()
                     extractor.find_sources()
 
-                    # Extract position of the reference star graphically
-                    pos = extractor.select()[0]
-                    logger.info(f"The star resides at\n{pos}\nin this image")
+                    # # Extract position of the reference star graphically
+                    # pos = extractor.select()[0]
+                    # logger.info(f"The star resides at\n{pos}\nin this image")
 
                     # Derive shift
                     # shift = int(round(reference_position[1] - pos[1])), int(round(reference_position[0] - pos[0]))
-                    shift = int(round(reference_position['y'] - pos['y'])), \
-                            int(round(reference_position['x'] - pos['x']))
+                    # shift = int(round(reference_position['y'] - pos['y'])), \
+                    #         int(round(reference_position['x'] - pos['x']))
+                    shift = extractor.cross_match_table(reference_stars)
+                    shift = tuple([int(round(x)) for x in shift])
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
 
         else:
             raise ValueError(f"Mode {mode!r} for estimating shifts is not understood! Choose from 'peak', "
-                             f"'correlation' and 'star'!")
+                             f"'correlation' and 'sources'!")
 
         # Return
         return self.shifts
