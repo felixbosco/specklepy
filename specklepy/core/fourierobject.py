@@ -139,6 +139,9 @@ class FourierObject(object):
         # denominator, this computation is cheaper in terms of memory usage
         self.fourier_image = np.divide(self.enumerator, self.denominator)
 
+        from IPython import embed
+        embed()
+
         return self.fourier_image
 
     def apodize(self, type, radius, crop=False):
