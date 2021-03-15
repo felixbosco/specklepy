@@ -7,7 +7,7 @@ from astropy.io import fits
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import alignment
 from specklepy.logging import logger
-from specklepy.reduction.filter import bad_pixel_mask
+from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
 
 
 class SpeckleCube(object):
@@ -98,6 +98,12 @@ class SpeckleCube(object):
         else:
             raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
         self.method = 'ssa'
+
+    def mask_hot_pixels(self, fill_value=0):
+        if fill_value is None:
+            self.image = mask_hot_pixels(image=self.image)
+        else:
+            self.image = fill_hot_pixels(self.image, fill_value=fill_value)
 
     def default_save_path(self):
         if self.method == 'ssa':

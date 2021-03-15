@@ -8,6 +8,7 @@ from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
+from specklepy.reduction.filter import fill_hot_pixels
 from specklepy.utils.box import Box
 
 
@@ -139,7 +140,7 @@ class Reconstruction(object):
     def reference_long_exp_file(self):
         return self.long_exp_files[self.reference_index]
 
-    def create_long_exposures(self, integration_method=None):
+    def create_long_exposures(self, integration_method=None, mask_hot_pixels=False):
         """Compute long exposures from the input data cubes."""
 
         # Update integration method, if provided
@@ -164,6 +165,10 @@ class Reconstruction(object):
             else:
                 raise SpecklepyValueError('Reconstruction', 'integration_method', self.integration_method,
                                           expected="either 'collapse' or 'ssa'")
+
+            # Mask out hot pixels
+            if mask_hot_pixels:
+                speckle_cube.mask_hot_pixels()
 
             # Store data to a new Outfile instance
             logger.info(f"Saving temporary reconstruction of cube {file!r} to {speckle_cube.default_save_path()!r}")
