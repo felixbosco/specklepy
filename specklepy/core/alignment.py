@@ -132,7 +132,7 @@ class ShiftEstimator(object):
 
                     # Derive the shift from the correlation
                     correlation_peak = self.peak_index(correlation)
-                    shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(correlation_peak))
+                    shift = tuple(x - correlation.shape[i] // 2 for i, x in enumerate(correlation_peak))
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
@@ -163,7 +163,7 @@ class ShiftEstimator(object):
                     pos = extractor.select()[0]
 
                     # Derive shift
-                    shift = reference_position[0] - pos[0], reference_position[1] - pos[1]
+                    shift = round(reference_position[0] - pos[0]), round(reference_position[1] - pos[1])
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
