@@ -79,10 +79,6 @@ class FileArchive(object):
 
         # Initialize the index for iteration
         self.index = 0
-        
-        # Initialize the list of product files
-        # self.source_files = None
-        # self.product_files = None
 
         # Reduce paths
         self.in_dir = os.path.normpath(self.in_dir)
@@ -334,12 +330,19 @@ class ReductionFileArchive(FileArchive):
         return np.unique(self.table['SETUP'][is_dark].data)
 
     def add_dark_column(self):
+        """Add a column to the table and initialize with dark setups of matching exposure time."""
+
+        # Initialize column
         dark_col = Column(name='DARK', dtype=object, length=len(self.table))
+
+        # Fill the column with the dark setup of matching exposure time
         dark_setups = self.get_dark_setups()
         for setup in dark_setups:
             exp_times = self.filter({'OBSTYPE': 'DARK', 'SETUP': setup}, namekey='EXPTIME')
             exp_time = np.unique(exp_times)[0]
             dark_col[self.table['EXPTIME'] == exp_time] = setup
+
+        # Append new column to the table
         self.table.add_column(dark_col)
 
     def get_flats(self):
@@ -362,6 +365,7 @@ class ReductionFileArchive(FileArchive):
 
         Args:
             keywords (list of str):
+                Keywords that shall be used to distinguish between observational setups.
         """
 
         # Check input parameters
@@ -370,7 +374,6 @@ class ReductionFileArchive(FileArchive):
 
         # Identifying setups key-by-key
         logger.info("Identifying distinct observational setups in the file list...")
-        # self.table['SETUP'] = [None] * len(self.table)
         self.table.add_column(col=Column(data=[None] * len(self.table), name='SETUP'))
 
         # Iterate over keywords and identify unique settings per key
@@ -440,44 +443,6 @@ class ReductionFileArchive(FileArchive):
                                               source=source, object=object, setup=setup))
         return sequences
 
-    # def make_product_file_names(self, prefix=None, return_table_mask=False):
-    #     """Copy the science data cubes into the stored out directory.
-    #
-    #     Args:
-    #         prefix (str, optional):
-    #             File prefix for output files.
-    #         return_table_mask (bool, optional):
-    #             Set `True` for returning a mask `input_file in product_files`.
-    #
-    #     Returns:
-    #         product_files (list):
-    #             List of paths of the data reduction products.
-    #         input_file_mask (np.array, optional):
-    #             Mask for input files, indicating whether a file is used as product file.
-    #     """
-    #
-    #     # Store update prefix
-    #     if prefix:
-    #         self.out_prefix = prefix
-    #
-    #     # Initialize list of data reduction products
-    #     self.product_files = []
-    #
-    #     # Extract sky and science files to serve as template for the product files
-    #     self.source_files, input_file_mask = self.filter({'OBSTYPE': ['SKY', 'SCIENCE']}, return_mask=return_table_mask)
-    #
-    #     # Copy the science data cubes into outdir (with an additional file prefix)
-    #     for file in self.source_files:
-    #         dest = self.out_prefix + os.path.basename(file)
-    #
-    #         # Store new file in the list of product files
-    #         self.product_files.append(dest)
-    #
-    #     if return_table_mask:
-    #         return self.product_files, input_file_mask
-    #
-    #     return self.product_files
-
     def add_product_file_column(self, prefix=None):
         """Add a column of product file names to the table.
 
@@ -526,15 +491,13 @@ class ReductionFileArchive(FileArchive):
                 List of paths of the data reduction products.
         """
 
-        # # Initialize list of data reduction products
-        # if self.source_files is None or self.product_files is None:
-        #     self.make_product_file_names(prefix=prefix)
-
         # Copy the science data cubes into outdir (with an additional file prefix)
         src = self.source_file_paths[index]
         dest = self.product_file_paths[index]
-        logger.info(f"Initializing data product file {dest}")
+        logger.info(f"Initializing data product file {dest!r}")
         os.system(f"cp {src} {dest}")
+
+        # Add information to the header of the new FITS file
         with fits.open(dest, mode='update') as hdu_list:
             hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
             hdu_list[0].header.set('REDUCED', default_time_stamp())
