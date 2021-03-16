@@ -377,11 +377,8 @@ class MasterFlat(object):
                 cube = hdu_list[extension].data.astype(float)
 
                 # Extract array shapes
-                sub_window_shape = sub_window(self.image)
+                sub_window_shape = sub_window(self.image).shape
                 frame_shape = cube.shape[-2], cube.shape[-1]
-
-                from IPython import embed
-                embed()
 
                 # Correct only if array shapes match
                 if sub_window_shape == frame_shape:
