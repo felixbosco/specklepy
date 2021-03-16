@@ -103,8 +103,8 @@ class DataReduction(object):
                 cards.append(instrument_cards[card])
             except KeyError:
                 logger.info(
-                    f"Dropping header card {card} from setup identification, as there is no description in the config file."
-                    f"\nCheck out {instrument_config_file} for details.")
+                    f"Dropping header card {card!r} from setup identification, as there is no description in the "
+                    f"config file.\nCheck out the config file {instrument_config_file!r} for details.")
                 cards.append(None)
         for card, dtype, header_card in zip(cards, dtypes, default_cards):
             if card is None:
