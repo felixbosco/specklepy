@@ -31,7 +31,7 @@ class DataReduction(object):
 
         # Initialize file archive
         self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
-                                          out_dir=self.paths.get('outDir'))
+                                          out_dir=self.paths.get('outDir'), table_format='ascii.fixed_width')
 
     @classmethod
     def from_file(cls, file_name):
