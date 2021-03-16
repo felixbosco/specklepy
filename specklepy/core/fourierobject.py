@@ -98,8 +98,12 @@ class FourierObject(object):
         self.denominator = np.zeros(img.shape, dtype='complex128')
         self.fourier_image = np.zeros(img.shape, dtype='complex128')
 
-    def coadd_fft(self):
+    def coadd_fft(self, fill_value=0):
         """Co-add the Fourier transforms of the image and PSF frames.
+
+        Arguments:
+            fill_value (float, optional):
+                Value to fill masked pixels of the data cube, in case the file contains a mask extension.
 
         Returns:
             fourier_image (np.ndarray, dtype=np.comlex128):
@@ -114,12 +118,21 @@ class FourierObject(object):
             # Open PSF and image files
             psf_cube = fits.getdata(self.psf_files[file_index])
             image_cube = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]))
+            try:
+                image_mask = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]), 'MASK')
+            except KeyError:
+                image_mask = None
             n_frames = image_cube.shape[0]
 
             for frame_index in trange(n_frames, desc="Fourier transforming frames"):
 
+                # Load image and fill masked values with zeros
+                frame = image_cube[frame_index]
+                if image_mask is not None:
+                    frame[image_mask] = fill_value
+
                 # Padding and transforming the image
-                img = pad_array(array=image_cube[frame_index],
+                img = pad_array(array=frame,
                                 pad_vector=self.pad_vectors[file_index],
                                 mode=self.mode,
                                 reference_image_pad_vector=self.reference_image_pad_vector)
