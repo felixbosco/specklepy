@@ -117,18 +117,19 @@ class MasterFlat(object):
         else:
             self.mask = np.logical_or(self.mask, new_mask)
 
-    def combine(self, method='average', rejection_threshold=10):
+    def combine(self, method='average', rejection_threshold=10, mask_percentage=None):
         """Combine the frames of the stored files to a master flat.
 
         Args:
             method (str, optional):
-                Method for the frame combination. Can be either 'median' for a
-                conventional median combination without propagation of
-                uncertainties (since the median does not allow for this) or
-                'clip' for sigma clipping and a subsequent estimate of the
-                variance of the cube, followed by a mean combination.
+                Method for the frame combination. Can be either 'median' for a conventional median combination without
+                propagation of uncertainties (since the median does not allow for this) or 'clip' for sigma clipping
+                and a subsequent estimate of the variance of the cube, followed by a mean combination.
             rejection_threshold (float, optional):
                 Threshold for sigma-clipping.
+            mask_percentage (float, optional):
+                Mask pixels in the final image above and below a deviation from unity of order `mask_percentage` after
+                combination.
         """
 
         # Type check
@@ -165,28 +166,6 @@ class MasterFlat(object):
                 elif data.ndim == 3:
                     logger.info("Computing statistics of data cube...")
                     clipped_mean, _, clipped_std = sigma_clipped_stats(data=data, sigma=rejection_threshold, axis=0)
-                    # mean = np.mean(data, axis=0)
-                    # std = np.std(data, axis=0)
-                    #
-                    # # Identify outliers based on sigma-clipping
-                    # mean_mask = sigma_clip(mean, sigma=rejection_threshold, masked=True).mask
-                    # std_mask = sigma_clip(std, sigma=rejection_threshold, masked=True).mask
-                    # mask = np.logical_or(mean_mask, std_mask)
-                    # mask_indexes = np.array(np.where(mask)).transpose()
-                    #
-                    # # Re-compute the identified pixels
-                    # logger.info(f"Re-measuring {len(mask_indexes)} outliers...")
-                    # for mask_index in mask_indexes:
-                    #     # Extract t-series for the masked pixel
-                    #     arr = data[:, mask_index[0], mask_index[1]]
-                    #
-                    #     # Compute sigma-clipped statistics for this pixel
-                    #     arr_mean, _, arr_std = sigma_clipped_stats(arr, sigma=rejection_threshold)
-                    #     mean[mask_index[0], mask_index[1]] = arr_mean
-                    #     std[mask_index[0], mask_index[1]] = arr_std
-                    #
-                    # mean = sigma_clip(mean, sigma=rejection_threshold, masked=True)
-                    # std = sigma_clip(std, sigma=rejection_threshold, masked=True)
 
                     # Combine variance
                     if data_var is None:
@@ -204,13 +183,6 @@ class MasterFlat(object):
                     raise ValueError(f"Shape of data {data.shape} is not understood. Data must be either 2 or "
                                      f"3-dimensional!")
 
-        #     # Create a master flat
-        #     if flats is None:
-        #         flats = data
-        #     else:
-        #         flats = np.append(flats, data, axis=0)
-        # logger.debug(f"'flats' cube has shape: {flats.shape}")
-
         # Collapse master flat along axis 0
         logger.info(f"Combining flats with {method!r} method...")
         if method == 'median':
@@ -220,10 +192,7 @@ class MasterFlat(object):
             flats = sigma_clip(np.array(means), axis=0, masked=True)
             self.image = np.mean(flats, axis=0)
             self.var = np.var(flats, axis=0)
-            # master_flat_var = np.var(flats, axis=0)
         elif method == 'average':
-            # self.image = np.average(np.ma.masked_array(means), axis=0, weights=number_frames)
-            # self.var = np.average(np.ma.masked_array(vars), axis=0, weights=number_frames)
 
             # Cast list of arrays into 3-dim arrays
             means = np.array(means)
@@ -292,11 +261,12 @@ class MasterFlat(object):
             self.var, mask_var = self.fill_masked(self.var)
             self.mask = np.logical_or(self.mask, mask_var)
 
-        # # Store variance in extension
-        # self.master_file.data = master_flat_normed
-        # if master_flat_normed_var is not None:
-        #     self.master_file.new_extension('VAR', data=master_flat_normed_var)
-        # self.master_file.new_extension('MASK', data=mask.astype(np.int16))
+        # Mask deviations beyond a given threshold
+        if mask_percentage is not None:
+            logger.info(f"Masking pixels with values beyond {mask_percentage}% off from unity")
+            mask_factor = (100 + mask_percentage) / 100
+            p_mask = np.logical_or(self.image > mask_factor, self.image < mask_factor**-1)
+            self.mask = np.logical_or(self.mask, p_mask)
 
     def fill_masked(self, masked_array):
         try:
