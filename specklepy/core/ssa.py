@@ -8,7 +8,7 @@ from specklepy.logging import logger
 
 
 def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, box_indexes=None,
-        integration_method='ssa', debug=False, **kwargs):
+        integration_method='ssa', alignment_method='correlation', mask_hot_pixels=False, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
@@ -42,6 +42,10 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         integration_method (str, optional):
             Method for creating individual long exposures. Using SSA by default, but can also use 'collapse' for a
             straight integration along the time axis (in case of faint reference sources).
+        alignment_method (str, optional):
+            Method for aligning cubes: Can be either 'correlation', 'peak', or 'sources'
+        mask_hot_pixels (bool, optional):
+            Mask hot pixels prior to alignment.
         debug (bool, optional):
             Show debugging information. Default is False.
 
@@ -95,7 +99,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
                                     box_indexes=box_indexes, debug=debug)
 
     # Compute the aligned and co-added image (and variance image)
-    reconstruction.align_cubes()
+    reconstruction.align_cubes(integration_method=integration_method, alignment_mode=alignment_method,
+                               mask_hot_pixels=mask_hot_pixels)
     reconstruction_image, reconstruction_var = reconstruction.coadd_long_exposures(save=True)
 
     # Return reconstruction (and the variance map if computed)

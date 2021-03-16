@@ -71,6 +71,11 @@ class GeneralArgParser(object):
                                 default='ssa',
                                 help='Collapse the individual data cubes instead of using SSA. This option is useful '
                                      'for very faint objects.')
+        parser_ssa.add_argument('-s', '--sources', dest='alignment_method', action='store_const', const='sources',
+                                default='correlation',
+                                help='Use sources in the field instead of a complete correlation. This is advantageous '
+                                     'in the presence of hot pixels or similar features.')
+        parser_ssa.add_argument('--mask', action='store_true', help='Mask hot pixels prior to aligning frames.')
         parser_ssa.add_argument('-t', '--tmpdir', type=str, default='tmp/', help='Path for saving temporary files.')
         parser_ssa.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 
