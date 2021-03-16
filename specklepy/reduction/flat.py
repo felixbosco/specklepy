@@ -427,5 +427,6 @@ class MasterFlat(object):
                     hdu_list.flush()
 
                 else:
-                    logger.warning(f"Unable to apply flat field correction to file {file!r}. Reason may be that "
-                                   f"the sub-window covered by the master flat is smaller than the image.")
+                    logger.warning(f"Unable to apply flat field correction to file {file!r}. Reason may be that the "
+                                   f"sub-window covered by the master flat ({sub_window_shape}) is smaller than the "
+                                   f"image ({frame_shape}).")
