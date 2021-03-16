@@ -420,7 +420,7 @@ class MasterFlat(object):
                         hdu_list['MASK'].data = np.logical_or(hdu_list['MASK'].data.astype(bool),
                                                               sub_window(gpm)).astype(np.int16)
                     else:
-                        hdu_list.append(fits.ImageHDU(data=sub_window(self.mask), name='MASK'))
+                        hdu_list.append(fits.ImageHDU(data=sub_window(self.mask).astype(np.int16), name='MASK'))
 
                     # Update FITS header and store updates
                     hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION FLATCORR', default_time_stamp())
