@@ -240,7 +240,7 @@ class DataReduction(object):
                 master_flat = flat.MasterFlat(file_list=flats, file_name=self.flat.get('masterFlatFile'),
                                               file_path=self.files.out_dir, out_dir=self.paths.get('tmpDir'),
                                               filter=filter, sub_window=sub_window)
-                master_flat.combine(method=self.flat.get('method'))
+                master_flat.combine(method=self.flat.get('method'), mask_percentage=self.flat.get('maskPercentage'))
                 master_flat.write()
                 master_flats[filter] = master_flat.path
 
