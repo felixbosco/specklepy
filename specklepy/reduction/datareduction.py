@@ -311,8 +311,16 @@ class DataReduction(object):
                 logger.info(f"Subtracting sky background...")
                 with fits.open(product_file_path, mode='update') as hdu_list:
 
+                    # Extract mask
+                    if 'MASK' in hdu_list:
+                        bpm = hdu_list['MASK'].data
+                        gpm = ~bpm
+                    else:
+                        bpm = np.zeros(frame_shape(hdu_list[0].data), dtype=bool)
+                        gpm = True
+
                     # Subtract sky
-                    hdu_list[0].data = hdu_list[0].data - sky_mean
+                    hdu_list[0].data = np.subtract(hdu_list[0].data, sky_mean, where=gpm)
 
                     # Update header
                     hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION SKYBKG', default_time_stamp())
@@ -328,8 +336,7 @@ class DataReduction(object):
 
                     # Propagate mask
                     if 'MASK' not in hdu_list:
-                        mask = np.zeros(frame_shape(hdu_list[0].data), dtype=np.int16)
-                        mask_hdu = fits.ImageHDU(data=mask, name='MASK')
+                        mask_hdu = fits.ImageHDU(data=bpm.astype(np.int16), name='MASK')
                         hdu_list.append(mask_hdu)
 
                     # Store updates
