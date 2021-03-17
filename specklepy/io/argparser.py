@@ -67,7 +67,7 @@ class GeneralArgParser(object):
         parser_ssa.add_argument('-b', '--box_indexes', type=int, nargs=4, default=None,
                                 help='Coordinates of a box constraining the search of the emission peak for frame '
                                      'alignment. Provide as a list [x_min, x_max, y_min, y_max].')
-        parser_ssa.add_argument('-c', '--collapse', dest='integration_method', action='store_const', const='both',
+        parser_ssa.add_argument('-c', '--collapse', dest='integration_method', action='store_const', const='collapse',
                                 default='ssa',
                                 help='Collapse the individual data cubes instead of using SSA. This option is useful '
                                      'for very faint objects.')
