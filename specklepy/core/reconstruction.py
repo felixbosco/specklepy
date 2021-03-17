@@ -140,8 +140,23 @@ class Reconstruction(object):
     def reference_long_exp_file(self):
         return self.long_exp_files[self.reference_index]
 
-    def create_long_exposures(self, integration_method=None, mask_hot_pixels=False):
-        """Compute long exposures from the input data cubes."""
+    def create_long_exposures(self, integration_method=None, mask_hot_pixels=False, shifts=None):
+        """Compute long exposures from the input data cubes.
+
+        Arguments:
+            integration_method (str, optional):
+                Choose from 'collapse' or 'ssa' for either simply collapsing a cube along the time axis, or SSA'ing the
+                individual frames.
+            mask_hot_pixels (bool, optional):
+                Let the SpeckleCube instance mask hot pixels.
+            shifts (list, optional):
+                List of shifts between the file and the reference file. This is used only in case of SSA
+                reconstructions, where the reference box might require to be shifted.
+
+        Returns:
+            long_exposure_files (list):
+                List of the file names of the long exposures.
+        """
 
         # Update integration method, if provided
         if integration_method is not None:
@@ -151,7 +166,7 @@ class Reconstruction(object):
         long_exposure_files = []
 
         # Iterate over input data cubes
-        for file in self.in_files:
+        for f, file in enumerate(self.in_files):
 
             # Read data from file
             speckle_cube = SpeckleCube(file_name=file, in_dir=self.in_dir, out_dir=self.tmp_dir,
@@ -161,7 +176,11 @@ class Reconstruction(object):
             if self.integration_method == 'collapse':
                 speckle_cube.collapse()
             elif self.integration_method == 'ssa':
-                speckle_cube.ssa(box=self.box)
+                if shifts is not None:
+                    shift = shifts[f]
+                else:
+                    shift = None
+                speckle_cube.ssa(box=self.box.shift(shift=shift))
             else:
                 raise SpecklepyValueError('Reconstruction', 'integration_method', self.integration_method,
                                           expected="either 'collapse' or 'ssa'")
