@@ -368,11 +368,14 @@ class DataReduction(object):
 
                     # Extract mask
                     if 'MASK' in hdu_list:
-                        bpm = hdu_list['MASK'].data
+                        bpm = hdu_list['MASK'].data != 0
                     else:
                         bpm = []
 
                     # Fill pixels
-                    hdu_list[0].data[bpm] = fill_value
+                    if hdu_list[0].data.ndim == 2:
+                        hdu_list[0].data[bpm] = fill_value
+                    elif hdu_list[0].data.ndim == 3:
+                        hdu_list[0].data[:, bpm] = fill_value
 
                     hdu_list.flush()
