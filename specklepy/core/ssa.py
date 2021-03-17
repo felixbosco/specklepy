@@ -99,7 +99,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
                                     box_indexes=box_indexes, debug=debug)
 
     # Compute the aligned and co-added image (and variance image)
-    if integration_method is 'both':
+    if integration_method == 'both':
         reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment_method,
                                    mask_hot_pixels=mask_hot_pixels)
         reconstruction.long_exp_files = reconstruction.create_long_exposures(integration_method='ssa',
