@@ -177,10 +177,10 @@ class Reconstruction(object):
                 speckle_cube.collapse()
             elif self.integration_method == 'ssa':
                 if shifts is not None:
-                    shift = shifts[f]
+                    box = self.box.shift(shift=shifts[f])
                 else:
-                    shift = None
-                speckle_cube.ssa(box=self.box.shift(shift=shift))
+                    box = self.box
+                speckle_cube.ssa(box=box)
             else:
                 raise SpecklepyValueError('Reconstruction', 'integration_method', self.integration_method,
                                           expected="either 'collapse' or 'ssa'")
