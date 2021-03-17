@@ -56,6 +56,7 @@ class DataReduction(object):
             self.run_flat_fielding()
         if not self.sky.get('skip'):
             self.run_sky_subtraction()
+        self.fill_masked_pixels(fill_value=self.options.get('fillValueMasked', None))
 
         # Close reduction
         logger.info("Reduction finished!")
@@ -346,3 +347,32 @@ class DataReduction(object):
             raise NotImplementedError(f"Sky subtraction from source {self.sky.get('source')!r} is not implemented yet!")
 
         logger.info(f"{'>' * 11} SKY SUBTRACTION COMPLETE {'<' * 11}")
+
+    def fill_masked_pixels(self, fill_value=None):
+
+        if fill_value is not None:
+
+            logger.info(f"Filling masked pixels with value {fill_value} in science product files...")
+
+            # Iterate through science files
+            for p, product_file_path in enumerate(self.files.product_file_paths):
+
+                # Skip files from different filter
+                if product_file_path is None \
+                        or self.files.table['OBSTYPE'][p] in ['DARK', 'FLAT', 'SKY']:
+                    continue
+
+                # Subtract sky background from data
+                logger.info(f"Filling masked pixels in file {product_file_path!r}")
+                with fits.open(product_file_path, mode='update') as hdu_list:
+
+                    # Extract mask
+                    if 'MASK' in hdu_list:
+                        bpm = hdu_list['MASK'].data
+                    else:
+                        bpm = []
+
+                    # Fill pixels
+                    hdu_list[0].data[bpm] = fill_value
+
+                    hdu_list.flush()
