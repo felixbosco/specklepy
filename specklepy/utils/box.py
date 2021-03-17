@@ -88,9 +88,27 @@ class Box(object):
 
             return array[self.x_min: self.x_max, self.y_min: self.y_max]
 
+    def __copy__(self):
+        return Box([self.x_min, self.x_max, self.y_min, self.y_max])
+
     @property
     def shape(self):
         if None in [self.x_max, self.x_min, self.y_max, self.y_min]:
             return None
         else:
             return self.x_max - self.x_min, self.y_max - self.y_min
+
+    def shift(self, shift, copy=True):
+        # Create a copy if requested
+        if copy:
+            obj = self.__copy__()
+        else:
+            obj = self
+
+        # Shift entries
+        obj.x_min += shift[1]
+        obj.x_max += shift[1]
+        obj.y_min += shift[0]
+        obj.y_max += shift[0]
+
+        return obj
