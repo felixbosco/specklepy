@@ -9,6 +9,8 @@ from specklepy.core.alignment import derive_pad_vectors, pad_array
 from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
+from specklepy.reduction.filter import hot_pixel_mask
+from specklepy.utils.array import frame_number
 from specklepy.utils.transferfunctions import otf
 
 
@@ -98,12 +100,14 @@ class FourierObject(object):
         self.denominator = np.zeros(img.shape, dtype='complex128')
         self.fourier_image = np.zeros(img.shape, dtype='complex128')
 
-    def coadd_fft(self, fill_value=0):
+    def coadd_fft(self, fill_value=0, mask_hot_pixels=False):
         """Co-add the Fourier transforms of the image and PSF frames.
 
         Arguments:
             fill_value (float, optional):
                 Value to fill masked pixels of the data cube, in case the file contains a mask extension.
+            mask_hot_pixels (bool, optional):
+                Identify hot pixels in a cube if requested and fill them.
 
         Returns:
             fourier_image (np.ndarray, dtype=np.comlex128):
@@ -113,18 +117,34 @@ class FourierObject(object):
         # Padding and Fourier transforming the images
         logger.info("Padding the images and PSFs...")
 
+        # Iterate through files
         for file_index in trange(len(self.in_files), desc="Processing files"):
 
             # Open PSF and image files
             psf_cube = fits.getdata(self.psf_files[file_index])
             image_cube = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]))
+            number_frames = frame_number(image_cube)
+
+            # Extract and combine frame mask
             try:
                 image_mask = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]), 'MASK')
             except KeyError:
                 image_mask = None
-            n_frames = image_cube.shape[0]
+            if mask_hot_pixels:
+                # Extract hot pixel mask
+                if number_frames == 1:
+                    bpm = hot_pixel_mask(image_cube)
+                else:
+                    bpm = hot_pixel_mask(np.sum(image_cube, axis=0))
 
-            for frame_index in trange(n_frames, desc="Fourier transforming frames"):
+                # Combine with image mask
+                if image_mask is None:
+                    image_mask = bpm
+                else:
+                    image_mask = np.logical_or(image_mask, bpm)
+
+            # Iterate through frames
+            for frame_index in trange(number_frames, desc="Fourier transforming frames"):
 
                 # Load image and fill masked values with zeros
                 frame = image_cube[frame_index]
