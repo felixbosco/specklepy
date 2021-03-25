@@ -6,6 +6,7 @@ from tqdm import trange
 from astropy.io import fits
 
 from specklepy.core.alignment import derive_pad_vectors, pad_array
+from specklepy.core.bootstrap import random_draw_vectors
 from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
@@ -102,6 +103,11 @@ class FourierObject(object):
 
         # Initialize bootstrap image attribute
         self.bootstrap_images = None
+        self.bootstrap_objects = None
+
+    @property
+    def number_files(self):
+        return len(self.in_files)
 
     def coadd_fft(self, fill_value=0, mask_hot_pixels=False, bootstrap=None):
         """Co-add the Fourier transforms of the image and PSF frames.
@@ -121,13 +127,23 @@ class FourierObject(object):
 
         # Prepare bootstrapping
         if bootstrap is not None:
-            self.bootstrap_images = [ComplexRatioImage] * bootstrap
+            self.bootstrap_objects = [ComplexRatioImage(shape=self.shape)] * bootstrap
+            number_frames = 0
+            for file in self.in_files:
+                path = os.path.join(self.in_dir, file)
+                with fits.open(path) as hdu_list:
+                    cube = hdu_list[0].data
+                    number_frames += frame_number(cube)
+            bootstrap_draws = random_draw_vectors(number_draws=bootstrap, number_frames=number_frames)
+        else:
+            bootstrap_draws = None
+        frame_counter = 0
 
         # Padding and Fourier transforming the images
         logger.info("Padding the images and PSFs...")
 
         # Iterate through files
-        for file_index in trange(len(self.in_files), desc="Processing files"):
+        for file_index in trange(self.number_files, desc="Processing files"):
 
             # Open PSF and image files
             psf_cube = fits.getdata(self.psf_files[file_index])
@@ -173,11 +189,28 @@ class FourierObject(object):
                 f_psf = fftshift(fft2(psf))
 
                 # Co-adding for the average
-                self.complex_ratio_image.numerator += np.multiply(f_img, np.conjugate(f_psf))
-                self.complex_ratio_image.denominator += np.abs(np.square(f_psf))
+                numerator = np.multiply(f_img, np.conjugate(f_psf))
+                denominator = np.abs(np.square(f_psf))
+                self.complex_ratio_image.numerator += numerator
+                self.complex_ratio_image.denominator += denominator
+
+                # Co-add bootstrap images
+                if self.bootstrap_objects is not None:
+                    for b, bootstrap_object in enumerate(self.bootstrap_objects):
+                        bootstrap_coeff = bootstrap_draws[b, frame_counter]
+                        if bootstrap_coeff > 0:
+                            bootstrap_object.numerator += bootstrap_coeff * numerator
+                            bootstrap_object.denominator += bootstrap_coeff * denominator
+
+                # Count frames
+                frame_counter += 1
 
         # Compute the object:
         self.fourier_image = self.complex_ratio_image.evaluate()
+        if self.bootstrap_objects is not None:
+            self.bootstrap_images = []
+            for bootstrap_object in self.bootstrap_objects:
+                self.bootstrap_images.append(bootstrap_object.evaluate())
 
         return self.fourier_image
 
@@ -225,6 +258,12 @@ class FourierObject(object):
         apodization_otf = otf(apodization_psf)
         self.fourier_image = np.multiply(self.fourier_image, apodization_otf)
 
+        # Apodize bootstrap images
+        if self.bootstrap_images is not None:
+            logger.info("Apodizing bootstrap objects...")
+            for b, bootstrap_image in enumerate(self.bootstrap_images):
+                self.bootstrap_images[b] = np.multiply(bootstrap_image, apodization_otf)
+
         return self.fourier_image
 
     def ifft(self, total_flux=None):
@@ -237,6 +276,9 @@ class FourierObject(object):
         Returns:
             image (np.ndarray):
                 Image-plane image.
+            bootstrap_images (list of np.ndarray):
+                List of the bootstrap reconstructions of the image. Returns `None`, if no bootstrap objects have been
+                computed before.
         """
         logger.info("Inverse Fourier transformation of the object...")
         image = ifft2(self.fourier_image)
@@ -244,7 +286,21 @@ class FourierObject(object):
         if total_flux is not None:
             image_scale = total_flux / np.sum(image)
             image = np.multiply(image, image_scale)
-        return image
+
+        # Fourier transform of the bootstrap images
+        if self.bootstrap_images is not None:
+            logger.info("Inverse Fourier transformation of the bootstrap objects...")
+            bootstrap_images = []
+            for bootstrap_fourier_image in self.bootstrap_images:
+                bootstrap_image = ifft2(bootstrap_fourier_image)
+                bootstrap_image = np.abs(bootstrap_image)
+                if total_flux is not None:
+                    bootstrap_image = np.multiply(bootstrap_image, total_flux/np.sum(bootstrap_image))
+                bootstrap_images.append(bootstrap_image)
+        else:
+            bootstrap_images = None
+
+        return image, bootstrap_images
 
 
 class ComplexRatioImage(object):

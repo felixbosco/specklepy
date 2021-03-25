@@ -157,7 +157,7 @@ def holography(params, mode='same', debug=False):
         f_object.apodize(type=apodization.get('type'), radius=apodization.get('radius'))
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
-        image = f_object.ifft(total_flux=total_flux)
+        image, bootstrap_images = f_object.ifft(total_flux=total_flux)
 
         # Inspect the latest reconstruction
         if debug:
@@ -165,6 +165,11 @@ def holography(params, mode='same', debug=False):
 
         # Save the latest reconstruction image to outfile
         out_file.data = image
+
+        # Compute uncertainty from bootstrap reconstructions
+        if bootstrap_images is not None:
+            var = np.var(np.array(bootstrap_images), axis=0)
+            out_file.update_extension(params['OPTIONS']['varianceExtensionName'], var)
 
         # Ask the user whether the iteration shall be continued or not
         answer = input("\tDo you want to continue with one more iteration? [yes/no]\n\t")
