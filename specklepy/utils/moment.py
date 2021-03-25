@@ -23,8 +23,14 @@ def first_moment_2d(array, var=None, weights=None):
     var_moment0 = np.sum(np.square(weighted_var))
 
     # Compute first moments
-    moment1_x = np.average(x, weights=weighted_array, axis=(0, 1))
-    moment1_y = np.average(y, weights=weighted_array, axis=(0, 1))
+    try:
+        moment1_x = np.average(x, weights=weighted_array, axis=(0, 1))
+        moment1_y = np.average(y, weights=weighted_array, axis=(0, 1))
+    except ZeroDivisionError as e:
+        if (np.array(array.shape) == 0).any():
+            raise ValueError(f"Input array with shape {array.shape} has no extent and cannot be averaged!")
+        else:
+            raise e
 
     # Compute uncertainties
     var_moment1_x = np.sum(np.square(np.multiply(weighted_var, np.subtract(x, moment1_x)))) / np.square(moment0)
