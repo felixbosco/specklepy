@@ -12,12 +12,17 @@ from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot
 
 class SpeckleCube(object):
 
-    def __init__(self, file_name, variance_extension=None, mask_extension='MASK', in_dir=None, out_dir=None):
+    variance_extension = 'VAR'
+    mask_extension = 'MASK'
+
+    def __init__(self, file_name, variance_extension=None, mask_extension=None, in_dir=None, out_dir=None):
 
         # Store input arguments
         self.in_dir, self.file_name = os.path.split(file_name)
-        self.var_ext = variance_extension
-        self.mask_ext = mask_extension
+        if variance_extension is not None:
+            self.variance_extension = variance_extension
+        if mask_extension is not None:
+            self.mask_extension = mask_extension
         if in_dir:
             self.in_dir = in_dir
         self.out_dir = out_dir if out_dir else ''
@@ -42,19 +47,19 @@ class SpeckleCube(object):
 
     @property
     def variance(self):
-        if self.var_ext is None:
+        if self.variance_extension is None:
             return None
         try:
-            return fits.getdata(self.in_file, self.var_ext).squeeze()
+            return fits.getdata(self.in_file, self.variance_extension).squeeze()
         except KeyError:
             return None
 
     @property
     def mask(self):
-        if self.mask_ext is None:
+        if self.mask_extension is None:
             return None
         try:
-            return fits.getdata(self.in_file, self.mask_ext).astype(bool)
+            return fits.getdata(self.in_file, self.mask_extension).astype(bool)
         except KeyError:
             return None
 
@@ -69,7 +74,7 @@ class SpeckleCube(object):
             raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
 
         # Extract variance image
-        if self.var_ext:
+        if self.variance_extension:
             if self.variance.ndim == 2:
                 self.image_var = self.variance
             else:
@@ -136,7 +141,7 @@ class SpeckleCube(object):
 
         # Append variance extension if available
         if self.image_var is not None:
-            var_hdu = fits.ImageHDU(data=self.image_var, name=self.var_ext)
+            var_hdu = fits.ImageHDU(data=self.image_var, name=self.variance_extension)
             hdu_list.append(var_hdu)
 
         # Store data to file
