@@ -183,6 +183,7 @@ class SourceExtractor(object):
                      f"\n\tThreshold = {self.threshold}"
                      f"\n\tSky = {self.image.sky_bkg}")
         sources = self.star_finder(self.image.data - self.image.sky_bkg)
+        embed()
 
         # Reformatting sources table
         sources.sort('flux', reverse=True)
