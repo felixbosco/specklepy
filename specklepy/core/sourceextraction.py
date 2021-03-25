@@ -76,15 +76,14 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
                            f"containing the image variance.")
             logger.info(f"Reading data from {extractor.image.filename!r} [{image_var}]")
             image_var = fits.getdata(extractor.image.filename, image_var)
-            image_var = np.sqrt(np.mean(image_var))
-        extractor.stddev = np.sqrt(image_var)
+        extractor.stddev = np.sqrt(np.mean(image_var))
         logger.debug(f"Resetting image standard deviation to {extractor.stddev}")
     if not background_subtraction:
         extractor.sky_bkg = 0.0
         logger.debug(f"Resetting sky background to {extractor.sky_bkg}")
 
     # Find sources
-    sources = extractor.find_sources(uncertainties=True)
+    sources = extractor.find_sources(uncertainties=True, image_var=image_var)
 
     # Save sources table to file, if requested
     if write_to is not None:
