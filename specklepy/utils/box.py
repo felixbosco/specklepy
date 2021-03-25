@@ -113,3 +113,23 @@ class Box(object):
             obj.y_max += shift[0]
 
         return obj
+
+    def crop_to_shape(self, shape):
+        updated = False
+
+        if self.x_min < 0:
+            self.x_min = 0
+            updated = True
+        if self.y_min < 0:
+            self.y_min = 0
+            updated = True
+        if self.x_max >= shape[1]:
+            self.x_max = -1
+            updated = True
+        if self.y_min >= shape[0]:
+            self.y_min = -1
+            updated = True
+
+        if updated:
+            logger.info(f"Cropped box {self} to shape {shape}")
+            logger.info(f"Box is now {self}")
