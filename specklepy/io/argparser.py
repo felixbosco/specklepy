@@ -161,8 +161,10 @@ class GeneralArgParser(object):
         parser_extraction = subparsers.add_parser('extract', help='Extract sources from an image.')
         parser_extraction.set_defaults(command='extract')
         parser_extraction.add_argument('file_name', type=str, help='Name of the image file.')
-        parser_extraction.add_argument('-n', '--noise_threshold', type=float, help='Multiple of the image uncertainty.')
-        parser_extraction.add_argument('-f', '--fwhm', type=float, help='Expected source FWHM in units of pixels.')
+        parser_extraction.add_argument('-n', '--noise_threshold', type=float, default=5,
+                                       help='Multiple of the image uncertainty.')
+        parser_extraction.add_argument('-f', '--fwhm', type=float, default=5,
+                                       help='Expected source FWHM in units of pixels.')
         parser_extraction.add_argument('-v', '--var', type=str, default=None,
                                        help='Value of the image variance or name of the FITS file extension containing '
                                             'the variance.')
