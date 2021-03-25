@@ -100,7 +100,7 @@ class FourierObject(object):
         self.denominator = np.zeros(img.shape, dtype='complex128')
         self.fourier_image = np.zeros(img.shape, dtype='complex128')
 
-    def coadd_fft(self, fill_value=0, mask_hot_pixels=False):
+    def coadd_fft(self, fill_value=0, mask_hot_pixels=False, bootstrap=None):
         """Co-add the Fourier transforms of the image and PSF frames.
 
         Arguments:
@@ -108,6 +108,8 @@ class FourierObject(object):
                 Value to fill masked pixels of the data cube, in case the file contains a mask extension.
             mask_hot_pixels (bool, optional):
                 Identify hot pixels in a cube if requested and fill them.
+            bootstrap (int, optional):
+                Number of bootstrap-resampled images to create in parallel.
 
         Returns:
             fourier_image (np.ndarray, dtype=np.comlex128):
