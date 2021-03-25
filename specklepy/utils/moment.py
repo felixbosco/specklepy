@@ -16,7 +16,7 @@ def first_moment_2d(array, var=None, weights=None):
     weighted_var = np.multiply(weights, var)
 
     # Initialize arrays
-    x, y = np.mgrid[:array.shape[0], :array.shape[1]]
+    y, x = np.mgrid[:array.shape[0], :array.shape[1]]
 
     # Compute zeroth moment
     moment0 = np.sum(weighted_array)

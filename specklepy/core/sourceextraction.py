@@ -4,6 +4,7 @@ import os
 
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
+from astropy.table import Table
 
 from photutils import DAOStarFinder, IRAFStarFinder
 
@@ -11,6 +12,8 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
 from specklepy.plotting.plot import StarFinderPlot
 from specklepy.utils import save_eval
+from specklepy.utils.box import Box
+from specklepy.utils.moment import first_moment_2d
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
@@ -81,7 +84,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         logger.debug(f"Resetting sky background to {extractor.sky_bkg}")
 
     # Find sources
-    sources = extractor.find_sources()
+    sources = extractor.find_sources(uncertainties=True)
 
     # Save sources table to file, if requested
     if write_to is not None:
@@ -175,7 +178,7 @@ class SourceExtractor(object):
 
         return self.star_finder
 
-    def find_sources(self):
+    def find_sources(self, uncertainties=False, image_var=None):
         # Find stars
         logger.info("Extracting sources...")
         logger.debug(f"Extraction parameters:"
@@ -183,13 +186,40 @@ class SourceExtractor(object):
                      f"\n\tThreshold = {self.threshold}"
                      f"\n\tSky = {self.image.sky_bkg}")
         sources = self.star_finder(self.image.data - self.image.sky_bkg)
-        embed()
 
         # Reformatting sources table
         sources.sort('flux', reverse=True)
         sources.rename_column('xcentroid', 'x')
         sources.rename_column('ycentroid', 'y')
         sources.keep_columns(['x', 'y', 'flux'])
+
+        # Re-measure positions and flux to obtain uncertainties
+        if uncertainties:
+            new_sources = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
+            radius = round(self.fwhm / 2.35 * 1.5)  # 1.5 times the standard deviation
+            logger.info(f"Measuring uncertainties over {(radius*2+1)**2} pixels...")
+
+            # Iterate through sources
+            for source in sources:
+                pos = round(source['x']), round(source['y'])
+                box = Box([pos[1] - radius, pos[1] + radius+1, pos[0] - radius, pos[0] + radius+1])
+                # box.crop_to_shape(self.image.data.shape)
+                aperture = box(self.image.data)
+                if image_var is None:
+                    var = np.full(aperture.shape, 5.5)
+                else:
+                    var = box(image_var)
+
+                # Compute moments and uncertainties, and add to new table
+                try:
+                    f, df, x, y, dx, dy = first_moment_2d(aperture, var=var)
+                    new_sources.add_row([x+pos[0]-radius, dx, y+pos[1]-radius, dy, f, df])
+                except ValueError:
+                    logger.warning(f"Unsuccessful to measure uncertainties for source in box {box}")
+                    new_sources.add_row([source['x'], 0, source['y'], 0, source['flux'], 0])
+
+            # Overwrite sources table
+            sources = new_sources
 
         # Add terminal output
         logger.info(f"Extracted {len(sources)} sources")
