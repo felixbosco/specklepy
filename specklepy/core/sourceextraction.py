@@ -195,31 +195,7 @@ class SourceExtractor(object):
 
         # Re-measure positions and flux to obtain uncertainties
         if uncertainties:
-            new_sources = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
-            radius = round(self.fwhm / 2.35 * 1.5)  # 1.5 times the standard deviation
-            logger.info(f"Measuring uncertainties over {(radius*2+1)**2} pixels...")
-
-            # Iterate through sources
-            for source in sources:
-                pos = round(source['x']), round(source['y'])
-                box = Box([pos[1] - radius, pos[1] + radius+1, pos[0] - radius, pos[0] + radius+1])
-                # box.crop_to_shape(self.image.data.shape)
-                aperture = box(self.image.data)
-                if image_var is None:
-                    var = np.full(aperture.shape, 5.5)
-                else:
-                    var = box(image_var)
-
-                # Compute moments and uncertainties, and add to new table
-                try:
-                    f, df, x, y, dx, dy = first_moment_2d(aperture, var=var)
-                    new_sources.add_row([x+pos[0]-radius, dx, y+pos[1]-radius, dy, f, df])
-                except ValueError:
-                    logger.warning(f"Unsuccessful to measure uncertainties for source in box {box}")
-                    new_sources.add_row([source['x'], 0, source['y'], 0, source['flux'], 0])
-
-            # Overwrite sources table
-            sources = new_sources
+            sources = self.estimate_uncertainties(sources=sources, image_var=image_var)
 
         # Add terminal output
         logger.info(f"Extracted {len(sources)} sources")
@@ -228,6 +204,31 @@ class SourceExtractor(object):
         # Store source table
         self.sources = sources
         return sources
+
+    def estimate_uncertainties(self, sources, image_var):
+        new_sources = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
+        radius = round(self.fwhm / 2.35 * 1.5)  # 1.5 times the standard deviation
+        logger.info(f"Measuring uncertainties over {(radius * 2 + 1) ** 2} pixels...")
+
+        # Iterate through sources
+        for source in sources:
+            pos = round(source['x']), round(source['y'])
+            box = Box([pos[1] - radius, pos[1] + radius + 1, pos[0] - radius, pos[0] + radius + 1])
+            aperture = box(self.image.data)
+            if image_var is None:
+                var = np.full(aperture.shape, 5.5)
+            else:
+                var = box(image_var)
+
+            # Compute moments and uncertainties, and add to new table
+            try:
+                f, df, x, y, dx, dy = first_moment_2d(aperture, var=var)
+                new_sources.add_row([x + pos[0] - radius, dx, y + pos[1] - radius, dy, f, df])
+            except ValueError:
+                logger.warning(f"Unsuccessful to measure uncertainties for source in box {box}")
+                new_sources.add_row([source['x'], 0, source['y'], 0, source['flux'], 0])
+
+        return new_sources
 
     def show(self):
         plot = StarFinderPlot(image_data=self.image.data)
