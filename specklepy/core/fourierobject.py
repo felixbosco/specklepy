@@ -74,7 +74,8 @@ class FourierObject(object):
         img = pad_array(array=img, pad_vector=image_pad_vector, mode=mode,
                         reference_image_pad_vector=self.reference_image_pad_vector)
         logger.info(f"\tShift: {shifts[file_index]}")
-        logger.info(f"\tShape: {img.shape}")
+        self.shape = img.shape
+        logger.info(f"\tShape: {self.shape}")
 
         # Get example PSF frame
         psf_file = psf_files[file_index]
@@ -83,22 +84,24 @@ class FourierObject(object):
         logger.info(f"\tShape: {psf.shape}")
 
         # Estimate the padding vector for the f_psf frames to have the same xy-extent as f_img
-        dx = img.shape[0] - psf.shape[0]
-        dy = img.shape[1] - psf.shape[1]
+        dx = self.shape[0] - psf.shape[0]
+        dy = self.shape[1] - psf.shape[1]
         psf_pad_vector = ((dx // 2, int(np.ceil(dx / 2))), (dy // 2, int(np.ceil(dy / 2))))
         logger.info(f"\tPad_width for PSFs: {psf_pad_vector}")
 
         # Apply padding to PSF frame
         psf = np.pad(psf, psf_pad_vector, mode='constant', )
         if not img.shape == psf.shape:
-            raise ValueError(f"The Fourier transformed images and PSFs have different shape, {img.shape} and "
+            raise ValueError(f"The Fourier transformed images and PSFs have different shape, {self.shape} and "
                              f"{psf.shape}. Something went wrong with the padding!")
         self.psf_pad_vector = psf_pad_vector
 
         # Initialize the enumerator, denominator and Fourier object attributes
-        self.enumerator = np.zeros(img.shape, dtype='complex128')
-        self.denominator = np.zeros(img.shape, dtype='complex128')
-        self.fourier_image = np.zeros(img.shape, dtype='complex128')
+        self.complex_ratio_image = ComplexRatioImage(self.shape)
+        self.fourier_image = None
+
+        # Initialize bootstrap image attribute
+        self.bootstrap_images = None
 
     def coadd_fft(self, fill_value=0, mask_hot_pixels=False, bootstrap=None):
         """Co-add the Fourier transforms of the image and PSF frames.
@@ -115,6 +118,10 @@ class FourierObject(object):
             fourier_image (np.ndarray, dtype=np.comlex128):
                 Fourier-transformed object reconstruction.
         """
+
+        # Prepare bootstrapping
+        if bootstrap is not None:
+            self.bootstrap_images = [ComplexRatioImage] * bootstrap
 
         # Padding and Fourier transforming the images
         logger.info("Padding the images and PSFs...")
@@ -166,13 +173,11 @@ class FourierObject(object):
                 f_psf = fftshift(fft2(psf))
 
                 # Co-adding for the average
-                self.enumerator += np.multiply(f_img, np.conjugate(f_psf))
-                self.denominator += np.abs(np.square(f_psf))
+                self.complex_ratio_image.numerator += np.multiply(f_img, np.conjugate(f_psf))
+                self.complex_ratio_image.denominator += np.abs(np.square(f_psf))
 
         # Compute the object:
-        # Note that by this division implicitly does averaging. By this implicit summing up of enumerator and
-        # denominator, this computation is cheaper in terms of memory usage
-        self.fourier_image = np.divide(self.enumerator, self.denominator)
+        self.fourier_image = self.complex_ratio_image.evaluate()
 
         return self.fourier_image
 
@@ -240,3 +245,17 @@ class FourierObject(object):
             image_scale = total_flux / np.sum(image)
             image = np.multiply(image, image_scale)
         return image
+
+
+class ComplexRatioImage(object):
+    def __init__(self, shape):
+        self.shape = shape
+
+        # Initialize numerator and denominator
+        self.numerator = np.zeros(shape, dtype='complex128')
+        self.denominator = np.zeros(shape, dtype='complex128')
+
+    def evaluate(self):
+        """The division implicitly achieves the averaging. By implicitly summing up of enumerator and
+        denominator, this computation is cheaper in terms of memory usage."""
+        return np.divide(self.numerator, self.denominator)
