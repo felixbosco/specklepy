@@ -184,7 +184,7 @@ class SourceExtractor(object):
                      f"\n\tFWHM = {self.fwhm}"
                      f"\n\tThreshold = {self.threshold}"
                      f"\n\tSky = {self.image.sky_bkg}")
-        sources = self.star_finder(self.image.data - self.image.sky_bkg)
+        sources = self.star_finder(np.ma.masked_less(self.image.data - self.image.sky_bkg, 0).filled(0))
 
         # Reformatting sources table
         sources.sort('flux', reverse=True)
