@@ -64,11 +64,13 @@ class FileArchive(object):
                             f"file names.")
                 self.table, self.in_dir = self.read_table_file(files[0], format=kwargs.get('table_format'))
             else:
-                self.table, self.in_dir = self.gather_table_from_list(files=files, **kwargs)
+                self.table, self.in_dir = self.gather_table_from_list(files=files, cards=kwargs.get('cards', []),
+                                                                      dtypes=kwargs.get('dtypes', []))
 
         elif isinstance(file_list, list):
             logger.info("FileArchive received a list of files.")
-            self.table, self.in_dir = self.gather_table_from_list(files=file_list, **kwargs)
+            self.table, self.in_dir = self.gather_table_from_list(files=file_list, cards=kwargs.get('cards', []),
+                                                                  dtypes=kwargs.get('dtypes', []))
 
         else:
             raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'str')
