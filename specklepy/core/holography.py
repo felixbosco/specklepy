@@ -167,6 +167,13 @@ def holography(params, debug=False):
         if bootstrap_images is not None:
             var = np.var(np.array(bootstrap_images), axis=0)
             out_file.update_extension(params['EXTNAMES']['varianceExtension'], var)
+            if params['BOOTSTRAP'].get('saveImages', False):
+                logger.info("Saving bootstrap images...")
+                bs_file = ReconstructionFile(filename=paths.get('outFile').replace('.fits', '_bs.fits'), files=in_files,
+                                             cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir,
+                                             shape=(len(bootstrap_images), image.shape[1], image.shape[2]))
+                for b, bootstrap_image in enumerate(bootstrap_images):
+                    bs_file.update_frame(frame_index=b, data=bootstrap_image)
 
         # Ask the user whether the iteration shall be continued or not
         answer = input("\tDo you want to continue with one more iteration? [yes/no]\n\t")
