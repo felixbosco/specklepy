@@ -196,7 +196,7 @@ class Aperture(object):
 
         # Estimate intensity peak
         peak = self.get_aperture_peak()
-        logger.info(f"Re-centering the aperture from ({self.x0, self.y0}) to {peak}")
+        logger.info(f"Re-centering the aperture from {self.index} to {peak}")
 
         # Update properties
         self.x0 = peak[0]
