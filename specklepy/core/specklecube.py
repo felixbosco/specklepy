@@ -8,6 +8,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import alignment
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
+from specklepy.utils.array import frame_number
 
 
 class SpeckleCube(object):
@@ -62,6 +63,10 @@ class SpeckleCube(object):
             return fits.getdata(self.in_file, self.mask_extension).astype(bool)
         except KeyError:
             return None
+
+    @property
+    def single_frame_mode(self):
+        return frame_number(self.cube) == 1
 
     def collapse(self):
 

@@ -171,6 +171,10 @@ class Reconstruction(object):
             # Read data from file
             speckle_cube = SpeckleCube(file_name=file, in_dir=self.in_dir, out_dir=self.tmp_dir,
                                        variance_extension=None)
+            if speckle_cube.single_frame_mode:
+                number_out_dir_levels = len(self.tmp_dir.split('/')) - 1
+                long_exposure_files.append('../' * number_out_dir_levels + file)
+                continue
             
             # Compute collapsed or SSA'ed images from the cube
             if self.integration_method == 'collapse':
