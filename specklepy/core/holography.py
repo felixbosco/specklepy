@@ -177,9 +177,11 @@ def holography(params, mode='same', debug=False):
             break
 
     # Repeat astrometry and photometry, i.e. StarFinder on final image
-    extract_sources(image=image, fwhm=source_extraction.get('starfinderFwhm'),
-                    noise_threshold=source_extraction.get('noiseThreshold'), background_subtraction=True,
-                    write_to=paths.get('allStarsFile'), star_finder='DAO', debug=debug)
+    fwhm = apodization.get('radius')
+    if 'gauss' in apodization.get('type').lower():
+        fwhm *= 2.35
+    extract_sources(image=image, fwhm=fwhm, noise_threshold=source_extraction.get('noiseThreshold'),
+                    background_subtraction=True, write_to=paths.get('allStarsFile'), star_finder='DAO', debug=debug)
 
     # Finally return the image
     return image
