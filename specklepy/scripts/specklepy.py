@@ -91,7 +91,7 @@ def main():
         defaults_file = os.path.abspath(defaults_file)
         params = config.read(defaults_file)
         params = config.update_from_file(params, args.parfile)
-        holography(params, mode=params['OPTIONS']['reconstructionMode'], debug=args.debug)
+        holography(params, debug=args.debug)
 
     elif args.command == 'inspect':
         run.inspect(files=args.files, keywords=args.keywords, save=args.save, recursive=args.recursive,
