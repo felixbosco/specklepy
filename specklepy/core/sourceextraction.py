@@ -213,6 +213,7 @@ class SourceExtractor(object):
         for source in sources:
             pos = int(round(source['x'])), int(round(source['y']))
             box = Box([pos[1] - radius, pos[1] + radius + 1, pos[0] - radius, pos[0] + radius + 1])
+            box.crop_to_shape(shape=self.image.data.shape)
             aperture = box(self.image.data)
             if image_var is None:
                 var = np.full(aperture.shape, 5.5)
