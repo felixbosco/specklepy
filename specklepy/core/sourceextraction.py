@@ -211,7 +211,7 @@ class SourceExtractor(object):
 
         # Iterate through sources
         for source in sources:
-            pos = round(source['x']), round(source['y'])
+            pos = int(round(source['x'])), int(round(source['y']))
             box = Box([pos[1] - radius, pos[1] + radius + 1, pos[0] - radius, pos[0] + radius + 1])
             aperture = box(self.image.data)
             if image_var is None:
