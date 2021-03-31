@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import sys
 
 from astropy.io import fits
 
@@ -144,6 +145,9 @@ class Reconstruction(object):
         image = fits.getdata(os.path.join(self.tmp_dir, self.reference_long_exp_file))
         logger.info(f"Select the source for the SSA reference aperture of radius {radius} pix!")
         _, selected = extract_sources(image=image, noise_threshold=3, fwhm=radius, select=True)
+        if len(selected) == 0:
+            sys.tracebacklimit = 0
+            raise ValueError("No source selected to center the aperture on")
         pos = {'x': int(round(selected[0]['x'])), 'y': int(round(selected[0]['y']))}
         self.box = Box(indexes=[pos['x'] - radius, pos['x'] + radius + 1, pos['y'] - radius, pos['y'] + radius + 1])
 
