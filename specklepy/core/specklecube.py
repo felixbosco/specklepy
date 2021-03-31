@@ -8,7 +8,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import alignment
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
-from specklepy.utils.array import frame_number
+from specklepy.utils.array import frame_number, frame_shape
 
 
 class SpeckleCube(object):
@@ -201,13 +201,12 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
         if var_cube.ndim == cube.ndim and var_cube.shape != cube.shape:
             raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
                                       expected=str(cube.shape))
-        elif var_cube.ndim == cube.ndim-1:
-            if var_cube.shape[0] != cube.shape[1] or var_cube.shape[1] != cube.shape[2]:
-                raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
-                                          expected=str(cube.shape))
+        elif var_cube.ndim == cube.ndim-1 and frame_shape(var_cube) != frame_shape(cube):
+            raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
+                                      expected=str(cube.shape))
 
     # Compute shifts
-    peak_indexes = np.zeros((cube.shape[0], 2), dtype=int)
+    peak_indexes = np.zeros((frame_number(cube), 2), dtype=int)
     for f, frame in enumerate(cube):
         if mask is not None:
             frame = np.ma.masked_array(frame, mask=mask).filled(0)
@@ -227,7 +226,7 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
     shifts = shifts.transpose()
 
     # Shift frames and add to coadded
-    coadded = np.zeros(cube[0].shape)
+    coadded = np.zeros(frame_shape(cube))
     pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False,
                                                                return_reference_image_pad_vector=True)
     for f, frame in enumerate(cube):
