@@ -4,11 +4,11 @@ import os
 from astropy.io import fits
 
 from specklepy.core import alignment
+from specklepy.core.sourceextraction import extract_sources
 from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
-from specklepy.reduction.filter import fill_hot_pixels
 from specklepy.utils.box import Box
 
 
@@ -139,6 +139,13 @@ class Reconstruction(object):
     @property
     def reference_long_exp_file(self):
         return self.long_exp_files[self.reference_index]
+
+    def select_box(self, radius):
+        image = fits.getdata(self.reference_long_exp_file)
+        logger.info(f"Select the source for the SSA reference aperture of radius {radius} pix!")
+        _, selected = extract_sources(image=image, noise_threshold=3, fwhm=radius, select=True)
+        pos = selected[0]
+        self.box = Box(indexes=[pos['x'] - radius, pos['x'] + radius + 1, pos['y'] - radius, pos['y'] + radius + 1])
 
     def create_long_exposures(self, integration_method=None, mask_hot_pixels=False, shifts=None):
         """Compute long exposures from the input data cubes.
