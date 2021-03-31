@@ -207,7 +207,7 @@ class SourceExtractor(object):
     def estimate_uncertainties(self, sources, image_var):
         new_sources = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
         radius = round(self.fwhm / 2.35 * 1.5)  # 1.5 times the standard deviation
-        logger.info(f"Measuring uncertainties over {(radius * 2 + 1) ** 2} pixels...")
+        logger.info(f"Measuring uncertainties over {(radius * 2 + 1)}x{radius * 2 + 1} pixels...")
 
         # Iterate through sources
         for source in sources:
