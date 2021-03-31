@@ -104,7 +104,7 @@ def holography(params, debug=False):
 
     # Save SSA reconstruction to serparate file, if requested
     if paths.get('ssaFile') is not None:
-        ssa_file = ReconstructionFile(filename=paths.get('ssaFile'), files=in_files, in_dir=paths.get('inDir'))
+        ssa_file = ReconstructionFile(filename=paths.get('ssaFile'), files=in_files, in_dir=in_dir)
         ssa_file.data = image
         ssa_file.new_extension(name=params['EXTNAMES']['varianceExtension'], data=image_var)
 
