@@ -90,8 +90,8 @@ class GeneralArgParser(object):
         # Parser for aperture analysis
         parser_aperture = subparsers.add_parser('aperture', help='Aperture analysis in the image data.')
         parser_aperture.set_defaults(command='aperture')
-        parser_aperture.add_argument('mode', choices=['psf1d', 'variance', 'all'], default='all',
-                                     help='Modes for the aperture analysis')
+        # parser_aperture.add_argument('mode', choices=['psf1d', 'variance', 'all'], default='all',
+        #                              help='Modes for the aperture analysis')
         parser_aperture.add_argument('file', type=str, default=None, help='File name to analyse.')
         parser_aperture.add_argument('-i', '--index', nargs='+', type=int,
                                      help='Center index of the aperture to analyse. Provide this as "--index 123 456".')
