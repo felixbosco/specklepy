@@ -1,4 +1,3 @@
-from IPython import embed
 import numpy as np
 import os
 
@@ -52,6 +51,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
     Returns:
         reconstruction (np.ndarray):
             The image reconstruction. The size depends on the mode argument.
+        reconstruction_var (np.ndarray):
+            The variance map of the reconstructed image. The size is the same as `reconstruction`.
     """
 
     # Set logging level
@@ -98,20 +99,19 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
                                     var_ext=var_ext,
                                     box_indexes=box_indexes, debug=debug)
 
-    # Compute the aligned and co-added image (and variance image)
-    if integration_method == 'both':
-        reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment_method,
-                                   mask_hot_pixels=mask_hot_pixels)
+    # Compute the first alignment based on collapsed images (and variance images)
+    reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment_method,
+                               mask_hot_pixels=mask_hot_pixels)
+
+    # Repeat alignment in SSA mode, if not requested otherwise
+    if integration_method != 'collapse':
         reconstruction.long_exp_files = reconstruction.create_long_exposures(integration_method='ssa',
                                                                              mask_hot_pixels=mask_hot_pixels,
                                                                              shifts=reconstruction.shifts)
-        reconstruction.align_cubes(alignment_mode=alignment_method)
-    else:
+
         reconstruction.align_cubes(integration_method=integration_method, alignment_mode=alignment_method,
                                    mask_hot_pixels=mask_hot_pixels)
     reconstruction_image, reconstruction_var = reconstruction.coadd_long_exposures(save=True)
 
-    # Return reconstruction (and the variance map if computed)
-    if reconstruction_var is not None:
-        return reconstruction_image, reconstruction_var
-    return reconstruction_image
+    # Return reconstruction and the variance map, which may be `None` type
+    return reconstruction_image, reconstruction_var
