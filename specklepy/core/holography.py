@@ -35,10 +35,11 @@ def holography(params, debug=False):
     logger.info(f"Starting holographic reconstruction...")
 
     # Extract individual parameter dictionaries
-    paths = params.get('PATHS')
-    apodization = params.get('APODIZATION')
-    psf_extraction = params.get('PSFEXTRACTION')
-    source_extraction = params.get('STARFINDER')
+    paths = params.get('PATHS', {})
+    alignment = params.get('ALIGNMENT', {})
+    apodization = params.get('APODIZATION', {})
+    psf_extraction = params.get('PSFEXTRACTION', {})
+    source_extraction = params.get('STARFINDER', {})
 
     # Create file archive and export paths to be directly available
     file_archive = FileArchive(file_list=paths.get('inDir'), cards=[], dtypes=[],
@@ -73,16 +74,28 @@ def holography(params, debug=False):
 
     # Initialize reconstruction
     reconstruction = Reconstruction(in_files=in_files, mode=mode, integration_method='ssa',
-                                    reference_file=paths.get('alignmentReferenceFile'),
+                                    reference_file=alignment.get('referenceFile'),
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=paths.get('outFile'),
                                     var_ext=params['EXTNAMES']['varianceExtension'],
-                                    box_indexes=params['ALIGNMENT']['boxIndexes'], debug=debug)
+                                    box_indexes=None, debug=debug)
     reconstruction.assert_dirs()
 
     # (i-ii) Align cubes
-    reconstruction.align_cubes(integration_method=params.get('ALIGNMENT', {}).get('integrationMode', 'ssa'),
-                               alignment_mode=params.get('ALIGNMENT', {}).get('mode', 'correlation'),
-                               mask_hot_pixels=params.get('ALIGNMENT', {}).get('maskHotPixels', False))
+    # Compute the first alignment based on collapsed images (and variance images)
+    mask_hot_pixels = alignment.get('maskHotPixels', False)
+    reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment.get('mode', 'correlation'),
+                               mask_hot_pixels=mask_hot_pixels)
+
+    # Repeat alignment in SSA mode, if not requested otherwise
+    if alignment.get('integrationMode', 'ssa') != 'collapse':
+        if psf_extraction.get('psfRadius') is not None:
+            reconstruction.select_box(radius=psf_extraction.get('psfRadius'))
+        reconstruction.long_exp_files = reconstruction.create_long_exposures(integration_method='ssa',
+                                                                             mask_hot_pixels=mask_hot_pixels,
+                                                                             shifts=reconstruction.shifts)
+
+        reconstruction.align_cubes(integration_method='ssa', alignment_mode=alignment.get('mode', 'correlation'),
+                                   mask_hot_pixels=mask_hot_pixels)
     shifts = reconstruction.shifts
 
     # (iii) Compute SSA reconstruction
@@ -147,7 +160,7 @@ def holography(params, debug=False):
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
         f_object = FourierObject(in_files, psf_files, shifts=shifts, mode=mode, in_dir=in_dir)
-        f_object.coadd_fft(mask_hot_pixels=params.get('ALIGNMENT', {}).get('maskHotPixels', False),
+        f_object.coadd_fft(mask_hot_pixels=alignment.get('maskHotPixels', False),
                            bootstrap=params.get('BOOTSTRAP').get('numberImages'))
 
         # (x) Apodization
