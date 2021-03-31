@@ -86,24 +86,24 @@ def holography(params, debug=False):
     shifts = reconstruction.shifts
 
     # (iii) Compute SSA reconstruction
-    image = reconstruction.coadd_long_exposures(save=True)
-    if isinstance(image, tuple):
-        # SSA returned a reconstruction image and a variance image
-        image, image_var = image
+    image, image_var = reconstruction.coadd_long_exposures(save=True)
     total_flux = np.sum(image)  # Stored for flux conservation
 
     # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
         # (v) Select reference stars
-        extract_sources(image=image,
-                        fwhm=source_extraction.get('starfinderFwhm'),
-                        noise_threshold=source_extraction.get('noiseThreshold'),
-                        background_subtraction=True,
-                        write_to=paths.get('allStarsFile'),
-                        star_finder='DAO', select=paths.get('refSourceFile'), debug=debug)
-        # print("\tPlease copy your desired reference stars from the all stars file into the reference star file!")
-        # input("\tWhen you are done, hit a ENTER.")
+        if psf_extraction.get('select', 'gui') == 'gui':
+            extract_sources(image=image,
+                            fwhm=source_extraction.get('starfinderFwhm'),
+                            noise_threshold=source_extraction.get('noiseThreshold'),
+                            background_subtraction=True,
+                            write_to=paths.get('allStarsFile'),
+                            star_finder='DAO', select=paths.get('refSourceFile'), debug=debug)
+        else:
+            logger.info("\tPlease copy the desired reference stars from the all stars file into the reference star "
+                        "file!")
+            input("\tWhen you are done, hit ENTER.")
 
         # (vi) PSF extraction
         psf_stars = ReferenceStars(psf_radius=psf_extraction.get('psfRadius'),
