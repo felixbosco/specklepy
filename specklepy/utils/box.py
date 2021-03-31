@@ -123,3 +123,11 @@ class Box(object):
             self.x_max = -1
         if self.y_min >= shape[0]:
             self.y_min = -1
+
+    def transpose(self):
+        x_min = self.x_min
+        x_max = self.x_max
+        self.x_min = self.y_min
+        self.x_max = self.y_max
+        self.y_min = x_min
+        self.y_max = x_max
