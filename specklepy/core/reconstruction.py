@@ -141,7 +141,7 @@ class Reconstruction(object):
         return self.long_exp_files[self.reference_index]
 
     def select_box(self, radius):
-        image = fits.getdata(self.reference_long_exp_file)
+        image = fits.getdata(os.path.join(self.tmp_dir, self.reference_long_exp_file))
         logger.info(f"Select the source for the SSA reference aperture of radius {radius} pix!")
         _, selected = extract_sources(image=image, noise_threshold=3, fwhm=radius, select=True)
         pos = selected[0]
