@@ -128,7 +128,7 @@ class Outfile(object):
         # Create a HDU list with the primary and write to file
         hdu_list = fits.HDUList([hdu])
         if self.verbose:
-            logger.info("Initializing file {}".format(self.file_path))
+            logger.info(f"Initializing file {self.file_path!r}")
         hdu_list.writeto(self.file_path, overwrite=True)
 
         if self.extensions is not None:
@@ -224,7 +224,7 @@ class Outfile(object):
 
     def update_extension(self, ext_name, data):
         if self.verbose:
-            logger.info(f"Updating data in {self.file_path}[{ext_name}]")
+            logger.info(f"Updating data in {self.file_path!r}[{ext_name}]")
         with fits.open(self.file_path, mode='update') as hdu_list:
             hdu_list[ext_name].data = data
             hdu_list.flush()
