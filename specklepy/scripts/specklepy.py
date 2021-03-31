@@ -123,5 +123,5 @@ def main():
         if args.tmpdir is not None and not os.path.isdir(args.tmpdir):
             os.mkdir(args.tmpdir)
         ssa(files=args.files, mode=args.mode, reference_file=args.reference, tmp_dir=args.tmpdir, outfile=args.outfile,
-            box_indexes=args.box_indexes, integration_method=args.integration_method,
+            aperture_radius=args.aperture_radius, integration_method=args.integration_method,
             alignment_method=args.alignment_method, mask_hot_pixels=args.mask, debug=args.debug)

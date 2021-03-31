@@ -64,9 +64,10 @@ class GeneralArgParser(object):
                                      "mode, the output image will only cover the cross section of all exposures.")
         parser_ssa.add_argument('-r', '--reference', type=str, default=None,
                                 help="Name of the reference file, serving as reference frame for frame alignment.")
-        parser_ssa.add_argument('-b', '--box_indexes', type=int, nargs=4, default=None,
-                                help='Coordinates of a box constraining the search of the emission peak for frame '
-                                     'alignment. Provide as a list [x_min, x_max, y_min, y_max].')
+        parser_ssa.add_argument('-a', '--aperture_radius', type=int, default=None,
+                                help='Radius of an aperture for constraining the search of the emission peak during '
+                                     'frame alignment. The center of the aperture is estimated based on a graphical '
+                                     'selection of a reference star.')
         parser_ssa.add_argument('-c', '--collapse', dest='integration_method', action='store_const', const='collapse',
                                 default='ssa',
                                 help='Collapse the individual data cubes instead of using SSA. This option is useful '

@@ -6,7 +6,7 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
 
 
-def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, box_indexes=None,
+def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, aperture_radius=None,
         integration_method='ssa', alignment_method='correlation', mask_hot_pixels=False, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
@@ -35,9 +35,10 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
             Path to the files. `None` is substituted by an empty string.
         tmp_dir (str, optional):
             Path of a directory in which the temporary results are stored in.
-        box_indexes (list, optional):
-            Constraining the search for the intensity peak to the specified box. Searching the full frames if not
-            provided.
+        aperture_radius (list, optional):
+            Constraining the search for the intensity peak to an aperture with the specified radius. The position of
+            the aperture is selected graphically. The code is estimating the intensity peak within the full frames if
+            not provided.
         integration_method (str, optional):
             Method for creating individual long exposures. Using SSA by default, but can also use 'collapse' for a
             straight integration along the time axis (in case of faint reference sources).
@@ -97,7 +98,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
                                     reference_file=reference_file,
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=outfile,
                                     var_ext=var_ext,
-                                    box_indexes=box_indexes, debug=debug)
+                                    box_indexes=None, debug=debug)
 
     # Compute the first alignment based on collapsed images (and variance images)
     reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment_method,
@@ -105,6 +106,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
 
     # Repeat alignment in SSA mode, if not requested otherwise
     if integration_method != 'collapse':
+        if aperture_radius is not None:
+            reconstruction.select_box(radius=aperture_radius)
         reconstruction.long_exp_files = reconstruction.create_long_exposures(integration_method='ssa',
                                                                              mask_hot_pixels=mask_hot_pixels,
                                                                              shifts=reconstruction.shifts)
