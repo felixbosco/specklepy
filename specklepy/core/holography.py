@@ -102,6 +102,12 @@ def holography(params, debug=False):
     image, image_var = reconstruction.coadd_long_exposures(save=True)
     total_flux = np.sum(image)  # Stored for flux conservation
 
+    # Save SSA reconstruction to serparate file, if requested
+    if paths.get('ssaFile') is not None:
+        ssa_file = ReconstructionFile(filename=paths.get('ssaFile'), files=in_files, in_dir=paths.get('inDir'))
+        ssa_file.data = image
+        ssa_file.new_extension(name=params['EXTNAMES']['varianceExtension'], data=image_var)
+
     # Start iteration from steps (iv) through (xi)
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
