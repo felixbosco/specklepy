@@ -100,7 +100,7 @@ class SpeckleCube(object):
             self.image_var = self.variance
         elif self.cube.ndim == 3:
             # Build bad pixel mask
-            bpm = bad_pixel_mask(cube=self.cube, var=self.variance)
+            bpm = bad_pixel_mask(cube=self.cube)  # var=self.variance
 
             # Coadd frames
             self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box,
