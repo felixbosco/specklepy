@@ -191,7 +191,7 @@ class Reconstruction(object):
                     box = self.box.shift(shift=shifts[f])
                 else:
                     box = self.box
-                speckle_cube.ssa(box=box)
+                speckle_cube.ssa(box=box, mask_bad_pixels=mask_hot_pixels)
             else:
                 raise SpecklepyValueError('Reconstruction', 'integration_method', self.integration_method,
                                           expected="either 'collapse' or 'ssa'")

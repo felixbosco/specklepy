@@ -88,7 +88,7 @@ class SpeckleCube(object):
         # Set method attribute
         self.method = 'collapse'
 
-    def ssa(self, box=None):
+    def ssa(self, box=None, mask_bad_pixels=False):
 
         # Update box attribute
         if box:
@@ -100,7 +100,10 @@ class SpeckleCube(object):
             self.image_var = self.variance
         elif self.cube.ndim == 3:
             # Build bad pixel mask
-            bpm = bad_pixel_mask(cube=self.cube)  # var=self.variance
+            if mask_bad_pixels:
+                bpm = bad_pixel_mask(cube=self.cube, var=self.variance)
+            else:
+                bpm = False
 
             # Coadd frames
             self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box,
