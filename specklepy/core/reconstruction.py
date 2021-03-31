@@ -187,7 +187,7 @@ class Reconstruction(object):
             if self.integration_method == 'collapse':
                 speckle_cube.collapse()
             elif self.integration_method == 'ssa':
-                if shifts is not None:
+                if self.box is not None and shifts is not None:
                     box = self.box.shift(shift=shifts[f])
                 else:
                     box = self.box
