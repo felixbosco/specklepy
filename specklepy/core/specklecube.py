@@ -165,7 +165,7 @@ class SpeckleCube(object):
         return self.default_save_path()
 
 
-def coadd_frames(cube, var_cube=None, box=None, mask=None):
+def coadd_frames(cube, var_cube=None, box=None, mask=None, fill_value=0):
     """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
 
     This function uses the SSA algorithm to coadd frames of a cube. If provided, this function coadds the variances
@@ -181,6 +181,8 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
             provided.
         mask (np.ndarray, optional):
             Bad pixel mask in the shape of a frame of the cube.
+        fill_value (float-like, optional):
+            Masked pixels will obtain this value prior to co-addition.
 
     Returns:
         coadded (np.ndarray, ndim=2):
@@ -212,7 +214,7 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None):
     peak_indexes = np.zeros((frame_number(cube), 2), dtype=int)
     for f, frame in enumerate(cube):
         if mask is not None:
-            frame = np.ma.masked_array(frame, mask=mask).filled(0)
+            frame = np.ma.masked_array(frame, mask=mask).filled(fill_value)
         if box is not None:
             frame = box(frame)
         try:
