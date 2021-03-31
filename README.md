@@ -44,7 +44,7 @@ For updating your Specklepy to the latest version, just `git pull` and repeat `p
 The data reduction with Specklepy is divided in two steps: Setup and execution. For setting up the files table and 
 parameter file, execute the `specklepy reduce` command.
 ```bash
-specklepy reduce --setup -i your_instrument -p path/to/your/files/ -o files.tab
+specklepy reduce your_parameter_file.par --setup -i your_instrument -p path/to/your/files/ -o files.tab
 ```
 
 This gathers files located at `--path` and saves the list to the `--outfile`.
@@ -163,22 +163,17 @@ cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'}
 
 ## Development:
 These are the current To-Do items:
-* General:
-  * ~~**low priority:** Create general script with signature "specklepy holography -f ..."~~
-  * ~~**low priority:** Make command line arguments to positional arguments for required args~~
-  * Transform config parameter sets into multilevel dictionaries
 * data reduction module:
-  * ~~Flatfield correction from flat frames~~
   * Extend scalar sky subtraction from the images to two-dimensional sky estimates (from sky frames)
-  * Linearity correction (wait for D. Thompson)
+  * Linearity correction
 * core module:
   * Division of the field of view into chunks with separate PSFs for consideration of variable PSFs.
-  * Propagation of uncertainties if provided
+  * ~~Propagation of uncertainties if provided~~
   * Measure "PSF quality" and implement a weighting scheme for frames
-  * Reconstruction modes that return reconstructions that cover the 'same' field of view as a reference, the 'full' field of view covered by at least one exposure or (**low priority:**) 'valid' field of view that is covered by all exposures
+  * ~~Reconstruction modes that return reconstructions that cover the 'same' field of view as a reference, the 'full' field of view covered by at least one exposure or (**low priority:**) 'valid' field of view that is covered by all exposures~~
   * Secondary source subtraction for holography function
-  * Bootstrap resampling for estimating the photo- and astrometric uncertainties
-  * Add a call of starfinder after the last iteration of the scripts to save the results
+  * ~~Bootstrap resampling for estimating the photo- and astrometric uncertainties~~
+  * ~~Add a call of starfinder after the last iteration of the scripts to save the results~~
   * **low priority:** Apertures need to throw errors, when the aperture is touching the image edge! This may also be solved by masking the missing data
   * **low priority:** Tune star finder routines
   * **low priority:** Implement frame save mode, which saves the Fourier transformed images and PSFs to files and then just sums up within a tmp file. This is necessary for "bootstrap resampling", which can deliver uncertainties.
@@ -192,6 +187,8 @@ These are the current To-Do items:
 ## Version history
 These are the incremental updates between versions:
 
+- *0.5.6*: Implement bootstrap resampling for holographic reconstruction. Implement new data reduction workflow. The 
+  source extraction procedure now estimates uncertainties, based on a variance map.
 - *0.5.5dev*: Working on the extraction of multiple PSFs. 
 - *0.5.5*: Added `specklepy plot` command.
 - *0.5.4*: Data reduction is working in scalar background mode

@@ -24,7 +24,7 @@ def find_packages():
 
 
 setup(name='specklepy',
-      version='0.5.5dev',
+      version='0.5.6',
       description='Specklepy Holographic Data Reduction',
       long_description=read_long_description(),
       long_description_content_type="text/markdown",
