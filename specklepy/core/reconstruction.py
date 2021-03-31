@@ -144,7 +144,7 @@ class Reconstruction(object):
         image = fits.getdata(os.path.join(self.tmp_dir, self.reference_long_exp_file))
         logger.info(f"Select the source for the SSA reference aperture of radius {radius} pix!")
         _, selected = extract_sources(image=image, noise_threshold=3, fwhm=radius, select=True)
-        pos = selected[0]
+        pos = {'x': int(round(selected[0]['x'])), 'y': int(round(selected[0]['y']))}
         self.box = Box(indexes=[pos['x'] - radius, pos['x'] + radius + 1, pos['y'] - radius, pos['y'] + radius + 1])
 
     def create_long_exposures(self, integration_method=None, mask_hot_pixels=False, shifts=None):
