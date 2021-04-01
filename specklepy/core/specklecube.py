@@ -44,23 +44,20 @@ class SpeckleCube(object):
     @property
     def cube(self):
         if self._cube is None:
-            self._cube = fits.getdata(self.in_file).squeeze()
+            self._cube = get_data(self.in_file)
         return self._cube
 
     @property
     def variance(self):
         if self.variance_extension is None:
             return None
-        return get_data(self.in_file, extension=self.variance_extension)
+        return get_data(self.in_file, extension=self.variance_extension, ignore_missing_extension=True)
 
     @property
     def mask(self):
         if self.mask_extension is None:
             return None
-        try:
-            return fits.getdata(self.in_file, self.mask_extension).astype(bool)
-        except KeyError:
-            return None
+        return get_data(self.in_file, extension=self.mask_extension, dtype=bool, ignore_missing_extension=True)
 
     @property
     def single_frame_mode(self):
