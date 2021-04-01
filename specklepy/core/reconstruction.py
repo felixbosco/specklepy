@@ -28,7 +28,7 @@ class Reconstruction(object):
     mask_extension = 'MASK'
 
     def __init__(self, in_files, mode='same', reference_file=None, out_file=None, in_dir=None, tmp_dir=None,
-                 integration_method='collapse', var_ext=None, box_indexes=None, debug=False):
+                 integration_method='collapse', variance_extension=None, box_indexes=None, debug=False):
         """Create a Reconstruction instance.
 
         Args:
@@ -76,8 +76,8 @@ class Reconstruction(object):
         self.in_dir = in_dir if in_dir is not None else ''
         self.tmp_dir = tmp_dir if tmp_dir is not None else ''
         self.integration_method = integration_method
-        if var_ext is not None:
-            self.variance_extension = var_ext  # if var_ext is not None else 'VAR'
+        if variance_extension is not None:
+            self.variance_extension = variance_extension  # if var_ext is not None else 'VAR'
         self.box = Box(box_indexes) if box_indexes is not None else None
         self.debug = debug
 

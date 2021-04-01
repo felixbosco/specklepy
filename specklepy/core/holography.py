@@ -76,7 +76,7 @@ def holography(params, debug=False):
     reconstruction = Reconstruction(in_files=in_files, mode=mode, integration_method='ssa',
                                     reference_file=alignment.get('referenceFile'),
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=paths.get('outFile'),
-                                    var_ext=params['EXTNAMES']['varianceExtension'],
+                                    variance_extension=params['EXTNAMES']['varianceExtension'],
                                     box_indexes=None, debug=debug)
     reconstruction.assert_dirs()
 

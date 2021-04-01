@@ -97,7 +97,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
     reconstruction = Reconstruction(in_files=files, mode=mode, integration_method=integration_method,
                                     reference_file=reference_file,
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=outfile,
-                                    var_ext=var_ext,
+                                    variance_extension=var_ext,
                                     box_indexes=None, debug=debug)
 
     # Compute the first alignment based on collapsed images (and variance images)
