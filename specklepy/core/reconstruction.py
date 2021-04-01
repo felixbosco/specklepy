@@ -26,6 +26,7 @@ class Reconstruction(object):
     supported_modes = ['full', 'same', 'valid']
     variance_extension = 'VAR'
     mask_extension = 'MASK'
+    fill_value = 0
 
     def __init__(self, in_files, mode='same', reference_file=None, out_file=None, in_dir=None, tmp_dir=None,
                  integration_method='collapse', variance_extension=None, box_indexes=None, custom_mask=None,
@@ -219,13 +220,13 @@ class Reconstruction(object):
             
             # Compute collapsed or SSA'ed images from the cube
             if self.integration_method == 'collapse':
-                speckle_cube.collapse()
+                speckle_cube.collapse(mask=self.custom_mask)
             elif self.integration_method == 'ssa':
                 if self.box is not None and shifts is not None:
                     box = self.box.shift(shift=shifts[f])
                 else:
                     box = self.box
-                speckle_cube.ssa(box=box, mask_bad_pixels=mask_hot_pixels)
+                speckle_cube.ssa(box=box, mask_bad_pixels=mask_hot_pixels, mask=self.custom_mask)
             else:
                 raise SpecklepyValueError('Reconstruction', 'integration_method', self.integration_method,
                                           expected="either 'collapse' or 'ssa'")

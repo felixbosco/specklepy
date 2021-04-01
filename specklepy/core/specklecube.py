@@ -17,6 +17,7 @@ class SpeckleCube(object):
 
     variance_extension = 'VAR'
     mask_extension = 'MASK'
+    fill_value = 0
 
     def __init__(self, file_name, variance_extension=None, mask_extension=None, in_dir=None, out_dir=None):
 
@@ -64,7 +65,18 @@ class SpeckleCube(object):
     def single_frame_mode(self):
         return frame_number(self.cube) == 1
 
-    def collapse(self):
+    def fill_masked(self, mask, fill_value=None):
+
+        # Update fill value
+        if fill_value is not None:
+            self.fill_value = fill_value
+
+        # Fill masked pixels
+        self.image[mask] = self.fill_value
+        if self.image_var is not None:
+            self.image_var[mask] = 0  # Variance is independent on the fill value
+
+    def collapse(self, mask=False, fill_value=None):
 
         # Compute collapsed image from the cube
         if self.cube.ndim == 2:
@@ -81,32 +93,41 @@ class SpeckleCube(object):
             else:
                 logger.warning('Image variance data is not an image!')
 
+        # Fill masked pixels
+        self.fill_masked(mask=mask, fill_value=fill_value)
+
         # Set method attribute
         self.method = 'collapse'
 
-    def ssa(self, box=None, mask_bad_pixels=False):
+        return self.image, self.image_var
+
+    def ssa(self, box=None, mask_bad_pixels=False, mask=False, fill_value=None):
 
         # Update box attribute
         if box:
             self.box = box
+        if fill_value is not None:
+            self.fill_value = fill_value
 
         # Compute SSA'ed image from the cube
         if self.cube.ndim == 2:
             self.image = self.cube
             self.image_var = self.variance
+            self.fill_masked(mask=mask, fill_value=fill_value)
+
         elif self.cube.ndim == 3:
-            # Build bad pixel mask
-            if mask_bad_pixels:
-                bpm = bad_pixel_mask(cube=self.cube, var=self.variance)
-            else:
-                bpm = False
+            # Build bad pixel mask and combine masks
+            bpm = bad_pixel_mask(cube=self.cube, var=self.variance) if mask_bad_pixels else False
+            mask = np.logical_or(self.mask, bpm) | mask
 
             # Coadd frames
-            self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box,
-                                                      mask=np.logical_or(self.mask, bpm))
+            self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box, mask=mask,
+                                                      fill_value=self.fill_value)
         else:
             raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
         self.method = 'ssa'
+
+        return self.image, self.image_var
 
     def mask_hot_pixels(self, fill_value=0):
         if fill_value is None:
@@ -215,7 +236,7 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None, fill_value=0):
     peak_indexes = np.zeros((frame_number(cube), 2), dtype=int)
     for f, frame in enumerate(cube):
         if mask is not None:
-            frame = np.ma.masked_array(frame, mask=mask).filled(fill_value)
+            frame[mask] = fill_value
         if box is not None:
             frame = box(frame)
         try:
