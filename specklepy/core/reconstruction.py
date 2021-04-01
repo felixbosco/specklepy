@@ -233,8 +233,8 @@ class Reconstruction(object):
                                           expected="either 'collapse' or 'ssa'")
 
             # Mask out hot pixels
-            if mask_hot_pixels:
-                speckle_cube.mask_hot_pixels()
+            # if mask_hot_pixels:
+            #     speckle_cube.mask_hot_pixels()
 
             # Store data to a new Outfile instance
             logger.info(f"Saving temporary reconstruction of cube {file!r} to {speckle_cube.default_save_path()!r}")
