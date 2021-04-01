@@ -65,6 +65,10 @@ class SpeckleCube(object):
     def single_frame_mode(self):
         return frame_number(self.cube) == 1
 
+    @property
+    def frame_shape(self):
+        return frame_shape(self.cube)
+
     def fill_masked(self, mask, fill_value=None):
 
         # Update fill value
@@ -101,6 +105,43 @@ class SpeckleCube(object):
 
         return self.image, self.image_var
 
+    def estimate_peak_indexes(self, cube, box=None, mask=None):
+        # Compute shifts
+        peak_indexes = np.zeros((frame_number(cube), 2), dtype=int)
+        for f, frame in enumerate(cube):
+            if mask is not None:
+                frame[mask] = self.fill_value
+            if box is not None:
+                frame = box(frame)
+            peak_indexes[f] = np.array(alignment.peak_index(frame), dtype=int)
+        return peak_indexes
+
+    def estimate_frame_shifts(self, cube, box=None, mask=None):
+        peak_indexes = self.estimate_peak_indexes(cube=cube, box=box, mask=mask).transpose()
+        mean_index = np.mean(np.array(peak_indexes), axis=1)
+        shifts = np.array([int(mean_index[0]) - peak_indexes[0], int(mean_index[1]) - peak_indexes[1]])
+        return shifts.transpose()
+
+    def align_frames(self, mask=None):
+
+        # Estimate shifts between frames
+        shifts = self.estimate_frame_shifts(self.cube, box=self.box, mask=mask)
+
+        # Initialize output images
+        aligned = np.zeros(self.frame_shape)
+        aligned_var = np.zeros(self.frame_shape) if self.variance is not None else None
+
+        # Shift frames and add to `aligned`
+        pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False,
+                                                                   return_reference_image_pad_vector=True)
+        for f, frame in enumerate(self.cube):
+            aligned += alignment.pad_array(frame, pad_vectors[f], mode='same',
+                                           reference_image_pad_vector=ref_pad_vector)
+            if aligned_var is not None:
+                aligned_var += alignment.pad_array(self.variance, pad_vectors[f], mode='same',
+                                                   reference_image_pad_vector=ref_pad_vector)
+        return aligned, aligned_var
+
     def ssa(self, box=None, mask_bad_pixels=False, mask=False, fill_value=None):
 
         # Update box attribute
@@ -121,8 +162,9 @@ class SpeckleCube(object):
             mask = np.logical_or(self.mask, bpm) | mask
 
             # Coadd frames
-            self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box, mask=mask,
-                                                      fill_value=self.fill_value)
+            self.image, self.image_var = self.align_frames(mask=mask)
+            # self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box, mask=mask,
+            #                                           fill_value=self.fill_value)
         else:
             raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
         self.method = 'ssa'
