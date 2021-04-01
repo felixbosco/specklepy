@@ -6,6 +6,7 @@ from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import alignment
+from specklepy.io.filestream import FileStream
 from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
@@ -127,34 +128,39 @@ class SpeckleCube(object):
         return hdr
 
     def write(self, path=None):
-        # TODO: implement using an OutFile instance here.
 
         # Stop if image is not computed yet
         if self.image is None:
-            raise ValueError
+            raise ValueError("SpeckleCube instance contains no image, so nothing to write!")
 
         # Update out_dir path if new provided
         if path:
             self.out_dir = path
 
-        # Set up FITS HDU list
-        self.fits_header = self.make_header()
-        hdu = fits.PrimaryHDU(data=self.image, header=self.fits_header)
-        hdu_list = fits.HDUList(hdus=[hdu])
-
-        # Append variance extension if available
+        # Setup file stream
+        file_stream = FileStream(self.default_save_path())
+        file_stream.initialize(data=self.image, header=self.make_header(), overwrite=True)
         if self.image_var is not None:
-            var_hdu = fits.ImageHDU(data=self.image_var, name=self.variance_extension)
-            hdu_list.append(var_hdu)
+            file_stream.new_extension(data=self.image_var, name=self.variance_extension)
 
-        # Store data to file
-        try:
-            hdu_list.writeto(self.default_save_path(), overwrite=True)
-        except fits.verify.VerifyError as e:
-            # Something is weird in the FITS header, so reset
-            logger.error(e)
-            logger.error("Amend this and try again!")
-            hdu_list.writeto(self.default_save_path(), overwrite=True)
+        # Set up FITS HDU list
+        # self.fits_header = self.make_header()
+        # hdu = fits.PrimaryHDU(data=self.image, header=self.fits_header)
+        # hdu_list = fits.HDUList(hdus=[hdu])
+        #
+        # # Append variance extension if available
+        # if self.image_var is not None:
+        #     var_hdu = fits.ImageHDU(data=self.image_var, name=self.variance_extension)
+        #     hdu_list.append(var_hdu)
+        #
+        # # Store data to file
+        # try:
+        #     hdu_list.writeto(self.default_save_path(), overwrite=True)
+        # except fits.verify.VerifyError as e:
+        #     # Something is weird in the FITS header, so reset
+        #     logger.error(e)
+        #     logger.error("Amend this and try again!")
+        #     hdu_list.writeto(self.default_save_path(), overwrite=True)
 
         # Return target path
         return self.default_save_path()
