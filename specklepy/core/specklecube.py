@@ -6,6 +6,7 @@ from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import alignment
+from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
 from specklepy.utils.array import frame_number, frame_shape
@@ -50,10 +51,7 @@ class SpeckleCube(object):
     def variance(self):
         if self.variance_extension is None:
             return None
-        try:
-            return fits.getdata(self.in_file, self.variance_extension).squeeze()
-        except KeyError:
-            return None
+        return get_data(self.in_file, extension=self.variance_extension)
 
     @property
     def mask(self):

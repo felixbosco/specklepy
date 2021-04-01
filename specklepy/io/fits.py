@@ -4,7 +4,7 @@ import sys
 from astropy.io import fits
 
 
-def get_data(file_name, path=None, extension=None, ignore_missing_extension=False):
+def get_data(file_name, path=None, extension=None, squeeze=True, dtype=None, ignore_missing_extension=False):
 
     # Construct path
     if path is None:
@@ -23,6 +23,14 @@ def get_data(file_name, path=None, extension=None, ignore_missing_extension=Fals
             return None
         sys.tracebacklimit = 0
         raise e
+
+    # Squeeze array
+    if squeeze:
+        data = data.squeeze()
+
+    # Cast data type if requested
+    if dtype is not None:
+        data = data.astype(dtype=dtype)
 
     # Return
     return data
