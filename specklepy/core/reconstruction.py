@@ -28,7 +28,8 @@ class Reconstruction(object):
     mask_extension = 'MASK'
 
     def __init__(self, in_files, mode='same', reference_file=None, out_file=None, in_dir=None, tmp_dir=None,
-                 integration_method='collapse', variance_extension=None, box_indexes=None, debug=False):
+                 integration_method='collapse', variance_extension=None, box_indexes=None, custom_mask=None,
+                 debug=False):
         """Create a Reconstruction instance.
 
         Args:
@@ -52,6 +53,14 @@ class Reconstruction(object):
                 Path to the `in_files`.
             tmp_dir (str, optional):
                 Path to the directory for storing temporary products.
+            integration_method (str, optional):
+                Method for integrating speckle cubes. Can also be set in the `create_long_exposures` method.
+            variance_extension (str, optional):
+                Name of the variance extension of the FITS files. The default is `'VAR'`.
+            box_indexes (list, optional):
+                List of indexes defining a box for the SSA integration.
+            custom_mask (str or array-like, optional):
+                Path to a custom mask or the mask itself, which will be applied to all frames prior to integration.
             debug (bool, optional):
                 Show debugging information.
         """
@@ -81,6 +90,14 @@ class Reconstruction(object):
         self.box = Box(box_indexes) if box_indexes is not None else None
         self.debug = debug
 
+        # Set custom mask
+        self.custom_mask_file = None
+        self._custom_mask = None
+        if isinstance(custom_mask, str):
+            self.custom_mask_file = custom_mask
+        elif isinstance(custom_mask, (bool, np.ndarray)):
+            self._custom_mask = custom_mask
+
         # Derive shape of individual input frames
         example_data = get_data(self.in_files[0], path=in_dir)
         self.frame_shape = frame_shape(example_data)
@@ -106,6 +123,15 @@ class Reconstruction(object):
     @property
     def reference_file(self):
         return self.in_files[self.reference_index]
+
+    @property
+    def custom_mask(self):
+        if self._custom_mask is not None:
+            return self._custom_mask
+        elif self.custom_mask_file is not None:
+            return get_data(self.custom_mask_file, dtype=bool)
+        else:
+            return None
 
     def assert_dirs(self, error=True):
         for name, dir in zip(['in_dir', 'tmp_dir'], [self.in_dir, self.tmp_dir]):
