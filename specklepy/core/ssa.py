@@ -72,6 +72,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
     file_archive = FileArchive(file_list=files, cards=[], dtypes=[],
                                table_format=kwargs.get('tableFormat', 'ascii.no_header'))
     files = file_archive.files
+    in_dir = file_archive.in_dir
     # if not isinstance(files, (list, np.ndarray)):
     #     if isinstance(files, str):
     #         files = [files]
