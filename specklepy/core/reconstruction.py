@@ -8,8 +8,10 @@ from specklepy.core import alignment
 from specklepy.core.sourceextraction import extract_sources
 from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io.fits import get_data
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
+from specklepy.utils.array import frame_shape
 from specklepy.utils.box import Box
 
 
@@ -22,6 +24,8 @@ class Reconstruction(object):
     """
 
     supported_modes = ['full', 'same', 'valid']
+    variance_extension = 'VAR'
+    mask_extension = 'MASK'
 
     def __init__(self, in_files, mode='same', reference_file=None, out_file=None, in_dir=None, tmp_dir=None,
                  integration_method='collapse', var_ext=None, box_indexes=None, debug=False):
@@ -72,15 +76,14 @@ class Reconstruction(object):
         self.in_dir = in_dir if in_dir is not None else ''
         self.tmp_dir = tmp_dir if tmp_dir is not None else ''
         self.integration_method = integration_method
-        self.var_ext = var_ext  # if var_ext is not None else 'VAR'
+        if var_ext is not None:
+            self.variance_extension = var_ext  # if var_ext is not None else 'VAR'
         self.box = Box(box_indexes) if box_indexes is not None else None
         self.debug = debug
 
         # Derive shape of individual input frames
-        example_frame = fits.getdata(os.path.join(in_dir, self.in_files[0]))
-        if example_frame.ndim == 3:
-            example_frame = example_frame[0]
-        self.frame_shape = example_frame.shape
+        example_data = get_data(self.in_files[0], path=in_dir)
+        self.frame_shape = frame_shape(example_data)
 
         # Initialize secondary attributes
         self.image = None
@@ -93,8 +96,8 @@ class Reconstruction(object):
         # Initialize output file and create an extension for the variance
         self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file,
                                            in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
-        if self.var_ext is not None:
-            self.out_file.new_extension(name=self.var_ext)
+        if self.variance_extension is not None:
+            self.out_file.new_extension(name=self.variance_extension)
 
     @property
     def single_cube_mode(self):
@@ -142,7 +145,7 @@ class Reconstruction(object):
         return self.long_exp_files[self.reference_index]
 
     def select_box(self, radius):
-        image = fits.getdata(os.path.join(self.tmp_dir, self.reference_long_exp_file))
+        image = get_data(self.reference_long_exp_file, path=self.tmp_dir)
         logger.info(f"Select the source for the SSA reference aperture of radius {radius} pix!")
         _, selected = extract_sources(image=image, noise_threshold=3, fwhm=radius, select=True)
         if len(selected) == 0:
@@ -282,12 +285,9 @@ class Reconstruction(object):
         for index, file in enumerate(self.long_exp_files):
 
             # Read data
-            with fits.open(os.path.join(self.tmp_dir, file)) as hdu_list:
-                tmp_image = hdu_list[0].data
-                if self.var_ext is not None and self.var_ext in hdu_list:
-                    tmp_image_var = hdu_list[self.var_ext].data
-                else:
-                    tmp_image_var = None
+            tmp_image = get_data(file, path=self.tmp_dir)
+            tmp_image_var = get_data(file, path=self.tmp_dir, extension=self.variance_extension,
+                                     ignore_missing_extension=True)
 
             # Co-add reconstructions and var images
             self.image += alignment.pad_array(tmp_image, self.pad_vectors[index], mode=self.mode,
@@ -306,5 +306,5 @@ class Reconstruction(object):
 
     def save(self):
         self.out_file.data = self.image
-        if self.var_ext is not None and self.image_var is not None:
-            self.out_file.update_extension(ext_name=self.var_ext, data=self.image_var)
+        if self.variance_extension is not None and self.image_var is not None:
+            self.out_file.update_extension(ext_name=self.variance_extension, data=self.image_var)
