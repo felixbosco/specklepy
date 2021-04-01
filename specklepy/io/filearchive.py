@@ -46,34 +46,31 @@ class FileArchive(object):
         self.out_dir = out_dir if out_dir is not None else './'
         self.out_prefix = out_prefix if out_prefix is not None else ''
 
-        # Interpret the file list input
+        # Interpret the str-type file list input
         if isinstance(file_list, str):
 
             # Search for files
-            files = glob.glob(file_list)
-            files.sort()
-            if len(files) == 0:
+            generic = file_list
+            file_list = glob.glob(file_list)
+            file_list.sort()
+            if len(file_list) == 0:
                 sys.tracebacklimit = 0
                 raise FileNotFoundError(f"FileArchive did not find any file matching to {file_list!r}.")
             else:
-                logger.info(f"FileArchive found {len(files)} file(s) matching to {file_list!r}.")
+                logger.info(f"FileArchive found {len(file_list)} file(s) matching to {generic!r}.")
 
-            # Read table files for gather files directly
-            if len(files) == 1 and not self.is_fits_file(files[0]):
-                logger.info(f"Input file is not FITS type. FileArchive assumes that input file {files[0]!r} contains "
-                            f"file names.")
-                self.table, self.in_dir = self.read_table_file(files[0], format=kwargs.get('table_format'))
-            else:
-                self.table, self.in_dir = self.gather_table_from_list(files=files, cards=kwargs.get('cards', []),
-                                                                      dtypes=kwargs.get('dtypes', []))
+        # Assert type of file list
+        if not isinstance(file_list, list):
+            raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'list')
 
-        elif isinstance(file_list, list):
-            logger.info("FileArchive received a list of files.")
+        # Read table files for gather files directly
+        if len(file_list) == 1 and not self.is_fits_file(file_list[0]):
+            logger.info(f"Input file is not FITS type. FileArchive assumes that input file {file_list[0]!r} contains "
+                        f"file names.")
+            self.table, self.in_dir = self.read_table_file(file_list[0], format=kwargs.get('table_format'))
+        else:
             self.table, self.in_dir = self.gather_table_from_list(files=file_list, cards=kwargs.get('cards', []),
                                                                   dtypes=kwargs.get('dtypes', []))
-
-        else:
-            raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'str')
 
         # Log identified input files
         logger.debug("FileArchive lists the following files:")
