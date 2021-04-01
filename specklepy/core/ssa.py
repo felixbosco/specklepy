@@ -3,12 +3,13 @@ import os
 
 from specklepy.core.reconstruction import Reconstruction
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io.filearchive import FileArchive
 from specklepy.logging import logger
 
 
 def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, variance_extension=None,
         aperture_radius=None, integration_method='ssa', alignment_method='correlation', mask_hot_pixels=False,
-        mask_file=None, debug=False):
+        mask_file=None, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
@@ -68,11 +69,14 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         logger.info("Set logging level to DEBUG")
 
     # Check parameters
-    if not isinstance(files, (list, np.ndarray)):
-        if isinstance(files, str):
-            files = [files]
-        else:
-            raise SpecklepyTypeError('ssa()', argname='files', argtype=type(files), expected='list')
+    file_archive = FileArchive(file_list=files, cards=[], dtypes=[],
+                               table_format=kwargs.get('tableFormat', 'ascii.no_header'))
+    files = file_archive.files
+    # if not isinstance(files, (list, np.ndarray)):
+    #     if isinstance(files, str):
+    #         files = [files]
+    #     else:
+    #         raise SpecklepyTypeError('ssa()', argname='files', argtype=type(files), expected='list')
 
     if isinstance(mode, str):
         if mode not in ['same', 'full', 'valid']:
