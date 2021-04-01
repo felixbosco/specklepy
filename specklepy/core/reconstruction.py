@@ -132,7 +132,7 @@ class Reconstruction(object):
         elif self.custom_mask_file is not None:
             return get_data(self.custom_mask_file, dtype=bool)
         else:
-            return None
+            return False
 
     def assert_dirs(self, error=True):
         for name, dir in zip(['in_dir', 'tmp_dir'], [self.in_dir, self.tmp_dir]):
