@@ -6,8 +6,9 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
 
 
-def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, aperture_radius=None,
-        integration_method='ssa', alignment_method='correlation', mask_hot_pixels=False, debug=False, **kwargs):
+def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, variance_extension=None,
+        aperture_radius=None, integration_method='ssa', alignment_method='correlation', mask_hot_pixels=False,
+        mask_file=None, debug=False):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
@@ -35,6 +36,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
             Path to the files. `None` is substituted by an empty string.
         tmp_dir (str, optional):
             Path of a directory in which the temporary results are stored in.
+        variance_extension (str, optional):
+            Name of the variance extension in the FITS files. Falls back to `'VAR'`.
         aperture_radius (list, optional):
             Constraining the search for the intensity peak to an aperture with the specified radius. The position of
             the aperture is selected graphically. The code is estimating the intensity peak within the full frames if
@@ -46,6 +49,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
             Method for aligning cubes: Can be either 'correlation', 'peak', or 'sources'
         mask_hot_pixels (bool, optional):
             Mask hot pixels prior to alignment.
+        mask_file (str, optional):
+            Name of a file containing a mask, which will be applied additionally to the files own mask extension.
         debug (bool, optional):
             Show debugging information. Default is False.
 
@@ -87,18 +92,16 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         if isinstance(tmp_dir, str) and not os.path.isdir(tmp_dir):
             os.makedirs(tmp_dir)
 
-    if 'variance_extension_name' in kwargs.keys():
-        var_ext = kwargs['variance_extension_name']
-    else:
-        var_ext = 'VAR'
+    if variance_extension is None:
+        variance_extension = 'VAR'
 
     # Initialize the reconstruction
     logger.info("Starting SSA reconstruction...")
     reconstruction = Reconstruction(in_files=files, mode=mode, integration_method=integration_method,
                                     reference_file=reference_file,
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=outfile,
-                                    variance_extension=var_ext,
-                                    box_indexes=None, debug=debug)
+                                    variance_extension=variance_extension,
+                                    box_indexes=None, custom_mask=mask_file, debug=debug)
 
     # Compute the first alignment based on collapsed images (and variance images)
     reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment_method,

@@ -77,6 +77,7 @@ class GeneralArgParser(object):
                                 help='Use sources in the field instead of a complete correlation. This is advantageous '
                                      'in the presence of hot pixels or similar features.')
         parser_ssa.add_argument('--mask', action='store_true', help='Mask hot pixels prior to aligning frames.')
+        parser_ssa.add_argument('--mask_file', type=str, help='Name of a file containing a custom bad pixel mask.')
         parser_ssa.add_argument('-t', '--tmpdir', type=str, default='tmp/', help='Path for saving temporary files.')
         parser_ssa.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
 

@@ -127,4 +127,5 @@ def main():
             os.mkdir(args.tmpdir)
         ssa(files=args.files, mode=args.mode, reference_file=args.reference, tmp_dir=args.tmpdir, outfile=args.outfile,
             aperture_radius=args.aperture_radius, integration_method=args.integration_method,
-            alignment_method=args.alignment_method, mask_hot_pixels=args.mask, debug=args.debug)
+            alignment_method=args.alignment_method, mask_hot_pixels=args.mask, mask_file=args.mask_file,
+            debug=args.debug)

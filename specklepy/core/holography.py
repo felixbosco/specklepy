@@ -77,7 +77,7 @@ def holography(params, debug=False):
                                     reference_file=alignment.get('referenceFile'),
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=paths.get('outFile'),
                                     variance_extension=params['EXTNAMES']['varianceExtension'],
-                                    box_indexes=None, debug=debug)
+                                    box_indexes=None, custom_mask=paths.get('maskFile'), debug=debug)
     reconstruction.assert_dirs()
 
     # (i-ii) Align cubes
