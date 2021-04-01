@@ -226,6 +226,7 @@ class Reconstruction(object):
                     box = self.box.shift(shift=shifts[f])
                 else:
                     box = self.box
+                box.crop_to_shape(speckle_cube.frame_shape)
                 speckle_cube.ssa(box=box, mask_bad_pixels=mask_hot_pixels, mask=self.custom_mask)
             else:
                 raise SpecklepyValueError('Reconstruction', 'integration_method', self.integration_method,
