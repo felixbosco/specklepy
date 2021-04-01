@@ -55,8 +55,9 @@ class FileStream(object):
         hdu = fits.PrimaryHDU(data=data, header=header)
 
         # Add cards to header
-        for (card, value) in cards.items():
-            hdu.header.set(self.header_card_prefix + card, value=value)
+        if isinstance(cards, dict):
+            for (card, value) in cards.items():
+                hdu.header.set(self.header_card_prefix + card, value=value)
         hdu.header.set('DATE', default_time_stamp())
 
         # Store new HDU to file
