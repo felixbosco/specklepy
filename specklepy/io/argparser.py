@@ -167,6 +167,9 @@ class GeneralArgParser(object):
                                        help='Multiple of the image uncertainty.')
         parser_extraction.add_argument('-f', '--fwhm', type=float, default=5,
                                        help='Expected source FWHM in units of pixels.')
+        parser_extraction.add_argument('-a', '--algorithm', default='DAO',
+                                       help="Name of the StarFinder algorithm. Can be 'IRAF', 'DAO' (default), or "
+                                            "'PeakFinder'.")
         parser_extraction.add_argument('-v', '--var', type=str, default=None,
                                        help='Value of the image variance or name of the FITS file extension containing '
                                             'the variance.')
