@@ -100,7 +100,7 @@ class Box(object):
 
     @classmethod
     def centered_at(cls, x0, y0, radius):
-        return cls([x0 - radius, x0 + radius + 1, y0 + radius, y0 + radius + 1])
+        return cls([x0 - radius, x0 + radius + 1, y0 - radius, y0 + radius + 1])
 
     def shift(self, shift, copy=True):
         # Create a copy if requested
