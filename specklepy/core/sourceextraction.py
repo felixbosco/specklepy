@@ -1,4 +1,3 @@
-from IPython import embed
 import numpy as np
 import os
 
@@ -13,7 +12,7 @@ from specklepy.logging import logger
 from specklepy.plotting.plot import StarFinderPlot
 from specklepy.utils import save_eval
 from specklepy.utils.box import Box
-from specklepy.utils.moment import first_moment_2d
+from specklepy.utils.moment import moment_2d
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
@@ -222,7 +221,7 @@ class SourceExtractor(object):
 
             # Compute moments and uncertainties, and add to new table
             try:
-                f, df, x, y, dx, dy = first_moment_2d(aperture, var=var)
+                f, df, x, dx, y, dy = moment_2d(aperture, var=var)
                 new_sources.add_row([x + pos[0] - radius, dx, y + pos[1] - radius, dy, f, df])
             except ValueError:
                 logger.warning(f"Unsuccessful to measure uncertainties for source in box {box}")
