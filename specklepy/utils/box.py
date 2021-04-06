@@ -98,6 +98,10 @@ class Box(object):
         else:
             return self.x_max - self.x_min, self.y_max - self.y_min
 
+    @classmethod
+    def centered_at(cls, x0, y0, radius):
+        return cls([x0 - radius, x0 + radius + 1, y0 + radius, y0 + radius + 1])
+
     def shift(self, shift, copy=True):
         # Create a copy if requested
         if copy:
