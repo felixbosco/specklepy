@@ -1,6 +1,8 @@
 import numpy as np
 import os
 
+from scipy.signal import find_peaks
+
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
@@ -8,6 +10,7 @@ from astropy.table import Table
 from photutils import DAOStarFinder, IRAFStarFinder
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.plotting.plot import StarFinderPlot
 from specklepy.utils import save_eval
@@ -74,7 +77,8 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
             logger.warning(f"'image_var' was provided as str-type. Interpreting as the name of a FITS extension "
                            f"containing the image variance.")
             logger.info(f"Reading data from {extractor.image.filename!r} [{image_var}]")
-            image_var = fits.getdata(extractor.image.filename, image_var)
+            # image_var = fits.getdata(extractor.image.filename, image_var)
+            image_var = get_data(extractor.image.filename, extension=image_var)
         extractor.stddev = np.sqrt(np.mean(image_var))
         logger.debug(f"Resetting image standard deviation to {extractor.stddev}")
     if not background_subtraction:
@@ -160,7 +164,7 @@ class SourceExtractor(object):
     def initialize_star_finder(self):
 
         # Build parameter dictionary
-        params = {'fwhm': self.fwhm,'threshold': self.threshold}#, 'sky': self.image.sky_bkg}
+        params = {'fwhm': self.fwhm, 'threshold': self.threshold}  # , 'sky': self.image.sky_bkg}
 
         # Type and value check on algorithm
         if not isinstance(self.algorithm, str):
@@ -170,9 +174,11 @@ class SourceExtractor(object):
             self.star_finder = DAOStarFinder(**params)
         elif 'iraf' in self.algorithm.lower():
             self.star_finder = IRAFStarFinder(**params)
+        elif 'peak' in self.algorithm.lower():
+            self.star_finder = PeakFinder(**params)
         else:
             raise SpecklepyValueError('extract_sources', argname='star_finder', argvalue=self.algorithm,
-                                      expected="'DAO' or 'IRAF")
+                                      expected="'DAO', 'IRAF', or 'PeakFinder'")
 
         return self.star_finder
 
@@ -340,7 +346,8 @@ class StarFinderImage(object):
     @classmethod
     def from_file(cls, filename, extension=None):
         logger.info(f"Read FITS image from file {filename!r} [{str(extension)}]")
-        image = fits.getdata(filename, extension)
+        # image = fits.getdata(filename, extension)
+        image = get_data(filename, extension=extension)
         logger.debug(f"Data type of file input is {image.dtype}")
         image = image.squeeze()
         return cls(image=image, filename=filename)
@@ -355,3 +362,45 @@ class StarFinderImage(object):
         self._sky_bkg = mean
         self._stddev = std
         return mean, std
+
+
+class PeakFinder(object):
+
+    def __init__(self, fwhm, threshold):
+        self.fwhm = fwhm
+        self.threshold = threshold
+
+    def __call__(self, image, *args, **kwargs):
+        peaks = find_peaks_2d(array=image, height=self.threshold, width=self.fwhm, threshold=5, distance=2)
+        sources = Table(names=['xcentroid', 'ycentroid', 'flux'])
+        for peak in peaks:
+            sources.add_row([peak[0], peak[1], image[peak[1], peak[0]]])
+        return sources
+
+
+def find_peaks_1d(array, axis=None, **kwargs):
+    if axis == 1:
+        array = array.transpose()
+    peaks, props = find_peaks(array.flatten(), **kwargs)
+    peaks = np.unravel_index(peaks, array.shape)
+    if axis == 1:
+        peaks = peaks[1], peaks[0]
+
+    return peaks
+
+
+def find_peaks_2d(array, **kwargs):
+    peaks_x = find_peaks_1d(array=array, axis=0, **kwargs)
+    peaks_y = find_peaks_1d(array=array, axis=1, **kwargs)
+
+    matches = []
+    for pxx, pxy in zip(peaks_x[0], peaks_x[1]):
+        good_x = pxx == peaks_y[0]
+        good_y = pxy == peaks_y[1]
+        matching = good_x & good_y
+        if np.any(matching):
+            matches.append([peaks_y[0][matching], peaks_y[1][matching]])
+
+    matches = np.array(matches).transpose()[0]
+
+    return matches
