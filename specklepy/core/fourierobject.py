@@ -9,6 +9,7 @@ from specklepy.core.alignment import derive_pad_vectors, pad_array
 from specklepy.core.bootstrap import random_draw_vectors
 from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
+from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.reduction.filter import hot_pixel_mask
 from specklepy.utils.array import frame_number
@@ -23,7 +24,7 @@ class FourierObject(object):
     Therefore it estimates the padding of the PSF and image frames.
     """
 
-    def __init__(self, in_files, psf_files, shifts, mode='same', in_dir=None):
+    def __init__(self, in_files, psf_files, shifts, mode='same', in_dir=None, custom_mask=None):
         """ Initialize a FourierObject instance.
 
         Args:
@@ -38,6 +39,8 @@ class FourierObject(object):
                 covered field. Default is 'same'.
             in_dir (str, optional):
                 Path to the input files.
+            custom_mask (str or array-like, optional):
+                Path to a custom mask or the mask itself, which will be applied to all frames prior to integration.
         """
 
         # Assert that there are the same number of inFiles and psfFiles, which should be the case after running the
@@ -105,9 +108,26 @@ class FourierObject(object):
         self.bootstrap_images = None
         self.bootstrap_objects = None
 
+        # Set custom mask
+        self.custom_mask_file = None
+        self._custom_mask = None
+        if isinstance(custom_mask, str):
+            self.custom_mask_file = custom_mask
+        elif isinstance(custom_mask, (bool, np.ndarray)):
+            self._custom_mask = custom_mask
+
     @property
     def number_files(self):
         return len(self.in_files)
+
+    @property
+    def custom_mask(self):
+        if self._custom_mask is not None:
+            return self._custom_mask
+        elif self.custom_mask_file is not None:
+            return get_data(self.custom_mask_file, dtype=bool)
+        else:
+            return False
 
     def coadd_fft(self, fill_value=0, mask_hot_pixels=False, bootstrap=None):
         """Co-add the Fourier transforms of the image and PSF frames.
