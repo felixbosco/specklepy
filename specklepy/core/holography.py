@@ -165,7 +165,8 @@ def holography(params, debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        f_object = FourierObject(in_files, psf_files, shifts=shifts, mode=mode, in_dir=in_dir)
+        f_object = FourierObject(in_files, psf_files, shifts=shifts, mode=mode, in_dir=in_dir,
+                                 custom_mask=paths.get('maskFile'))
         f_object.coadd_fft(mask_hot_pixels=alignment.get('maskHotPixels', False),
                            bootstrap=params.get('BOOTSTRAP').get('numberImages'))
 
