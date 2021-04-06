@@ -73,3 +73,27 @@ def moment_2d(array, var=None, weights=None):
         std_moment1_y = None
 
     return moment0, std_moment0, moment1_x, std_moment1_x, moment1_y, std_moment1_y
+
+
+def gaussian_weights(shape, fwhm, center=None, normalization=1):
+    if center is None:
+        center = (shape[0]-1) / 2, (shape[1]-1) / 2
+
+    y, x = np.mgrid[:shape[0], :shape[1]]
+    r_squared = (y - center[0])**2 + (x - center[1])**2
+
+    var = fwhm / 2.35
+    weights = np.exp(-np.divide(r_squared, 2 * var)) / np.sqrt(2 * np.pi * var)
+
+    return normalize_weights(weights=weights, normalization=normalization)
+
+
+def uniform_weights(shape, normalization=1):
+    return normalize_weights(np.ones(shape=shape), normalization=normalization)
+
+
+def normalize_weights(weights, normalization=None):
+    try:
+        return weights * np.divide(normalization, np.sum(weights))
+    except TypeError:
+        return weights
