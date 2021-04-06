@@ -118,7 +118,8 @@ def holography(params, debug=False):
                             noise_threshold=source_extraction.get('noiseThreshold'),
                             background_subtraction=True,
                             write_to=paths.get('allStarsFile'),
-                            star_finder='DAO', select=paths.get('refSourceFile'), debug=debug)
+                            star_finder=source_extraction.get('algorithm'),
+                            select=paths.get('refSourceFile'), debug=debug)
         else:
             logger.info("\tPlease copy the desired reference stars from the all stars file into the reference star "
                         "file!")
@@ -205,7 +206,8 @@ def holography(params, debug=False):
     if 'gauss' in apodization.get('type').lower():
         fwhm *= 2.35
     extract_sources(image=image, fwhm=fwhm, noise_threshold=source_extraction.get('noiseThreshold'),
-                    background_subtraction=True, write_to=paths.get('allStarsFile'), star_finder='DAO', debug=debug)
+                    background_subtraction=True, write_to=paths.get('allStarsFile'),
+                    star_finder=source_extraction.get('algorithm'), debug=debug)
 
     # Finally return the image
     return image
