@@ -1,13 +1,13 @@
 import numpy as np
 import os
 
-from scipy.signal import find_peaks
+from scipy import signal
 
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 
-from photutils import DAOStarFinder, IRAFStarFinder
+from photutils import DAOStarFinder, IRAFStarFinder, find_peaks
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.fits import get_data
@@ -179,6 +179,7 @@ class SourceExtractor(object):
         else:
             raise SpecklepyValueError('extract_sources', argname='star_finder', argvalue=self.algorithm,
                                       expected="'DAO', 'IRAF', or 'PeakFinder'")
+        logger.debug(f"StarFinder algorithm is initialized as: {self.star_finder}")
 
         return self.star_finder
 
@@ -371,17 +372,24 @@ class PeakFinder(object):
         self.threshold = threshold
 
     def __call__(self, image, *args, **kwargs):
-        peaks = find_peaks_2d(array=image, height=self.threshold, width=self.fwhm, threshold=5, distance=2)
-        sources = Table(names=['xcentroid', 'ycentroid', 'flux'])
-        for peak in peaks:
-            sources.add_row([peak[0], peak[1], image[peak[1], peak[0]]])
+        # peaks = find_peaks_2d(array=image, height=self.threshold, width=self.fwhm)#, threshold=5, distance=1)
+        # sources = Table(names=['xcentroid', 'ycentroid', 'flux'])
+        # for peak in peaks:
+        #     sources.add_row([peak[0], peak[1], image[peak[1], peak[0]]])
+        sources = find_peaks(data=image, threshold=self.threshold, box_size=1.5*self.fwhm)
+        sources.rename_column('x_peak', 'xcentroid')
+        sources.rename_column('y_peak', 'ycentroid')
+        sources.rename_column('peak_value', 'flux')
         return sources
+
+    def __repr__(self):
+        return f"PeakFinder(fwhm: {self.fwhm:.2f}, threshold: {self.threshold:.2f})"
 
 
 def find_peaks_1d(array, axis=None, **kwargs):
     if axis == 1:
         array = array.transpose()
-    peaks, props = find_peaks(array.flatten(), **kwargs)
+    peaks, props = signal.find_peaks(array.flatten(), **kwargs)
     peaks = np.unravel_index(peaks, array.shape)
     if axis == 1:
         peaks = peaks[1], peaks[0]
