@@ -170,11 +170,13 @@ class FourierObject(object):
             image_cube = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]))
             number_frames = frame_number(image_cube)
 
-            # Extract and combine frame mask
-            try:
-                image_mask = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]), 'MASK')
-            except KeyError:
-                image_mask = None
+            # Extract frame mask
+            image_mask = get_data(self.in_files[file_index], path=self.in_dir, extension='MASK', dtype=bool,
+                                  ignore_missing_extension=True)
+            if image_mask is None:
+                image_mask = False
+
+            # Mask hot pixels and combine with image mask
             if mask_hot_pixels:
                 # Extract hot pixel mask
                 if number_frames == 1:
@@ -183,18 +185,17 @@ class FourierObject(object):
                     bpm = hot_pixel_mask(np.sum(image_cube, axis=0))
 
                 # Combine with image mask
-                if image_mask is None:
-                    image_mask = bpm
-                else:
-                    image_mask = np.logical_or(image_mask, bpm)
+                image_mask = np.logical_or(image_mask, bpm)
+
+            # Combine with the custom mask
+            image_mask = np.logical_or(image_mask, self.custom_mask)
 
             # Iterate through frames
             for frame_index in trange(number_frames, desc="Fourier transforming frames"):
 
                 # Load image and fill masked values with zeros
                 frame = image_cube[frame_index]
-                if image_mask is not None:
-                    frame[image_mask] = fill_value
+                frame[image_mask] = fill_value
 
                 # Padding and transforming the image
                 img = pad_array(array=frame,
