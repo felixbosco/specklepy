@@ -75,24 +75,44 @@ def moment_2d(array, var=None, weights=None):
     return moment0, std_moment0, moment1_x, std_moment1_x, moment1_y, std_moment1_y
 
 
-def gaussian_weights(shape, fwhm, center=None, normalization=1):
+def gaussian_weights(shape, fwhm, center=None, normalization='unity'):
+    # Set center to the central pixel, if not provided
     if center is None:
         center = (shape[0]-1) / 2, (shape[1]-1) / 2
 
+    # Evaluate distances from center on a grid
     y, x = np.mgrid[:shape[0], :shape[1]]
     r_squared = (y - center[0])**2 + (x - center[1])**2
 
-    var = fwhm / 2.35
+    # Compute amplitude of Gaussian distribution on the grid
+    var = np.square(fwhm / 2.35)
     weights = np.exp(-np.divide(r_squared, 2 * var)) / np.sqrt(2 * np.pi * var)
 
     return normalize_weights(weights=weights, normalization=normalization)
 
 
-def uniform_weights(shape, normalization=1):
+def uniform_weights(shape, normalization='unity'):
     return normalize_weights(np.ones(shape=shape), normalization=normalization)
 
 
 def normalize_weights(weights, normalization=None):
+    """Normalize an array of weights.
+
+    Args:
+        weights (array-like):
+            Array of weights.
+        normalization:
+            Any value to normalize the sum of the weights to. Can be set to `'unity'` to allow for flux conservation.
+
+    Returns:
+        weights (array-like):
+            Normalized weights
+    """
+
+    # Compute number of pixels to normalize to this
+    if normalization == 'unity':
+        normalization = weights.shape[0] * weights.shape[1]
+
     try:
         return weights * np.divide(normalization, np.sum(weights))
     except TypeError:
