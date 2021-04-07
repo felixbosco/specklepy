@@ -9,7 +9,6 @@ from specklepy.core.reconstruction import Reconstruction
 from specklepy.core.sourceextraction import extract_sources
 from specklepy.io.filearchive import FileArchive
 from specklepy.io.filestream import FileStream
-# from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
@@ -186,8 +185,8 @@ def holography(params, debug=False):
         image, bootstrap_images = f_object.ifft(total_flux=total_flux)
 
         # Inspect the latest reconstruction
-        if debug:
-            imshow(image)
+        # if debug:
+        imshow(image)
 
         # Save the latest reconstruction image to outfile
         out_file.set_data(data=image)
