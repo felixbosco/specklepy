@@ -184,10 +184,6 @@ def holography(params, debug=False):
         # (xi) Inverse Fourier transform to retain the reconstructed image
         image, bootstrap_images = f_object.ifft(total_flux=total_flux)
 
-        # Inspect the latest reconstruction
-        # if debug:
-        imshow(image)
-
         # Save the latest reconstruction image to outfile
         out_file.set_data(data=image)
 
@@ -207,6 +203,11 @@ def holography(params, debug=False):
                                                                insert=True)
                 for b, bootstrap_image in enumerate(bootstrap_images):
                     bs_file.update_frame(frame_index=b, data=bootstrap_image)
+
+        # Inspect the latest reconstruction
+        # if debug:
+        logger.info("This is the latest reconstruction:")
+        imshow(image)
 
         # Ask the user whether the iteration shall be continued or not
         answer = input("\tDo you want to continue with one more iteration? [yes/no]\n\t")
