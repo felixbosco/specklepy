@@ -83,6 +83,9 @@ class FileStream(object):
                 self.new_extension(name=extension, data=data)
             hdu_list.flush()
 
+    def get_frame(self, frame_index, extension=None):
+        return get_data(self.file_path, extension=extension)[frame_index]
+
     def has_extension(self, extension):
         with fits.open(self.file_path) as hdu_list:
             return extension in hdu_list
