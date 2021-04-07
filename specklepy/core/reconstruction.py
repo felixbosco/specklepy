@@ -2,15 +2,12 @@ import numpy as np
 import os
 import sys
 
-from astropy.io import fits
-
 from specklepy.core import alignment
 from specklepy.core.sourceextraction import extract_sources
 from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.filestream import FileStream
 from specklepy.io.fits import get_data
-from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.logging import logger
 from specklepy.utils.array import frame_shape
 from specklepy.utils.box import Box
@@ -111,12 +108,6 @@ class Reconstruction(object):
         self.shifts = None
         self.pad_vectors = None
         self.reference_pad_vector = None
-
-        # # Initialize output file and create an extension for the variance
-        # self.out_file = ReconstructionFile(files=self.in_files, filename=self.out_file,
-        #                                    in_dir=in_dir, cards={"RECONSTRUCTION": "SSA"})
-        # if self.variance_extension is not None:
-        #     self.out_file.new_extension(name=self.variance_extension)
 
     @property
     def single_cube_mode(self):
@@ -339,6 +330,5 @@ class Reconstruction(object):
             out_file.initialize(data=self.image)
             out_file.build_reconstruction_file_header_cards(algorithm='SSA', files=self.in_files, path=self.in_dir,
                                                             insert=True)
-        # self.out_file.data = self.image
         if self.variance_extension is not None and self.image_var is not None:
             out_file.set_data(extension=self.variance_extension, data=self.image_var)
