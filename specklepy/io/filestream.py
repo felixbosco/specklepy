@@ -126,7 +126,7 @@ class FileStream(object):
             # Load HDU
             try:
                 hdu = hdu_list[extension]
-            except TypeError:
+            except KeyError:
                 hdu = hdu_list[0]
 
             # Insert header cards
