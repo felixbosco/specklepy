@@ -9,7 +9,7 @@ from specklepy.core.reconstruction import Reconstruction
 from specklepy.core.sourceextraction import extract_sources
 from specklepy.io.filearchive import FileArchive
 from specklepy.io.filestream import FileStream
-from specklepy.io.reconstructionfile import ReconstructionFile
+# from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
@@ -70,8 +70,11 @@ def holography(params, debug=False):
         logger.error(f"Apodization radius has not been set or of wrong type ({apodization['radius']})")
 
     # Initialize the outfile
-    out_file = ReconstructionFile(filename=paths.get('outFile'), files=in_files,
-                                  cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
+    # out_file = ReconstructionFile(filename=paths.get('outFile'), files=in_files,
+    #                               cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
+    out_file = FileStream(file_name=paths.get('outFile'))
+    out_file.initialize()
+    out_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography', insert=True)
 
     # Initialize reconstruction
     reconstruction = Reconstruction(in_files=in_files, mode=mode, integration_method='ssa',
@@ -107,7 +110,7 @@ def holography(params, debug=False):
     if paths.get('ssaFile') is not None:
         ssa_file = FileStream(file_name=paths.get('ssaFile'))
         ssa_file.initialize(data=image)
-        ssa_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, insert=True)
+        ssa_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='SSA', insert=True)
         # ssa_file = ReconstructionFile(filename=paths.get('ssaFile'), files=in_files, in_dir=in_dir)
         # ssa_file.data = image
         ssa_file.new_extension(name=params['EXTNAMES']['varianceExtension'], data=image_var)
@@ -186,17 +189,22 @@ def holography(params, debug=False):
             imshow(image)
 
         # Save the latest reconstruction image to outfile
-        out_file.data = image
+        out_file.set_data(data=image)
 
         # Compute uncertainty from bootstrap reconstructions
         if bootstrap_images is not None:
             var = np.var(np.array(bootstrap_images), axis=0)
-            out_file.update_extension(params['EXTNAMES']['varianceExtension'], var)
+            # out_file.update_extension(params['EXTNAMES']['varianceExtension'], var)
+            out_file.set_data(data=var, extension=params['EXTNAMES']['varianceExtension'])
             if params['BOOTSTRAP'].get('saveImages', False):
                 logger.info("Saving bootstrap images...")
-                bs_file = ReconstructionFile(filename=paths.get('outFile').replace('.fits', '_bs.fits'), files=in_files,
-                                             cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir,
-                                             shape=(len(bootstrap_images), image.shape[1], image.shape[2]))
+                # bs_file = ReconstructionFile(filename=paths.get('outFile').replace('.fits', '_bs.fits'), files=in_files,
+                #                              cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir,
+                #                              shape=(len(bootstrap_images), image.shape[1], image.shape[2]))
+                bs_file = FileStream(file_name=paths.get('outFile').replace('.fits', '_bs.fits'), path=in_dir)
+                bs_file.initialize(shape=(len(bootstrap_images), image.shape[1], image.shape[2]))
+                bs_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography',
+                                                               insert=True)
                 for b, bootstrap_image in enumerate(bootstrap_images):
                     bs_file.update_frame(frame_index=b, data=bootstrap_image)
 
