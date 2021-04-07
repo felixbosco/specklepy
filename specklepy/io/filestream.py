@@ -79,6 +79,8 @@ class FileStream(object):
                 hdu_list[extension].data = data
             except TypeError as e:
                 hdu_list[0].data = data
+            except KeyError:
+                self.new_extension(name=extension, data=data)
             hdu_list.flush()
 
     def has_extension(self, extension):
@@ -137,7 +139,8 @@ class FileStream(object):
             # Store to file
             hdu_list.flush()
 
-    def build_reconstruction_file_header_cards(self, files, path=None, card_prefix=None, insert=True, extension=None):
+    def build_reconstruction_file_header_cards(self, files, path=None, algorithm=None, card_prefix=None,
+                                               insert=True, extension=None):
 
         # Update the card prefix
         if card_prefix is not None:
@@ -145,6 +148,8 @@ class FileStream(object):
 
         # Initialize and fill `cards` dictionary
         cards = {}
+        if algorithm is not None:
+            cards[f"{self.header_card_prefix} ALGORITHM"] = algorithm
         for index, file in enumerate(files):
             cards[f"{self.header_card_prefix} SOURCE FILE{index:04} NAME"] = os.path.basename(file)
             cards[f"{self.header_card_prefix} SOURCE FILE{index:04} FRAMES"] = get_frame_number(file, path=path)
