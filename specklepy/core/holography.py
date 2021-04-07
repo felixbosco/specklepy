@@ -185,7 +185,7 @@ def holography(params, debug=False):
         image, bootstrap_images = f_object.ifft(total_flux=total_flux)
 
         # Save the latest reconstruction image to outfile
-        out_file.set_data(data=image)
+        out_file.set_data(data=image, extension=0)
 
         # Compute uncertainty from bootstrap reconstructions
         if bootstrap_images is not None:
