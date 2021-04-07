@@ -69,8 +69,6 @@ def holography(params, debug=False):
         logger.error(f"Apodization radius has not been set or of wrong type ({apodization['radius']})")
 
     # Initialize the outfile
-    # out_file = ReconstructionFile(filename=paths.get('outFile'), files=in_files,
-    #                               cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir)
     out_file = FileStream(file_name=paths.get('outFile'))
     out_file.initialize()
     out_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography', insert=True)
@@ -105,13 +103,11 @@ def holography(params, debug=False):
     image, image_var = reconstruction.coadd_long_exposures(save=True)
     total_flux = np.sum(image)  # Stored for flux conservation
 
-    # Save SSA reconstruction to serparate file, if requested
+    # Save SSA reconstruction to separate file, if requested
     if paths.get('ssaFile') is not None:
         ssa_file = FileStream(file_name=paths.get('ssaFile'))
         ssa_file.initialize(data=image)
         ssa_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='SSA', insert=True)
-        # ssa_file = ReconstructionFile(filename=paths.get('ssaFile'), files=in_files, in_dir=in_dir)
-        # ssa_file.data = image
         ssa_file.new_extension(name=params['EXTNAMES']['varianceExtension'], data=image_var)
 
     # Start iteration from steps (iv) through (xi)
@@ -194,9 +190,6 @@ def holography(params, debug=False):
             out_file.set_data(data=var, extension=params['EXTNAMES']['varianceExtension'])
             if params['BOOTSTRAP'].get('saveImages', False):
                 logger.info("Saving bootstrap images...")
-                # bs_file = ReconstructionFile(filename=paths.get('outFile').replace('.fits', '_bs.fits'), files=in_files,
-                #                              cards={"RECONSTRUCTION": "Holography"}, in_dir=in_dir,
-                #                              shape=(len(bootstrap_images), image.shape[1], image.shape[2]))
                 bs_file = FileStream(file_name=paths.get('outFile').replace('.fits', '_bs.fits'), path=in_dir)
                 bs_file.initialize(shape=(len(bootstrap_images), image.shape[1], image.shape[2]))
                 bs_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography',
