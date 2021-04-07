@@ -43,7 +43,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
             `True`.
         show (bool, optional):
             Create a plot of the identified sources on the image.
-        select (bool, optional):
+        select (bool or dict, optional):
             Create a plot of the identified sources on the image, with the option of selecting apertures for future
             purposes. These are selected by clicking on the image.
         collapse (bool, optional):
@@ -59,7 +59,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         sources (astropy.table.Table):
             Table of identified sources, `None` if no sources are detected.
         selected (list, optional):
-            List of selected sources, returned only if `select==True`.
+            List of selected sources, returned only if `select!=False`.
     """
 
     # Set logger level
@@ -96,8 +96,12 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         extractor.show()
 
     if select:
-        save_selected_to = select if isinstance(select, str) else None
-        selected = extractor.select(save_selected_to)
+        message = None
+        save_to = None
+        if isinstance(select, dict):
+            message = select.get('message', 'Please select sources!')
+            save_to = select.get('save_to', None)
+        selected = extractor.select(save_to=save_to, message=message)
         logger.info(f"Selected {len(selected)} sources")
         logger.debug(f"\n{selected}")
         return sources, selected
@@ -243,7 +247,7 @@ class SourceExtractor(object):
             plot.add_apertures(positions=positions, radius=self.fwhm / 2)
         plot.show()
 
-    def select(self, save_to=None):
+    def select(self, save_to=None, message=None):
         if self.sources is None:
             logger.warning("SourceExtractor does not store identified sources yet! Finding sources now...")
             self.find_sources()
@@ -252,6 +256,10 @@ class SourceExtractor(object):
         plot = StarFinderPlot(image_data=self.image.data)
         positions = np.transpose((self.sources['x'], self.sources['y']))
         plot.add_apertures(positions=positions, radius=self.fwhm / 2)
+
+        # Prompt message
+        if message is not None:
+            logger.info(message)
 
         # Graphically select apertures
         selected = plot.select_apertures(marker_size=100)

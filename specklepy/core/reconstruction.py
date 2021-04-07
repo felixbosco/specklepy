@@ -165,8 +165,8 @@ class Reconstruction(object):
 
     def select_box(self, radius):
         image = get_data(self.reference_long_exp_file, path=self.tmp_dir)
-        logger.info(f"Select the source for the SSA reference aperture of radius {radius} pix!")
-        _, selected = extract_sources(image=image, noise_threshold=3, fwhm=radius, select=True)
+        select_dict = {'message': f"Select the source for the SSA reference aperture of radius {radius} pix!"}
+        _, selected = extract_sources(image=image, noise_threshold=3, fwhm=radius, select=select_dict)
         if len(selected) == 0:
             sys.tracebacklimit = 0
             raise ValueError("No source selected to center the aperture on")

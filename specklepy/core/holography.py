@@ -118,15 +118,15 @@ def holography(params, debug=False):
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
         # (v) Select reference stars
-        logger.info("Select the PSF reference stars!")
         if psf_extraction.get('select', 'gui') == 'gui':
+            select_dict = {'save_to': paths.get('refSourceFile'), 'message': "Please select the PSF reference stars!"}
             extract_sources(image=image,
                             fwhm=source_extraction.get('starfinderFwhm'),
                             noise_threshold=source_extraction.get('noiseThreshold'),
                             background_subtraction=True,
                             write_to=paths.get('allStarsFile'),
                             star_finder=source_extraction.get('algorithm'),
-                            select=paths.get('refSourceFile'), debug=debug)
+                            select=select_dict, debug=debug)
         else:
             logger.info("\tPlease copy the desired reference stars from the all stars file into the reference star "
                         "file!")
