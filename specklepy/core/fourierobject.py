@@ -1,15 +1,13 @@
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift
-import os
-from tqdm import trange
 
-from astropy.io import fits
+from tqdm import trange
 
 from specklepy.core.alignment import derive_pad_vectors, pad_array
 from specklepy.core.bootstrap import random_draw_vectors
 from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
-from specklepy.io.fits import get_data
+from specklepy.io.fits import get_data, get_frame_number
 from specklepy.logging import logger
 from specklepy.reduction.filter import hot_pixel_mask
 from specklepy.utils.array import frame_number
@@ -64,7 +62,6 @@ class FourierObject(object):
 
         # Extract padding vectors for images and reference image
         logger.info("Initializing padding vectors")
-        # files_contain_data_cubes = fits.getdata(in_files[0]).ndim == 3
         self.pad_vectors, self.reference_image_pad_vector = derive_pad_vectors(shifts=shifts,
                                                                                cube_mode=False,
                                                                                return_reference_image_pad_vector=True)
@@ -74,7 +71,7 @@ class FourierObject(object):
         # Get example image frame, used as final image size
         image_file = in_files[file_index]
         logger.info(f"\tUsing example image frame from {image_file!r}")
-        img = fits.getdata(os.path.join(self.in_dir, image_file))[0]  # Remove time axis padding
+        img = get_data(image_file, path=self.in_dir)[0]  # Remove time axis padding
         img = pad_array(array=img, pad_vector=image_pad_vector, mode=mode,
                         reference_image_pad_vector=self.reference_image_pad_vector)
         logger.info(f"\tShift: {shifts[file_index]}")
@@ -84,7 +81,7 @@ class FourierObject(object):
         # Get example PSF frame
         psf_file = psf_files[file_index]
         logger.info(f"\tUsing example PSF frame from {psf_file!r}")
-        psf = fits.getdata(psf_file)[0]
+        psf = get_data(psf_file)[0]
         logger.info(f"\tShape: {psf.shape}")
 
         # Estimate the padding vector for the f_psf frames to have the same xy-extent as f_img
@@ -148,12 +145,13 @@ class FourierObject(object):
         # Prepare bootstrapping
         if bootstrap is not None:
             self.bootstrap_objects = [ComplexRatioImage(shape=self.shape)] * bootstrap
+
+            # Count total number of frames
             number_frames = 0
             for file in self.in_files:
-                path = os.path.join(self.in_dir, file)
-                with fits.open(path) as hdu_list:
-                    cube = hdu_list[0].data
-                    number_frames += frame_number(cube)
+                number_frames += get_frame_number(file=file, path=self.in_dir)
+
+            # Draw bootstrap coefficients
             bootstrap_draws = random_draw_vectors(number_draws=bootstrap, number_frames=number_frames)
         else:
             bootstrap_draws = None
@@ -166,8 +164,8 @@ class FourierObject(object):
         for file_index in trange(self.number_files, desc="Processing files"):
 
             # Open PSF and image files
-            psf_cube = fits.getdata(self.psf_files[file_index])
-            image_cube = fits.getdata(os.path.join(self.in_dir, self.in_files[file_index]))
+            psf_cube = get_data(self.psf_files[file_index])
+            image_cube = get_data(self.in_files[file_index], path=self.in_dir)
             number_frames = frame_number(image_cube)
 
             # Extract frame mask
