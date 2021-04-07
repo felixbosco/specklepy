@@ -90,10 +90,10 @@ def plot_simple(xdata, ydata, title=None, xlabel=None, ylabel=None):
 
 def plot_powerspec1d(image, title=None, average=True, pixel_scale=None):
     plt.figure()
-    if image.ndim is 2:
+    if image.ndim == 2:
         xdata, ydata = tf.powerspec1d(image, average=average, pixel_scale=pixel_scale)
         plt.plot(xdata, ydata, '-')
-    elif image.ndim is 3:
+    elif image.ndim == 3:
         for frame in image:
             xdata, ydata = tf.powerspec1d(frame, average=average, pixel_scale=pixel_scale)
             plt.plot(xdata, ydata, '-')
