@@ -147,6 +147,9 @@ class ShiftEstimator(object):
             # Extract the position of the reference star in the reference image
             message = "Select the sources that shall be used for correlating the source lists!"
             reference_stars = extractor.select(message=message)
+            if reference_stars is None or len(reference_stars) == 0:
+                logger.warning("No sources have been selected! Please repeat the source selection!")
+                reference_stars = extractor.select(message=message)
             logger.info(f"The sources reside at\n{reference_stars}\nin the reference image")
 
             # Iterate through files
