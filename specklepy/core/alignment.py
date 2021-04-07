@@ -316,9 +316,9 @@ def estimate_shift(image, reference_image, mode='correlation', is_fourier_transf
     """
 
     # Check input parameters
-    if not isinstance(image, np.ndarray) or image.ndim is not 2:
+    if not isinstance(image, np.ndarray) or image.ndim != 2:
         raise TypeError(f"Image input must be 2-dim numpy.ndarray, but was provided as {type(image)}")
-    if not isinstance(reference_image, np.ndarray) or image.ndim is not 2:
+    if not isinstance(reference_image, np.ndarray) or image.ndim != 2:
         raise TypeError(f"Image input must be 2-dim numpy.ndarray, but was provided as {type(reference_image)}")
     if not isinstance(is_fourier_transformed, bool):
         raise SpecklepyTypeError('estimate_shift()', argname='is_fourier_transformed',
