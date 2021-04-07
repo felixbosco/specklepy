@@ -3,6 +3,8 @@ import sys
 
 from astropy.io import fits
 
+from specklepy.utils import array
+
 
 def get_data(file_name, path=None, extension=None, squeeze=True, dtype=None, ignore_missing_extension=False):
     """Read data from a FITS file.
@@ -56,3 +58,14 @@ def get_data(file_name, path=None, extension=None, squeeze=True, dtype=None, ign
 
     # Return
     return data
+
+
+def get_frame_number(file, path=None, extension=None):
+    data = get_data(file_name=file, path=path, extension=extension)
+    return array.frame_number(data)
+
+
+def get_frame_shape(file, path=None, extension=None):
+    data = get_data(file_name=file, path=path, extension=extension)
+    return array.frame_shape(data)
+
