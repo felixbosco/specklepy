@@ -119,6 +119,7 @@ def holography(params, debug=False):
     while True:
         # (iv) Astrometry and photometry, i.e. StarFinder
         # (v) Select reference stars
+        logger.info("Select the PSF reference stars!s")
         if psf_extraction.get('select', 'gui') == 'gui':
             extract_sources(image=image,
                             fwhm=source_extraction.get('starfinderFwhm'),
