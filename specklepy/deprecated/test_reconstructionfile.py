@@ -1,7 +1,6 @@
 import unittest
-import numpy as np
 from specklepy.io.filearchive import FileArchive
-from specklepy.io.reconstructionfile import ReconstructionFile
+from specklepy.deprecated.reconstructionfile import ReconstructionFile
 
 
 class TestReconstructionFile(unittest.TestCase):

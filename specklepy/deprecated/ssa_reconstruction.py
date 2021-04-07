@@ -6,7 +6,6 @@ import sys
 
 from specklepy.logging import logger
 from specklepy.io.filearchive import FileArchive
-from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.core.ssa import ssa
 
 
