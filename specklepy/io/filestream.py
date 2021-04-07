@@ -3,7 +3,7 @@ import os
 
 from astropy.io import fits
 
-from specklepy.io.fits import get_data
+from specklepy.io.fits import get_data, get_frame_number
 from specklepy.logging import logger
 from specklepy.utils.array import frame_number, frame_shape
 from specklepy.utils.time import default_time_stamp
@@ -13,7 +13,7 @@ class FileStream(object):
 
     variance_extension = 'VAR'
     mask_extension = 'MASK'
-    header_card_prefix = 'HIERARCH SPECKLEPY '
+    header_card_prefix = 'HIERARCH SPECKLEPY'
 
     def __init__(self, file_name, path=None):
         self.file_name = file_name
@@ -57,7 +57,7 @@ class FileStream(object):
         # Add cards to header
         if isinstance(cards, dict):
             for (card, value) in cards.items():
-                hdu.header.set(self.header_card_prefix + card, value=value)
+                hdu.header.set(f"{self.header_card_prefix} {card}", value=value)
         hdu.header.set('DATE', default_time_stamp())
 
         # Store new HDU to file
@@ -117,3 +117,40 @@ class FileStream(object):
             hdu_list[extension].data[frame_index] = data
             hdu_list[extension].header.set('UPDATED', default_time_stamp())
             hdu_list.flush()
+
+    def insert_header_cards(self, cards, extension=None):
+        with fits.open(self.file_path, mode='update') as hdu_list:
+
+            # Load HDU
+            try:
+                hdu = hdu_list[extension]
+            except TypeError:
+                hdu = hdu_list[0]
+
+            # Insert header cards
+            for key, value in cards.items():
+                try:
+                    hdu.header.set(key, value)
+                except ValueError:
+                    hdu.header.set(key, value[0], value[1])
+
+            # Store to file
+            hdu_list.flush()
+
+    def build_reconstruction_file_header_cards(self, files, path=None, card_prefix=None, insert=True, extension=None):
+
+        # Update the card prefix
+        if card_prefix is not None:
+            self.header_card_prefix = card_prefix
+
+        # Initialize and fill `cards` dictionary
+        cards = {}
+        for index, file in enumerate(files):
+            cards[f"{self.header_card_prefix} SOURCE FILE{index:04} NAME"] = os.path.basename(file)
+            cards[f"{self.header_card_prefix} SOURCE FILE{index:04} FRAMES"] = get_frame_number(file, path=path)
+
+        # Insert into FITS header
+        if insert:
+            self.insert_header_cards(cards=cards, extension=extension)
+
+        return cards
