@@ -7,6 +7,7 @@ from specklepy.core.fourierobject import FourierObject
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.reconstruction import Reconstruction
 from specklepy.core.sourceextraction import extract_sources
+from specklepy.io.config import dict_to_cards
 from specklepy.io.filearchive import FileArchive
 from specklepy.io.filestream import FileStream
 from specklepy.exceptions import SpecklepyValueError
@@ -70,7 +71,7 @@ def holography(params, debug=False):
 
     # Initialize the outfile
     out_file = FileStream(file_name=paths.get('outFile'))
-    out_file.initialize()
+    out_file.initialize(cards=dict_to_cards(params=params))
     out_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography', insert=True)
 
     # Initialize reconstruction
