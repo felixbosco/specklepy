@@ -267,7 +267,7 @@ class ReferenceStars(object):
                 Mask array, derived from the frame.
         """
 
-        y, x = np.mgrid[-self.radius: self.radius, -self.radius: self.radius]
+        y, x = np.mgrid[-self.radius: self.radius + 1, -self.radius: self.radius + 1]
         r = np.sqrt(x**2 + y**2)
         return r > self.radius - margin
 
