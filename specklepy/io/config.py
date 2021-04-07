@@ -114,3 +114,21 @@ def update_from_file(params, par_file):
             params[key] = update[key]
 
     return params
+
+
+def dict_to_cards(params):
+    """Transform a parameter dictionary into a set of FITS header cards.
+
+    Args:
+        params (dict):
+            Parameter dictionary as obtained from `read()` function.
+
+    Returns:
+        cards (dict):
+            Parameter dictionary in the form to insert into a FITS header.
+    """
+    cards = {}
+    for key, section in params.items():
+        for card, value in section.items():
+            cards[f"{key.upper()} {card.upper()}"] = value
+    return cards
