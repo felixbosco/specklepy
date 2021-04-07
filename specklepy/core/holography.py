@@ -144,26 +144,8 @@ def holography(params, debug=False):
         logger.info("Saved the extracted PSFs...")
 
         # (vii) Noise thresholding
-        psf_noise_mask = None
-        for file in psf_files:
-            with fits.open(file, mode='update') as hdu_list:
-                n_frames = hdu_list[0].header['NAXIS3']
-                if psf_noise_mask is None:
-                    psf_noise_mask = get_noise_mask(hdu_list[0].data[0],
-                                                    noise_reference_margin=
-                                                    psf_extraction.get('noiseReferenceMargin'))
-                for index in range(n_frames):
-                    reference = np.ma.masked_array(hdu_list[0].data[index], mask=psf_noise_mask)
-                    background = np.mean(reference)
-                    noise = np.std(reference)
-                    update = np.maximum(hdu_list[0].data[index] - background -
-                                        psf_extraction.get('noiseThreshold') * noise, 0.0)
-                    if np.sum(update) == 0.0:
-                        raise ValueError("After background subtraction and noise thresholding, no signal is leftover. "
-                                         "Please reduce the noiseThreshold!")
-                    update = update / np.sum(update)  # Flux sum of order unity
-                    hdu_list[0].data[index] = update
-                    hdu_list.flush()
+        psf_stars.apply_noise_thresholding(margin=psf_extraction.get('noiseReferenceMargin'),
+                                           threshold=psf_extraction.get('noiseThreshold'))
 
         # (viii) Subtraction of secondary sources within the reference apertures
         # TODO: Implement Secondary source subtraction
@@ -218,24 +200,3 @@ def holography(params, debug=False):
 
     # Finally return the image
     return image
-
-
-def get_noise_mask(frame, noise_reference_margin):
-    """Create an annulus-like mask within a given aperture for measuring noise
-    and (sky) background.
-
-    Args:
-        frame (np.ndarray):
-            Image frame within which the mask is derived.
-        noise_reference_margin (int):
-            Width of the reference annulus in pixels.
-
-    Returns:
-        annulus_mask (np.ndarray, dtype=bool):
-            Mask array, derived from the frame.
-    """
-    center = int((frame.shape[0] - 1) / 2)
-    radius = center - noise_reference_margin
-    tmp = Aperture(center, center, radius, data=frame, crop=False)
-    annulus_mask = np.logical_not(tmp.data.mask)
-    return annulus_mask

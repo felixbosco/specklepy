@@ -2,12 +2,15 @@ import numpy as np
 import os
 from scipy import ndimage
 from tqdm import trange
+import warnings
 
 from astropy.io import fits
 
 from specklepy.core.aperture import Aperture
 from specklepy.core.segmentation import Segmentation
 from specklepy.logging import logger
+from specklepy.io.filestream import FileStream
+from specklepy.io.fits import get_frame_number
 from specklepy.io.psffile import PSFFile
 from specklepy.io.table import read_table
 from specklepy.utils.combine import weighted_mean
@@ -56,6 +59,9 @@ class ReferenceStars(object):
                                    f"image segments contain reference stars:\n{covering}\nPlease select more reference "
                                    f"or reduce the field segmentation.")
             self.field_segmentation = segmentation
+
+        # Initialize optional attributes
+        self.psf_files = None
 
     @property
     def box_size(self):
@@ -117,7 +123,7 @@ class ReferenceStars(object):
             file_shifts = [None] * self.number_files
 
         # Create a list of psf files and store it to params
-        psf_files = []
+        self.psf_files = []
 
         # Iterate over input files
         for file, shift in zip(self.in_files, file_shifts):
@@ -125,7 +131,7 @@ class ReferenceStars(object):
             logger.info(f"Extracting PSFs from file {file!r}")
             psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=self.frame_shape(), in_dir=self.in_dir,
                                header_card_prefix="HIERARCH SPECKLEPY ")
-            psf_files.append(psf_file.file_path)
+            self.psf_files.append(psf_file.file_path)
 
             # Consider alignment of cubes when initializing the apertures, i.e. the position of the aperture in the
             # shifted cube
@@ -163,7 +169,7 @@ class ReferenceStars(object):
 
                 psf_file.update_frame(frame_index, psf)
 
-        return psf_files
+        return self.psf_files
 
     def extract_epsfs(self, file_shifts=None, oversampling=4, debug=False):
         """Extract effective PSFs following Anderson & King (2000).
@@ -186,7 +192,7 @@ class ReferenceStars(object):
             file_shifts = [None] * self.number_files
 
         # Create a list of psf files and store it to params
-        psf_files = []
+        self.psf_files = []
 
         # Iterate over input files
         for file, shift in zip(self.in_files, file_shifts):
@@ -194,7 +200,7 @@ class ReferenceStars(object):
             logger.info(f"Extracting PSFs from file {file!r}")
             psf_file = PSFFile(file, out_dir=self.save_dir, frame_shape=self.frame_shape(), in_dir=self.in_dir,
                                header_card_prefix="HIERARCH SPECKLEPY")
-            psf_files.append(psf_file.filename)
+            self.psf_files.append(psf_file.filename)
 
             # Consider alignment of cubes when initializing the apertures, i.e. the position of the aperture in the
             # shifted cube
@@ -247,4 +253,54 @@ class ReferenceStars(object):
         
                 psf_file.update_frame(frame_index, epsf)
 
-        return psf_files
+        return self.psf_files
+
+    def create_noise_annulus(self, margin):
+        """Create an annulus-like mask within the given aperture for measuring noise and (sky) background.
+
+        Args:
+            margin (int):
+                Minimum width of the reference annulus in pixels.
+
+        Returns:
+            annulus_mask (np.ndarray, dtype=bool):
+                Mask array, derived from the frame.
+        """
+
+        y, x = np.mgrid[-self.radius: self.radius, -self.radius: self.radius]
+        r = np.sqrt(x**2 + y**2)
+        return r > self.radius - margin
+
+    def apply_noise_thresholding(self, margin, threshold, extension=0):
+
+        # Create mask for measuring the noise
+        noise_reference_region = self.create_noise_annulus(margin=margin)
+
+        # Iterate through PSF files
+        for file in self.psf_files:
+            psf_file = FileStream(file_name=file)
+            number_frames = get_frame_number(file=file, extension=extension)
+
+            # Iterate through frames
+            for frame_index in range(number_frames):
+
+                # Extract statistics from reference annulus
+                frame = psf_file.get_frame(frame_index=frame_index, extension=extension)
+                reference = frame[noise_reference_region]
+                background = np.mean(reference)
+                noise = np.std(reference)
+
+                # Subtract background and noise threshold, truncating at zero
+                update = np.maximum(frame - background - threshold * noise, 0.0)
+
+                # Normalize
+                with warnings.catch_warnings():
+                    warnings.simplefilter("error")
+                    try:
+                        update /= np.sum(update)
+                    except RuntimeWarning:
+                        raise ValueError("After background subtraction and noise thresholding, no signal is leftover. "
+                                         "Consider reducing the noiseThreshold!")
+
+                # Update frame in the file
+                psf_file.update_frame(frame_index=frame_index, data=update, extension=extension)
