@@ -10,6 +10,7 @@ from astropy.visualization import simple_norm
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.utils import transferfunctions as tf
+from specklepy.utils.box import Box
 
 
 def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maximize=False):
@@ -61,6 +62,21 @@ def imshow(image, title=None, norm=None, colorbar_label=None, saveto=None, maxim
 
     plt.show()
     plt.close()
+
+
+def plot3d(image):
+    y, x = np.mgrid[-(image.shape[0] // 2): image.shape[0] // 2 + 1, -(image.shape[1] // 2): image.shape[1] // 2 + 1]
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(x, y, image, cmap="viridis")
+    plt.show()
+
+
+def plot3d_aperture(image, pos, radius):
+    box = Box.centered_at(pos[1], pos[0], radius)
+    box.crop_to_shape(image.shape)
+    aperture = box(image)
+    plot3d(aperture)
 
 
 def plot_simple(xdata, ydata, title=None, xlabel=None, ylabel=None):
