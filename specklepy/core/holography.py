@@ -8,6 +8,7 @@ from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.reconstruction import Reconstruction
 from specklepy.core.sourceextraction import extract_sources
 from specklepy.io.filearchive import FileArchive
+from specklepy.io.filestream import FileStream
 from specklepy.io.reconstructionfile import ReconstructionFile
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
@@ -104,8 +105,11 @@ def holography(params, debug=False):
 
     # Save SSA reconstruction to serparate file, if requested
     if paths.get('ssaFile') is not None:
-        ssa_file = ReconstructionFile(filename=paths.get('ssaFile'), files=in_files, in_dir=in_dir)
-        ssa_file.data = image
+        ssa_file = FileStream(file_name=paths.get('ssaFile'))
+        ssa_file.initialize(data=image)
+        ssa_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, insert=True)
+        # ssa_file = ReconstructionFile(filename=paths.get('ssaFile'), files=in_files, in_dir=in_dir)
+        # ssa_file.data = image
         ssa_file.new_extension(name=params['EXTNAMES']['varianceExtension'], data=image_var)
 
     # Start iteration from steps (iv) through (xi)
