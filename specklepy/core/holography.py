@@ -185,16 +185,20 @@ def holography(params, debug=False):
         logger.info("This is the latest reconstruction:")
         imshow(image)
 
+        # Update the StarFinder FWHM to the width of the apodized PSF
+        sigma = apodization.get('radius')
+        if 'airy' in apodization.get('type').lower():
+            sigma = sigma / 1.22 * 0.42  # Transformation between Airy first zero and Gaussian sigma
+        source_extraction['starfinderFwhm'] = sigma * 2.35
+
         # Ask the user whether the iteration shall be continued or not
         answer = input("\tDo you want to continue with one more iteration? [yes/no]\n\t")
         if answer.lower() in ['n', 'no']:
             break
 
     # Repeat astrometry and photometry, i.e. StarFinder on final image
-    fwhm = apodization.get('radius')
-    if 'gauss' in apodization.get('type').lower():
-        fwhm *= 2.35
-    extract_sources(image=image, fwhm=fwhm, noise_threshold=source_extraction.get('noiseThreshold'),
+    extract_sources(image=image, fwhm=source_extraction.get('starfinderFwhm'),
+                    noise_threshold=source_extraction.get('noiseThreshold'),
                     background_subtraction=True, write_to=paths.get('allStarsFile'),
                     star_finder=source_extraction.get('algorithm'), debug=debug)
 
