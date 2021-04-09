@@ -19,7 +19,8 @@ from specklepy.utils.moment import moment_2d
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
-                    show=False, select=False, collapse=False, write_to=None, cast_dtype=None, debug=False):
+                    show=False, select=False, matching_threshold=30, collapse=False, write_to=None, cast_dtype=None,
+                    debug=False):
     """Extract sources from an image with a StarFinder routine.
 
     Long description...
@@ -46,6 +47,9 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         select (bool or dict, optional):
             Create a plot of the identified sources on the image, with the option of selecting apertures for future
             purposes. These are selected by clicking on the image.
+        matching_threshold (int, optional):
+            Radial threshold for accepting a source as matched or, when manually selecting peaks, the radius of the
+            search box.
         collapse (bool, optional):
             Collapse the a data cube along the third axis prior to analysis.
         write_to (str, optional):
@@ -93,12 +97,18 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         extractor.show()
 
     if select:
+        # Interpret select type
         message = None
         save_to = None
         if isinstance(select, dict):
             message = select.get('message', 'Please select sources!')
             save_to = select.get('save_to', None)
-        selected = extractor.select(save_to=save_to, message=message)
+        elif isinstance(select, str):
+            message = 'Please select sources!'
+            save_to = select
+
+        # Select sources
+        selected = extractor.select(save_to=save_to, message=message, radius=matching_threshold)
         logger.info(f"Selected {len(selected)} sources")
         logger.debug(f"\n{selected}")
         return sources, selected
@@ -261,7 +271,7 @@ class SourceExtractor(object):
         # Graphically select apertures
         positions = plot.select_apertures(marker_size=100)
         if cross_match:
-            selected = self.cross_match(positions)
+            selected = self.cross_match(positions, radius_threshold=radius)
         else:
             selected = self.find_closest_peaks(positions, radius=radius)
 
@@ -271,10 +281,16 @@ class SourceExtractor(object):
 
         return selected
 
-    def cross_match(self, positions):
+    def cross_match(self, positions, radius_threshold=None):
         indexes = []
         for pos in positions:
             distances = self.compute_distances(pos)
+            try:
+                if np.min(distances) > radius_threshold:
+                    # Reject source to far away from sources
+                    continue
+            except TypeError:
+                pass
             indexes.append(np.argmin(distances))
         return self.sources[indexes]
 
