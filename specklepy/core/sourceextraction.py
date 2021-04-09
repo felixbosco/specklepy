@@ -14,6 +14,7 @@ from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.plotting.plot import StarFinderPlot
 from specklepy.utils import save_eval
+from specklepy.utils.array import peak_index
 from specklepy.utils.box import Box
 from specklepy.utils.moment import moment_2d
 
@@ -247,7 +248,7 @@ class SourceExtractor(object):
             plot.add_apertures(positions=positions, radius=self.fwhm / 2)
         plot.show()
 
-    def select(self, save_to=None, message=None):
+    def select(self, save_to=None, message=None, cross_match=True, radius=None):
         if self.sources is None:
             logger.warning("SourceExtractor does not store identified sources yet! Finding sources now...")
             self.find_sources()
@@ -262,12 +263,16 @@ class SourceExtractor(object):
             logger.info(message)
 
         # Graphically select apertures
-        selected = plot.select_apertures(marker_size=100)
-        selected = self.cross_match(selected)
+        positions = plot.select_apertures(marker_size=100)
+        if cross_match:
+            selected = self.cross_match(positions)
+        else:
+            selected = self.find_closest_peaks(positions, radius=radius)
 
         # Save results
         if save_to is not None and len(selected) > 0:
             selected.write(save_to, format='ascii.fixed_width', overwrite=True)
+
         return selected
 
     def cross_match(self, positions):
@@ -276,6 +281,27 @@ class SourceExtractor(object):
             distances = self.compute_distances(pos)
             indexes.append(np.argmin(distances))
         return self.sources[indexes]
+
+    def find_closest_peaks(self, positions, radius):
+        # Initialize table of identified peaks
+        peaks_table = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
+
+        # Iterate through guesses and identify peaks within a radius from the guess
+        for pos in positions:
+            peak = self.find_closest_peak(image=self.image.data, guess=pos, radius=radius)
+            peaks_table.add_row([peak[1], None, peak[0], None, None, None])
+
+        # Estimate uncertainties
+        peaks_table = self.estimate_uncertainties(peaks_table, image_var=np.square(self.image.var))
+
+        return peaks_table
+
+    @staticmethod
+    def find_closest_peak(image, guess, radius):
+        box = Box.centered_at(guess[1], guess[0], radius=radius)
+        aperture = box(image)
+        peak = peak_index(aperture)
+        return peak[0] + box.y_min, peak[1] + box.x_min
 
     def write_to(self, filename):
         """Save source table to a file"""
