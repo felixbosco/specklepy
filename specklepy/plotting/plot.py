@@ -1,6 +1,6 @@
-from IPython import embed
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import numpy as np
 import os
 import sys
 
@@ -145,11 +145,34 @@ class Plot(object):
 class StarFinderPlot(Plot):
 
     def add_apertures(self, positions, radius=10, axis=0):
+        """
+
+        Args:
+            positions (array-like):
+                List of (y, x) position tuples of the centers of the apertures.
+            radius (int or float):
+                Radius of the aperture circle that is drawn on the image.
+            axis (int, optional):
+                Index of the axis of the plot instance that the apertures shall be drawn into.
+        """
+        positions = np.roll(positions, shift=1, axis=1)  # CircularAperture requires (x, y) coordinates
         apertures = CircularAperture(positions, r=radius)
         aperture_style = {'color': 'tab:orange', 'lw': 4}
         apertures.plot(axes=self.axes[axis], **aperture_style)
 
     def select_apertures(self, axis=0, marker_size=1):
+        """
+
+        Args:
+            axis (int, optional):
+                Index of the axes of the parent plot, which shall be used.
+            marker_size (float, optional):
+                Size of the marker that marks the click position.
+
+        Returns:
+            positions (list):
+                List of (y, x) positions of the click-events.
+        """
 
         # Initialize position list
         positions = []
@@ -162,7 +185,7 @@ class StarFinderPlot(Plot):
 
         def onclick(event):
             if event.button == 1 and event.dblclick:
-                positions.append([int(event.xdata), int(event.ydata)])
+                positions.append([int(event.ydata), int(event.xdata)])
                 self.axes[axis].scatter(event.xdata, event.ydata, marker='+', color='red', s=marker_size)
                 text.set_text(status.format(len(positions)) + instruction)
                 self.figure.canvas.draw()
