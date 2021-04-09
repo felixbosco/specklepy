@@ -434,6 +434,7 @@ class ManualFinder(object):
 
         # Create plot and graphically select apertures
         plot = StarFinderPlot(image_data=image)
+        logger.info("Select guesses for iterative source selection!")
         guesses = plot.select_apertures(marker_size=100)
 
         # Iterate through guesses and identify peaks within a radius from the guess
