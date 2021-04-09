@@ -283,6 +283,7 @@ class SourceExtractor(object):
 
         # Estimate uncertainties
         peaks_table = self.estimate_uncertainties(peaks_table)
+        peaks_table.sort('flux', reverse=True)
 
         return peaks_table
 
