@@ -198,7 +198,7 @@ class MasterDark(object):
         logger.info(f"Subtracting master dark {self.file_name!r} from file at {file_path!r}")
 
         # Construct sub-window
-        sub_window = SubWindow.from_str(sub_window, full=self.sub_window)
+        sub_window = SubWindow.from_str(sub_window, full=self.sub_window, order='yx')
 
         # Construct good pixel mask
         if self.mask is None:

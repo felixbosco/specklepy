@@ -339,7 +339,7 @@ class MasterFlat(object):
                 file = os.path.join(file_path, file)
 
             # Construct sub-window
-            sub_window = SubWindow.from_str(sub_window_str, full=self.sub_window)
+            sub_window = SubWindow.from_str(sub_window_str, full=self.sub_window, order='yx')
 
             # Open the product files and update
             with fits.open(file, mode='update') as hdu_list:
