@@ -218,7 +218,8 @@ class DataReduction(object):
                 sub_window = self.files.table['SUBWIN'].data[p]
 
                 # Subtract master dark from file
-                master_dark.subtract(product_file_path, sub_window=sub_window)
+                master_dark.subtract(product_file_path, sub_window=sub_window,
+                                     sub_window_order=self.options.get('windowAxisOrder'))
                 counter += 1
 
             logger.info(f"Dark subtraction complete for {counter} files in setup {setup!r}")
@@ -268,7 +269,8 @@ class DataReduction(object):
                 sub_window = self.files.table['SUBWIN'].data[p]
 
                 # Normalize product file with master flat
-                master_flat.run_correction(file_list=[product_file_path], sub_windows=[sub_window])
+                master_flat.run_correction(file_list=[product_file_path], sub_windows=[sub_window],
+                                           sub_window_order=self.options.get('windowAxisOrder'))
                 counter += 1
 
             logger.info(f"Flat fielding complete for {counter} files in {filter!r} band")

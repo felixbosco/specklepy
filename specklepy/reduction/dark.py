@@ -183,7 +183,7 @@ class MasterDark(object):
         logger.info(f"Writing master dark frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
 
-    def subtract(self, file_path, extension=None, sub_window=None):
+    def subtract(self, file_path, extension=None, sub_window=None, sub_window_order='xy'):
         """Subtract the master dark from a file containing image data.
 
         The master dark is subtracted from the image or each frame in a data cube. Then uncertainties are propagated.
@@ -193,12 +193,16 @@ class MasterDark(object):
                 Path to the file, containing image data.
             extension (str, optional):
                 Classifier for the image data extension.
+            sub_window (str, optional):
+                Sub-window string to initialize sub-windows from.
+            sub_window_order (str, optional):
+                Order of axis in the sub-window strings.
         """
 
         logger.info(f"Subtracting master dark {self.file_name!r} from file at {file_path!r}")
 
         # Construct sub-window
-        sub_window = SubWindow.from_str(sub_window, full=self.sub_window, order='yx')
+        sub_window = SubWindow.from_str(sub_window, full=self.sub_window, order=sub_window_order)
 
         # Construct good pixel mask
         if self.mask is None:

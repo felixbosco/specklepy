@@ -300,7 +300,7 @@ class MasterFlat(object):
         logger.info(f"Writing master flat frame to file {self.path!r}")
         hdu_list.writeto(self.path, overwrite=overwrite)
 
-    def run_correction(self, file_list, file_path=None, sub_windows=None):
+    def run_correction(self, file_list, file_path=None, sub_windows=None, sub_window_order='xy'):
         """Executes the flat field correction on files in a list.
 
         Args:
@@ -311,6 +311,8 @@ class MasterFlat(object):
             sub_windows (list, optional):
                 List of sub-window strings, where the entries indicate, how the individual exposure is positioned
                 within the master flat field. Should be provided as str-types.
+            sub_window_order (str, optional):
+                Order of axis in the sub-window strings.
         """
 
         # Input parameters
@@ -339,7 +341,7 @@ class MasterFlat(object):
                 file = os.path.join(file_path, file)
 
             # Construct sub-window
-            sub_window = SubWindow.from_str(sub_window_str, full=self.sub_window, order='yx')
+            sub_window = SubWindow.from_str(sub_window_str, full=self.sub_window, order=sub_window_order)
 
             # Open the product files and update
             with fits.open(file, mode='update') as hdu_list:
