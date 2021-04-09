@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def frame_shape(array):
     return array.shape[-2], array.shape[-1]
 
@@ -21,3 +24,7 @@ def frame_number(array):
         raise ValueError(f"Data is {array.ndim}-dimensional but must be 2 or 3-dimensional!")
 
     return number_frames
+
+
+def peak_index(array):
+    return np.unravel_index(np.argmax(array), array.shape)
