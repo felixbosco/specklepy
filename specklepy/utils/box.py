@@ -86,7 +86,7 @@ class Box(object):
             # # Create index sets
             # x, y = np.meshgrid(range(self.y_min, self.y_max), range(self.x_min, self.x_max))
 
-            return array[self.x_min: self.x_max, self.y_min: self.y_max]
+            return array[self.y_min: self.y_max, self.x_min: self.x_max]
 
     def __copy__(self):
         return Box([self.x_min, self.x_max, self.y_min, self.y_max])
