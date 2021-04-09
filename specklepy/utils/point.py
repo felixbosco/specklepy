@@ -3,7 +3,7 @@ import numpy as np
 
 class Point(object):
 
-    def __init__(self, *args, order='xy'):
+    def __init__(self, *args, order='xyz'):
 
         self.x = 0.0
         self.y = 0.0
