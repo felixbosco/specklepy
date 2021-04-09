@@ -316,7 +316,7 @@ class DataReduction(object):
 
                     # Extract mask
                     if 'MASK' in hdu_list:
-                        bpm = hdu_list['MASK'].data
+                        bpm = hdu_list['MASK'].data.astype(bool)
                         gpm = ~bpm
                     else:
                         bpm = np.zeros(frame_shape(hdu_list[0].data), dtype=bool)
