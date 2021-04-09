@@ -96,7 +96,7 @@ class Box(object):
         if None in [self.x_max, self.x_min, self.y_max, self.y_min]:
             return None
         else:
-            return self.x_max - self.x_min, self.y_max - self.y_min
+            return self.y_max - self.y_min, self.x_max - self.x_min
 
     @classmethod
     def centered_at(cls, x0, y0, radius):
