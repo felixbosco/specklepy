@@ -223,18 +223,18 @@ class SourceExtractor(object):
         # Iterate through sources
         for source in sources:
             pos = int(round(source['y'])), int(round(source['x']))
-            box = Box([pos[1] - radius, pos[1] + radius + 1, pos[0] - radius, pos[0] + radius + 1])
+            box = Box.centered_at(pos[1], pos[0], radius=radius)
             box.crop_to_shape(shape=self.image.data.shape)
             aperture = box(self.image.data)
-            if image_var is None:
-                var = np.full(aperture.shape, 5.5)
-            else:
+            try:
                 var = box(image_var)
+            except TypeError:
+                var = None
 
             # Compute moments and uncertainties, and add to new table
             try:
                 f, df, x, dx, y, dy = moment_2d(aperture, var=var)
-                new_sources.add_row([x + pos[0] - radius, dx, y + pos[1] - radius, dy, f, df])
+                new_sources.add_row([x + box.x_min, dx, y + box.y_min, dy, f, df])
             except ValueError:
                 logger.warning(f"Unsuccessful to measure uncertainties for source in box {box}")
                 new_sources.add_row([source['x'], 0, source['y'], 0, source['flux'], 0])
