@@ -5,9 +5,9 @@ class Point(object):
 
     def __init__(self, *args, order='xy'):
 
-        self.x = 0
-        self.y = 0
-        self.z = 0
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
         self.order = order
 
         for a, arg in enumerate(args):
@@ -32,8 +32,9 @@ class Point(object):
         dz = self.z - other.z
         return Point(dx, dy, dz, order='xyz')
 
-    def __len__(self):
-        return np.sqrt(self.x**2 + self.y**2 + self.z**2)
+    def length(self):
+        return np.sqrt(np.square(self.x) + np.square(self.y) + np.square(self.z))
 
     def distance_to(self, other):
-        return len(self - other)
+        diff = self - other
+        return diff.length()
