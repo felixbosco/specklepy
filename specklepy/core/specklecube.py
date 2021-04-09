@@ -10,7 +10,7 @@ from specklepy.io.filestream import FileStream
 from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
-from specklepy.utils.array import frame_number, frame_shape
+from specklepy.utils.array import frame_number, frame_shape, peak_index
 
 
 class SpeckleCube(object):
@@ -113,7 +113,7 @@ class SpeckleCube(object):
                 frame[mask] = self.fill_value
             if box is not None:
                 frame = box(frame)
-            peak_indexes[f] = np.array(alignment.peak_index(frame), dtype=int)
+            peak_indexes[f] = np.array(peak_index(frame), dtype=int)
         return peak_indexes
 
     def estimate_frame_shifts(self, cube, box=None, mask=None):
@@ -282,7 +282,7 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None, fill_value=0):
         if box is not None:
             frame = box(frame)
         try:
-            peak_indexes[f] = np.array(alignment.peak_index(frame), dtype=int)
+            peak_indexes[f] = np.array(peak_index(frame), dtype=int)
         except ValueError as e:
             sys.tracebacklimit = 0
             logger.warning(f"The box {box} might be set inappropriate!")

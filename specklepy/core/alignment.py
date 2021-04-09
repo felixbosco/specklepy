@@ -7,6 +7,7 @@ from specklepy.core.sourceextraction import SourceExtractor
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
+from specklepy.utils.array import peak_index
 
 
 class ShiftEstimator(object):
@@ -61,10 +62,6 @@ class ShiftEstimator(object):
             data = np.sum(data, axis=0)
 
         return data
-
-    @staticmethod
-    def peak_index(array):
-        return np.unravel_index(np.argmax(array, axis=None), array.shape)
 
     @staticmethod
     def make_path(file_name, in_dir=None):
@@ -131,7 +128,7 @@ class ShiftEstimator(object):
                         imshow(np.abs(correlation), title='FFT shifted correlation')
 
                     # Derive the shift from the correlation
-                    correlation_peak = self.peak_index(correlation)
+                    correlation_peak = peak_index(correlation)
                     shift = tuple(x - correlation.shape[i] // 2 for i, x in enumerate(correlation_peak))
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
@@ -489,7 +486,3 @@ def _adapt_max_coordinate(index):
         return None
     else:
         return - index
-
-
-def peak_index(array):
-    return np.unravel_index(np.argmax(array, axis=None), array.shape)
