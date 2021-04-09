@@ -16,6 +16,7 @@ from specklepy.utils import save_eval
 from specklepy.utils.array import peak_index
 from specklepy.utils.box import Box
 from specklepy.utils.moment import moment_2d
+from specklepy.utils.point import Point
 
 
 def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
@@ -152,6 +153,8 @@ class SourceExtractor(object):
             star_finder = IRAFStarFinder(**params)
         elif 'peak' in self.algorithm.lower():
             star_finder = PeakFinder(**params)
+        elif 'manu' in self.algorithm.lower():
+            star_finder = ManualFinder(**params)
         else:
             raise SpecklepyValueError('extract_sources', argname='star_finder', argvalue=self.algorithm,
                                       expected="'DAO', 'IRAF', or 'PeakFinder'")
@@ -232,7 +235,7 @@ class SourceExtractor(object):
             plot.add_apertures(positions=positions, radius=self.fwhm / 2)
         plot.show()
 
-    def select(self, save_to=None, message=None, cross_match=False, radius=None):
+    def select(self, save_to=None, message=None, radius=None):
         if self.sources is None:
             logger.warning("SourceExtractor does not store identified sources yet! Finding sources now...")
             self.find_sources()
@@ -248,10 +251,7 @@ class SourceExtractor(object):
 
         # Graphically select apertures
         positions = plot.select_apertures(marker_size=100)
-        if cross_match:
-            selected = self.cross_match(positions, radius_threshold=radius)
-        else:
-            selected = self.find_closest_peaks(positions, radius=radius)
+        selected = self.cross_match(positions, radius_threshold=radius)
 
         # Save results
         if save_to is not None and len(selected) > 0:
@@ -271,28 +271,6 @@ class SourceExtractor(object):
                 pass
             indexes.append(np.argmin(distances))
         return self.sources[indexes]
-
-    def find_closest_peaks(self, guesses, radius):
-        # Initialize table of identified peaks
-        peaks_table = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
-
-        # Iterate through guesses and identify peaks within a radius from the guess
-        for guess in guesses:
-            peak = self.find_closest_peak(image=self.image.data, guess=guess, radius=radius)
-            peaks_table.add_row([peak[1], None, peak[0], None, None, None])
-
-        # Estimate uncertainties
-        peaks_table = self.estimate_uncertainties(peaks_table)
-        peaks_table.sort('flux', reverse=True)
-
-        return peaks_table
-
-    @staticmethod
-    def find_closest_peak(image, guess, radius):
-        box = Box.centered_at(guess[1], guess[0], radius=radius)
-        aperture = box(image)
-        peak = peak_index(aperture)
-        return peak[0] + box.y_min, peak[1] + box.x_min
 
     def write_to(self, filename):
         """Save source table to a file"""
@@ -439,3 +417,50 @@ def find_peaks_2d(array, **kwargs):
     matches = np.array(matches).transpose()[0]
 
     return matches
+
+
+class ManualFinder(object):
+
+    def __init__(self, radius=None, **kwargs):
+
+        self.radius = radius
+        if self.radius is None:
+            self.radius = kwargs.get('fwhm', 20)
+
+    def __call__(self, image):
+
+        # Initialize table of identified peaks
+        peaks_table = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
+
+        # Create plot and graphically select apertures
+        plot = StarFinderPlot(image_data=image)
+        guesses = plot.select_apertures(marker_size=100)
+
+        # Iterate through guesses and identify peaks within a radius from the guess
+        for guess in guesses:
+            peak = self.find_closest_peak(image=image, guess=guess, radius=self.radius)
+            peaks_table.add_row([peak[1], None, peak[0], None, image[peak], None])
+
+        return peaks_table
+
+    @staticmethod
+    def find_closest_peak(image, guess, radius, threshold=0.1):
+        guess = Point(*guess, order='yx')
+        peak = None
+
+        done = False
+        while not done:
+            box = Box.centered_at(x0=guess.x, y0=guess.y, radius=radius)
+            box.crop_to_shape(image.shape)
+            aperture = box(image)
+            peak = peak_index(aperture)
+            peak = Point(*peak, order='yx')
+            peak.y += box.y_min
+            peak.x += box.x_min
+
+            # Test for convergence
+            if peak.distance_to(guess) < threshold:
+                done = True
+            else:
+                guess = peak
+        return peak.y, peak.x
