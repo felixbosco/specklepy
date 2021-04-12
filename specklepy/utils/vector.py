@@ -4,12 +4,16 @@ import numpy as np
 class Vector(object):
 
     def __init__(self, *args):
-        if isinstance(args, tuple):
-            self.values = list(args)
-        if isinstance(args, list):
-            self.values = args
+        args = list(args)
+        if len(args) == 1:
+            if isinstance(args[0], (int, float)):
+                self.values = args
+            if isinstance(args[0], (tuple, list, np.ndarray)):
+                self.values = list(args[0])
+            else:
+                raise TypeError
         else:
-            self.values = list(args)
+            self.values = args
 
     def __repr__(self):
         return f"Vector({self.values})"
@@ -19,7 +23,6 @@ class Vector(object):
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
-            from IPython import embed; embed()
             return Vector(np.add(self.values, other))
         elif isinstance(other, Vector):
             return Vector(np.add(self.values, other.values))
