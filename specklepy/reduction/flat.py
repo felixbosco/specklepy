@@ -1,5 +1,3 @@
-from datetime import datetime
-from IPython import embed
 import numpy as np
 import os
 from tqdm import trange
@@ -9,7 +7,6 @@ from astropy.table import Table
 from astropy.stats import sigma_clip, sigma_clipped_stats
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io.masterfile import MasterFile
 from specklepy.logging import logger
 from specklepy.reduction.subwindow import SubWindow
 from specklepy.utils.combine import combine_masks
@@ -233,7 +230,7 @@ class MasterFlat(object):
             norm_var = np.var(clipped)
             master_flat_normed = np.divide(self.image, norm)
             self.var = np.divide(self.var, np.square(norm)) + \
-                                     np.divide(np.square(self.image), np.power(norm, 4)) * norm_var
+                       np.divide(np.square(self.image), np.power(norm, 4)) * norm_var
             self.image = master_flat_normed
             self.normalized = True
         elif method == 'average':
@@ -242,7 +239,7 @@ class MasterFlat(object):
             norm = np.average(self.image, weights=weights)
             norm_var = np.reciprocal(np.sum(weights))
             self.var = np.divide(self.var, np.square(norm)) + \
-                                     np.divide(np.square(self.image), np.power(norm, 4)) * norm_var
+                       np.divide(np.square(self.image), np.power(norm, 4)) * norm_var
             self.image = np.divide(self.image, norm)
 
             # Store good pixel mask to arrays
