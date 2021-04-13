@@ -236,12 +236,12 @@ class FrameAlignment(object):
         # Crop the image according to the desired mode
         if mode == 'same':
             # Take reference pad vector and adapt to correctly limit the image
-            _r = self.reference_image_pad_vector
+            cv = self.get_crop_vector()
             # Pick only those pixels, covered by the reference image
             if array.ndim == 2:
-                padded = padded[_r[0][0]: _adapt_max_coordinate(_r[0][1]), _r[1][0]: _adapt_max_coordinate(_r[1][1])]
+                padded = padded[cv[0][0]: cv[0][1], cv[1][0]:cv[1][1]]
             else:
-                padded = padded[:, _r[0][0]: _adapt_max_coordinate(_r[0][1]), _r[1][0]: _adapt_max_coordinate(_r[1][1])]
+                padded = padded[:, cv[0][0]: cv[0][1], cv[1][0]: cv[1][1]]
 
         elif mode == 'full':
             # There is nothing to crop in 'full' mode
@@ -252,21 +252,14 @@ class FrameAlignment(object):
 
         return padded
 
-
-def _adapt_max_coordinate(index):
-    """Cast the upper interval border, such that indexing returns the correct
-    entries.
-
-    Args:
-        index (int):
-            Index.
-
-    Returns:
-        None or negative index (NoneType or int):
-            ... depending on index.
-
-    """
-    if index == 0:
-        return None
-    else:
-        return - index
+    def get_crop_vector(self):
+        crop_vector = []
+        for i in range(2):
+            crop_vector_tuple = [self.reference_image_pad_vector[i][0]]
+            max_index = self.reference_image_pad_vector[i][1]
+            if max_index == 0:
+                crop_vector_tuple.append(None)
+            else:
+                crop_vector_tuple.append(- max_index)
+            crop_vector.append(crop_vector_tuple)
+        return crop_vector
