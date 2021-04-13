@@ -1,3 +1,6 @@
+from .box import Box, Box3D
+
+
 def save_eval(val):
     """Evaluate variables, assuming they are str representations of e.g. int-types.
 
