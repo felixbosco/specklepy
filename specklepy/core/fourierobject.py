@@ -49,16 +49,13 @@ class FourierObject(object):
         self.in_files = in_files
         self.psf_files = psf_files
         self.shifts = shifts
+        self.in_dir = in_dir
 
         # Check whether mode is supported
         if mode not in ['same', 'full', 'valid']:
             raise SpecklepyValueError('FourierObject', argname='mode', argvalue=mode,
                                       expected="either 'same', 'full', or 'valid'")
         self.mode = mode
-        if in_dir is None:
-            self.in_dir = ''
-        else:
-            self.in_dir = in_dir
 
         # Extract padding vectors for images and reference image
         logger.info("Initializing padding vectors")

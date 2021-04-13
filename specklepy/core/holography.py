@@ -1,8 +1,5 @@
 import numpy as np
 
-from astropy.io import fits
-
-from specklepy.core.aperture import Aperture
 from specklepy.core.fourierobject import FourierObject
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.reconstruction import Reconstruction
