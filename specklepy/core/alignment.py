@@ -18,8 +18,10 @@ class FrameAlignment(object):
         self._reference_image = reference_image
         self.file_path = file_path
 
-        # Initialize shifts
+        # Initialize future attributes
         self.shifts = None
+        self.pad_vectors = None
+        self.reference_image_pad_vector = None
 
     def __repr__(self):
         return f"ShiftEstimator ({self.reference_image_path})"
@@ -163,6 +165,92 @@ class FrameAlignment(object):
 
         # Return
         return self.shifts
+
+    def derive_pad_vectors(self, shifts=None):
+        """Computes padding vectors from the relative shifts between files.
+
+        Args:
+            shifts (list or np.ndarray):
+                Shifts between files, relative to a reference image. See get_shifts function for details.
+
+        Returns:
+            pad_vectors (list):
+                List of padding vectors for each shift in shifts.
+            reference_image_pad_vector (list, optional):
+                Pad vector of the reference image, which is needed for pad_array() in 'same' mode.
+        """
+
+        # Check input parameters
+        if shifts is not None:
+            self.shifts = shifts
+
+        # Initialize list
+        self.pad_vectors = []
+
+        # Get extreme points for 'full' padding
+        y_max, x_max = np.max(np.array(self.shifts), axis=0)
+        y_min, x_min = np.min(np.array(self.shifts), axis=0)
+
+        # Iterate over Shifts
+        for shift in self.shifts:
+
+            pad_vector = [(shift[0] - y_min, y_max - shift[0]), (shift[1] - x_min, x_max - shift[1])]
+            self.pad_vectors.append(pad_vector)
+
+        # In 'same' mode, pad_array needs also the pad vector of the reference image
+        self.reference_image_pad_vector = [(np.abs(y_min), np.abs(y_max)), (np.abs(x_min), np.abs(x_max))]
+
+        return self.pad_vectors, self.reference_image_pad_vector
+
+    def pad_array(self, array, pad_vector_index, mode='same', reference_image_pad_vector=None):
+        """Pads an array according to the pad_vector and crops the image given the
+        mode.
+
+        Pads an array with zeros to match a desired field size. Intermediately, it always creates a 'full' image and only
+        in 'same' mode it crops the edges such that the returned array covers only the field of the reference image.
+
+        Args:
+            array (np.ndarray):
+                Input array that shall be padded to match the 'full' or 'same' fields.
+            pad_vector_index (int):
+                Index of the padding vector to apply from the stored list of pad vectors.
+            mode (str, optional):
+                Define the size of the output image as 'same' to the reference image or expanding to include the 'full'
+                covered field.
+            reference_image_pad_vector (tuple or list, optional):
+                Used in `same` mode to estimate the position of the reference image and crop beyond.
+
+        Returns:
+            padded (np.ndarray):
+                Padded array, matching the field of the reference image in 'same'
+                mode, or the complete field in 'full' mode.
+        """
+
+        #
+        if reference_image_pad_vector is not None:
+            self.reference_image_pad_vector = reference_image_pad_vector
+
+        #
+        padded = np.pad(array, self.pad_vectors[pad_vector_index], mode='constant')
+
+        # Crop the image according to the desired mode
+        if mode == 'same':
+            # Take reference pad vector and adapt to correctly limit the image
+            _r = self.reference_image_pad_vector
+            # Pick only those pixels, covered by the reference image
+            if array.ndim == 2:
+                padded = padded[_r[0][0]: _adapt_max_coordinate(_r[0][1]), _r[1][0]: _adapt_max_coordinate(_r[1][1])]
+            else:
+                padded = padded[:, _r[0][0]: _adapt_max_coordinate(_r[0][1]), _r[1][0]: _adapt_max_coordinate(_r[1][1])]
+
+        elif mode == 'full':
+            # There is nothing to crop in 'full' mode
+            pass
+
+        elif mode == 'valid':
+            raise NotImplementedError("Alignment.pad_array does not support the 'valid' mode yet!")
+
+        return padded
 
 
 def derive_pad_vectors(shifts):
