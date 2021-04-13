@@ -4,6 +4,7 @@ import warnings
 
 from specklepy.io import fits
 from specklepy.logging import logger
+from specklepy.utils import Box, Box3D
 from specklepy.utils import transferfunctions as tf
 
 
@@ -92,12 +93,6 @@ class Aperture(object):
         mask = self.make_mask(mode=self.mask_mode)
         self.data = np.ma.masked_array(self.data, mask=mask)
 
-        if vars is None:
-            if self.data.ndim == 3:
-                self.vars = np.var(self.data, axis=0)
-        else:
-            self.vars = None
-
         # Initialize optional attributes
         self.power_spectrum_cube = None
 
@@ -152,9 +147,11 @@ class Aperture(object):
             else:
                 mask = np.ones(self.data.shape, dtype=bool)
                 if mask.ndim == 2:
-                    mask[self.y0 - self.radius: self.y0 + self.radius + 1, self.x0 - self.radius: self.x0 + self.radius + 1] = self.fill_value
+                    gpm = Box.centered_at(self.x0, y0=self.y0, radius=self.radius)
+                    mask = gpm.set_value(mask, False)
                 elif mask.ndim == 3:
-                    mask[:, self.y0 - self.radius: self.y0 + self.radius + 1, self.x0 - self.radius: self.x0 + self.radius + 1] = self.fill_value
+                    gpm = Box3D.centered_at(self.x0, y0=self.y0, z0=None, radius=self.radius)
+                    mask = gpm.set_value(mask, False)
                 return mask
         else:
             raise ValueError(f"Aperture received mode argument {mode}, but needs to be either 'circular' or "
@@ -165,11 +162,11 @@ class Aperture(object):
             logger.info("Margins are removed already from aperture instance.")
         else:
             if self.data.ndim == 2:
-                self.data = copy(self.data[self.y0 - self.radius: self.y0 + self.radius + 1,
-                                 self.x0 - self.radius: self.x0 + self.radius + 1])
+                gpm = Box.centered_at(self.x0, y0=self.y0, radius=self.radius)
+                self.data = copy(gpm(self.data))
             elif self.data.ndim == 3:
-                self.data = copy(self.data[:, self.y0 - self.radius: self.y0 + self.radius + 1,
-                                 self.x0 - self.radius: self.x0 + self.radius + 1])
+                gpm = Box3D.centered_at(self.x0, y0=self.y0, z0=None, radius=self.radius)
+                self.data = copy(gpm(self.data))
             self.cropped = True
 
     def remove_margins(self):
