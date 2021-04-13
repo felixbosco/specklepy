@@ -8,7 +8,7 @@ from astropy.table import Table
 
 from specklepy.logging import logging
 from specklepy.io.parameterset import ParameterSet
-from specklepy.io.psffile import PSFFile
+from specklepy.deprecated.psffile import PSFFile
 from specklepy.core.aperture import Aperture
 from specklepy.plotting.utils import imshow
 

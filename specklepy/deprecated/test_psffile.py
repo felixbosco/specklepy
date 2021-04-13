@@ -2,11 +2,10 @@ import unittest
 import os
 from numpy.random import rand
 
-from specklepy.io.psffile import PSFFile
+from specklepy.deprecated.psffile import PSFFile
 
 
-
-class TestPSFfile(unittest.TestCase):
+class TestPSFFile(unittest.TestCase):
 
     def setUp(self):
         self.frame_shape = (25, 25)
@@ -20,7 +19,6 @@ class TestPSFfile(unittest.TestCase):
     def test_set_data(self):
         psf_file = PSFFile(in_file=self.file, out_dir=self.tmpdir, frame_shape=self.frame_shape, cards={"RECONSTRUCTION": "Test"}, header_card_prefix="HIERARCH SPECKLEPY ")
         psf_file.update_frame(3, rand(*self.frame_shape))
-
 
 
 if __name__ == "__main__":
