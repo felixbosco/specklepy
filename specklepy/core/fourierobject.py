@@ -59,9 +59,7 @@ class FourierObject(object):
 
         # Extract padding vectors for images and reference image
         logger.info("Initializing padding vectors")
-        self.pad_vectors, self.reference_image_pad_vector = derive_pad_vectors(shifts=shifts,
-                                                                               cube_mode=False,
-                                                                               return_reference_image_pad_vector=True)
+        self.pad_vectors, self.reference_image_pad_vector = derive_pad_vectors(shifts=shifts, cube_mode=False)
         file_index = 0
         image_pad_vector = self.pad_vectors[file_index]
 

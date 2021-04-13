@@ -132,8 +132,7 @@ class SpeckleCube(object):
         aligned_var = np.zeros(self.frame_shape) if self.variance is not None else None
 
         # Shift frames and add to `aligned`
-        pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False,
-                                                                   return_reference_image_pad_vector=True)
+        pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False)
         for f, frame in enumerate(self.cube):
             aligned += alignment.pad_array(frame, pad_vectors[f], mode='same',
                                            reference_image_pad_vector=ref_pad_vector)
@@ -296,8 +295,7 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None, fill_value=0):
 
     # Shift frames and add to coadded
     coadded = np.zeros(frame_shape(cube))
-    pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False,
-                                                               return_reference_image_pad_vector=True)
+    pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts, cube_mode=False)
     for f, frame in enumerate(cube):
         coadded += alignment.pad_array(frame, pad_vectors[f], mode='same', reference_image_pad_vector=ref_pad_vector)
 

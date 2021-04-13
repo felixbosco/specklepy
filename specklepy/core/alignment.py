@@ -355,7 +355,7 @@ def estimate_shift(image, reference_image, mode='correlation', is_fourier_transf
         raise NotImplementedError(f"Estimating shift in {mode!r} mode is not implemented!")
 
 
-def derive_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vector=False):
+def derive_pad_vectors(shifts, cube_mode=False):
     """Computes padding vectors from the relative shifts between files.
 
     Args:
@@ -364,16 +364,12 @@ def derive_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vecto
         cube_mode (bool, optional):
             If image is a cube, the estimated pad vectors will obtain pad_vector entries of (0, 0) for the zeroth axis.
             Default is False.
-        return_reference_image_pad_vector (bool, optional):
-            In 'same' mode, pad_array needs also the pad vector of the reference image. This is returned if this arg is
-            set True. Default is False.
 
     Returns:
         pad_vectors (list):
             List of padding vectors for each shift in shifts.
         reference_image_pad_vector (list, optional):
-            Pad vector of the reference image, which is needed for pad_array()
-            in 'same' mode, thus is only returned in 'same' mode.
+            Pad vector of the reference image, which is needed for pad_array() in 'same' mode.
     """
 
     # Check input parameters
@@ -383,9 +379,6 @@ def derive_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vecto
         raise SpecklepyTypeError('get_pad_vectors()', argname='shifts', argtype=type(shifts), expected='list')
     if not isinstance(cube_mode, bool):
         raise SpecklepyTypeError('get_pad_vectors()', argname='cube_mode', argtype=type(cube_mode), expected='bool')
-    if not isinstance(return_reference_image_pad_vector, bool):
-        raise SpecklepyTypeError('get_pad_vectors()', argname='return_reference_image_pad_vector',
-                                 argtype=type(return_reference_image_pad_vector), expected='bool')
 
     # Initialize list
     pad_vectors = []
@@ -408,11 +401,9 @@ def derive_pad_vectors(shifts, cube_mode=False, return_reference_image_pad_vecto
         pad_vectors.append(pad_vector)
 
     # In 'same' mode, pad_array needs also the pad vector of the reference image
-    if return_reference_image_pad_vector:
-        reference_image_pad_vector = [(np.abs(xmin), np.abs(xmax)), (np.abs(ymin), np.abs(ymax))]
-        return pad_vectors, reference_image_pad_vector
-    else:
-        return pad_vectors
+    reference_image_pad_vector = [(np.abs(xmin), np.abs(xmax)), (np.abs(ymin), np.abs(ymax))]
+
+    return pad_vectors, reference_image_pad_vector
 
 
 def pad_array(array, pad_vector, mode='same', reference_image_pad_vector=None):
