@@ -126,6 +126,10 @@ class Box(object):
         self.y_min = x_min
         self.y_max = x_max
 
+    def set_value(self, array, value):
+        array[self.y_min: self.y_max, self.x_min: self.x_max] = value
+        return array
+
 
 class Box3D(object):
 
@@ -186,3 +190,7 @@ class Box3D(object):
             self.y_max = None
         if self.z_max >= shape[0]:
             self.z_max = None
+
+    def set_value(self, array, value):
+        array[self.z_min: self.z_max, self.y_min: self.y_max, self.x_min: self.x_max] = value
+        return array
