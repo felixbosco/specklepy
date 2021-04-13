@@ -110,13 +110,13 @@ class Box(object):
 
     def crop_to_shape(self, shape):
         if self.x_min < 0:
-            self.x_min = 0
+            self.x_min = None
         if self.y_min < 0:
-            self.y_min = 0
+            self.y_min = None
         if self.x_max >= shape[1]:
-            self.x_max = -1
-        if self.y_min >= shape[0]:
-            self.y_min = -1
+            self.x_max = None
+        if self.y_max >= shape[0]:
+            self.y_max = None
 
     def transpose(self):
         x_min = self.x_min
@@ -125,3 +125,64 @@ class Box(object):
         self.x_max = self.y_max
         self.y_min = x_min
         self.y_max = x_max
+
+
+class Box3D(object):
+
+    def __init__(self, x_min, x_max, y_min, y_max, z_min, z_max):
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
+        self.z_min = z_min
+        self.z_max = z_max
+
+    def round_indexes(self):
+        for attr in ['x_min', 'x_max', 'y_min', 'y_max', 'z_min', 'z_max']:
+            try:
+                self.__setattr__(attr, int(round(self.__getattribute__(attr))))
+            except TypeError:
+                pass
+
+    def __repr__(self):
+        return f"[[{self.x_min}, {self.x_max}], [{self.y_min}, {self.y_max}], [{self.z_min}, {self.z_max}]]"
+
+    def __call__(self, array):  #, update=False):
+
+        # Abort if Box is undefined
+        if self.x_min is None and self.x_max is None and self.y_min is None and self.y_max is None:
+            return array
+
+        else:
+            return array[self.z_min: self.z_max, self.y_min: self.y_max, self.x_min: self.x_max]
+
+    def __copy__(self):
+        return Box([self.x_min, self.x_max, self.y_min, self.y_max, self.z_min, self.z_max])
+
+    @property
+    def shape(self):
+        if None in [self.x_max, self.x_min, self.y_max, self.y_min, self.z_min, self.z_max]:
+            return None
+        else:
+            return self.z_min - self.z_max, self.y_max - self.y_min, self.x_max - self.x_min
+
+    @classmethod
+    def centered_at(cls, x0, y0, radius, z0=None):
+        if z0 is None:
+            return cls(x0 - radius, x0 + radius + 1, y0 - radius, y0 + radius + 1, None, None)
+        else:
+            return cls(x0 - radius, x0 + radius + 1, y0 - radius, y0 + radius + 1, z0 - radius, z0 + radius + 1)
+
+    def crop_to_shape(self, shape):
+        if self.x_min < 0:
+            self.x_min = None
+        if self.y_min < 0:
+            self.y_min = None
+        if self.z_min < 0:
+            self.z_min = None
+        if self.x_max >= shape[2]:
+            self.x_max = None
+        if self.y_max >= shape[1]:
+            self.y_max = None
+        if self.z_max >= shape[0]:
+            self.z_max = None
