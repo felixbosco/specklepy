@@ -123,6 +123,13 @@ class FileStream(object):
             hdu_list[extension].header.set('UPDATED', default_time_stamp())
             hdu_list.flush()
 
+    def set_header(self, key, value, comment=None, extension=None):
+        if extension is None:
+            extension = 0
+        with fits.open(self.file_path, mode='update') as hdu_list:
+            hdu_list[extension].header.set(key, value, comment)
+            hdu_list.flush()
+
     def insert_header_cards(self, cards, extension=None):
         with fits.open(self.file_path, mode='update') as hdu_list:
 
