@@ -50,7 +50,7 @@ def main(options=None):
 
 
     # Initialize the aperture
-    aperture = Aperture(args.index, args.radius, data=args.file, crop=True)
+    aperture = Aperture(args.index, args.radius, file_name=args.file, crop=True)
     # peak = aperture.get_aperture_peak()
     # aperture = Aperture(peak, args.radius, data=args.file, crop=True)
     if args.debug:

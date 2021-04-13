@@ -12,7 +12,7 @@ class TestTransferFunctions(unittest.TestCase):
     def setUp(self):
         size = 256
         amp = np.ones((size, size))
-        amp = Aperture(128, 128, 64, data=amp, subset_only=False)().filled(0)
+        amp = Aperture(128, 128, 64, file_name=amp, subset_only=False)().filled(0)
         pha = np.random.rand(size, size) * 2*np.pi * 2**(-1)
         self.aperture = amp * np.exp(1j * pha)
 

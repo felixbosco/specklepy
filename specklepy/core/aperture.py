@@ -1,18 +1,19 @@
 from copy import copy
-from datetime import datetime
 import numpy as np
 import sys
 import warnings
 
-from astropy.io import fits
-
+from specklepy.io import fits
 from specklepy.logging import logger
 from specklepy.utils import transferfunctions as tf
 
 
 class Aperture(object):
 
-    def __init__(self, *args, data, vars=None, mask='circular', crop=True):
+    variance_extension = 'VAR'
+    mask_extension = 'MASK'
+
+    def __init__(self, *args, file_name, path=None, mask='circular', crop=True, fill_value=0):
         """Instantiate Aperture object.
 
         Long description...
@@ -22,20 +23,17 @@ class Aperture(object):
                 Can be either two or three arguments, where the last is always interpreted as the aperture radius,
                 which must be int type. The other arguments can be either a coordinate tuple or two individual
                 coordinates.
-            data (np.ndarray, str):
+            file_name (np.ndarray, str):
                 2D or 3D np.ndarray that the aperture shall be extracted of. If provided as str type, this is assumed
-                to be a path and the objects tries to read the fits file.
-            vars (np.ndarray, optional):
-                Variance of the data. If not provided, the variance will be estimated along the time axis of a cube. In
-                the future this might read in from a file extension. Default is None.
+                to be a path and the objects tries to read the FITS file.
             mask (str, optional):
                 Mode that is describing, how the aperture is masked. Can be 'circular' or 'rectangular'. If 'circular',
                 then it creates a circular mask and the data become a np.ma.masked_array. Default is 'circular'.
             crop (bool, optional):
                 If set to True, then the object only stores a copy of the data with radius around the center. Otherwise
                 all the data beyond the limits of the aperture are masked. Default is True.
-            verbose (bool, optional):
-                Set to True for retrieving more information. Default is True.
+            fill_value (int or float, optional):
+                Value for filling masked pixels. Default is `0`.
         """
 
         # Interpret the args
@@ -70,17 +68,18 @@ class Aperture(object):
             raise ValueError('Aperture radius must be given as integer! (Was given as {})'.format(radius))
 
         # Handling data input
-        if isinstance(data, str):
-            logger.debug(f"Aperture argument data '{data}' is interpreted as file name.")
-            try:
-                data = fits.getdata(data)
-            except FileNotFoundError as e:
-                sys.tracebacklimit = 0
-                raise e
-        if not (data.ndim == 2 or data.ndim == 3):
-            raise ValueError(f"Data input of Aperture class must be of dimension 2 or 3, but was provided as "
-                             f"data.ndim={data.ndim}.")
-        self.data = copy(data)
+        if isinstance(file_name, str):
+            logger.debug(f"Aperture argument data '{file_name}' is interpreted as file name.")
+            self.data = fits.get_data(file_name)
+            self.var = fits.get_data(file_name=file_name, path=path, extension=self.variance_extension,
+                                     ignore_missing_extension=True)
+            data_mask = fits.get_data(file_name=file_name , path=path, extension=self.mask_extension, dtype=bool,
+                                      ignore_missing_extension=True)
+            if data_mask is not None:
+                self.data[data_mask] = fill_value
+
+        else:
+            raise TypeError
 
         # Remove the margins if requested
         self.cropped = False
@@ -208,32 +207,6 @@ class Aperture(object):
         mask = self.make_mask(mode=self.mask_mode)
         self.data = np.ma.masked_array(self.data, mask=mask)
 
-    # def initialize_Fourier_file(self, infile, Fourier_file):
-    #     self.infile = infile
-    #     self.Fourier_file = Fourier_file
-    #     logger.info("Initializing Fourier file {}".format(self.Fourier_file))
-    #     header = fits.getheader(self.infile)
-    #     header.set('HIERARCH specklepy TYPE', 'Fourier transform of an aperture')
-    #     header.set('HIERARCH specklepy ORIGIN', self.infile)
-    #     header.set('HIERARCH specklepy APERTURE INDEX', str(self.index))
-    #     header.set('HIERARCH specklepy APERTURE RADIUS', self.radius)
-    #     header.set('UPDATED', str(datetime.now()))
-    #     data = np.zeros(self.data.shape)
-    #     fits.writeto(self.Fourier_file, data=data, header=header, overwrite=True)
-    #     logger.info("Initialized {}".format(self.Fourier_file))
-    #
-    # def powerspec_to_file(self, infile=None, Fourier_file=None):
-    #     if not hasattr(self, 'Fourier_file'):
-    #         self.initialize_Fourier_file(infile, Fourier_file)
-    #
-    #     with fits.open(self.Fourier_file, mode='update') as hdulist:
-    #         for index, frame in enumerate(self.data):
-    #             print("\rFourier transforming frame {}/{}".format(index+1, self.data.shape[0]), end='')
-    #             hdulist[0].data[index] = tf.powerspec(frame)
-    #             hdulist.flush()
-    #         print()
-    #     logger.info("Computed the Fourier transform of every frame and saved them to {}".format(self.Fourier_file))
-
     def get_power_spectrum_cube(self):
         self.power_spectrum_cube = np.zeros(self.data.shape)
         for index, frame in enumerate(self.data):
@@ -254,7 +227,6 @@ class Aperture(object):
         # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            from IPython import embed
             for index, radius in enumerate(rdata):
                 x, y = np.where(radius_map == radius)
                 subset = self.power_spectrum_cube[:, x, y]

@@ -65,7 +65,7 @@ def main(options=None):
     if not start_with_Fourier_file:
 
         # Test of the heavy spot of the aperture
-        aperture = Aperture(*args.index, args.radius, data=args.file, crop=False)
+        aperture = Aperture(*args.index, args.radius, file_name=args.file, crop=False)
         max = aperture.get_aperture_peak()
         if args.debug:
             imshow(aperture.data, title="Aperture in the integrated cube")
@@ -77,7 +77,7 @@ def main(options=None):
             if answer.lower() == "yes":
                 logger.info("Replacing index {} by the maximum of the integrated cube image {}...".format(args.index, max))
                 args.index = max
-                aperture = Aperture(*args.index, args.radius, data=integrated_cube, mask=None, crop=True)
+                aperture = Aperture(*args.index, args.radius, file_name=integrated_cube, mask=None, crop=True)
                 if answer and (answer.lower() == "yes" or answer == ''):
                     if args.debug:
                         imshow(aperture.data, title="Updated aperture")

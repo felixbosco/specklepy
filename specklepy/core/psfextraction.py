@@ -81,7 +81,7 @@ class ReferenceStars(object):
         apertures = []
         for star in self.star_table:
             apertures.append(Aperture(star['y'] - shift[0], star['x'] - shift[1], self.radius,
-                                      data=os.path.join(self.in_dir, filename), mask='rectangular', crop=True))
+                                      file_name=os.path.join(self.in_dir, filename), mask='rectangular', crop=True))
         return apertures
 
     def extract_psfs(self, file_shifts=None, mode='median', align=True, debug=False):

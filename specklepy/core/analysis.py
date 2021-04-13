@@ -15,7 +15,7 @@ def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, recente
         out_file = 'aperture_' + os.path.basename(file).replace(".fits", ".dat")
 
     # Initialize the aperture
-    aperture = Aperture(index, radius, data=file, crop=not recenter)
+    aperture = Aperture(index, radius, file_name=file, crop=not recenter)
 
     # Recenter aperture on peak
     if recenter:
@@ -68,7 +68,7 @@ def get_psf_1d(file, index, radius, out_file=None, normalize=None, debug=False):
         out_file = "psf_" + os.path.basename(file).replace(".fits", ".dat")
 
     # Initialize the aperture
-    aperture = Aperture(index, radius, data=file, crop=True)
+    aperture = Aperture(index, radius, file_name=file, crop=True)
     if debug:
         imshow(aperture.get_integrated(), maximize=False)
 
@@ -113,7 +113,7 @@ def get_psf_variation(file, index, radius, out_file=None, normalize=None, debug=
         out_file = "var_" + os.path.basename(file).replace(".fits", ".dat")
 
     # Initialize the aperture
-    aperture = Aperture(index, radius, data=file, crop=True)
+    aperture = Aperture(index, radius, file_name=file, crop=True)
     if debug:
         imshow(aperture.get_integrated(), maximize=False)
 
