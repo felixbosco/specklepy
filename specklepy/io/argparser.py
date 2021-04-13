@@ -95,7 +95,8 @@ class GeneralArgParser(object):
         #                              help='Modes for the aperture analysis')
         parser_aperture.add_argument('file', type=str, default=None, help='File name to analyse.')
         parser_aperture.add_argument('-i', '--index', nargs='+', type=int,
-                                     help='Center index of the aperture to analyse. Provide this as "--index 123 456".')
+                                     help='Center index of the aperture to analyse. Parse this as "--index 123 456". '
+                                          'Note that the order of indexes is y-x!')
         parser_aperture.add_argument('-r', '--radius', type=int, default=10,
                                      help='Radius of the aperture to analyse in pix.')
         parser_aperture.add_argument('-p', '--pixel_scale', type=float, default=1,
