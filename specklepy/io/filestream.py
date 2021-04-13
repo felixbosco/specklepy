@@ -90,7 +90,7 @@ class FileStream(object):
         with fits.open(self.file_path) as hdu_list:
             return extension in hdu_list
 
-    def new_extension(self, name, data=None, header=None, index=None):
+    def new_extension(self, name, data=None, header=None, index=None, dtype=None):
         """Create a new FITS file extension.
 
         All arguments are parsed to the new HDU in the HDUList of instances file, i.e. `self.file_name`.
@@ -105,7 +105,13 @@ class FileStream(object):
             index (int, optional):
                 Index of the extension, before which the new hdu is inserted. None translates into appending the new
                 HDU at the end of the HDUList.
+            dtype (type, optional):
+                Data type, to which the data are casted prior to storing into the new HDU.
         """
+
+        # Cast data to requested data type
+        if dtype is not None:
+            data = data.astype(dtype=dtype)
 
         with fits.open(self.file_path, mode='update') as hdu_list:
             hdu = fits.ImageHDU(data=data, name=name, header=header)
