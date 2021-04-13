@@ -64,8 +64,9 @@ class FileStream(object):
         logger.info(f"Initializing file {self.file_path!r}")
         hdu.writeto(self.file_path, overwrite=overwrite)
 
-    def get_data(self, extension=None, squeeze=False, dtype=None):
-        return get_data(self.file_path, extension=extension, squeeze=squeeze, dtype=dtype)
+    def get_data(self, extension=None, squeeze=False, dtype=None, ignore_missing_extension=False):
+        return get_data(self.file_path, extension=extension, squeeze=squeeze, dtype=dtype,
+                        ignore_missing_extension=ignore_missing_extension)
 
     def set_data(self, data, extension=None, dtype=None):
 
