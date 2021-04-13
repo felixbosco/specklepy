@@ -5,12 +5,13 @@ import os
 import string
 import sys
 
-from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.table import Column, Table
 
-from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io.fits import get_header
+from specklepy.io import FileStream
+from specklepy.logging import logger
 from specklepy.reduction.sequence import Sequence
 from specklepy.utils.time import default_time_stamp
 
@@ -195,7 +196,7 @@ class FileArchive(object):
             file = file[1:] if file[0] == '/' else file
 
             logger.info(f"Retrieving header information from file {file!r}")
-            hdr = fits.getheader(path)
+            hdr = get_header(path)
             new_row = [file]
             for card in cards:
                 # Card actually contains two or more cards
@@ -497,9 +498,8 @@ class ReductionFileArchive(FileArchive):
         os.system(f"cp {src} {dest}")
 
         # Add information to the header of the new FITS file
-        with fits.open(dest, mode='update') as hdu_list:
-            hdu_list[0].header.set('PIPELINE', 'SPECKLEPY')
-            hdu_list[0].header.set('REDUCED', default_time_stamp())
-            hdu_list.flush()
+        product_file = FileStream(file_name=dest)
+        product_file.set_header('PIPELINE', 'SPECKLEPY')
+        product_file.set_header('REDUCED', default_time_stamp())
 
         return dest
