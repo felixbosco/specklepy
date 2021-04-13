@@ -37,34 +37,36 @@ class Aperture(object):
 
         # Interpret the args
         if len(args) == 2 and (isinstance(args[0], tuple) or isinstance(args[0], list)):
-            x0 = args[0][0]
-            y0 = args[0][1]
+            y0 = args[0][0]
+            x0 = args[0][1]
             radius = args[1]
         elif len(args) == 3:
-            x0 = args[0]
-            y0 = args[1]
+            y0 = args[0]
+            x0 = args[1]
             radius = args[2]
         else:
             raise ValueError(f"Aperture expects either 2 or 3 positional args, but {len(args)} have been provided!")
 
         # Integer checks and handling non-integer input
-        if isinstance(x0, int) and isinstance(y0, int):
-            self.x0 = x0
+        if isinstance(y0, int) and isinstance(x0, int):
             self.y0 = y0
-            self.xoffset = 0
-            self.yoffset = 0
+            self.x0 = x0
+            self.y_offset = 0
+            self.x_offset = 0
         else:
-            x0 = float(x0)
             y0 = float(y0)
-            self.x0 = np.rint(x0).astype(int)
+            x0 = float(x0)
             self.y0 = np.rint(y0).astype(int)
-            self.xoffset = x0 - self.x0
-            self.yoffset = y0 - self.y0
+            self.x0 = np.rint(x0).astype(int)
+            self.y_offset = y0 - self.y0
+            self.x_offset = x0 - self.x0
 
         if isinstance(radius, int):
             self.radius = radius
         else:
             raise ValueError(f"Aperture radius must be integer type, but is {radius})")
+
+        self.fill_value = fill_value
 
         # Handling data input
         if isinstance(file_name, str):
@@ -75,7 +77,7 @@ class Aperture(object):
             data_mask = fits.get_data(file_name=file_name , path=path, extension=self.mask_extension, dtype=bool,
                                       ignore_missing_extension=True)
             if data_mask is not None:
-                self.data[data_mask] = fill_value
+                self.data[data_mask] = self.fill_value
 
         else:
             raise TypeError
@@ -105,11 +107,11 @@ class Aperture(object):
 
     @property
     def index(self):
-        return self.x0, self.y0
+        return self.y0, self.x0
 
     @property
     def offset(self):
-        return self.xoffset, self.yoffset
+        return self.y_offset, self.x_offset
 
     @property
     def shape(self):
@@ -150,9 +152,9 @@ class Aperture(object):
             else:
                 mask = np.ones(self.data.shape, dtype=bool)
                 if mask.ndim == 2:
-                    mask[self.x0 - self.radius: self.y0 + self.radius + 1, self.y0 - self.radius: self.y0 + self.radius + 1] = 0
+                    mask[self.y0 - self.radius: self.y0 + self.radius + 1, self.x0 - self.radius: self.x0 + self.radius + 1] = self.fill_value
                 elif mask.ndim == 3:
-                    mask[:, self.x0 - self.radius: self.y0 + self.radius + 1, self.y0 - self.radius: self.y0 + self.radius + 1] = 0
+                    mask[:, self.y0 - self.radius: self.y0 + self.radius + 1, self.x0 - self.radius: self.x0 + self.radius + 1] = self.fill_value
                 return mask
         else:
             raise ValueError(f"Aperture received mode argument {mode}, but needs to be either 'circular' or "
@@ -163,11 +165,11 @@ class Aperture(object):
             logger.info("Margins are removed already from aperture instance.")
         else:
             if self.data.ndim == 2:
-                self.data = copy(self.data[self.x0 - self.radius: self.x0 + self.radius + 1,
-                                 self.y0 - self.radius: self.y0 + self.radius + 1])
+                self.data = copy(self.data[self.y0 - self.radius: self.y0 + self.radius + 1,
+                                 self.x0 - self.radius: self.x0 + self.radius + 1])
             elif self.data.ndim == 3:
-                self.data = copy(self.data[:, self.x0 - self.radius: self.x0 + self.radius + 1,
-                                 self.y0 - self.radius: self.y0 + self.radius + 1])
+                self.data = copy(self.data[:, self.y0 - self.radius: self.y0 + self.radius + 1,
+                                 self.x0 - self.radius: self.x0 + self.radius + 1])
             self.cropped = True
 
     def remove_margins(self):
@@ -197,10 +199,8 @@ class Aperture(object):
         logger.info(f"Re-centering the aperture from {self.index} to {peak}")
 
         # Update properties
-        self.x0 = peak[0]
-        self.y0 = peak[1]
-        self.xoffset = 0
-        self.yoffset = 0
+        self.y0, self.x0 = peak
+        self.y_offset, self.x_offset = (0, 0)
 
         # Update mask
         mask = self.make_mask(mode=self.mask_mode)
@@ -227,8 +227,8 @@ class Aperture(object):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for index, radius in enumerate(rdata):
-                x, y = np.where(radius_map == radius)
-                subset = self.power_spectrum_cube[:, x, y]
+                y, x = np.where(radius_map == radius)
+                subset = self.power_spectrum_cube[:, y, x]
                 ydata[index] = np.mean(subset)
                 edata[index] = np.std(subset)
 

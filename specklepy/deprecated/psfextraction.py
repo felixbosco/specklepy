@@ -74,7 +74,7 @@ class PSFExtraction(object):
                 for aperture_index, aperture in enumerate(self.ref_apertures):
                     # Copy aperture into psf
                     if 'align' in mode:
-                        psf[aperture_index] = shift(aperture[frame_index], shift=(aperture.xoffset, aperture.yoffset))
+                        psf[aperture_index] = shift(aperture[frame_index], shift=(aperture.y_offset, aperture.x_offset))
                     elif 'resample' in mode:
                         pass
                     else:

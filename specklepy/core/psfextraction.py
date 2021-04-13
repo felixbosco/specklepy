@@ -154,8 +154,8 @@ class ReferenceStars(object):
                     var = aperture.vars
 
                     if align:
-                        flux = ndimage.shift(flux, shift=(aperture.xoffset, aperture.yoffset))
-                        var = ndimage.shift(var, shift=(aperture.xoffset, aperture.yoffset))
+                        flux = ndimage.shift(flux, shift=(aperture.y_offset, aperture.x_offset))
+                        var = ndimage.shift(var, shift=(aperture.y_offset, aperture.x_offset))
 
                     # Normalization of each psf to make median estimate sensible
                     psfs[aperture_index] = flux / np.sum(flux)
@@ -225,8 +225,8 @@ class ReferenceStars(object):
                 ivar_oversampled = np.zeros(frame_shape)
 
                 for aperture_index, aperture in enumerate(apertures):
-                    xoff = np.floor(aperture.xoffset * oversampling).astype(int) + oversampling // 2
-                    yoff = np.floor(aperture.yoffset * oversampling).astype(int) + oversampling // 2
+                    xoff = np.floor(aperture.y_offset * oversampling).astype(int) + oversampling // 2
+                    yoff = np.floor(aperture.x_offset * oversampling).astype(int) + oversampling // 2
 
                     # Getting coordinates of aperture and stretching to oversampled image
                     y, x = np.mgrid[0:self.box_size, 0:self.box_size]
