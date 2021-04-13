@@ -2,12 +2,12 @@ import numpy as np
 import os
 from tqdm import trange
 
-from astropy.io import fits
 from astropy.table import Table
 from astropy.stats import sigma_clip, sigma_clipped_stats
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import FileStream
+from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
 from specklepy.reduction.subwindow import SubWindow
 from specklepy.utils.combine import combine_masks
@@ -77,18 +77,23 @@ class MasterFlat(object):
         obj = cls(file_list=None, file_name=file_name, out_dir=out_dir, filter=None)
 
         # Load data from file
-        obj.image = fits.getdata(obj.path)
-        try:
-            obj.var = fits.getdata(obj.path, obj.extensions.get('variance'))
-        except KeyError:
+        obj.image = get_data(obj.path)
+        obj.var = get_data(obj.path, extension=obj.extensions.get('variance'), ignore_missing_extension=True)
+        # try:
+        #     obj.var = fits.getdata(obj.path, obj.extensions.get('variance'))
+        # except KeyError:
+        if obj.var is None:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('variance')!r} "
                          f"extension")
-        try:
-            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).astype(bool)
-        except KeyError:
+        obj.mask = get_data(obj.path, extension=obj.extensions.get('mask'), dtype=bool, ignore_missing_extension=True)
+        # try:
+        #     obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).astype(bool)
+        # except KeyError:
+        if obj.mask is None:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
-        obj.sub_window = fits.getheader(obj.path)["HIERARCH SPECKLEPY REDUCTION SUBWIN"]
+        # obj.sub_window = fits.getheader(obj.path)["HIERARCH SPECKLEPY CALIBRATION SUBWIN"]
+        obj.sub_window = get_header(obj.path, card="HIERARCH SPECKLEPY CALIBRATION SUBWIN")
 
         return obj
 
@@ -143,44 +148,45 @@ class MasterFlat(object):
         # Iterate through files
         for index, file in enumerate(self.files):
             logger.info(f"Reading FLAT frames from file {file!r}...")
-            with fits.open(os.path.join(self.file_path, file)) as hdu_list:
-                data = hdu_list[0].data.squeeze()
-                # data -= np.min(data)  # Avoid negative values that screw up the normalization
-                logger.debug(f"{file} (dtype: {data.dtype}, shape: {data.shape})")
+            data = get_data(file_name=file, path=self.file_path)
+            # with fits.open(os.path.join(self.file_path, file)) as hdu_list:
+            #     data = hdu_list[0].data.squeeze()
+            #     logger.debug(f"{file} (dtype: {data.dtype}, shape: {data.shape})")
 
-                # Extract variance of data for propagation of uncertainties
-                try:
-                    data_var = hdu_list[self.extensions.get('variance')].data
-                except KeyError:
-                    data_var = None
+            # Extract variance of data for propagation of uncertainties
+            data_var = get_data(file_name=file, path=self.file_path, extension=self.extensions.get('variance'))
+            # try:
+            #     data_var = hdu_list[self.extensions.get('variance')].data
+            # except KeyError:
+            #     data_var = None
 
-                if data.ndim == 2:
-                    means.append(data)
-                    if data_var is None:
-                        vars.append(np.zeros(data.shape))
-                    else:
-                        vars.append(data_var)
-                    number_frames.append(1)
-
-                elif data.ndim == 3:
-                    logger.info("Computing statistics of data cube...")
-                    clipped_mean, _, clipped_std = sigma_clipped_stats(data=data, sigma=rejection_threshold, axis=0)
-
-                    # Combine variance
-                    if data_var is None:
-                        var = np.square(clipped_std.data)
-                    else:
-                        var = np.add(np.square(clipped_std.data), data_var)
-
-                    # Store results into lists
-                    means.append(clipped_mean)
-                    vars.append(var)
-                    # self.combine_mask(np.logical_or(mean.mask, std.mask))
-                    number_frames.append(data.shape[0])
-
+            if data.ndim == 2:
+                means.append(data)
+                if data_var is None:
+                    vars.append(np.zeros(data.shape))
                 else:
-                    raise ValueError(f"Shape of data {data.shape} is not understood. Data must be either 2 or "
-                                     f"3-dimensional!")
+                    vars.append(data_var)
+                number_frames.append(1)
+
+            elif data.ndim == 3:
+                logger.info("Computing statistics of data cube...")
+                clipped_mean, _, clipped_std = sigma_clipped_stats(data=data, sigma=rejection_threshold, axis=0)
+
+                # Combine variance
+                if data_var is None:
+                    var = np.square(clipped_std.data)
+                else:
+                    var = np.add(np.square(clipped_std.data), data_var)
+
+                # Store results into lists
+                means.append(clipped_mean)
+                vars.append(var)
+                # self.combine_mask(np.logical_or(mean.mask, std.mask))
+                number_frames.append(data.shape[0])
+
+            else:
+                raise ValueError(f"Shape of data {data.shape} is not understood. Data must be either 2 or "
+                                 f"3-dimensional!")
 
         # Collapse master flat along axis 0
         logger.info(f"Combining flats with {method!r} method...")
@@ -275,29 +281,37 @@ class MasterFlat(object):
 
     def write(self, overwrite=True):
 
-        # Build primary HDU
-        header = fits.Header()
-        for index, file in enumerate(self.files):
-            header.set(f"HIERARCH SPECKLEPY SOURCE FILE{index:04} NAME", os.path.basename(file))
-        header.set("HIERARCH SPECKLEPY REDUCTION SUBWIN", self.sub_window)
-        primary = fits.PrimaryHDU(data=self.image, header=header)
+        file_stream = FileStream(self.file_name, path=self.out_dir)
+        logger.info(f"Writing master flat frame to file {self.path!r}")
+        file_stream.initialize(data=self.image, overwrite=overwrite)
+        file_stream.build_master_file_header_cards(files=self.files, path=None, sub_window=self.sub_window,
+                                                   calibration='FLAT', insert=True)
 
-        # Build HDU list
-        hdu_list = fits.HDUList([primary])
+        # # Build primary HDU
+        # header = fits.Header()
+        # for index, file in enumerate(self.files):
+        #     header.set(f"HIERARCH SPECKLEPY SOURCE FILE{index:04} NAME", os.path.basename(file))
+        # header.set("HIERARCH SPECKLEPY REDUCTION SUBWIN", self.sub_window)
+        # primary = fits.PrimaryHDU(data=self.image, header=header)
+        #
+        # # Build HDU list
+        # hdu_list = fits.HDUList([primary])
 
         # Build variance HDU
         if self.var is not None:
-            var_hdu = fits.ImageHDU(data=self.var, name=self.extensions.get('variance'))
-            hdu_list.append(var_hdu)
+            file_stream.new_extension(name=self.extensions.get('variance'), data=self.var)
+            # var_hdu = fits.ImageHDU(data=self.var, name=self.extensions.get('variance'))
+            # hdu_list.append(var_hdu)
 
         # Build mask HDU
         if self.mask is not None:
-            mask_hdu = fits.ImageHDU(data=self.mask.astype(np.int16), name=self.extensions.get('mask'))
-            hdu_list.append(mask_hdu)
+            file_stream.new_extension(name=self.extensions.get('mask'), data=self.mask, dtype=np.int16)
+            # mask_hdu = fits.ImageHDU(data=self.mask.astype(np.int16), name=self.extensions.get('mask'))
+            # hdu_list.append(mask_hdu)
 
-        # Write HDU list to file
-        logger.info(f"Writing master flat frame to file {self.path!r}")
-        hdu_list.writeto(self.path, overwrite=overwrite)
+        # # Write HDU list to file
+        # logger.info(f"Writing master flat frame to file {self.path!r}")
+        # hdu_list.writeto(self.path, overwrite=overwrite)
 
     def run_correction(self, file_list, file_path=None, sub_windows=None, sub_window_order='xy'):
         """Executes the flat field correction on files in a list.
