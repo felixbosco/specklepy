@@ -74,9 +74,6 @@ class ReferenceStars(object):
     def number_files(self):
         return len(self.in_files)
 
-    def extract_frame_number(self, file):
-        return fits.getheader(os.path.join(self.in_dir, file)).get('NAXIS3')
-
     def init_apertures(self, filename, shift=None):
 
         if shift is None:
@@ -137,16 +134,13 @@ class ReferenceStars(object):
             # shifted cube
             apertures = self.init_apertures(file, shift=shift)
 
-            # Extract the number of frames in the FITS file from the header
-            frame_number = self.extract_frame_number(file)
-
             # Check apertures visually
             if debug:
                 for index, aperture in enumerate(apertures):
                     imshow(aperture.get_integrated(), title=f"Inspect reference aperture {index + 1}")
 
             # Extract the PSF by combining the aperture frames in the desired mode
-            for frame_index in trange(frame_number, desc="Extracting PSF frame"):
+            for frame_index in trange(get_frame_number(file), desc="Extracting PSF frame"):
                 psfs = np.empty((len(apertures), self.box_size, self.box_size))
                 vars = np.ones((len(apertures), self.box_size, self.box_size))
                 for aperture_index, aperture in enumerate(apertures):
@@ -206,11 +200,8 @@ class ReferenceStars(object):
             # shifted cube
             apertures = self.init_apertures(file, shift=shift)
 
-            # Extract the number of frames in the FITS file from the header
-            frame_number = self.extract_frame_number(file)
-
             # Extract the PSF by combining the aperture frames in the desired mode
-            for frame_index in trange(frame_number, desc="Extracting PSF from frames"):
+            for frame_index in trange(get_frame_number(file), desc="Extracting PSF from frames"):
                 
                 if debug:
                     if frame_index > 0:
@@ -279,10 +270,9 @@ class ReferenceStars(object):
         # Iterate through PSF files
         for file in self.psf_files:
             psf_file = FileStream(file_name=file)
-            number_frames = get_frame_number(file=file, extension=extension)
 
             # Iterate through frames
-            for frame_index in range(number_frames):
+            for frame_index in range(get_frame_number(file=file, extension=extension)):
 
                 # Extract statistics from reference annulus
                 frame = psf_file.get_frame(frame_index=frame_index, extension=extension)
