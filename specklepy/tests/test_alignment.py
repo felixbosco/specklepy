@@ -10,7 +10,7 @@ class TestAlignment(unittest.TestCase):
 
     def setUp(self):
         self.path = 'specklepy/tests/files/'
-        self.files = FileArchive('synthetic/glao_600ms*.fits', in_dir=self.path).files
+        self.files = FileArchive('synthetic/glao_600ms*.fits', file_path=self.path).files
         self.shifts = [(0, 0), (34, -20), (-14, -51)]
         self.image_shape = (512, 512)
         self.cube_shape = (10, 512, 512)

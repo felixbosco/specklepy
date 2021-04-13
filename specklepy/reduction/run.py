@@ -123,14 +123,14 @@ def setup(path, instrument, par_file=None, list_file=None, sort_by=None, recursi
     _, ext = os.path.splitext(par_file)
     if 'yaml' in ext:
         logger.info(f"Creating default reduction YAML parameter file {par_file}")
-        par_file_content = f"PATHS:\n  filePath: {raw_files.in_dir}\n  fileList: {list_file}\n  outDir: Science/" \
+        par_file_content = f"PATHS:\n  filePath: {raw_files.file_path}\n  fileList: {list_file}\n  outDir: Science/" \
                            f"\n  tmpDir: Master//\n  prefix: r" \
                            f"\n\nDARK:\n  masterDarkFile: MasterDark.fits" \
                            f"\n\nFLAT:\n  masterFlatFile: MasterFlat.fits" \
                            f"\n\nSKY:\n  method: scalar"
     else:
         logger.info(f"Creating default reduction INI parameter file {par_file}")
-        par_file_content = f"[PATHS]\nfilePath = {raw_files.in_dir}\nfileList = {list_file}\noutDir = Science/" \
+        par_file_content = f"[PATHS]\nfilePath = {raw_files.file_path}\nfileList = {list_file}\noutDir = Science/" \
                            f"\ntmpDir = Master/\nprefix = r" \
                            f"\n\n[DARK]\nmasterDarkFile = MasterDark.fits" \
                            f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \

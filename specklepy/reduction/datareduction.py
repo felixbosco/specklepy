@@ -33,7 +33,7 @@ class DataReduction(object):
         self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
                                           out_dir=self.paths.get('outDir'), table_format='ascii.fixed_width')
         # Reset input directory
-        self.files.in_dir = self.paths.get('filePath')
+        self.files.file_path = self.paths.get('filePath')
 
     @classmethod
     def from_file(cls, file_name):
@@ -143,14 +143,14 @@ class DataReduction(object):
         _, ext = os.path.splitext(par_file)
         if 'yaml' in ext:
             logger.info(f"Creating default reduction YAML parameter file {par_file}")
-            par_file_content = f"PATHS:\n  filePath: {raw_files.in_dir}\n  fileList: {list_file}\n  outDir: Science/" \
+            par_file_content = f"PATHS:\n  filePath: {raw_files.file_path}\n  fileList: {list_file}\n  outDir: Science/" \
                                f"\n  tmpDir: Master//\n  prefix: r" \
                                f"\n\nDARK:\n  masterDarkFile: MasterDark.fits" \
                                f"\n\nFLAT:\n  masterFlatFile: MasterFlat.fits" \
                                f"\n\nSKY:\n  method: scalar"
         else:
             logger.info(f"Creating default reduction INI parameter file {par_file}")
-            par_file_content = f"[PATHS]\nfilePath = {raw_files.in_dir}\nfileList = {list_file}\noutDir = Science/" \
+            par_file_content = f"[PATHS]\nfilePath = {raw_files.file_path}\nfileList = {list_file}\noutDir = Science/" \
                                f"\ntmpDir = Master/\nprefix = r" \
                                f"\n\n[DARK]\nmasterDarkFile = MasterDark.fits" \
                                f"\n\n[FLAT]\nmasterFlatFile = MasterFlat.fits" \
@@ -190,7 +190,7 @@ class DataReduction(object):
             for setup in dark_setups:
                 darks = self.files.filter({'OBSTYPE': 'DARK', 'SETUP': setup})
                 sub_window = self.files.filter({'OBSTYPE': 'DARK', 'SETUP': setup}, namekey='SUBWIN')
-                master_dark = dark.MasterDark(file_list=darks, file_path=self.files.in_dir, setup=setup,
+                master_dark = dark.MasterDark(file_list=darks, file_path=self.files.file_path, setup=setup,
                                               file_name=self.dark.get('masterDarkFile'),
                                               out_dir=self.paths.get('tmpDir'), sub_window=sub_window)
                 master_dark.combine()

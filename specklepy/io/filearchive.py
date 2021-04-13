@@ -26,7 +26,8 @@ class FileArchive(object):
         ...
     """
 
-    def __init__(self, file_list, in_dir=None, out_dir=None, out_prefix=None, cards=None, dtypes=None, **kwargs):
+    def __init__(self, file_list, file_path=None, out_dir=None, out_prefix=None, cards=None, dtypes=None,
+                 table_format=None):
         """Create a FileArchive instance.
 
         Long description...
@@ -34,22 +35,29 @@ class FileArchive(object):
         Args:
             file_list (str, list):
                 Path to list of files or generic file path. Can also be provided as list type.
-            in_dir (str, optional):
+            file_path (str, optional):
                 Path to the raw/ input data.
             out_dir (str, optional):
                 Path to the product/ output data.
             out_prefix (str, optional):
                 Prefix of the product/ output data.
+            cards (list, optional):
+                Header keywords, for which the values shall be extracted from the FITS headers.
+            dtypes (list, optional):
+                List of data types, to which the header entries of the `cards` are casted.
+            table_format (str, optional):
+                Format of the ASCII file, from which file names are read. Used only if `file_list` is parsed as the name
+                of an ASCII table file.
         """
 
         # Store in and out paths
-        self.in_dir = in_dir
+        self.file_path = file_path
         self.out_dir = out_dir if out_dir is not None else './'
         self.out_prefix = out_prefix if out_prefix is not None else ''
 
         # Interpret the str-type file list input
         if isinstance(file_list, str):
-            file_list = self.find_files(file_list, path=self.in_dir)
+            file_list = self.find_files(file_list, path=self.file_path)
 
         # Assert type of file list
         if not isinstance(file_list, list):
@@ -59,7 +67,7 @@ class FileArchive(object):
         if len(file_list) == 1 and not self.is_fits_file(file_list[0]):
             logger.info(f"Input file is not FITS type. FileArchive assumes that input file {file_list[0]!r} contains "
                         f"file names.")
-            file_list = self.read_table_file(file_list[0], format=kwargs.get('table_format'))
+            file_list = self.read_table_file(file_list[0], format=table_format)
 
         # Gather table of file names and request further information, from the FITS header
         self.gather_table_from_list(files=file_list, cards=cards, dtypes=dtypes)
@@ -72,7 +80,7 @@ class FileArchive(object):
         self.index = 0
 
         # Reduce paths
-        self.in_dir = os.path.normpath(self.in_dir)
+        self.file_path = os.path.normpath(self.file_path)
         self.out_dir = os.path.normpath(self.out_dir)
 
     def __iter__(self):
@@ -192,14 +200,14 @@ class FileArchive(object):
             table = Table(names=['FILE']+names, dtype=[str]+dtypes)
 
         # Extract common path
-        self.in_dir = self.common_path(files)
+        self.file_path = self.common_path(files)
 
         # Read data from files
         for path in files:
-            file = path.replace(self.in_dir, '').lstrip('/')
+            file = path.replace(self.file_path, '').lstrip('/')
 
             logger.info(f"Retrieving header information from file {file!r}")
-            hdr = get_header(file, path=self.in_dir)
+            hdr = get_header(file, path=self.file_path)
             new_row = [file]
             for card in cards:
                 # Card actually contains two or more cards
@@ -266,7 +274,7 @@ class ReductionFileArchive(FileArchive):
     def source_file_paths(self):
         paths = []
         for source_file in self.source_files:
-            paths.append(os.path.join(self.in_dir, source_file))
+            paths.append(os.path.join(self.file_path, source_file))
         return paths
 
     @property
@@ -439,7 +447,7 @@ class ReductionFileArchive(FileArchive):
                                    f"subtraction will be applied!")
                 else:
                     # Store the information in a new sequence
-                    sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.in_dir,
+                    sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.file_path,
                                               sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
                                               source=source, object=object, setup=setup))
         return sequences
