@@ -2,12 +2,10 @@ import numpy as np
 import os
 import sys
 
-from astropy.io import fits
-
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import FrameAlignment
 from specklepy.io import FileStream
-from specklepy.io.fits import get_data
+from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
 from specklepy.utils.array import frame_number, frame_shape, peak_index
@@ -185,8 +183,7 @@ class SpeckleCube(object):
         return os.path.join(self.out_dir, prefix + self.file_name)
 
     def make_header(self):
-        hdr = fits.getheader(os.path.join(self.in_dir, self.file_name))
-        return hdr
+        return get_header(path=self.in_dir, file_name=self.file_name)
 
     def write(self, path=None):
 
@@ -203,25 +200,6 @@ class SpeckleCube(object):
         file_stream.initialize(data=self.image, header=self.make_header(), overwrite=True)
         if self.image_var is not None:
             file_stream.new_extension(data=self.image_var, name=self.variance_extension)
-
-        # Set up FITS HDU list
-        # self.fits_header = self.make_header()
-        # hdu = fits.PrimaryHDU(data=self.image, header=self.fits_header)
-        # hdu_list = fits.HDUList(hdus=[hdu])
-        #
-        # # Append variance extension if available
-        # if self.image_var is not None:
-        #     var_hdu = fits.ImageHDU(data=self.image_var, name=self.variance_extension)
-        #     hdu_list.append(var_hdu)
-        #
-        # # Store data to file
-        # try:
-        #     hdu_list.writeto(self.default_save_path(), overwrite=True)
-        # except fits.verify.VerifyError as e:
-        #     # Something is weird in the FITS header, so reset
-        #     logger.error(e)
-        #     logger.error("Amend this and try again!")
-        #     hdu_list.writeto(self.default_save_path(), overwrite=True)
 
         # Return target path
         return self.default_save_path()
