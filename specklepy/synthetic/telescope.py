@@ -3,13 +3,12 @@ from scipy.signal import fftconvolve
 from scipy.ndimage import zoom
 import warnings
 
-from astropy.io import fits
 from astropy.modeling import models
-# from astropy import units as u
-from astropy.units import Unit, Quantity, UnitConversionError
+from astropy.units import Unit, Quantity
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
+from specklepy.io import fits
 from specklepy.logging import logger
 
 
@@ -116,7 +115,7 @@ class Telescope(object):
 		for key in self.__dict__:
 			if key == 'psf':
 				continue
-			tmp += "{}: {}\n".format(key, self.__dict__[key])
+			tmp += f"{key}: {self.__dict__[key]}\n"
 		return tmp
 
 	def model_psf(self, model, radius, psf_resolution, shape=256, **kwargs):
@@ -196,10 +195,10 @@ class Telescope(object):
 		angular_resolution = None
 
 		# Extract header
-		header = fits.getheader(filename, hdu)
+		header = fits.get_header(filename, extension=hdu)
 
 		if header['NAXIS'] == 2:
-			psf = self.normalize(fits.getdata(filename, hdu))
+			psf = self.normalize(fits.get_data(filename, extension=hdu))
 		else:
 			# Iterate over list of known header cards containing the time resolution
 			for key in self.TIME_STEP_KEYS:
@@ -407,7 +406,7 @@ class Telescope(object):
 		n_frames = int(integration_time / self.timestep)
 
 		# Read PSF frames from source file
-		data = fits.getdata(self.psf_source, hdu)
+		data = fits.get_data(self.psf_source, extension=hdu)
 
 		self.psf_frame += 1
 		if self.psf_frame + n_frames < data.shape[0]:
