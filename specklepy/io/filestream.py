@@ -155,8 +155,8 @@ class FileStream(object):
             # Store to file
             hdu_list.flush()
 
-    def build_reconstruction_file_header_cards(self, files, path=None, algorithm=None, card_prefix=None,
-                                               insert=True, extension=None):
+    def build_reconstruction_file_header_cards(self, files, path=None, algorithm=None, card_prefix=None, insert=True,
+                                               extension=None):
 
         # Update the card prefix
         if card_prefix is not None:
@@ -166,6 +166,29 @@ class FileStream(object):
         cards = {}
         if algorithm is not None:
             cards[f"{self.header_card_prefix} ALGORITHM"] = algorithm
+        for index, file in enumerate(files):
+            cards[f"{self.header_card_prefix} SOURCE FILE{index:04} NAME"] = os.path.basename(file)
+            cards[f"{self.header_card_prefix} SOURCE FILE{index:04} FRAMES"] = get_frame_number(file, path=path)
+
+        # Insert into FITS header
+        if insert:
+            self.insert_header_cards(cards=cards, extension=extension)
+
+        return cards
+
+    def build_master_file_header_cards(self, files, path=None, calibration=None, sub_window=None, card_prefix=None,
+                                       insert=True, extension=None):
+
+        # Update the card prefix
+        if card_prefix is not None:
+            self.header_card_prefix = card_prefix
+
+        # Initialize and fill `cards` dictionary
+        cards = {}
+        if calibration is not None:
+            cards[f"{self.header_card_prefix} CALIBRATION TYPE"] = calibration
+        if sub_window is not None:
+            cards[f"{self.header_card_prefix} CALIBRATION SUBWIN"] = sub_window
         for index, file in enumerate(files):
             cards[f"{self.header_card_prefix} SOURCE FILE{index:04} NAME"] = os.path.basename(file)
             cards[f"{self.header_card_prefix} SOURCE FILE{index:04} FRAMES"] = get_frame_number(file, path=path)
