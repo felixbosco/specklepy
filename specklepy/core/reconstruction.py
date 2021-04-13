@@ -192,6 +192,8 @@ class Reconstruction(object):
         # Update integration method, if provided
         if integration_method is not None:
             self.integration_method = integration_method
+        if shifts is not None:
+            self.shifts = shifts
 
         # Initialize list of long exposure files
         long_exposure_files = []
@@ -211,8 +213,8 @@ class Reconstruction(object):
             if self.integration_method == 'collapse':
                 speckle_cube.collapse(mask=self.custom_mask)
             elif self.integration_method == 'ssa':
-                if self.box is not None and shifts is not None:
-                    box = self.box.shift(shift=shifts[f])
+                if self.box is not None and self.shifts is not None:
+                    box = self.box.shift(shift=self.shifts[f])
                 else:
                     box = self.box
                 box.crop_to_shape(speckle_cube.frame_shape)
@@ -232,6 +234,9 @@ class Reconstruction(object):
             # Add the recently created file to the list
             long_exposure_files.append(os.path.basename(long_exposure_path))
 
+        # Store list of long exposure files
+        self.long_exp_files = long_exposure_files
+
         return long_exposure_files
 
     def align_cubes(self, integration_method=None, alignment_mode='correlation', mask_hot_pixels=False):
@@ -242,7 +247,7 @@ class Reconstruction(object):
 
         # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
         if self.long_exp_files is None:
-            self.long_exp_files = self.create_long_exposures(mask_hot_pixels=mask_hot_pixels)
+            self.create_long_exposures(mask_hot_pixels=mask_hot_pixels)
 
         # Save time if only one cube is provided
         if self.single_cube_mode:
