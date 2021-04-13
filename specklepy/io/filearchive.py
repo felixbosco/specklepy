@@ -26,7 +26,7 @@ class FileArchive(object):
         ...
     """
 
-    def __init__(self, file_list, in_dir=None, out_dir=None, out_prefix=None, **kwargs):
+    def __init__(self, file_list, in_dir=None, out_dir=None, out_prefix=None, cards=None, dtypes=None, **kwargs):
         """Create a FileArchive instance.
 
         Long description...
@@ -43,35 +43,26 @@ class FileArchive(object):
         """
 
         # Store in and out paths
-        self.in_dir = in_dir if in_dir is not None else './'
+        self.in_dir = in_dir
         self.out_dir = out_dir if out_dir is not None else './'
         self.out_prefix = out_prefix if out_prefix is not None else ''
 
         # Interpret the str-type file list input
         if isinstance(file_list, str):
-
-            # Search for files
-            generic = file_list
-            file_list = glob.glob(file_list)
-            file_list.sort()
-            if len(file_list) == 0:
-                sys.tracebacklimit = 0
-                raise FileNotFoundError(f"FileArchive did not find any file matching to {file_list!r}.")
-            else:
-                logger.info(f"FileArchive found {len(file_list)} file(s) matching to {generic!r}.")
+            file_list = self.find_files(file_list, path=self.in_dir)
 
         # Assert type of file list
         if not isinstance(file_list, list):
             raise SpecklepyTypeError("FileArchive", 'file_list', type(file_list), 'list')
 
-        # Read table files for gather files directly
+        # Read file names from list file
         if len(file_list) == 1 and not self.is_fits_file(file_list[0]):
             logger.info(f"Input file is not FITS type. FileArchive assumes that input file {file_list[0]!r} contains "
                         f"file names.")
-            self.table, self.in_dir = self.read_table_file(file_list[0], format=kwargs.get('table_format'))
-        else:
-            self.table, self.in_dir = self.gather_table_from_list(files=file_list, cards=kwargs.get('cards', []),
-                                                                  dtypes=kwargs.get('dtypes', []))
+            file_list = self.read_table_file(file_list[0], format=kwargs.get('table_format'))
+
+        # Gather table of file names and request further information, from the FITS header
+        self.gather_table_from_list(files=file_list, cards=cards, dtypes=dtypes)
 
         # Log identified input files
         logger.debug("FileArchive lists the following files:")
@@ -122,6 +113,23 @@ class FileArchive(object):
         _, extension = os.path.splitext(filename)
         return extension == '.fits'
 
+    @staticmethod
+    def find_files(generic, path=None):
+
+        # Join path into file name
+        if path is not None:
+            generic = os.path.join(path, generic)
+
+        files = glob.glob(generic)
+        files.sort()
+        if len(files) == 0:
+            sys.tracebacklimit = 0
+            raise FileNotFoundError(f"FileArchive did not find any file matching to {generic!r}.")
+        else:
+            logger.info(f"FileArchive found {len(files)} file(s) matching to {generic!r}.")
+
+        return files
+
     def read_table_file(self, file, format='ascii.no_header'):
         """Interprets text in a file input.
 
@@ -140,6 +148,7 @@ class FileArchive(object):
 
         logger.info(f"Reading file names from input file {file!r}")
 
+        # Read table from ASCII file
         try:
             table = Table.read(file, format=format)
             if format == 'ascii.no_header':
@@ -149,15 +158,10 @@ class FileArchive(object):
             sys.tracebacklimit = 0
             raise e
 
-        # Extract the common path
-        files = list(table['FILE'].data)
-        common_path = self.common_path(files=files)
-        for r, row in enumerate(table):
-            row['FILE'] = row['FILE'].replace(common_path, '').strip('/')
+        # Return list of files
+        return list(table['FILE'].data)
 
-        return table, common_path
-
-    def gather_table_from_list(self, files, cards, dtypes, names=None, sort_by=None):
+    def gather_table_from_list(self, files, cards=None, dtypes=None, names=None, sort_by=None):
         """Gather file header information to fill the table
 
         Args:
@@ -188,15 +192,14 @@ class FileArchive(object):
             table = Table(names=['FILE']+names, dtype=[str]+dtypes)
 
         # Extract common path
-        common_path = self.common_path(files)
+        self.in_dir = self.common_path(files)
 
         # Read data from files
         for path in files:
-            file = path.replace(common_path, '')
-            file = file[1:] if file[0] == '/' else file
+            file = path.replace(self.in_dir, '').lstrip('/')
 
             logger.info(f"Retrieving header information from file {file!r}")
-            hdr = get_header(path)
+            hdr = get_header(file, path=self.in_dir)
             new_row = [file]
             for card in cards:
                 # Card actually contains two or more cards
@@ -218,8 +221,6 @@ class FileArchive(object):
                         logger.warning(f"File {file!r} is missing header card {card!r}. Number of frames set to 1!")
                         new_row.append(1)
                     else:
-                        # logger.info(f"Skipping file {file} due to at least one missing header card ({card}).")
-                        # break
                         new_row.append(None)
             if len(new_row) == len(table.columns):
                 table.add_row(new_row)
@@ -232,7 +233,7 @@ class FileArchive(object):
         if sort_by:
             table.sort(sort_by)
 
-        return table, common_path
+        self.table = table
 
     @staticmethod
     def common_path(files):
