@@ -1,7 +1,6 @@
 import numpy as np
 import os
 from astropy.io import fits
-from datetime import datetime
 
 from specklepy.logging import logger
 from specklepy.exceptions import SpecklepyTypeError
@@ -92,7 +91,7 @@ class Outfile(object):
             raise SpecklepyTypeError('Outfile', 'timestamp', type(timestamp), 'bool')
         else:
             if timestamp:
-                self.filename = filename.replace('.fits', '_{}.fits'.format(self.time_stamp()))
+                self.filename = filename.replace('.fits', '_{}.fits'.format(default_time_stamp()))
 
         if header_card_prefix is None:
             self.header_card_prefix = ""
@@ -123,7 +122,7 @@ class Outfile(object):
         if data is not None:
             hdu.data = data
         if 'DATE' not in hdu.header.keys():
-            hdu.header.set('DATE', str(datetime.now()))
+            hdu.header.set('DATE', default_time_stamp())
 
         # Create a HDU list with the primary and write to file
         hdu_list = fits.HDUList([hdu])
@@ -154,11 +153,6 @@ class Outfile(object):
     def from_file(cls, filename, path=None):
         return cls(filename=filename, path=path, initialize=False)
 
-    @staticmethod
-    def time_stamp():
-        """Return a time stamp str of format 'YYYYMMDD_HHMMSS'."""
-        return default_time_stamp()
-
     @property
     def file_path(self):
         if self.path is None:
@@ -174,7 +168,7 @@ class Outfile(object):
     def data(self, data):
         with fits.open(self.file_path, mode='update') as hdu_list:
             hdu_list[0].data = data
-            hdu_list[0].header.set('UPDATED', str(datetime.now()))
+            hdu_list[0].header.set('UPDATED', default_time_stamp())
             hdu_list.flush()
         if self.verbose:
             logger.info(f"Updating data in {self.file_path!r}")
@@ -185,7 +179,7 @@ class Outfile(object):
     def __setitem__(self, extension, data):
         with fits.open(self.file_path, mode='update') as hdu_list:
             hdu_list[extension].data = data
-            hdu_list[extension].header.set('UPDATED', str(datetime.now()))
+            hdu_list[extension].header.set('UPDATED', default_time_stamp())
             hdu_list.flush()
 
     def update_frame(self, frame_index, data, extension=None):
@@ -193,7 +187,7 @@ class Outfile(object):
             extension = 0
         with fits.open(self.file_path, mode='update') as hdu_list:
             hdu_list[extension].data[frame_index] = data
-            hdu_list[extension].header.set('UPDATED', str(datetime.now()))
+            hdu_list[extension].header.set('UPDATED', default_time_stamp())
             hdu_list.flush()
         # self.data[frame_index] = data
 
