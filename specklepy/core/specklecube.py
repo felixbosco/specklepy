@@ -159,8 +159,6 @@ class SpeckleCube(object):
 
             # Coadd frames
             self.image, self.image_var = self.align_frames(mask=mask)
-            # self.image, self.image_var = coadd_frames(cube=self.cube, var_cube=self.variance, box=self.box, mask=mask,
-            #                                           fill_value=self.fill_value)
         else:
             raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
         self.method = 'ssa'
@@ -203,91 +201,3 @@ class SpeckleCube(object):
 
         # Return target path
         return self.default_save_path()
-
-
-def coadd_frames(cube, var_cube=None, box=None, mask=None, fill_value=0):
-    """Compute the simple shift-and-add (SSA) reconstruction of a data cube.
-
-    This function uses the SSA algorithm to coadd frames of a cube. If provided, this function coadds the variances
-    within a var cube considering the exact same shifts.
-
-    Args:
-        cube (np.ndarray, ndim=3):
-            Data cube which is integrated along the zero-th axis.
-        var_cube (np.ndarray, ndim=3, optional):
-            Data cube of variances which is integrated along the zero-th axis with the same shifts as the cube.
-        box (Box object, optional):
-            Constraining the search for the intensity peak to the specified box. Searching the full frames if not
-            provided.
-        mask (np.ndarray, optional):
-            Bad pixel mask in the shape of a frame of the cube.
-        fill_value (float-like, optional):
-            Masked pixels will obtain this value prior to co-addition.
-
-    Returns:
-        coadded (np.ndarray, ndim=2):
-            SSA-integrated frames of the input cube.
-        var_coadded (np.ndarray, ndim=2):
-            SSA-integrated variances of the input cube or the variance map itself if provided as a 2D cube.
-    """
-
-    # Assert that cube is a 3-dimensional np.ndarray
-    try:
-        if cube.ndim != 3:
-            raise SpecklepyValueError('coadd_frames()', argname='cube.ndim', argvalue=cube.ndim, expected='2 or 3')
-    except AttributeError:
-        raise SpecklepyTypeError('coadd_frames()', argname='cube', argtype=type(cube), expected='np.ndarray')
-
-    # Check on the shape of var_cube
-    if var_cube is not None:
-        if not isinstance(var_cube, np.ndarray):
-            raise SpecklepyTypeError('coadd_frames()', argname='var_cube', argtype=type(var_cube),
-                                     expected='np.ndarray')
-        if var_cube.ndim == cube.ndim and var_cube.shape != cube.shape:
-            raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
-                                      expected=str(cube.shape))
-        elif var_cube.ndim == cube.ndim-1 and frame_shape(var_cube) != frame_shape(cube):
-            raise SpecklepyValueError('coadd_frames()', argname='var_cube.shape', argvalue=str(var_cube.shape),
-                                      expected=str(cube.shape))
-
-    # Compute shifts
-    peak_indexes = np.zeros((frame_number(cube), 2), dtype=int)
-    for f, frame in enumerate(cube):
-        if mask is not None:
-            frame[mask] = fill_value
-        if box is not None:
-            frame = box(frame)
-        try:
-            peak_indexes[f] = np.array(peak_index(frame), dtype=int)
-        except ValueError as e:
-            sys.tracebacklimit = 0
-            logger.warning(f"The box {box} might be set inappropriate!")
-            raise e
-
-    # Compute shifts from indexes
-    peak_indexes = peak_indexes.transpose()
-    mean_index = np.mean(np.array(peak_indexes), axis=1)
-    shifts = np.array([int(mean_index[0]) - peak_indexes[0], int(mean_index[1]) - peak_indexes[1]])
-    shifts = shifts.transpose()
-
-    # Shift frames and add to coadded
-    coadded = np.zeros(frame_shape(cube))
-    alignment = FrameAlignment()
-    alignment.derive_pad_vectors(shifts)
-    for f, frame in enumerate(cube):
-        coadded += alignment.pad_array(frame, pad_vector_index=f, mode='same')
-
-    # Coadd variance cube (if not an image itself)
-    if var_cube is not None:
-        if var_cube.ndim == 3:
-            var_coadded = np.zeros(coadded.shape)
-            for f, frame in enumerate(var_cube):
-                var_coadded += alignment.pad_array(frame, pad_vector_index=f, mode='same')
-        elif var_cube.ndim == 2:
-            var_coadded = var_cube
-        else:
-            raise RuntimeError(f"var_cube has unexpected shape: {var_cube.shape}")
-    else:
-        var_coadded = None
-
-    return coadded, var_coadded
