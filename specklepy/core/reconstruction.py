@@ -193,7 +193,7 @@ class Reconstruction(object):
         if integration_method is not None:
             self.integration_method = integration_method
         if shifts is not None:
-            self.shifts = shifts
+            self.alignment.shifts = shifts
 
         # Initialize list of long exposure files
         long_exposure_files = []
@@ -213,8 +213,8 @@ class Reconstruction(object):
             if self.integration_method == 'collapse':
                 speckle_cube.collapse(mask=self.custom_mask)
             elif self.integration_method == 'ssa':
-                if self.box is not None and self.shifts is not None:
-                    box = self.box.shift(shift=self.shifts[f])
+                if self.box is not None and self.alignment.shifts is not None:
+                    box = self.box.shift(shift=self.alignment.shifts[f])
                 else:
                     box = self.box
                 box.crop_to_shape(speckle_cube.frame_shape)
