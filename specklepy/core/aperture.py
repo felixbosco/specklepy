@@ -1,6 +1,5 @@
 from copy import copy
 import numpy as np
-import sys
 import warnings
 
 from specklepy.io import fits
@@ -46,7 +45,7 @@ class Aperture(object):
             y0 = args[1]
             radius = args[2]
         else:
-            raise ValueError("Aperture expects either 2 or 3 args, but {} have been provided!".format(len(args)))
+            raise ValueError(f"Aperture expects either 2 or 3 positional args, but {len(args)} have been provided!")
 
         # Integer checks and handling non-integer input
         if isinstance(x0, int) and isinstance(y0, int):
@@ -65,7 +64,7 @@ class Aperture(object):
         if isinstance(radius, int):
             self.radius = radius
         else:
-            raise ValueError('Aperture radius must be given as integer! (Was given as {})'.format(radius))
+            raise ValueError(f"Aperture radius must be integer type, but is {radius})")
 
         # Handling data input
         if isinstance(file_name, str):
@@ -135,7 +134,7 @@ class Aperture(object):
         """Create a circular or rectangular mask."""
 
         if not isinstance(mode, str):
-            raise TypeError("Aperture received mode argument of type {}, but needs to be str type!".format(type(mode)))
+            raise TypeError(f"Aperture received mode argument of type {type(mode)}, but needs to be str type!")
 
         if mode == 'circular':
             distance_map = self.make_radius_map()
@@ -286,7 +285,7 @@ class Aperture(object):
             header = "radius_(pix) encircled_energy(data_unit)"
             data = np.concatenate(([rdata], [ydata]), axis=0).transpose()
             np.savetxt(saveto, data, header=header)
-            logger.info("Saved encircled energy data to file {}".format(saveto))
+            logger.info(f"Saved encircled energy data to file {saveto}")
 
         return rdata, ydata, edata
 
