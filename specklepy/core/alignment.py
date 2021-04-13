@@ -194,8 +194,8 @@ def derive_pad_vectors(shifts, cube_mode=False):
     pad_vectors = []
 
     # Get extreme points for 'full' padding
-    xmax, ymax = np.max(np.array(shifts), axis=0)
-    xmin, ymin = np.min(np.array(shifts), axis=0)
+    y_max, x_max = np.max(np.array(shifts), axis=0)
+    y_min, x_min = np.min(np.array(shifts), axis=0)
 
     # Iterate over Shifts
     for shift in shifts:
@@ -205,13 +205,13 @@ def derive_pad_vectors(shifts, cube_mode=False):
         else:
             pad_vector = []
 
-        pad_vector.append((shift[0] - xmin, xmax - shift[0]))
-        pad_vector.append((shift[1] - ymin, ymax - shift[1]))
+        pad_vector.append((shift[0] - y_min, y_max - shift[0]))
+        pad_vector.append((shift[1] - x_min, x_max - shift[1]))
 
         pad_vectors.append(pad_vector)
 
     # In 'same' mode, pad_array needs also the pad vector of the reference image
-    reference_image_pad_vector = [(np.abs(xmin), np.abs(xmax)), (np.abs(ymin), np.abs(ymax))]
+    reference_image_pad_vector = [(np.abs(y_min), np.abs(y_max)), (np.abs(x_min), np.abs(x_max))]
 
     return pad_vectors, reference_image_pad_vector
 
