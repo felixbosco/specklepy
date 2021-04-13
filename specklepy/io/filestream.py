@@ -155,6 +155,10 @@ class FileStream(object):
             # Store to file
             hdu_list.flush()
 
+    @staticmethod
+    def default_psf_file_name(file_name):
+        return 'psf_' + os.path.basename(file_name)
+
     def build_reconstruction_file_header_cards(self, files, path=None, algorithm=None, card_prefix=None, insert=True,
                                                extension=None):
 
