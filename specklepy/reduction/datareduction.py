@@ -2,14 +2,10 @@ import glob
 import numpy as np
 import os
 
-from astropy.io import fits
-
-from specklepy.io import config
+from specklepy.io import config, FileStream, ReductionFileArchive
 from specklepy.io.config import read
-from specklepy.io.filearchive import ReductionFileArchive
 from specklepy.logging import logger
 from specklepy.reduction import dark, flat, sky
-from specklepy.utils.array import frame_shape
 from specklepy.utils.time import default_time_stamp
 
 
@@ -30,7 +26,7 @@ class DataReduction(object):
                 setattr(self, attr, kwargs.get(attr.upper()))
 
         # Initialize file archive
-        self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), in_dir=self.paths.get('filePath'),
+        self.files = ReductionFileArchive(file_list=self.paths.get('fileList'), file_path=self.paths.get('filePath'),
                                           out_dir=self.paths.get('outDir'), table_format='ascii.fixed_width')
         # Reset input directory
         self.files.file_path = self.paths.get('filePath')
@@ -312,38 +308,29 @@ class DataReduction(object):
 
                 # Subtract sky background from data
                 logger.info(f"Subtracting sky background...")
-                with fits.open(product_file_path, mode='update') as hdu_list:
+                product_file = FileStream(product_file_path)
+                bpm = product_file.get_data(extension='MASK', dtype=bool)
+                if bpm is None:
+                    bpm = np.zeros(product_file.frame_shape, dtype=bool)
+                gpm = ~bpm
 
-                    # Extract mask
-                    if 'MASK' in hdu_list:
-                        bpm = hdu_list['MASK'].data.astype(bool)
-                        gpm = ~bpm
-                    else:
-                        bpm = np.zeros(frame_shape(hdu_list[0].data), dtype=bool)
-                        gpm = True
+                # Subtract sky background
+                data = product_file.get_data()
+                product_file.set_data(np.subtract(data, sky_mean, where=gpm))
 
-                    # Subtract sky
-                    hdu_list[0].data = np.subtract(hdu_list[0].data, sky_mean, where=gpm)
+                # Update header
+                product_file.set_header('HIERARCH SPECKLEPY REDUCTION SKYBKG', default_time_stamp())
 
-                    # Update header
-                    hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION SKYBKG', default_time_stamp())
+                # Propagate uncertainties
+                var = product_file.get_data(extension='VAR', ignore_missing_extension=True)
+                if var is not None:
+                    product_file.set_data(extension='VAR', data=np.add(var, np.square(sky_std)))
+                else:
+                    product_file.new_extension(name='VAR', data=np.full(product_file.frame_shape, np.square(sky_std)))
 
-                    # Propagate uncertainties
-                    try:
-                        hdu_list['VAR'].data = np.add(hdu_list['VAR'].data, np.square(sky_std))
-                    except KeyError:
-                        # Create VAR image and HDU
-                        sky_std_image = np.full(frame_shape(hdu_list[0].data), np.square(sky_std))
-                        var_hdu = fits.ImageHDU(data=sky_std_image, name='VAR')
-                        hdu_list.append(var_hdu)
-
-                    # Propagate mask
-                    if 'MASK' not in hdu_list:
-                        mask_hdu = fits.ImageHDU(data=bpm.astype(np.int16), name='MASK')
-                        hdu_list.append(mask_hdu)
-
-                    # Store updates
-                    hdu_list.flush()
+                # Propagate mask
+                if not product_file.has_extension('MASK'):
+                    product_file.new_extension(name='MASK', data=bpm, dtype=np.int16)
 
         else:
             raise NotImplementedError(f"Sky subtraction from source {self.sky.get('source')!r} is not implemented yet!")
@@ -366,18 +353,18 @@ class DataReduction(object):
 
                 # Subtract sky background from data
                 logger.info(f"Filling masked pixels in file {product_file_path!r}")
-                with fits.open(product_file_path, mode='update') as hdu_list:
+                product_file = FileStream(product_file_path)
 
-                    # Extract mask
-                    if 'MASK' in hdu_list:
-                        bpm = hdu_list['MASK'].data != 0
-                    else:
-                        bpm = []
+                # Extract bad pixel mask
+                bpm = product_file.get_data(extension='MASK', dtype=bool, ignore_missing_extension=True)
+                if bpm is None:
+                    bpm = False
 
-                    # Fill pixels
-                    if hdu_list[0].data.ndim == 2:
-                        hdu_list[0].data[bpm] = fill_value
-                    elif hdu_list[0].data.ndim == 3:
-                        hdu_list[0].data[:, bpm] = fill_value
-
-                    hdu_list.flush()
+                # Fill pixels
+                data = product_file.get_data()
+                if data.ndim == 2:
+                    data[bpm] = fill_value
+                elif data.ndim == 3:
+                    data[:, bpm] = fill_value
+                else:
+                    raise ValueError(f"Encountered data of unexpected dimension ({data.ndim}, expected 2 or 3)!")
