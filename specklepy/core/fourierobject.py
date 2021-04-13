@@ -3,7 +3,7 @@ from numpy.fft import fft2, ifft2, fftshift
 
 from tqdm import trange
 
-from specklepy.core.alignment import derive_pad_vectors, pad_array
+from specklepy.core.alignment import FrameAlignment
 from specklepy.core.bootstrap import random_draw_vectors
 from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
@@ -59,16 +59,15 @@ class FourierObject(object):
 
         # Extract padding vectors for images and reference image
         logger.info("Initializing padding vectors")
-        self.pad_vectors, self.reference_image_pad_vector = derive_pad_vectors(shifts=shifts)
+        self.alignment = FrameAlignment()
+        self.alignment.derive_pad_vectors(shifts=shifts)
         file_index = 0
-        image_pad_vector = self.pad_vectors[file_index]
 
         # Get example image frame, used as final image size
         image_file = in_files[file_index]
         logger.info(f"\tUsing example image frame from {image_file!r}")
         img = get_data(image_file, path=self.in_dir)[0]  # Remove time axis padding
-        img = pad_array(array=img, pad_vector=image_pad_vector, mode=mode,
-                        reference_image_pad_vector=self.reference_image_pad_vector)
+        img = self.alignment.pad_array(array=img, pad_vector_index=file_index, mode=mode)
         logger.info(f"\tShift: {shifts[file_index]}")
         self.shape = img.shape
         logger.info(f"\tShape: {self.shape}")
@@ -191,10 +190,7 @@ class FourierObject(object):
                 frame[image_mask] = fill_value
 
                 # Padding and transforming the image
-                img = pad_array(array=frame,
-                                pad_vector=self.pad_vectors[file_index],
-                                mode=self.mode,
-                                reference_image_pad_vector=self.reference_image_pad_vector)
+                img = self.alignment.pad_array(array=frame, pad_vector_index=file_index, mode=self.mode)
                 f_img = fftshift(fft2(img))
 
                 # Padding and Fourier transforming PSF

@@ -5,7 +5,7 @@ import sys
 from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.core import alignment
+from specklepy.core.alignment import FrameAlignment
 from specklepy.io.filestream import FileStream
 from specklepy.io.fits import get_data
 from specklepy.logging import logger
@@ -132,13 +132,12 @@ class SpeckleCube(object):
         aligned_var = np.zeros(self.frame_shape) if self.variance is not None else None
 
         # Shift frames and add to `aligned`
-        pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts)
+        alignment = FrameAlignment()
+        alignment.derive_pad_vectors(shifts=shifts)
         for f, frame in enumerate(self.cube):
-            aligned += alignment.pad_array(frame, pad_vectors[f], mode='same',
-                                           reference_image_pad_vector=ref_pad_vector)
+            aligned += alignment.pad_array(frame, pad_vector_index=f, mode='same')
             if aligned_var is not None:
-                aligned_var += alignment.pad_array(self.variance, pad_vectors[f], mode='same',
-                                                   reference_image_pad_vector=ref_pad_vector)
+                aligned_var += alignment.pad_array(self.variance, pad_vector_index=f, mode='same')
         return aligned, aligned_var
 
     def ssa(self, box=None, mask_bad_pixels=False, mask=False, fill_value=None):
@@ -295,17 +294,17 @@ def coadd_frames(cube, var_cube=None, box=None, mask=None, fill_value=0):
 
     # Shift frames and add to coadded
     coadded = np.zeros(frame_shape(cube))
-    pad_vectors, ref_pad_vector = alignment.derive_pad_vectors(shifts)
+    alignment = FrameAlignment()
+    alignment.derive_pad_vectors(shifts)
     for f, frame in enumerate(cube):
-        coadded += alignment.pad_array(frame, pad_vectors[f], mode='same', reference_image_pad_vector=ref_pad_vector)
+        coadded += alignment.pad_array(frame, pad_vector_index=f, mode='same')
 
     # Coadd variance cube (if not an image itself)
     if var_cube is not None:
         if var_cube.ndim == 3:
             var_coadded = np.zeros(coadded.shape)
             for f, frame in enumerate(var_cube):
-                var_coadded += alignment.pad_array(frame, pad_vectors[f], mode='same',
-                                                   reference_image_pad_vector=ref_pad_vector)
+                var_coadded += alignment.pad_array(frame, pad_vector_index=f, mode='same')
         elif var_cube.ndim == 2:
             var_coadded = var_cube
         else:

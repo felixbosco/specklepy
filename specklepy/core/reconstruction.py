@@ -2,7 +2,7 @@ import numpy as np
 import os
 import sys
 
-from specklepy.core import alignment
+from specklepy.core.alignment import FrameAlignment
 from specklepy.core.sourceextraction import extract_sources
 from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
@@ -105,9 +105,7 @@ class Reconstruction(object):
         self.image = None
         self.image_var = None
         self.long_exp_files = None
-        self.shifts = None
-        self.pad_vectors = None
-        self.reference_pad_vector = None
+        self.alignment = None
 
     @property
     def single_cube_mode(self):
@@ -172,7 +170,6 @@ class Reconstruction(object):
             raise ValueError("No source selected to center the aperture on")
         pos = {'x': int(round(selected[0]['x'])), 'y': int(round(selected[0]['y']))}
         self.box = Box(indexes=[pos['x'] - radius, pos['x'] + radius + 1, pos['y'] - radius, pos['y'] + radius + 1])
-        # self.box.transpose()
 
     def create_long_exposures(self, integration_method=None, mask_hot_pixels=False, shifts=None):
         """Compute long exposures from the input data cubes.
@@ -249,22 +246,18 @@ class Reconstruction(object):
 
         # Save time if only one cube is provided
         if self.single_cube_mode:
-            self.shifts = [(0, 0)]
-            self.pad_vectors = [((0, 0), (0, 0))]
-            self.reference_pad_vector = ((0, 0), (0, 0))
+            self.alignment = FrameAlignment()
+            self.alignment.shifts = [(0, 0)]
+            self.alignment.pad_vectors = [((0, 0), (0, 0))]
+            self.alignment.reference_pad_vector = ((0, 0), (0, 0))
 
         else:
             # Estimate relative shifts
-            # self.shifts = alignment.estimate_shifts(files=self.long_exp_files, reference_file=self.reference_index,
-            #                                         lazy_mode=True, return_image_shape=False, in_dir=self.tmp_dir,
-            #                                         debug=self.debug)
-            shift_estimator = alignment.FrameAlignment()
-            self.shifts = shift_estimator.estimate_shifts(file_names=self.long_exp_files, in_dir=self.tmp_dir,
-                                                          reference_file_index=self.reference_index,
-                                                          mode=alignment_mode, debug=self.debug)
-
-            # Derive corresponding padding vectors
-            self.pad_vectors, self.reference_pad_vector = alignment.derive_pad_vectors(shifts=self.shifts)
+            self.alignment = FrameAlignment()
+            self.alignment.estimate_shifts(file_names=self.long_exp_files, in_dir=self.tmp_dir,
+                                           reference_file_index=self.reference_index, mode=alignment_mode,
+                                           debug=self.debug)
+            self.alignment.derive_pad_vectors()
 
     def initialize_image(self):
         """Initialize the reconstruction image."""
@@ -276,10 +269,10 @@ class Reconstruction(object):
         if self.mode == 'same':
             pass
         elif self.mode == 'full':
-            image = np.pad(image, self.reference_pad_vector, mode='constant')
+            image = np.pad(image, self.alignment.reference_pad_vector, mode='constant')
         elif self.mode == 'valid':
             # Estimate minimum overlap
-            _shifts = np.array(self.shifts)
+            _shifts = np.array(self.alignment.shifts)
             _crop_by = np.max(_shifts, axis=0) - np.min(_shifts, axis=0)
             image = image[_crop_by[0]:, _crop_by[1]:]
 
@@ -293,7 +286,7 @@ class Reconstruction(object):
             self.integration_method = integration_method
 
         # Align cubes and cube relative shifts, if not available yet
-        if self.shifts is None or self.pad_vectors is None or self.reference_pad_vector is None:
+        if self.alignment is None:
             self.align_cubes()
 
         # Initialize the image
@@ -309,13 +302,11 @@ class Reconstruction(object):
                                      ignore_missing_extension=True)
 
             # Co-add reconstructions and var images
-            self.image += alignment.pad_array(tmp_image, self.pad_vectors[index], mode=self.mode,
-                                              reference_image_pad_vector=self.reference_pad_vector)
+            self.image += self.alignment.pad_array(tmp_image, pad_vector_index=index, mode=self.mode)
             if tmp_image_var is not None:
                 if self.image_var is None:
                     self.image_var = self.initialize_image()
-                self.image_var += alignment.pad_array(tmp_image_var, self.pad_vectors[index], mode=self.mode,
-                                                      reference_image_pad_vector=self.reference_pad_vector)
+                self.image_var += self.alignment.pad_array(tmp_image_var, pad_vector_index=index, mode=self.mode)
 
         # Update out_file
         if save:
