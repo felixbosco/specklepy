@@ -21,13 +21,18 @@ class MasterFlat(object):
     extensions = {'variance': 'VAR', 'mask': 'MASK'}
 
     def __init__(self, file_list, file_name='MasterFlat.fits', file_path=None, out_dir=None, filter=None,
-                 sub_window=None, new=True):
+                 sub_window=None):
         """
 
-        Arguments:
+        Args:
+            file_list:
+            file_name:
+            file_path:
+            out_dir:
+            filter:
             sub_window (str, optional):
                 String describing the full window in the same format as the sub-window strings for providing relative
-                coordinates.
+                coordinates:
         """
 
         # Store input parameters
@@ -55,10 +60,6 @@ class MasterFlat(object):
             self.sub_window = sub_window
         else:
             self.sub_window = np.unique(sub_window)[0]
-
-        # Create an output file
-        # self.master_file = MasterFile(self.file_name, files=self.files, in_dir=file_path, out_dir=out_dir,
-        #                               initialize=new)
 
         # Initialize maps
         self.image = None
