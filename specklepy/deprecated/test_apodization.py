@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from specklepy.core.apodization import apodize
+from specklepy.deprecated.apodization import apodize
 from specklepy.plotting.utils import imshow
 
 
