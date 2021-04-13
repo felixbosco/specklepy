@@ -9,14 +9,14 @@ from specklepy.plotting.utils import imshow
 from specklepy.utils.array import peak_index
 
 
-class ShiftEstimator(object):
+class FrameAlignment(object):
 
-    def __init__(self, reference_file=None, reference_image=None, in_dir=None):
+    def __init__(self, reference_file=None, reference_image=None, file_path=None):
 
         # Store reference image
         self.reference_file = reference_file
         self._reference_image = reference_image
-        self.in_dir = in_dir
+        self.file_path = file_path
 
         # Initialize shifts
         self.shifts = None
@@ -26,15 +26,15 @@ class ShiftEstimator(object):
 
     @property
     def reference_image_path(self):
-        if self.in_dir is None:
+        if self.file_path is None:
             return self.reference_file
         else:
-            return os.path.join(self.in_dir, self.reference_file)
+            return os.path.join(self.file_path, self.reference_file)
 
     @property
     def reference_image(self):
         if self._reference_image is None:
-            self._reference_image = self.load_collapsed(self.reference_image_path)
+            self._reference_image = self.load_collapsed(self.reference_file, path=self.file_path)
         return self._reference_image
 
     @property
@@ -72,7 +72,7 @@ class ShiftEstimator(object):
         if reference_file_index is not None:
             self.reference_file = file_names[reference_file_index]
         if in_dir is not None:
-            self.in_dir = in_dir
+            self.file_path = in_dir
 
         # Reset stored shifts
         self.shifts = []
@@ -92,7 +92,7 @@ class ShiftEstimator(object):
                 if file == self.reference_file:
                     shift = (0, 0)
                 else:
-                    image = self.load_collapsed(file, path=self.in_dir)
+                    image = self.load_collapsed(file, path=self.file_path)
                     peak = peak_index(image)
                     shift = reference_peak[0] - peak[0], reference_peak[1] - peak[1]
 
@@ -109,7 +109,7 @@ class ShiftEstimator(object):
                     shift = (0, 0)
                 else:
                     # Load and Fourier transform the image
-                    image = self.load_collapsed(file, path=self.in_dir)
+                    image = self.load_collapsed(file, path=self.file_path)
                     f_image = np.conjugate(np.fft.fft2(image))
 
                     # Compute the 2-dimensional correlation
@@ -145,7 +145,7 @@ class ShiftEstimator(object):
                     shift = (0, 0)
                 else:
                     # Load the image into the source extractor
-                    image = self.load_collapsed(file, path=self.in_dir)
+                    image = self.load_collapsed(file, path=self.file_path)
                     extractor.initialize_image(source=image)
                     extractor.initialize_star_finder()
                     extractor.find_sources()
