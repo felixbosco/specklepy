@@ -42,7 +42,7 @@ class ShiftEstimator(object):
         return self._reference_image.shape
 
     @staticmethod
-    def load_collapsed(path):
+    def load_collapsed(file_name, path=None):
         """Load and collapse a data cube by integrating over time axis if not 2D image
 
         Arguments:
@@ -55,19 +55,12 @@ class ShiftEstimator(object):
         """
 
         logger.debug(f"Loading data from file {path!r}")
-        data = get_data(path)
+        data = get_data(file_name=file_name, path=path)
 
         if data.ndim == 3:
             data = np.sum(data, axis=0)
 
         return data
-
-    @staticmethod
-    def make_path(file_name, in_dir=None):
-        try:
-            return os.path.join(in_dir, file_name)
-        except TypeError:
-            return file_name
 
     def estimate_shifts(self, file_names, mode='correlation', in_dir=None, reference_file_index=None, debug=False):
 
@@ -99,8 +92,7 @@ class ShiftEstimator(object):
                 if file == self.reference_file:
                     shift = (0, 0)
                 else:
-                    path = self.make_path(file, in_dir=self.in_dir)
-                    image = self.load_collapsed(path=path)
+                    image = self.load_collapsed(file, path=self.in_dir)
                     peak = peak_index(image)
                     shift = reference_peak[0] - peak[0], reference_peak[1] - peak[1]
 
@@ -117,8 +109,7 @@ class ShiftEstimator(object):
                     shift = (0, 0)
                 else:
                     # Load and Fourier transform the image
-                    path = self.make_path(file, in_dir=self.in_dir)
-                    image = self.load_collapsed(path=path)
+                    image = self.load_collapsed(file, path=self.in_dir)
                     f_image = np.conjugate(np.fft.fft2(image))
 
                     # Compute the 2-dimensional correlation
@@ -154,8 +145,7 @@ class ShiftEstimator(object):
                     shift = (0, 0)
                 else:
                     # Load the image into the source extractor
-                    path = self.make_path(file, in_dir=self.in_dir)
-                    image = self.load_collapsed(path=path)
+                    image = self.load_collapsed(file, path=self.in_dir)
                     extractor.initialize_image(source=image)
                     extractor.initialize_star_finder()
                     extractor.find_sources()
