@@ -1,14 +1,12 @@
 import numpy as np
 
-from specklepy.core.fourierobject import FourierObject
-from specklepy.core.psfextraction import ReferenceStars
-from specklepy.core.reconstruction import Reconstruction
+from specklepy import imshow
+from specklepy.core import FourierObject, ReferenceStars, Reconstruction
 from specklepy.core.sourceextraction import extract_sources
-from specklepy.io.config import dict_to_cards
 from specklepy.io import FileArchive, FileStream
+from specklepy.io.config import dict_to_cards
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
-from specklepy.plotting.utils import imshow
 
 
 def holography(params, debug=False):

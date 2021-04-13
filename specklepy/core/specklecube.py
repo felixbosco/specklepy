@@ -5,8 +5,8 @@ import sys
 from astropy.io import fits
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.core.alignment import FrameAlignment
-from specklepy.io.filestream import FileStream
+from specklepy.core import FrameAlignment
+from specklepy.io import FileStream
 from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels

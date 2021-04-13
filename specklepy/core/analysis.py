@@ -4,9 +4,9 @@ import os
 from astropy.io import fits
 from astropy.table import Table, Column
 
-from specklepy.core.aperture import Aperture
+from specklepy import imshow
+from specklepy.core import Aperture
 from specklepy.logging import logger
-from specklepy.plotting.utils import imshow
 
 
 def aperture_analysis(file, index, radius, out_file=None, pixel_scale=1, recenter=False, debug=False):

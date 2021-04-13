@@ -3,9 +3,8 @@ from numpy.fft import fft2, ifft2, fftshift
 
 from tqdm import trange
 
-from specklepy.core.alignment import FrameAlignment
+from specklepy.core import FrameAlignment, PSFModel
 from specklepy.core.bootstrap import random_draw_vectors
-from specklepy.core.psfmodel import PSFModel
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.io.fits import get_data, get_frame_number
 from specklepy.logging import logger

@@ -1,9 +1,8 @@
-import numpy as np
 import os
 
-from specklepy.core.reconstruction import Reconstruction
+from specklepy.core import Reconstruction
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io.filearchive import FileArchive
+from specklepy.io import FileArchive
 from specklepy.logging import logger
 
 
@@ -69,15 +68,9 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         logger.info("Set logging level to DEBUG")
 
     # Check parameters
-    file_archive = FileArchive(file_list=files, cards=[], dtypes=[],
-                               table_format=kwargs.get('tableFormat', 'ascii.no_header'))
+    file_archive = FileArchive(file_list=files, table_format=kwargs.get('tableFormat', 'ascii.no_header'))
     files = file_archive.files
     in_dir = file_archive.file_path
-    # if not isinstance(files, (list, np.ndarray)):
-    #     if isinstance(files, str):
-    #         files = [files]
-    #     else:
-    #         raise SpecklepyTypeError('ssa()', argname='files', argtype=type(files), expected='list')
 
     if isinstance(mode, str):
         if mode not in ['same', 'full', 'valid']:
@@ -89,9 +82,6 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
         pass
     else:
         raise SpecklepyTypeError('ssa()', argname='outfile', argtype=type(outfile), expected='str')
-
-    if in_dir is None:
-        in_dir = ''
 
     if tmp_dir is not None:
         if isinstance(tmp_dir, str) and not os.path.isdir(tmp_dir):
@@ -118,7 +108,7 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
             reconstruction.select_box(radius=aperture_radius)
         reconstruction.long_exp_files = reconstruction.create_long_exposures(integration_method='ssa',
                                                                              mask_hot_pixels=mask_hot_pixels,
-                                                                             shifts=reconstruction.shifts)
+                                                                             shifts=reconstruction.alignment.shifts)
 
         reconstruction.align_cubes(integration_method=integration_method, alignment_mode=alignment_method,
                                    mask_hot_pixels=mask_hot_pixels)
