@@ -4,6 +4,7 @@ import os
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
 
+from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
 from specklepy.reduction.subwindow import SubWindow
 from specklepy.utils.time import default_time_stamp
@@ -38,18 +39,22 @@ class MasterDark(object):
         obj = cls(file_list=None, file_name=file_name, out_dir=out_dir, setup=None)
 
         # Load data from file
-        obj.image = fits.getdata(obj.path)
-        try:
-            obj.var = fits.getdata(obj.path, obj.extensions.get('variance'))
-        except KeyError:
+        obj.image = get_data(obj.path)
+        obj.var = get_data(obj.path, extension=obj.extensions.get('variance'), ignore_missing_extension=True)
+        # try:
+        #     obj.var = fits.getdata(obj.path, obj.extensions.get('variance'))
+        # except KeyError:
+        if obj.var is None:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('variance')!r} "
                          f"extension")
-        try:
-            obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).astype(bool)
-        except KeyError:
+        obj.mask = get_data(obj.path, extension=obj.extensions.get('mask'), dtype=bool, ignore_missing_extension=True)
+        # try:
+        #     obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).astype(bool)
+        # except KeyError:
+        if obj.mask is None:
             logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
-        obj.sub_window = fits.getheader(obj.path)["HIERARCH SPECKLEPY REDUCTION SUBWIN"]
+        obj.sub_window = get_header(obj.path, card="HIERARCH SPECKLEPY CALIBRATION SUBWIN")
 
         return obj
 
@@ -163,7 +168,7 @@ class MasterDark(object):
         header = fits.Header()
         for index, file in enumerate(self.files):
             header.set(f"HIERARCH SPECKLEPY SOURCE FILE{index:04} NAME", os.path.basename(file))
-        header.set("HIERARCH SPECKLEPY REDUCTION SUBWIN", self.sub_window)
+        header.set("HIERARCH SPECKLEPY CALIBRATION SUBWIN", self.sub_window)
         primary = fits.PrimaryHDU(data=self.image, header=header)
 
         # Build HDU list
