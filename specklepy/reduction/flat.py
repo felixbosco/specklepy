@@ -26,11 +26,16 @@ class MasterFlat(object):
         """
 
         Args:
-            file_list:
-            file_name:
-            file_path:
-            out_dir:
-            filter:
+            file_list (list or str):
+                List of file names or single file name of the flat frames to combine.
+            file_name (str, optional):
+                Name of the master flat file.
+            file_path (str, optional):
+                Path to the files in the `file_list`.
+            out_dir (str, optional):
+                Path to store the master flat in.
+            filter (str, optional):
+                Name of the filter or pass band that this master flat is dedicated to.
             sub_window (str, optional):
                 String describing the full window in the same format as the sub-window strings for providing relative
                 coordinates:
@@ -83,14 +88,14 @@ class MasterFlat(object):
         #     obj.var = fits.getdata(obj.path, obj.extensions.get('variance'))
         # except KeyError:
         if obj.var is None:
-            logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('variance')!r} "
+            logger.debug(f"Loading MasterFlat from file {obj.path!r} without {obj.extensions.get('variance')!r} "
                          f"extension")
         obj.mask = get_data(obj.path, extension=obj.extensions.get('mask'), dtype=bool, ignore_missing_extension=True)
         # try:
         #     obj.mask = fits.getdata(obj.path, obj.extensions.get('mask')).astype(bool)
         # except KeyError:
         if obj.mask is None:
-            logger.debug(f"Loading MasterDark from file {obj.path!r} without {obj.extensions.get('mask')!r} "
+            logger.debug(f"Loading MasterFlat from file {obj.path!r} without {obj.extensions.get('mask')!r} "
                          f"extension")
         # obj.sub_window = fits.getheader(obj.path)["HIERARCH SPECKLEPY CALIBRATION SUBWIN"]
         obj.sub_window = get_header(obj.path, card="HIERARCH SPECKLEPY CALIBRATION SUBWIN")
