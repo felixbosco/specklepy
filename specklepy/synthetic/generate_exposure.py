@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 import numpy as np
 from tqdm import trange
 
@@ -7,10 +6,12 @@ from astropy.io import fits
 from astropy.units import Quantity
 
 from specklepy.io import config
+from specklepy.io import FileStream
 from specklepy.logging import logger
 from specklepy.synthetic.target import Target
 from specklepy.synthetic.telescope import Telescope
 from specklepy.synthetic.detector import Detector
+from specklepy.utils.time import default_time_stamp
 
 
 def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_frames_limit=100, dithers=None,
@@ -39,7 +40,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
         dithers (list, optional):
             List of dither positions, offsets from the Target instance center. Default is None.
         outfile (str, optional):
-            Base name of the output file. If multiple files are requested, the index will be appended. Default is
+            Base name of the output file. If multiple files are requested, the frame_index will be appended. Default is
             'exposure.fits'.
         time_stamp (str, optional):
             Time stamp that can be added to outfile. Can be either 'start', 'end' or None to suppress adding the time
@@ -59,8 +60,9 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
 
     # Add a time stamp to file name, if not None
     out_dir, outfile = os.path.split(outfile)
-    now = datetime.now()
-    time_str = now.strftime('%Y%m%d_%H%M%S')
+    # now = datetime.now()
+    # time_str = now.strftime('%Y%m%d_%H%M%S')
+    time_str = default_time_stamp()
     if time_stamp == 'end':
         outfile = outfile.replace('.fits', f"_{time_str}.fits")
     elif time_stamp == 'start':
@@ -73,7 +75,8 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     hdu = fits.PrimaryHDU()
     hdu.data = np.zeros((n_frames_limit,) + detector.shape)
     hdu.header.set('EXPTIME', exposure_time.value, exposure_time.unit)
-    hdu.header.set('DATE', str(datetime.now()))
+    # hdu.header.set('DATE', str(datetime.now()))
+    hdu.header.set('DATE', default_time_stamp())
     if 'cards' in kwargs:
         for key in kwargs['cards']:
             hdu.header.set(key, kwargs['cards'][key])
@@ -122,39 +125,41 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     # Computation of frames
     frame_counter = 0
     for outfile_index, outfile in enumerate(outfiles):
-        with fits.open(outfile, mode='update') as hdu_list:
+        file_stream = FileStream(outfile)
+        # with fits.open(outfile, mode='update') as hdu_list:
 
-            # Get a new field of view for each file to enable dithering between files
-            if dithers is not None:
-                try:
-                    dither = dithers[outfile_index]
-                except IndexError:
-                    raise RuntimeError(f"Expected {len(outfiles)} dither positions but received only {len(dithers)}!")
-            else:
-                dither = None
-            photon_rate_density = target.get_photon_rate_density(field_of_view=detector.field_of_view,
-                                                                 resolution=telescope.psf_resolution,
-                                                                 dither=dither)
+        # Get a new field of view for each file to enable dithering between files
+        if dithers is not None:
+            try:
+                dither = dithers[outfile_index]
+            except IndexError:
+                raise RuntimeError(f"Expected {len(outfiles)} dither positions but received only {len(dithers)}!")
+        else:
+            dither = None
+        photon_rate_density = target.get_photon_rate_density(field_of_view=detector.field_of_view,
+                                                             resolution=telescope.psf_resolution,
+                                                             dither=dither)
 
-            # Generate individual frames
-            for index in trange(hdu_list[0].header['NAXIS3'], desc=f"Generating exposures for file {outfile}"):
-                photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=exposure_time,
-                                                        debug=debug)
-                counts = detector.get_counts(photon_rate=photon_rate,
-                                             integration_time=exposure_time,
-                                             photon_rate_resolution=target.resolution, debug=debug)
-                counts = counts.decompose()
-                hdu_list[0].data[index] = counts.value
+        # Generate individual frames
+        for frame_index in trange(file_stream.frame_number, desc=f"Generating exposures for file {outfile}"):
+            photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=exposure_time,
+                                                    debug=debug)
+            counts = detector.get_counts(photon_rate=photon_rate,
+                                         integration_time=exposure_time,
+                                         photon_rate_resolution=target.resolution, debug=debug)
+            counts = counts.decompose()
+            file_stream.update_frame(frame_index=frame_index, data=counts.value)
+            # hdu_list[0].data[frame_index] = counts.value
 
-                try:
-                    telescope.psf_frame += skip_frames
-                except TypeError:
-                    pass
+            try:
+                telescope.psf_frame += skip_frames
+            except TypeError:
+                pass
 
-                frame_counter += 1
+            frame_counter += 1
 
-            # Update header entry DATE
-            hdu_list[0].header.set('DATE', str(datetime.now()))
+        # Update header entry DATE
+        # hdu_list[0].header.set('DATE', str(datetime.now()))
 
 
 def get_objects(parameter_file, debug=False):
