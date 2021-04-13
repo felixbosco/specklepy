@@ -60,6 +60,56 @@ def get_data(file_name, path=None, extension=None, squeeze=True, dtype=None, ign
     return data
 
 
+def get_header(file_name, path=None, extension=None, card=None, ignore_missing_extension=False):
+    """Read data from a FITS file.
+
+    Args:
+        file_name (str):
+            Name of the file to read data from.
+        path (str, optional):
+            The path will be joined with `file_name`, if provided.
+        extension (str, optional):
+            Name of a FITS file extension. The behavior for missing extensions depends on the
+            `ignore_missing_extension` argument.
+        card (str, optional):
+            Name of a specific header card.
+        ignore_missing_extension (bool, optional):
+            Set the behavior for missing extensions. If `False`, a KeyError is raised, and otherwise the function
+            returns a `None`.
+
+    Returns:
+        header (astropy.io.fits.Header or None-type):
+            Header of the requested FITS file extension. Can return `None`, if extension is not contained in the file.
+        value (any):
+            Value of a specific card, if `card` is not None.
+    """
+
+    # Construct path
+    if path is None:
+        path = file_name
+    else:
+        path = os.path.join(path, file_name)
+
+    # Load data
+    try:
+        header = fits.getheader(path, extension)
+    except FileNotFoundError as e:
+        sys.tracebacklimit = 0
+        raise e
+    except KeyError as e:
+        if ignore_missing_extension:
+            return None
+        sys.tracebacklimit = 0
+        raise e
+
+    # Return value of requested card
+    if card is not None:
+        return header[card]
+
+    # Return
+    return header
+
+
 def get_frame_number(file, path=None, extension=None):
     data = get_data(file_name=file, path=path, extension=extension)
     return array.frame_number(data)
