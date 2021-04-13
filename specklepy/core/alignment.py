@@ -180,7 +180,7 @@ class FrameAlignment(object):
                 Pad vector of the reference image, which is needed for pad_array() in 'same' mode.
         """
 
-        # Check input parameters
+        # Update shifts if provided
         if shifts is not None:
             self.shifts = shifts
 
@@ -203,11 +203,11 @@ class FrameAlignment(object):
         return self.pad_vectors, self.reference_image_pad_vector
 
     def pad_array(self, array, pad_vector_index, mode='same', reference_image_pad_vector=None):
-        """Pads an array according to the pad_vector and crops the image given the
-        mode.
+        """Pads an array according to the pad_vector and crops the image given the mode.
 
-        Pads an array with zeros to match a desired field size. Intermediately, it always creates a 'full' image and only
-        in 'same' mode it crops the edges such that the returned array covers only the field of the reference image.
+        Pads an array with zeros to match a desired field size. Intermediately, it always creates a 'full' image and
+        only in 'same' mode it crops the edges such that the returned array covers only the field of the reference
+        image.
 
         Args:
             array (np.ndarray):
@@ -226,11 +226,11 @@ class FrameAlignment(object):
                 mode, or the complete field in 'full' mode.
         """
 
-        #
+        # Update reference pad vector if provided
         if reference_image_pad_vector is not None:
             self.reference_image_pad_vector = reference_image_pad_vector
 
-        #
+        # Pad the array to full size
         padded = np.pad(array, self.pad_vectors[pad_vector_index], mode='constant')
 
         # Crop the image according to the desired mode
