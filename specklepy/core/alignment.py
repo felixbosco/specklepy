@@ -1,10 +1,9 @@
 import numpy as np
 import os
 
-from astropy.io import fits
-
 from specklepy.core.sourceextraction import SourceExtractor
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io.fits import get_data, get_frame_shape
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
 from specklepy.utils.array import peak_index
@@ -56,7 +55,7 @@ class ShiftEstimator(object):
         """
 
         logger.debug(f"Loading data from file {path!r}")
-        data = fits.getdata(path).squeeze()
+        data = get_data(path)
 
         if data.ndim == 3:
             data = np.sum(data, axis=0)
@@ -239,8 +238,7 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
     if lazy_mode and len(files) == 1:
         logger.info("Only one data cube is provided, nothing to align.")
         shifts = [(0, 0)]
-        image_shape = fits.getdata(os.path.join(in_dir, files[0])).shape
-        image_shape = (image_shape[-2], image_shape[-1])
+        image_shape = get_frame_shape(files[0], path=in_dir)
 
     # Otherwise estimate shifts
     else:
@@ -248,7 +246,7 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
 
         # Identify reference file and Fourier transform the integrated image
         logger.info(f"Computing relative shifts between data cubes. Reference file is {reference_file!r}")
-        reference_image = fits.getdata(os.path.join(in_dir, reference_file)).squeeze()
+        reference_image = get_data(reference_file, path=in_dir)
         image_shape = reference_image.shape
         logger.debug(f"Reference image has shape {image_shape}")
 
@@ -268,7 +266,7 @@ def estimate_shifts(files, reference_file=None, mode='correlation', lazy_mode=Tr
             if file == reference_file:
                 shift = (0, 0)
             else:
-                image = fits.getdata(os.path.join(in_dir, file)).squeeze()
+                image = get_data(file, path=in_dir)
                 if image.ndim == 3:
                     image = np.sum(image, axis=0)
                 shift = estimate_shift(image, reference_image=reference_image, is_fourier_transformed=ref_image_ft,
@@ -347,7 +345,7 @@ def estimate_shift(image, reference_image, mode='correlation', is_fourier_transf
             imshow(np.abs(correlation), title='FFT shifted correlation')
 
         # Derive the shift from the correlation
-        shift = np.unravel_index(np.argmax(correlation), correlation.shape)
+        shift = peak_index(correlation)
         shift = tuple(x - int(correlation.shape[i] / 2) for i, x in enumerate(shift))
         return shift
 
