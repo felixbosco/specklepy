@@ -3,7 +3,7 @@
 import os
 import sys
 
-from specklepy.core import analysis
+from specklepy.core.analysis import aperture_analysis
 from specklepy.core.holography import holography
 from specklepy.core.sourceextraction import extract_sources
 from specklepy.core.ssa import ssa
@@ -47,20 +47,8 @@ def main():
     # Execute the script of the corresponding command
     if args.command == 'aperture':
         logger.info("Extract aperture statistics")
-        analysis.aperture_analysis(file=args.file, index=args.index, radius=args.radius, out_file=args.out_file,
-                                   pixel_scale=args.pixel_scale, recenter=args.centering, debug=args.debug)
-        # if args.mode == 'all':
-        #     logger.info("Extract aperture statistics")
-        #     analysis.aperture_analysis(file=args.file, index=args.index, radius=args.radius, out_file=args.out_file,
-        #                                pixel_scale=args.pixel_scale, recenter=args.centering, debug=args.debug)
-        # elif args.mode == 'psf1d':
-        #     logger.info("Extract 1D PSF profile")
-        #     analysis.get_psf_1d(args.file, args.index, args.radius, args.out_file, args.normalize, debug=args.debug)
-        # elif args.mode == 'variance':
-        #     logger.info("Extract 1D PSF variation")
-        #     analysis.get_psf_variation(args.file, args.index, args.radius, args.out_file, args.normalize, args.debug)
-        # else:
-        #     logger.warning(f"Aperture mode {args.mode} not recognized!")
+        aperture_analysis(file=args.file, index=args.index, radius=args.radius, out_file=args.out_file,
+                          pixel_scale=args.pixel_scale, recenter=args.centering, debug=args.debug)
 
     elif args.command == 'apodization':
         get_resolution_parameters(wavelength=args.wavelength, diameter=args.diameter, pixel_scale=args.pixel_scale)
