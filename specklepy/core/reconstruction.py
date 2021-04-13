@@ -264,8 +264,7 @@ class Reconstruction(object):
                                                           mode=alignment_mode, debug=self.debug)
 
             # Derive corresponding padding vectors
-            self.pad_vectors, self.reference_pad_vector =\
-                alignment.derive_pad_vectors(shifts=self.shifts, cube_mode=False)
+            self.pad_vectors, self.reference_pad_vector = alignment.derive_pad_vectors(shifts=self.shifts)
 
     def initialize_image(self):
         """Initialize the reconstruction image."""

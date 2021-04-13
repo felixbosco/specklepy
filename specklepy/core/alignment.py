@@ -165,15 +165,12 @@ class ShiftEstimator(object):
         return self.shifts
 
 
-def derive_pad_vectors(shifts, cube_mode=False):
+def derive_pad_vectors(shifts):
     """Computes padding vectors from the relative shifts between files.
 
     Args:
         shifts (list or np.ndarray):
             Shifts between files, relative to a reference image. See get_shifts function for details.
-        cube_mode (bool, optional):
-            If image is a cube, the estimated pad vectors will obtain pad_vector entries of (0, 0) for the zeroth axis.
-            Default is False.
 
     Returns:
         pad_vectors (list):
@@ -187,8 +184,6 @@ def derive_pad_vectors(shifts, cube_mode=False):
         pass
     else:
         raise SpecklepyTypeError('get_pad_vectors()', argname='shifts', argtype=type(shifts), expected='list')
-    if not isinstance(cube_mode, bool):
-        raise SpecklepyTypeError('get_pad_vectors()', argname='cube_mode', argtype=type(cube_mode), expected='bool')
 
     # Initialize list
     pad_vectors = []
@@ -200,14 +195,7 @@ def derive_pad_vectors(shifts, cube_mode=False):
     # Iterate over Shifts
     for shift in shifts:
 
-        if cube_mode:
-            pad_vector = [(0, 0)]
-        else:
-            pad_vector = []
-
-        pad_vector.append((shift[0] - y_min, y_max - shift[0]))
-        pad_vector.append((shift[1] - x_min, x_max - shift[1]))
-
+        pad_vector = [(shift[0] - y_min, y_max - shift[0]), (shift[1] - x_min, x_max - shift[1])]
         pad_vectors.append(pad_vector)
 
     # In 'same' mode, pad_array needs also the pad vector of the reference image
