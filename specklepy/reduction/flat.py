@@ -7,6 +7,7 @@ from astropy.table import Table
 from astropy.stats import sigma_clip, sigma_clipped_stats
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.io import FileStream
 from specklepy.logging import logger
 from specklepy.reduction.subwindow import SubWindow
 from specklepy.utils.combine import combine_masks
@@ -334,69 +335,129 @@ class MasterFlat(object):
         for file, sub_window_str in zip(file_list, sub_windows):
             logger.info(f"Applying flat field correction on file {file!r}")
 
-            # Add path to file name
-            if file_path:
-                file = os.path.join(file_path, file)
+            # # Add path to file name
+            # if file_path:
+            #     file = os.path.join(file_path, file)
 
             # Construct sub-window
             sub_window = SubWindow.from_str(sub_window_str, full=self.sub_window, order=sub_window_order)
 
             # Open the product files and update
-            with fits.open(file, mode='update') as hdu_list:
-                extension = 0
-                cube = hdu_list[extension].data.astype(float)
+            file_stream = FileStream(file_name=file, path=file_path)
+            cube = file_stream.get_data(extension=0, dtype=float)
 
-                # Extract array shapes
-                sub_window_shape = sub_window(self.image).shape
-                frame_shape = cube.shape[-2], cube.shape[-1]
+            # Extract array shapes
+            sub_window_shape = sub_window(self.image).shape
+            frame_shape = cube.shape[-2], cube.shape[-1]
 
-                # Correct only if array shapes match
-                if sub_window_shape == frame_shape:
+            # Correct only if array shapes match
+            if sub_window_shape == frame_shape:
 
-                    # Expand 2D image to a one frame cube
-                    if cube.ndim == 2:
-                        hdu_list[extension].data = np.divide(cube, sub_window(self.image), where=sub_window(gpm))
-                    else:
-                        # Normalize image/ cube frames by master flat
-                        for f in trange(cube.shape[0], desc='Updating frame'):
-                            frame = cube[f]
-                            hdu_list[extension].data[f] = np.divide(frame, sub_window(self.image), where=sub_window(gpm))
-                            hdu_list.flush()
-
-                    # Propagate variance
-                    if 'VAR' in hdu_list:
-                        cube_var = hdu_list['VAR'].data
-
-                        if self.var is None:
-                            # The cube stores its variance map already
-                            pass
-                        else:
-                            # Combine variance maps of the cube and the master flat
-                            # TODO double check the variance propagation formula
-                            # out_var = np.multiply(np.square(np.divide(1, np.square(master_flat))), master_flat_var)
-                            out_var = np.add(sub_window(self.var), cube_var)
-                            hdu_list['VAR'].data = out_var
-                    else:
-                        # TODO: Implement a measure for the cube variance
-                        if self.var is None:
-                            # No variance map is available
-                            pass
-                        else:
-                            # Use the variance map of the master flat
-                            hdu_list.append(fits.ImageHDU(name='VAR', data=sub_window(self.var)))
-
-                    # Store the mask
-                    if 'MASK' in hdu_list:
-                        hdu_list['MASK'].data = np.logical_or(hdu_list['MASK'].data.astype(bool),
-                                                              sub_window(self.mask)).astype(np.int16)
-                    else:
-                        hdu_list.append(fits.ImageHDU(data=sub_window(self.mask).astype(np.int16), name='MASK'))
-
-                    # Update FITS header and store updates
-                    hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION FLATCORR', default_time_stamp())
-                    hdu_list.flush()
-
+                # Expand 2D image to a one frame cube
+                if cube.ndim == 2:
+                    file_stream.set_data(data=np.divide(cube, sub_window(self.image), where=sub_window(gpm)),
+                                         extension=0)
                 else:
-                    logger.warning(f"Unable to apply flat field correction to file {file!r}. Reason may be that the "
-                                   f"sub-window covered by the master flat ({sub_window_shape}) is smaller than the "
-                                   f"image ({frame_shape}).")
+                    # Normalize image/ cube frames by master flat
+                    for f in trange(file_stream.frame_number, desc='Updating frame'):
+                        frame = cube[f]
+                        file_stream.update_frame(frame_index=f,
+                                                 data=np.divide(frame, sub_window(self.image), where=sub_window(gpm)))
+
+                # Propagate variance
+                if file_stream.has_extension('VAR'):
+                    cube_var = file_stream.get_data(extension='VAR')
+
+                    if self.var is None:
+                        # The cube stores its variance map already
+                        pass
+                    else:
+                        # Combine variance maps of the cube and the master flat
+                        # TODO double check the variance propagation formula
+                        # out_var = np.multiply(np.square(np.divide(1, np.square(master_flat))), master_flat_var)
+                        out_var = np.add(sub_window(self.var), cube_var)
+                        file_stream.set_data(data=out_var, extension='VAR')
+                else:
+                    # TODO: Implement a measure for the cube variance
+                    if self.var is None:
+                        # No variance map is available
+                        pass
+                    else:
+                        # Use the variance map of the master flat
+                        file_stream.new_extension(name='VAR', data=sub_window(self.var))
+
+                # Store the mask
+                if file_stream.has_extension('MASK'):
+                    file_mask = file_stream.get_data(extension='MASK', dtype=bool)
+                    combined_mask = np.logical_or(file_mask, sub_window(self.mask))
+                    file_stream.set_data(extension='MASK', dtype=np.int16, data=combined_mask)
+                else:
+                    file_stream.new_extension(data=sub_window(self.mask), name='MASK', dtype=np.int16)
+
+                # Update FITS header and store updates
+                file_stream.set_header('HIERARCH SPECKLEPY REDUCTION FLATCORR', default_time_stamp())
+
+            else:
+                logger.warning(f"Unable to apply flat field correction to file {file!r}. Reason may be that the "
+                               f"sub-window covered by the master flat ({sub_window_shape}) is smaller than the "
+                               f"image ({frame_shape}).")
+
+            # # Open the product files and update
+            # with fits.open(file, mode='update') as hdu_list:
+            #     extension = 0
+            #     cube = hdu_list[extension].data.astype(float)
+            #
+            #     # Extract array shapes
+            #     sub_window_shape = sub_window(self.image).shape
+            #     frame_shape = cube.shape[-2], cube.shape[-1]
+            #
+            #     # Correct only if array shapes match
+            #     if sub_window_shape == frame_shape:
+            #
+            #         # Expand 2D image to a one frame cube
+            #         if cube.ndim == 2:
+            #             hdu_list[extension].data = np.divide(cube, sub_window(self.image), where=sub_window(gpm))
+            #         else:
+            #             # Normalize image/ cube frames by master flat
+            #             for f in trange(cube.shape[0], desc='Updating frame'):
+            #                 frame = cube[f]
+            #                 hdu_list[extension].data[f] = np.divide(frame, sub_window(self.image), where=sub_window(gpm))
+            #                 hdu_list.flush()
+            #
+            #         # Propagate variance
+            #         if 'VAR' in hdu_list:
+            #             cube_var = hdu_list['VAR'].data
+            #
+            #             if self.var is None:
+            #                 # The cube stores its variance map already
+            #                 pass
+            #             else:
+            #                 # Combine variance maps of the cube and the master flat
+            #                 # TODO double check the variance propagation formula
+            #                 # out_var = np.multiply(np.square(np.divide(1, np.square(master_flat))), master_flat_var)
+            #                 out_var = np.add(sub_window(self.var), cube_var)
+            #                 hdu_list['VAR'].data = out_var
+            #         else:
+            #             # TODO: Implement a measure for the cube variance
+            #             if self.var is None:
+            #                 # No variance map is available
+            #                 pass
+            #             else:
+            #                 # Use the variance map of the master flat
+            #                 hdu_list.append(fits.ImageHDU(name='VAR', data=sub_window(self.var)))
+            #
+            #         # Store the mask
+            #         if 'MASK' in hdu_list:
+            #             hdu_list['MASK'].data = np.logical_or(hdu_list['MASK'].data.astype(bool),
+            #                                                   sub_window(self.mask)).astype(np.int16)
+            #         else:
+            #             hdu_list.append(fits.ImageHDU(data=sub_window(self.mask).astype(np.int16), name='MASK'))
+            #
+            #         # Update FITS header and store updates
+            #         hdu_list[0].header.set('HIERARCH SPECKLEPY REDUCTION FLATCORR', default_time_stamp())
+            #         hdu_list.flush()
+            #
+            #     else:
+            #         logger.warning(f"Unable to apply flat field correction to file {file!r}. Reason may be that the "
+            #                        f"sub-window covered by the master flat ({sub_window_shape}) is smaller than the "
+            #                        f"image ({frame_shape}).")
