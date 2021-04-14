@@ -1,4 +1,3 @@
-from datetime import datetime
 import glob
 import numpy as np
 import os
@@ -54,6 +53,9 @@ class FileArchive(object):
         self.file_path = file_path
         self.out_dir = out_dir if out_dir is not None else './'
         self.out_prefix = out_prefix if out_prefix is not None else ''
+
+        # Initialize table
+        self.table = None
 
         # Interpret the str-type file list input
         if isinstance(file_list, str):
@@ -138,7 +140,8 @@ class FileArchive(object):
 
         return files
 
-    def read_table_file(self, file, format='ascii.no_header'):
+    @staticmethod
+    def read_table_file(file, format='ascii.no_header'):
         """Interprets text in a file input.
 
         Args:
@@ -280,7 +283,7 @@ class ReductionFileArchive(FileArchive):
     @property
     def product_files(self):
         try:
-            out =  self.table['PRODUCT'].data
+            out = self.table['PRODUCT'].data
         except KeyError:
             self.add_product_file_column()
             out = self.table['PRODUCT'].data
@@ -447,9 +450,10 @@ class ReductionFileArchive(FileArchive):
                                    f"subtraction will be applied!")
                 else:
                     # Store the information in a new sequence
-                    sequences.append(Sequence(sky_files=sky_files, science_files=science_files, file_path=self.file_path,
-                                              sky_time_stamps=sky_time_stamps, science_time_stamps=science_time_stamps,
-                                              source=source, object=object, setup=setup))
+                    sequences.append(Sequence(sky_files=sky_files, science_files=science_files,
+                                              file_path=self.file_path, sky_time_stamps=sky_time_stamps,
+                                              science_time_stamps=science_time_stamps, source=source, object=object,
+                                              setup=setup))
         return sequences
 
     def add_product_file_column(self, prefix=None):
@@ -486,18 +490,16 @@ class ReductionFileArchive(FileArchive):
         # Store the new column of product file names to the table
         self.table.add_column(product_file_column)
 
-    def initialize_product_file(self, index, prefix=None):
+    def initialize_product_file(self, index):
         """Copy the science data cubes into the stored out directory.
 
         Args:
             index (int):
                 Index of the file to be initialized in the list of `self.source_files`.
-            prefix (str, optional):
-                File prefix for output files.
 
         Returns:
-            product_files (list):
-                List of paths of the data reduction products.
+            product_file (list):
+                Paths to the initialized data reduction product file.
         """
 
         # Copy the science data cubes into outdir (with an additional file prefix)
