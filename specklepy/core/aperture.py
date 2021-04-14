@@ -164,12 +164,19 @@ class Aperture(object):
         if self.cropped:
             logger.info("Margins are removed already from aperture instance.")
         else:
+            # Crop data
             if self.data.ndim == 2:
                 gpm = Box.centered_at(self.x0, y0=self.y0, radius=self.radius)
                 self.data = copy(gpm(self.data))
             elif self.data.ndim == 3:
                 gpm = Box3D.centered_at(self.x0, y0=self.y0, z0=None, radius=self.radius)
                 self.data = copy(gpm(self.data))
+
+            # Crop var
+            gpm = Box.centered_at(self.x0, y0=self.y0, radius=self.radius)
+            self.var = gpm(self.var)
+
+            # Update `cropped` attribute
             self.cropped = True
 
     def remove_margins(self):
