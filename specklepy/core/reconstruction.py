@@ -169,7 +169,7 @@ class Reconstruction(object):
             sys.tracebacklimit = 0
             raise ValueError("No source selected to center the aperture on")
         pos = {'x': int(round(selected[0]['x'])), 'y': int(round(selected[0]['y']))}
-        self.box = Box(indexes=[pos['x'] - radius, pos['x'] + radius + 1, pos['y'] - radius, pos['y'] + radius + 1])
+        self.box = Box.centered_at(x0=pos['x'], y0=pos['y'], radius=radius)
 
     def create_long_exposures(self, integration_method=None, mask_hot_pixels=False, shifts=None):
         """Compute long exposures from the input data cubes.
