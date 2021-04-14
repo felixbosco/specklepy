@@ -12,9 +12,8 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.plotting.plot import StarFinderPlot
-from specklepy.utils import save_eval
+from specklepy.utils import save_eval, Box, Point, Vector
 from specklepy.utils.array import peak_index
-from specklepy.utils import Box, Point, Vector
 from specklepy.utils.moment import moment_2d
 
 
@@ -318,9 +317,9 @@ class SourceExtractor(object):
 
         # Reference pattern: Stellar positions relative to brightest star
         table.sort('flux', reverse=True)
-        reference = table[0]
-        table_dx = table['x'] - reference['x']
-        table_dy = table['y'] - reference['y']
+        reference = Vector(table[0]['y'], table[0]['x'])
+        table_dx = table['x'] - reference[1]
+        table_dy = table['y'] - reference[0]
 
         # Iterate through sources to identify reference star from `table`
         for j in range(len(self.sources)):
@@ -339,10 +338,10 @@ class SourceExtractor(object):
 
         # Estimate distance-minimizing counter part to reference star
         best_match = np.argmin(minimum_distances_total)
-        best_match = Vector
+        best_match = Vector(self.sources[best_match]['y'], self.sources[best_match]['x'])
 
         # Estimate shift
-        shift = reference['y'] - self.sources[best_match]['y'], reference['x'] - self.sources[best_match]['x']
+        shift = (reference - best_match).astype(tuple)
 
         return shift
 
