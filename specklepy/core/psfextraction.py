@@ -126,7 +126,7 @@ class ReferenceStars(object):
 
             # Extract number of frames
             logger.info(f"Extracting PSFs from file {file!r}")
-            frame_number = get_frame_number(file)
+            frame_number = get_frame_number(file, path=self.in_dir)
 
             # Initialize PSF file
             psf_file_name = FileStream.default_psf_file_name(file)
