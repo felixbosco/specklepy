@@ -241,7 +241,22 @@ class Reconstruction(object):
 
         return long_exposure_files
 
-    def align_cubes(self, integration_method=None, alignment_mode='correlation', mask_hot_pixels=False):
+    def align_cubes(self, integration_method=None, alignment_mode='correlation', mask_hot_pixels=False,
+                    source_extractor_kwargs=None):
+        """Align the most recent long exposures.
+
+        Args:
+            integration_method (str, optional):
+                Mode for integrating the data cubes to the long exposures. This is updating the stored
+                `integration_mode` attribute. It is used during the creation of long-exposure files, if they are not
+                existing prior.
+            alignment_mode (str, optional):
+                .
+            mask_hot_pixels (bool, optional):
+                .
+            source_extractor_kwargs (dict, optionl):
+                Used only if `alignment_mode=='sources'`. Parsed to `alignment.estimate_shifts`.
+        """
 
         # Update integration method, if provided
         if integration_method is not None:
@@ -263,7 +278,7 @@ class Reconstruction(object):
             self.alignment = FrameAlignment()
             self.alignment.estimate_shifts(file_names=self.long_exp_files, in_dir=self.tmp_dir,
                                            reference_file_index=self.reference_index, mode=alignment_mode,
-                                           debug=self.debug)
+                                           source_extractor_kwargs=source_extractor_kwargs, debug=self.debug)
             self.alignment.derive_pad_vectors()
 
     def initialize_image(self):

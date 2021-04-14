@@ -36,6 +36,8 @@ def holography(params, debug=False):
     apodization = params.get('APODIZATION', {})
     psf_extraction = params.get('PSFEXTRACTION', {})
     source_extraction = params.get('STARFINDER', {})
+    source_extractor_kwargs = {'fwhm': source_extraction.get('starfinderFwhm', 10),
+                               'algorithm': source_extraction.get('algorithm', 'DAO')}
 
     # Create file archive and export paths to be directly available
     file_archive = FileArchive(file_list=paths.get('inDir'), table_format=paths.get('tableFormat', 'ascii.no_header'))
@@ -80,7 +82,7 @@ def holography(params, debug=False):
     # Compute the first alignment based on collapsed images (and variance images)
     mask_hot_pixels = alignment.get('maskHotPixels', False)
     reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment.get('mode', 'correlation'),
-                               mask_hot_pixels=mask_hot_pixels)
+                               mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs)
 
     # Repeat alignment in SSA mode, if not requested otherwise
     if alignment.get('integrationMode', 'ssa') != 'collapse':
@@ -88,7 +90,7 @@ def holography(params, debug=False):
             reconstruction.select_box(radius=psf_extraction.get('psfRadius'))
         reconstruction.create_long_exposures(integration_method='ssa', mask_hot_pixels=mask_hot_pixels)
         reconstruction.align_cubes(integration_method='ssa', alignment_mode=alignment.get('mode', 'correlation'),
-                                   mask_hot_pixels=mask_hot_pixels)
+                                   mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs)
     shifts = reconstruction.alignment.shifts
 
     # (iii) Compute SSA reconstruction
