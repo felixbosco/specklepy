@@ -276,7 +276,7 @@ class Reconstruction(object):
         if self.mode == 'same':
             pass
         elif self.mode == 'full':
-            image = np.pad(image, self.alignment.reference_pad_vector, mode='constant')
+            image = np.pad(image, self.alignment.reference_image_pad_vector, mode='constant')
         elif self.mode == 'valid':
             # Estimate minimum overlap
             _shifts = np.array(self.alignment.shifts)
