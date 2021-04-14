@@ -115,7 +115,7 @@ def holography(params, debug=False):
                             noise_threshold=source_extraction.get('noiseThreshold'),
                             background_subtraction=True,
                             write_to=paths.get('allStarsFile'),
-                            star_finder=source_extraction.get('algorithm'),
+                            algorithm=source_extraction.get('algorithm'),
                             select=select_dict, debug=debug)
         else:
             logger.info("\tPlease copy the desired reference stars from the all stars file into the reference star "
@@ -193,7 +193,7 @@ def holography(params, debug=False):
     extract_sources(image=image, fwhm=source_extraction.get('starfinderFwhm'),
                     noise_threshold=source_extraction.get('noiseThreshold'),
                     background_subtraction=True, write_to=paths.get('allStarsFile'),
-                    star_finder=source_extraction.get('algorithm'), debug=debug)
+                    algorithm=source_extraction.get('algorithm'), debug=debug)
 
     # Finally return the image
     return image

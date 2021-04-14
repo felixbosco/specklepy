@@ -19,7 +19,7 @@ from specklepy.utils.moment import moment_2d
 from specklepy.utils.point import Point
 
 
-def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=None, background_subtraction=True,
+def extract_sources(image, noise_threshold, fwhm, algorithm='DAO', image_var=None, background_subtraction=True,
                     show=False, select=False, matching_threshold=30, collapse=False, write_to=None, cast_dtype=None,
                     debug=False):
     """Extract sources from an image with a StarFinder routine.
@@ -33,9 +33,9 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
             Multiple of the uncertainty/ standard deviation of the image.
         fwhm (float):
             Expected full width at half maximum (FWHM) of the sources in units of pixels.
-        star_finder (str, optional):
-            Choose whether the 'DAO' or 'IRAF' StarFinder implementations from photutils shall be used. Default is
-            'DAO'.
+        algorithm (str, optional):
+            Choose whether the `'DAO'` or `'IRAF'` StarFinder algorithms from `photutils` shall be used. Also the
+            `specklepy` algorithms `'PeakFinder'` and `'ManualFinder'` are available. Default is 'DAO'.
         image_var (float or str):
             Variance of the image used for the StarFinder threshold (=noise_threshold * sqrt(image_var)). If not
             provided, the code extracts this value from sigma clipped stats. If provided as str-type, the code tries to
@@ -72,7 +72,7 @@ def extract_sources(image, noise_threshold, fwhm, star_finder='DAO', image_var=N
         logger.setLevel('DEBUG')
 
     # Initialize the extractor
-    extractor = SourceExtractor(algorithm=star_finder, fwhm=fwhm, sigma=noise_threshold)
+    extractor = SourceExtractor(algorithm=algorithm, fwhm=fwhm, sigma=noise_threshold)
     extractor.initialize_image(image, extension=None, var=image_var, dtype=cast_dtype, collapse=collapse)
     extractor.initialize_star_finder()
 
