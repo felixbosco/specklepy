@@ -1,8 +1,6 @@
 import numpy as np
 import os
-import sys
 
-from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core import FrameAlignment
 from specklepy.io import FileStream
 from specklepy.io.fits import get_data, get_header
@@ -38,26 +36,24 @@ class SpeckleCube(object):
         self._cube = None
 
     @property
-    def in_file(self):
-        return os.path.join(self.in_dir, self.file_name)
-
-    @property
     def cube(self):
         if self._cube is None:
-            self._cube = get_data(self.in_file)
+            self._cube = get_data(self.file_name, path=self.in_dir)
         return self._cube
 
     @property
     def variance(self):
         if self.variance_extension is None:
             return None
-        return get_data(self.in_file, extension=self.variance_extension, ignore_missing_extension=True)
+        return get_data(self.file_name, path=self.in_dir, extension=self.variance_extension,
+                        ignore_missing_extension=True)
 
     @property
     def mask(self):
         if self.mask_extension is None:
             return None
-        return get_data(self.in_file, extension=self.mask_extension, dtype=bool, ignore_missing_extension=True)
+        return get_data(self.file_name, path=self.in_dir, extension=self.mask_extension, dtype=bool,
+                        ignore_missing_extension=True)
 
     @property
     def single_frame_mode(self):
@@ -120,7 +116,21 @@ class SpeckleCube(object):
         shifts = np.array([int(mean_index[0]) - peak_indexes[0], int(mean_index[1]) - peak_indexes[1]])
         return shifts.transpose()
 
-    def align_frames(self, mask=None):
+    def align_frames(self, mask=None, bootstrap=None):
+        """Use the SSA algorithm to align the frames of the data cube.
+
+        Args:
+            mask (np.ndarray, optional):
+                Bad pixel mask, parsed down to the method that estimates the shifts between frames.
+            bootstrap (int, optional):
+                Number of bootstrap images to create for sampling the uncertainty of the aligned image.
+
+        Returns:
+            aligned (np.ndarray):
+                Aligned image.
+            aligned_var (np.ndarray):
+                Variance map of the aligned image.
+        """
 
         # Estimate shifts between frames
         shifts = self.estimate_frame_shifts(self.cube, box=self.box, mask=mask)
