@@ -150,7 +150,7 @@ class FrameAlignment(object):
                 source_extractor_kwargs['fwhm'] = 10
 
             # Initialize SourceExtractor
-            extractor = SourceExtractor(source_extractor_kwargs)
+            extractor = SourceExtractor(**source_extractor_kwargs)
             extractor.initialize_image(source=self.reference_image_path)
             extractor.initialize_star_finder()
             extractor.find_sources()
