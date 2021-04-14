@@ -36,8 +36,7 @@ def holography(params, debug=False):
     apodization = params.get('APODIZATION', {})
     psf_extraction = params.get('PSFEXTRACTION', {})
     source_extraction = params.get('STARFINDER', {})
-    source_extractor_kwargs = {'fwhm': source_extraction.get('starfinderFwhm', 10),
-                               'algorithm': source_extraction.get('algorithm', 'DAO')}
+    source_extractor_kwargs = {'fwhm': source_extraction.get('starfinderFwhm', 10)}
 
     # Create file archive and export paths to be directly available
     file_archive = FileArchive(file_list=paths.get('inDir'), table_format=paths.get('tableFormat', 'ascii.no_header'))
