@@ -57,8 +57,25 @@ class Vector(object):
         else:
             raise TypeError
 
+    def __getitem__(self, item):
+        return self.values.__getitem__(item)
+
+    def __setitem__(self, item, value):
+        return self.values.__setitem__(item, value)
+
     def __copy__(self):
         return Vector(*self.values)
 
     def length(self):
         return np.sqrt(self * self)
+
+    @property
+    def dtype(self):
+        return type(self.values[0])
+
+    @dtype.setter
+    def dtype(self, type):
+        self.values = [type(x) for x in self.values]
+
+    def astype(self, type):
+        return type(self.values)
