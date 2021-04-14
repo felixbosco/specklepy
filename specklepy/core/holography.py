@@ -40,12 +40,18 @@ def holography(params, debug=False):
 
     # Create file archive and export paths to be directly available
     file_archive = FileArchive(file_list=paths.get('inDir'), table_format=paths.get('tableFormat', 'ascii.no_header'))
-    in_files = file_archive.files
+
+    # Extract often used parameters
+    bootstrap_number = params.get('BOOTSTRAP').get('numberImages')
+    custom_mask = paths.get('maskFile')
     in_dir = file_archive.file_path
+    in_files = file_archive.files
+    mask_hot_pixels = alignment.get('maskHotPixels', False)
+    mode = params['ALIGNMENT'].get('reconstructionMode')
     tmp_dir = paths.get('tmpDir')
+    variance_extension = params['EXTNAMES']['varianceExtension']
 
     # Check input mode
-    mode = params['ALIGNMENT'].get('reconstructionMode')
     if mode not in ['same', 'full', 'valid']:
         raise SpecklepyValueError('holography()', argname='mode', argvalue=mode,
                                   expected="either 'same', 'full', or 'valid'")
@@ -73,26 +79,25 @@ def holography(params, debug=False):
     reconstruction = Reconstruction(in_files=in_files, mode=mode, integration_method='ssa',
                                     reference_file=alignment.get('referenceFile'),
                                     in_dir=in_dir, tmp_dir=tmp_dir, out_file=paths.get('outFile'),
-                                    variance_extension=params['EXTNAMES']['varianceExtension'],
-                                    box_indexes=None, custom_mask=paths.get('maskFile'), debug=debug)
+                                    variance_extension=variance_extension,
+                                    box_indexes=None, custom_mask=custom_mask, debug=debug)
     reconstruction.assert_dirs()
 
     # (i-ii) Align cubes
     # Compute the first alignment based on collapsed images (and variance images)
-    mask_hot_pixels = alignment.get('maskHotPixels', False)
     reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment.get('mode', 'correlation'),
                                mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs,
-                               bootstrap_number=params.get('BOOTSTRAP').get('numberImages'))
+                               bootstrap_number=bootstrap_number)
 
     # Repeat alignment in SSA mode, if not requested otherwise
     if alignment.get('integrationMode', 'ssa') != 'collapse':
         if psf_extraction.get('psfRadius') is not None:
             reconstruction.select_box(radius=alignment.get('ssaBoxRadius'))
         reconstruction.create_long_exposures(integration_method='ssa', mask_hot_pixels=mask_hot_pixels,
-                                             bootstrap_number=params.get('BOOTSTRAP').get('numberImages'))
+                                             bootstrap_number=bootstrap_number)
         reconstruction.align_cubes(integration_method='ssa', alignment_mode=alignment.get('mode', 'correlation'),
                                    mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs,
-                                   bootstrap_number=params.get('BOOTSTRAP').get('numberImages'))
+                                   bootstrap_number=bootstrap_number)
     shifts = reconstruction.alignment.shifts
 
     # (iii) Compute SSA reconstruction
@@ -147,10 +152,8 @@ def holography(params, debug=False):
         pass
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
-        f_object = FourierObject(in_files, psf_files, shifts=shifts, mode=mode, in_dir=in_dir,
-                                 custom_mask=paths.get('maskFile'))
-        f_object.coadd_fft(mask_hot_pixels=alignment.get('maskHotPixels', False),
-                           bootstrap=params.get('BOOTSTRAP').get('numberImages'))
+        f_object = FourierObject(in_files, psf_files, shifts=shifts, mode=mode, in_dir=in_dir, custom_mask=custom_mask)
+        f_object.coadd_fft(mask_hot_pixels=mask_hot_pixels, bootstrap=bootstrap_number)
 
         # (x) Apodization
         f_object.apodize(type=apodization.get('type'), radius=apodization.get('radius'))
@@ -165,7 +168,7 @@ def holography(params, debug=False):
         if bootstrap_images is not None:
             var = np.var(np.array(bootstrap_images), axis=0)
             # out_file.update_extension(params['EXTNAMES']['varianceExtension'], var)
-            out_file.set_data(data=var, extension=params['EXTNAMES']['varianceExtension'])
+            out_file.set_data(data=var, extension=variance_extension)
             if params['BOOTSTRAP'].get('saveImages', False):
                 logger.info("Saving bootstrap images...")
                 bs_file = FileStream(file_name=paths.get('outFile').replace('.fits', '_bs.fits'), path=in_dir)
