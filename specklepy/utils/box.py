@@ -99,10 +99,10 @@ class Box(object):
 
         # Shift entries
         if shift is not None:
-            obj.x_min += shift[1]
-            obj.x_max += shift[1]
-            obj.y_min += shift[0]
-            obj.y_max += shift[0]
+            obj.x_min -= shift[1]
+            obj.x_max -= shift[1]
+            obj.y_min -= shift[0]
+            obj.y_max -= shift[0]
 
         obj.round_indexes()
 
