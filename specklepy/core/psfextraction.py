@@ -151,7 +151,7 @@ class ReferenceStars(object):
                 for aperture_index, aperture in enumerate(apertures):
 
                     flux = aperture[frame_index]
-                    var = aperture.vars
+                    var = aperture.var
 
                     if align:
                         flux = ndimage.shift(flux, shift=(aperture.y_offset, aperture.x_offset))
@@ -198,7 +198,7 @@ class ReferenceStars(object):
 
             # Extract frame number
             logger.info(f"Extracting PSFs from file {file!r}")
-            frame_number = get_frame_number(file)
+            frame_number = get_frame_number(file, path=self.in_dir)
             frame_shape = self.frame_shape(oversampling=oversampling)
 
             # Initialize file by file
