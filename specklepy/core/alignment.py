@@ -139,7 +139,7 @@ class FrameAlignment(object):
                     # Derive the shift from the correlation
                     correlation_peak = Vector(peak_index(correlation))
                     reference = Vector(correlation.shape) // 2
-                    shift = (reference - correlation_peak).astype(tuple)
+                    shift = (correlation_peak - reference).astype(tuple)
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
