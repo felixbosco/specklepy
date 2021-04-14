@@ -1,5 +1,6 @@
 from .box import Box, Box3D
 from .time import default_time_stamp
+from .vector import Vector
 
 
 def save_eval(val):
