@@ -3,7 +3,7 @@ import os
 
 from astropy.io import fits
 
-from specklepy.io.fits import get_data, get_frame_number
+from specklepy.io.fits import get_data, get_frame_number, get_header
 from specklepy.logging import logger
 from specklepy.utils.array import frame_number, frame_shape
 from specklepy.utils.time import default_time_stamp
@@ -129,6 +129,13 @@ class FileStream(object):
             hdu_list[extension].data[frame_index] = data
             hdu_list[extension].header.set('UPDATED', default_time_stamp())
             hdu_list.flush()
+
+    def get_header(self, key=None, extension=None):
+        header = get_header(self.file_path, extension=extension)
+        if key is None:
+            return header
+        else:
+            return header[key]
 
     def set_header(self, key, value, comment=None, extension=None):
         if extension is None:
