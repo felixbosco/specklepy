@@ -86,7 +86,7 @@ def holography(params, debug=False):
     # Repeat alignment in SSA mode, if not requested otherwise
     if alignment.get('integrationMode', 'ssa') != 'collapse':
         if psf_extraction.get('psfRadius') is not None:
-            reconstruction.select_box(radius=psf_extraction.get('psfRadius'))
+            reconstruction.select_box(radius=alignment.get('ssaBoxRadius'))
         reconstruction.create_long_exposures(integration_method='ssa', mask_hot_pixels=mask_hot_pixels)
         reconstruction.align_cubes(integration_method='ssa', alignment_mode=alignment.get('mode', 'correlation'),
                                    mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs)
