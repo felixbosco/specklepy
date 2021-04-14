@@ -1,5 +1,5 @@
 import unittest
-from specklepy.core import bootstrap
+from specklepy.utils import bootstrap
 
 
 class TestBootstrap(unittest.TestCase):
