@@ -64,7 +64,24 @@ class FrameAlignment(object):
 
         return data
 
-    def estimate_shifts(self, file_names, mode='correlation', in_dir=None, reference_file_index=None, debug=False):
+    def estimate_shifts(self, file_names, mode='correlation', in_dir=None, reference_file_index=None,
+                        source_extractor_kwargs=None, debug=False):
+        """
+
+        Args:
+            file_names:
+            mode:
+            in_dir:
+            reference_file_index:
+            source_extractor_kwargs (dict, optional):
+                Used only if `mode=='sources'`. Parsed to the `SourceExtractor` instance.
+            debug (bool, optional):
+                Switch to `debug` mode.
+
+        Returns:
+            shifts (list):
+                List of tuples of shifts between the images in the files of `file_names`.
+        """
 
         # Transform str-type file names into a list
         if isinstance(file_names, str):
@@ -127,8 +144,13 @@ class FrameAlignment(object):
                 self.shifts.append(shift)
 
         elif mode == 'sources':
+            if source_extractor_kwargs is None:
+                source_extractor_kwargs = {'fwhm': 10}
+            if 'fwhm' not in source_extractor_kwargs:
+                source_extractor_kwargs['fwhm'] = 10
+
             # Initialize SourceExtractor
-            extractor = SourceExtractor(fwhm=10)
+            extractor = SourceExtractor(source_extractor_kwargs)
             extractor.initialize_image(source=self.reference_image_path)
             extractor.initialize_star_finder()
             extractor.find_sources()
