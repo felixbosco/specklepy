@@ -78,7 +78,10 @@ class Aperture(object):
             data_mask = fits.get_data(file_name=file_name , path=path, extension=self.mask_extension, dtype=bool,
                                       ignore_missing_extension=True)
             if data_mask is not None:
-                self.data[data_mask] = self.fill_value
+                if self.data.ndim == 2:
+                    self.data[data_mask] = self.fill_value
+                elif self.data.ndim == 3:
+                    self.data[:, data_mask] = self.fill_value
 
         else:
             raise TypeError
