@@ -1,4 +1,5 @@
 from .box import Box, Box3D
+from .point import Point
 from .time import default_time_stamp
 from .vector import Vector
 

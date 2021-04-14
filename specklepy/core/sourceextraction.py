@@ -14,9 +14,8 @@ from specklepy.logging import logger
 from specklepy.plotting.plot import StarFinderPlot
 from specklepy.utils import save_eval
 from specklepy.utils.array import peak_index
-from specklepy.utils.box import Box
+from specklepy.utils import Box, Point, Vector
 from specklepy.utils.moment import moment_2d
-from specklepy.utils.point import Point
 
 
 def extract_sources(image, noise_threshold, fwhm, algorithm='DAO', image_var=None, background_subtraction=True,
@@ -340,6 +339,7 @@ class SourceExtractor(object):
 
         # Estimate distance-minimizing counter part to reference star
         best_match = np.argmin(minimum_distances_total)
+        best_match = Vector
 
         # Estimate shift
         shift = reference['y'] - self.sources[best_match]['y'], reference['x'] - self.sources[best_match]['x']

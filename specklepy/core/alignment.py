@@ -2,10 +2,10 @@ import numpy as np
 import os
 
 from specklepy.core.sourceextraction import SourceExtractor
-from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io.fits import get_data, get_frame_shape
+from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
+from specklepy.utils import Vector
 from specklepy.utils.array import peak_index
 
 
@@ -104,7 +104,7 @@ class FrameAlignment(object):
 
         # Estimate shifts in the requested modes
         if mode == 'peak':
-            reference_peak = peak_index(self.reference_image)
+            reference_peak = Vector(peak_index(self.reference_image))
 
             # Iterate through files
             for file in file_names:
@@ -112,8 +112,8 @@ class FrameAlignment(object):
                     shift = (0, 0)
                 else:
                     image = self.load_collapsed(file, path=self.file_path)
-                    peak = peak_index(image)
-                    shift = reference_peak[0] - peak[0], reference_peak[1] - peak[1]
+                    peak = Vector(peak_index(image))
+                    shift = (reference_peak - peak).astype(tuple)
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
@@ -137,9 +137,9 @@ class FrameAlignment(object):
                         imshow(np.abs(correlation), title='FFT shifted correlation')
 
                     # Derive the shift from the correlation
-                    correlation_peak = peak_index(correlation)
-                    reference = [x // 2 for x in list(correlation.shape)]
-                    shift = correlation_peak[0] - reference[0], correlation_peak[1], reference[1]
+                    correlation_peak = Vector(peak_index(correlation))
+                    reference = Vector(correlation.shape) // 2
+                    shift = (correlation_peak - reference).astype(tuple)
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
@@ -176,8 +176,10 @@ class FrameAlignment(object):
                     extractor.find_sources()
 
                     # Derive shift from cross matching the identified sources to the reference stars
-                    shift = extractor.cross_match_table(reference_stars)
-                    shift = tuple([int(round(x)) for x in shift])
+                    shift = Vector(extractor.cross_match_table(reference_stars))
+                    shift.round()
+                    shift.dtype = int
+                    shift = shift.astype(tuple)
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
