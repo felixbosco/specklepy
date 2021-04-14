@@ -319,8 +319,9 @@ class SourceExtractor(object):
 
         # Reference pattern: Stellar positions relative to brightest star
         table.sort('flux', reverse=True)
-        table_dx = table['x'] - table['x'][0]
-        table_dy = table['y'] - table['y'][0]
+        reference = table[0]
+        table_dx = table['x'] - reference['x']
+        table_dy = table['y'] - reference['y']
 
         # Iterate through sources to identify reference star from `table`
         for j in range(len(self.sources)):
@@ -341,7 +342,7 @@ class SourceExtractor(object):
         best_match = np.argmin(minimum_distances_total)
 
         # Estimate shift
-        shift = table[0]['y'] - self.sources[best_match]['y'], table[0]['x'] - self.sources[best_match]['x']
+        shift = reference['y'] - self.sources[best_match]['y'], reference['x'] - self.sources[best_match]['x']
 
         return shift
 

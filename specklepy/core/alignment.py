@@ -138,7 +138,8 @@ class FrameAlignment(object):
 
                     # Derive the shift from the correlation
                     correlation_peak = peak_index(correlation)
-                    shift = tuple(x - correlation.shape[i] // 2 for i, x in enumerate(correlation_peak))
+                    reference = [x // 2 for x in list(correlation.shape)]
+                    shift = correlation_peak[0] - reference[0], correlation_peak[1], reference[1]
 
                 logger.info(f"Estimated shift {shift} for file {file!r}")
                 self.shifts.append(shift)
