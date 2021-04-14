@@ -277,11 +277,17 @@ class ReferenceStars(object):
 
     def apply_noise_thresholding(self, margin, threshold, extension=0):
 
+        # Terminal info
+        logger.info(f"Subtracting background and apply noise threshold of {threshold} sigma...")
+
         # Create mask for measuring the noise
         noise_reference_region = self.create_noise_annulus(margin=margin)
 
         # Iterate through PSF files
         for file in self.psf_files:
+
+            # Start stream to file
+            logger.info(f"Thresholding file {file!r}")
             psf_file = FileStream(file_name=file)
 
             # Iterate through frames
