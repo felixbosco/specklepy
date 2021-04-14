@@ -6,8 +6,8 @@ from specklepy.io import FileStream
 from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
-from specklepy.utils import random_draw_vectors
 from specklepy.utils.array import frame_number, frame_shape, peak_index
+from specklepy.utils.bootstrap import random_draw_vectors
 
 
 class SpeckleCube(object):

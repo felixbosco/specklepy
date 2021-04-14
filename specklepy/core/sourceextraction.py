@@ -12,9 +12,12 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.plotting.plot import StarFinderPlot
-from specklepy.utils import save_eval, Box, Point, Vector
+from specklepy.utils import save_eval
 from specklepy.utils.array import peak_index
+from specklepy.utils.box import Box
 from specklepy.utils.moment import moment_2d
+from specklepy.utils.point import Point
+from specklepy.utils.vector import Vector
 
 
 def extract_sources(image, noise_threshold, fwhm, algorithm='DAO', image_var=None, background_subtraction=True,

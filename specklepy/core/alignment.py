@@ -5,8 +5,8 @@ from specklepy.core.sourceextraction import SourceExtractor
 from specklepy.io.fits import get_data
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
-from specklepy.utils import Vector
 from specklepy.utils.array import peak_index
+from specklepy.utils.vector import Vector
 
 
 class FrameAlignment(object):

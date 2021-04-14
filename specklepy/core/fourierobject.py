@@ -4,12 +4,12 @@ from numpy.fft import fft2, ifft2, fftshift
 from tqdm import trange
 
 from specklepy.core import FrameAlignment, PSFModel
-from specklepy.utils import random_draw_vectors
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.io.fits import get_data, get_frame_number
 from specklepy.logging import logger
 from specklepy.reduction.filter import hot_pixel_mask
 from specklepy.utils.array import frame_number
+from specklepy.utils.bootstrap import random_draw_vectors
 from specklepy.utils.transferfunctions import otf
 
 
