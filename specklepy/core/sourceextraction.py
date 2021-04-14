@@ -221,7 +221,11 @@ class SourceExtractor(object):
             # Compute moments and uncertainties, and add to new table
             try:
                 f, df, x, dx, y, dy = moment_2d(aperture, var=var)
-                new_sources.add_row([x + box.x_min, dx, y + box.y_min, dy, f, df])
+                if box.x_min is not None:
+                    x += box.x_min
+                if box.y_min is not None:
+                    y += box.y_min
+                new_sources.add_row([x, dx, y, dy, f, df])
             except ValueError:
                 logger.warning(f"Unsuccessful to measure uncertainties for source in box {box}")
                 new_sources.add_row([source['x'], 0, source['y'], 0, source['flux'], 0])
