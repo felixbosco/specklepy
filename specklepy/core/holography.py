@@ -81,15 +81,18 @@ def holography(params, debug=False):
     # Compute the first alignment based on collapsed images (and variance images)
     mask_hot_pixels = alignment.get('maskHotPixels', False)
     reconstruction.align_cubes(integration_method='collapse', alignment_mode=alignment.get('mode', 'correlation'),
-                               mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs)
+                               mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs,
+                               bootstrap_number=params.get('BOOTSTRAP').get('numberImages'))
 
     # Repeat alignment in SSA mode, if not requested otherwise
     if alignment.get('integrationMode', 'ssa') != 'collapse':
         if psf_extraction.get('psfRadius') is not None:
             reconstruction.select_box(radius=alignment.get('ssaBoxRadius'))
-        reconstruction.create_long_exposures(integration_method='ssa', mask_hot_pixels=mask_hot_pixels)
+        reconstruction.create_long_exposures(integration_method='ssa', mask_hot_pixels=mask_hot_pixels,
+                                             bootstrap_number=params.get('BOOTSTRAP').get('numberImages'))
         reconstruction.align_cubes(integration_method='ssa', alignment_mode=alignment.get('mode', 'correlation'),
-                                   mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs)
+                                   mask_hot_pixels=mask_hot_pixels, source_extractor_kwargs=source_extractor_kwargs,
+                                   bootstrap_number=params.get('BOOTSTRAP').get('numberImages'))
     shifts = reconstruction.alignment.shifts
 
     # (iii) Compute SSA reconstruction

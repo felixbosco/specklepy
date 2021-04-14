@@ -8,7 +8,7 @@ from specklepy.logging import logger
 
 def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_dir=None, variance_extension=None,
         aperture_radius=None, integration_method='ssa', alignment_method='correlation', mask_hot_pixels=False,
-        mask_file=None, debug=False, **kwargs):
+        mask_file=None, bootstrap_number=None, debug=False, **kwargs):
     """Compute the SSA reconstruction of a list of files.
 
     The simple shift-and-add (SSA) algorithm makes use of the structure of typical speckle patterns, i.e.
@@ -51,6 +51,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
             Mask hot pixels prior to alignment.
         mask_file (str, optional):
             Name of a file containing a mask, which will be applied additionally to the files own mask extension.
+        bootstrap_number (int, optional):
+            .
         debug (bool, optional):
             Show debugging information. Default is False.
 
@@ -108,7 +110,8 @@ def ssa(files, mode='same', reference_file=None, outfile=None, in_dir=None, tmp_
             reconstruction.select_box(radius=aperture_radius)
         reconstruction.long_exp_files = reconstruction.create_long_exposures(integration_method='ssa',
                                                                              mask_hot_pixels=mask_hot_pixels,
-                                                                             shifts=reconstruction.alignment.shifts)
+                                                                             shifts=reconstruction.alignment.shifts,
+                                                                             bootstrap_number=bootstrap_number)
 
         reconstruction.align_cubes(integration_method=integration_method, alignment_mode=alignment_method,
                                    mask_hot_pixels=mask_hot_pixels)

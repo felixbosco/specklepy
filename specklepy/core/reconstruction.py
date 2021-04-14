@@ -171,7 +171,7 @@ class Reconstruction(object):
         pos = {'x': int(round(selected[0]['x'])), 'y': int(round(selected[0]['y']))}
         self.box = Box.centered_at(x0=pos['x'], y0=pos['y'], radius=radius)
 
-    def create_long_exposures(self, integration_method=None, mask_hot_pixels=False, shifts=None):
+    def create_long_exposures(self, integration_method=None, mask_hot_pixels=False, shifts=None, bootstrap_number=None):
         """Compute long exposures from the input data cubes.
 
         Arguments:
@@ -183,6 +183,8 @@ class Reconstruction(object):
             shifts (list, optional):
                 List of shifts between the file and the reference file. This is used only in case of SSA
                 reconstructions, where the reference box might require to be shifted.
+            bootstrap_number (int, optional):
+                .
 
         Returns:
             long_exposure_files (list):
@@ -220,7 +222,8 @@ class Reconstruction(object):
                     else:
                         box = self.box
                     box.crop_to_shape(speckle_cube.frame_shape)
-                speckle_cube.ssa(box=box, mask_bad_pixels=mask_hot_pixels, mask=self.custom_mask)
+                speckle_cube.ssa(box=box, mask_bad_pixels=mask_hot_pixels, mask=self.custom_mask,
+                                 bootstrap_number=bootstrap_number)
             else:
                 raise SpecklepyValueError('Reconstruction', 'integration_method', self.integration_method,
                                           expected="either 'collapse' or 'ssa'")
@@ -242,7 +245,7 @@ class Reconstruction(object):
         return long_exposure_files
 
     def align_cubes(self, integration_method=None, alignment_mode='correlation', mask_hot_pixels=False,
-                    source_extractor_kwargs=None):
+                    bootstrap_number=None, source_extractor_kwargs=None):
         """Align the most recent long exposures.
 
         Args:
@@ -254,6 +257,8 @@ class Reconstruction(object):
                 .
             mask_hot_pixels (bool, optional):
                 .
+            bootstrap_number (int, optional):
+                .
             source_extractor_kwargs (dict, optionl):
                 Used only if `alignment_mode=='sources'`. Parsed to `alignment.estimate_shifts`.
         """
@@ -264,7 +269,7 @@ class Reconstruction(object):
 
         # Compute SSA reconstructions of cubes or collapse cubes for initial alignments
         if self.long_exp_files is None:
-            self.create_long_exposures(mask_hot_pixels=mask_hot_pixels)
+            self.create_long_exposures(mask_hot_pixels=mask_hot_pixels, bootstrap_number=bootstrap_number)
 
         # Save time if only one cube is provided
         if self.single_cube_mode:

@@ -6,6 +6,7 @@ from specklepy.io import FileStream
 from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels
+from specklepy.utils import random_draw_vectors
 from specklepy.utils.array import frame_number, frame_shape, peak_index
 
 
@@ -60,6 +61,10 @@ class SpeckleCube(object):
         return frame_number(self.cube) == 1
 
     @property
+    def frame_number(self):
+        return frame_number(self.cube)
+
+    @property
     def frame_shape(self):
         return frame_shape(self.cube)
 
@@ -99,56 +104,78 @@ class SpeckleCube(object):
 
         return self.image, self.image_var
 
-    def estimate_peak_indexes(self, cube, box=None, mask=None):
+    def estimate_peak_indexes(self, mask=None):
         # Compute shifts
-        peak_indexes = np.zeros((frame_number(cube), 2), dtype=int)
-        for f, frame in enumerate(cube):
+        peak_indexes = np.zeros((self.frame_number, 2), dtype=int)
+        for f, frame in enumerate(self.cube):
             if mask is not None:
                 frame[mask] = self.fill_value
-            if box is not None:
-                frame = box(frame)
+            if self.box is not None:
+                frame = self.box(frame)
             peak_indexes[f] = np.array(peak_index(frame), dtype=int)
         return peak_indexes
 
-    def estimate_frame_shifts(self, cube, box=None, mask=None):
-        peak_indexes = self.estimate_peak_indexes(cube=cube, box=box, mask=mask).transpose()
+    def estimate_frame_shifts(self, mask=None):
+        peak_indexes = self.estimate_peak_indexes(mask=mask).transpose()
         mean_index = np.mean(np.array(peak_indexes), axis=1)
         shifts = np.array([int(mean_index[0]) - peak_indexes[0], int(mean_index[1]) - peak_indexes[1]])
         return shifts.transpose()
 
-    def align_frames(self, mask=None, bootstrap=None):
+    def align_frames(self, mask=None, bootstrap_number=None):
         """Use the SSA algorithm to align the frames of the data cube.
 
         Args:
             mask (np.ndarray, optional):
                 Bad pixel mask, parsed down to the method that estimates the shifts between frames.
-            bootstrap (int, optional):
+            bootstrap_number (int, optional):
                 Number of bootstrap images to create for sampling the uncertainty of the aligned image.
 
         Returns:
             aligned (np.ndarray):
                 Aligned image.
-            aligned_var (np.ndarray):
-                Variance map of the aligned image.
+            variance (np.ndarray):
+                Variance map of the aligned image. This is either the aligned variance of the frames or the bootstrap
+                resampling variance of the image, if `bootstrap_number` is provided.
         """
 
         # Estimate shifts between frames
-        shifts = self.estimate_frame_shifts(self.cube, box=self.box, mask=mask)
+        shifts = self.estimate_frame_shifts(mask=mask)
 
         # Initialize output images
         aligned = np.zeros(self.frame_shape)
         aligned_var = np.zeros(self.frame_shape) if self.variance is not None else None
+        bootstrap_var = np.zeros(self.frame_shape) if bootstrap_number is not None else None
+        bootstrap_images = [np.zeros(self.frame_shape)] * bootstrap_number if bootstrap_number is not None else None
+        bootstrap_vector = random_draw_vectors(number_draws=bootstrap_number, number_frames=self.frame_number)
 
         # Shift frames and add to `aligned`
         alignment = FrameAlignment()
         alignment.derive_pad_vectors(shifts=shifts)
         for f, frame in enumerate(self.cube):
-            aligned += alignment.pad_array(frame, pad_vector_index=f, mode='same')
+            padded = alignment.pad_array(frame, pad_vector_index=f, mode='same')
+            aligned += padded
+
+            # Co-add variance
             if aligned_var is not None:
                 aligned_var += alignment.pad_array(self.variance, pad_vector_index=f, mode='same')
-        return aligned, aligned_var
 
-    def ssa(self, box=None, mask_bad_pixels=False, mask=False, fill_value=None):
+            # Co-add bootstrap frames
+            for b in range(bootstrap_number):
+                bootstrap_coefficient = bootstrap_vector[b, f]
+                if bootstrap_coefficient != 0:
+                    bootstrap_images[b] += bootstrap_coefficient * padded
+
+        # Evaluate variance
+        if bootstrap_var is None:
+            # Account for variance averaging
+            variance = aligned_var / self.frame_number
+        else:
+            # Evaluate variance of bootstrap images
+            variance = np.var(bootstrap_images, axis=0)
+
+        return aligned, variance
+
+    def ssa(self, box=None, mask_bad_pixels=False, mask=False, fill_value=None, bootstrap_number=None):
 
         # Update box attribute
         if box:
@@ -168,7 +195,7 @@ class SpeckleCube(object):
             mask = np.logical_or(self.mask, bpm) | mask
 
             # Coadd frames
-            self.image, self.image_var = self.align_frames(mask=mask)
+            self.image, self.image_var = self.align_frames(mask=mask, bootstrap_number=bootstrap_number)
         else:
             raise NotImplementedError(f"Frame alignment is not defined for FITS cubes with {self.cube.ndim!r} axes!")
         self.method = 'ssa'
