@@ -27,7 +27,7 @@ class Vector(object):
         elif isinstance(other, Vector):
             return Vector(np.add(self.values, other.values))
         else:
-            raise TypeError
+            raise TypeError(f"unsupported operand type(s) for +: 'Vector' and {type(other)!r}")
 
     def __sub__(self, other):
         if isinstance(other, (int, float)):
@@ -35,7 +35,7 @@ class Vector(object):
         elif isinstance(other, Vector):
             return Vector(np.subtract(self.values, other.values))
         else:
-            raise TypeError
+            raise TypeError(f"unsupported operand type(s) for -: 'Vector' and {type(other)!r}")
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
@@ -43,19 +43,19 @@ class Vector(object):
         elif isinstance(other, Vector):
             return np.sum(np.multiply(self.values, other.values))
         else:
-            raise TypeError
+            raise TypeError(f"unsupported operand type(s) for *: 'Vector' and {type(other)!r}")
 
     def __floordiv__(self, other):
         if isinstance(other, (int, float)):
             return Vector(np.floor_divide(self.values, other))
         else:
-            raise TypeError
+            raise TypeError(f"unsupported operand type(s) for //: 'Vector' and {type(other)!r}")
 
     def __truediv__(self, other):
         if isinstance(other, (int, float)):
             return Vector(np.true_divide(self.values, other))
         else:
-            raise TypeError
+            raise TypeError(f"unsupported operand type(s) for /: 'Vector' and {type(other)!r}")
 
     def __getitem__(self, item):
         return self.values.__getitem__(item)
