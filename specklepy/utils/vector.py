@@ -79,3 +79,6 @@ class Vector(object):
 
     def astype(self, type):
         return type(self.values)
+
+    def round(self):
+        self.values = [round(x) for x in self.values]
