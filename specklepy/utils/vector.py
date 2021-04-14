@@ -45,6 +45,18 @@ class Vector(object):
         else:
             raise TypeError
 
+    def __floordiv__(self, other):
+        if isinstance(other, (int, float)):
+            return Vector(np.floor_divide(self.values, other))
+        else:
+            raise TypeError
+
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return Vector(np.true_divide(self.values, other))
+        else:
+            raise TypeError
+
     def __copy__(self):
         return Vector(*self.values)
 
