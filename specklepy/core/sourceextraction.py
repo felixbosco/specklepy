@@ -289,12 +289,32 @@ class SourceExtractor(object):
         dy = position[0] - self.sources['y'].data
         return np.sqrt(np.add(np.square(dx), np.square(dy)))
 
-    def cross_match_table(self, table):
+    def cross_match_table(self, table, threshold=5, penalty=100):
+        """Cross match the `sources` table with a reference `table` in order to measure the shift between two images.
+
+        The function iterates through the table of identified `sources`, counts how many stars have a counterpart if
+        the current star is the brightest of the reference stars. The best match then serves as a measure to estimate
+        the shift between the two sets of data.s
+
+        Args:
+            table (astropy.table.Table):
+                Table of source to which the table of sources shall be cross-matched.
+            threshold (int, optional):
+                Threshold in offset pixels, serving as a measure whether a source has a counterpart or not.
+            penalty:
+                Penalty that individual combinations receive for one source not having a counterpart.
+
+        Returns:
+            shift (tuple):
+                Shift between the sources in the `sources` table and the comparison `table`, after identification of the
+                corresponding sources.
+        """
 
         # Initialize array of summed distances
         minimum_distances_total = np.empty((len(self.sources)))
 
-        # Reference pattern: Stellar positions relative to first star
+        # Reference pattern: Stellar positions relative to brightest star
+        table.sort('flux', reverse=True)
         table_dx = table['x'] - table['x'][0]
         table_dy = table['y'] - table['y'][0]
 
@@ -305,10 +325,13 @@ class SourceExtractor(object):
             sources_dy = self.sources['y'] - self.sources['y'][j]
 
             # Compute distances
-            for i, (xi, yi) in enumerate(zip(table_dx, table_dy)):
-                ri = np.sqrt((xi - sources_dx) ** 2 + (yi - sources_dy) ** 2)
+            for i, (dxi, dyi) in enumerate(zip(table_dx, table_dy)):
+                ri = np.sqrt(np.square(dxi - sources_dx) + np.square(dyi - sources_dy))
                 j_min = np.argmin(ri)
-                minimum_distances_total[j] += ri[j_min]
+                if ri[j_min] < threshold:
+                    minimum_distances_total[j] += ri[j_min]
+                else:
+                    minimum_distances_total[j] += penalty
 
         # Estimate distance-minimizing counter part to reference star
         best_match = np.argmin(minimum_distances_total)
