@@ -25,8 +25,8 @@ class FileArchive(object):
         ...
     """
 
-    def __init__(self, file_list, file_path=None, out_dir=None, out_prefix=None, cards=None, dtypes=None,
-                 table_format=None):
+    def __init__(self, file_list, file_path=None, out_dir=None, out_prefix=None, cards=None, dtypes=None, names=None,
+                 sort_by=None, table_format=None):
         """Create a FileArchive instance.
 
         Long description...
@@ -44,6 +44,10 @@ class FileArchive(object):
                 Header keywords, for which the values shall be extracted from the FITS headers.
             dtypes (list, optional):
                 List of data types, to which the header entries of the `cards` are casted.
+            names (list, optional):
+                .
+            sort_by (str, optional):
+                .
             table_format (str, optional):
                 Format of the ASCII file, from which file names are read. Used only if `file_list` is parsed as the name
                 of an ASCII table file.
@@ -72,7 +76,7 @@ class FileArchive(object):
             file_list = self.read_table_file(file_list[0], format=table_format)
 
         # Gather table of file names and request further information, from the FITS header
-        self.gather_table_from_list(files=file_list, cards=cards, dtypes=dtypes)
+        self.gather_table_from_list(files=file_list, cards=cards, dtypes=dtypes, names=names, sort_by=sort_by)
 
         # Log identified input files
         logger.debug("FileArchive lists the following files:")
