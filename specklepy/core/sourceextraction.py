@@ -483,8 +483,12 @@ class ManualFinder(object):
             aperture = box(image)
             peak = peak_index(aperture)
             peak = Point(*peak, order='yx')
-            peak.y += box.y_min
-            peak.x += box.x_min
+
+            # Shift into full frame reference
+            if box.y_min is not None:
+                peak.y += box.y_min
+            if box.x_min is not None:
+                peak.x += box.x_min
 
             # Test for convergence
             if peak.distance_to(guess) < threshold:
