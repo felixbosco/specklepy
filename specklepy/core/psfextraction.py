@@ -225,15 +225,15 @@ class ReferenceStars(object):
                 ivar_oversampled = np.zeros(frame_shape)
 
                 for aperture_index, aperture in enumerate(apertures):
-                    xoff = np.floor(aperture.y_offset * oversampling).astype(int) + oversampling // 2
-                    yoff = np.floor(aperture.x_offset * oversampling).astype(int) + oversampling // 2
+                    x_offset = np.floor(aperture.y_offset * oversampling).astype(int) + oversampling // 2
+                    y_offset = np.floor(aperture.x_offset * oversampling).astype(int) + oversampling // 2
 
                     # Getting coordinates of aperture and stretching to oversampled image
                     y, x = np.mgrid[0:self.box_size, 0:self.box_size]
                     x *= oversampling
                     y *= oversampling
-                    x += xoff
-                    y += yoff
+                    x += x_offset
+                    y += y_offset
                     
                     epsf_oversampled[y, x] += aperture.data[frame_index]
                     ivar_oversampled[y, x] += np.divide(1, aperture.var)
@@ -245,13 +245,13 @@ class ReferenceStars(object):
                 
                 # Sample down to the initial grid
                 epsf = np.zeros((self.box_size, self.box_size))
-                for indizes, value in np.ndenumerate(epsf):
+                for indexes, value in np.ndenumerate(epsf):
                     weighted_sum = np.multiply(epsf_oversampled, ivar_oversampled)
-                    weighted_sum = np.sum(weighted_sum[indizes[0] * oversampling: (indizes[0] + 1) * oversampling,
-                                          indizes[1] * oversampling: (indizes[1] + 1) * oversampling])
-                    weights_sum = np.sum(ivar_oversampled[indizes[0] * oversampling: (indizes[0] + 1) * oversampling,
-                                         indizes[1] * oversampling: (indizes[1] + 1) * oversampling])
-                    epsf[indizes] = np.divide(weighted_sum, weights_sum)
+                    weighted_sum = np.sum(weighted_sum[indexes[0] * oversampling: (indexes[0] + 1) * oversampling,
+                                          indexes[1] * oversampling: (indexes[1] + 1) * oversampling])
+                    weights_sum = np.sum(ivar_oversampled[indexes[0] * oversampling: (indexes[0] + 1) * oversampling,
+                                         indexes[1] * oversampling: (indexes[1] + 1) * oversampling])
+                    epsf[indexes] = np.divide(weighted_sum, weights_sum)
                 if debug:
                     imshow(epsf, title='ePSF', maximize=True)
         
