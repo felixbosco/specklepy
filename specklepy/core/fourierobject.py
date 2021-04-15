@@ -96,7 +96,7 @@ class FourierObject(object):
 
         # Initialize bootstrap image attribute
         self.bootstrap_images = None
-        self.bootstrap_objects = None
+        self.bootstrap_cube = None
 
         # Set custom mask
         self.custom_mask_file = None
@@ -137,7 +137,7 @@ class FourierObject(object):
 
         # Prepare bootstrapping
         if bootstrap is not None:
-            self.bootstrap_objects = [ComplexRatioImage(shape=self.shape)] * bootstrap
+            self.bootstrap_cube = ComplexRatioImage(shape=(bootstrap,) + self.shape)
 
             # Count total number of frames
             number_frames = 0
@@ -204,22 +204,20 @@ class FourierObject(object):
                 self.complex_ratio_image.denominator += denominator
 
                 # Co-add bootstrap images
-                if self.bootstrap_objects is not None:
-                    for b, bootstrap_object in enumerate(self.bootstrap_objects):
+                if self.bootstrap_cube is not None:
+                    for b in range(self.bootstrap_cube.number_images):
                         bootstrap_coeff = bootstrap_draws[b, frame_counter]
                         if bootstrap_coeff > 0:
-                            bootstrap_object.numerator += bootstrap_coeff * numerator
-                            bootstrap_object.denominator += bootstrap_coeff * denominator
+                            self.bootstrap_cube.numerator[b] += bootstrap_coeff * numerator
+                            self.bootstrap_cube.denominator[b] += bootstrap_coeff * denominator
 
                 # Count frames
                 frame_counter += 1
 
         # Compute the object:
         self.fourier_image = self.complex_ratio_image.evaluate()
-        if self.bootstrap_objects is not None:
-            self.bootstrap_images = []
-            for bootstrap_object in self.bootstrap_objects:
-                self.bootstrap_images.append(bootstrap_object.evaluate())
+        if self.bootstrap_cube is not None:
+            self.bootstrap_images = self.bootstrap_cube.evaluate()
 
         return self.fourier_image
 
@@ -297,17 +295,16 @@ class FourierObject(object):
             image = np.multiply(image, image_scale)
 
         # Fourier transform of the bootstrap images
+        bootstrap_images = None
         if self.bootstrap_images is not None:
             logger.info("Inverse Fourier transformation of the bootstrap objects...")
-            bootstrap_images = []
-            for bootstrap_fourier_image in self.bootstrap_images:
+            bootstrap_images = np.empty(self.bootstrap_images.shape)
+            for b, bootstrap_fourier_image in enumerate(self.bootstrap_images):
                 bootstrap_image = ifft2(bootstrap_fourier_image)
                 bootstrap_image = np.abs(bootstrap_image)
                 if total_flux is not None:
                     bootstrap_image = np.multiply(bootstrap_image, total_flux/np.sum(bootstrap_image))
-                bootstrap_images.append(bootstrap_image)
-        else:
-            bootstrap_images = None
+                bootstrap_images[b] = bootstrap_image
 
         return image, bootstrap_images
 
@@ -324,3 +321,25 @@ class ComplexRatioImage(object):
         """The division implicitly achieves the averaging. By implicitly summing up of enumerator and
         denominator, this computation is cheaper in terms of memory usage."""
         return np.divide(self.numerator, self.denominator)
+
+    @property
+    def ndim(self):
+        return self.shape
+
+    @property
+    def number_images(self):
+        if self.ndim == 2:
+            return 1
+        elif self.ndim == 3:
+            return self.shape[0]
+        else:
+            raise ValueError
+
+    @property
+    def frame_shape(self):
+        if self.ndim == 2:
+            return self.shape
+        elif self.ndim == 3:
+            return self.shape[-2], self.shape[-1]
+        else:
+            raise ValueError
