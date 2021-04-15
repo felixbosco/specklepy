@@ -160,7 +160,7 @@ def holography(params, debug=False):
         f_object.apodize(type=apodization.get('type'), radius=apodization.get('radius'))
 
         # (xi) Inverse Fourier transform to retain the reconstructed image
-        image, bootstrap_images = f_object.ifft(total_flux=total_flux)
+        image, bootstrap_images = f_object.ifft(total_flux=None)
 
         # Save the latest reconstruction image to outfile
         out_file.set_data(data=image, extension=0)
