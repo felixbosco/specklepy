@@ -201,7 +201,25 @@ class SourceExtractor(object):
                 table.rename_column(key, alias)
         return table
 
-    def estimate_uncertainties(self, sources):
+    def estimate_uncertainties(self, sources, weighting='gaussian'):
+        """Estimate the astrometric and photometric uncertainties of the sources in the provided table.
+
+        This function uses a two-dimensional moment with propagated uncertainties to re-measure the flux and position
+        values of the sources as the zeroth and first moment within an aperture, centered on the provided position of
+        the sourcse.
+
+        Args:
+            sources (astropy.table.Table):
+                Table of sources.
+            weighting (str, optional):
+                Weighting scheme. Can be 'gaussian' (default), 'uniform', or a weighting kernel.
+
+        Returns:
+            sources (astropy.table.Table):
+                Table of sources with updated positions and flux values, plus corresponding uncertainties
+        """
+
+        # Initialize output table
         new_sources = Table(names=['x', 'dx', 'y', 'dy', 'flux', 'dflux'])
         radius = round(self.fwhm / 2.35 * 1.5)  # 1.5 times the standard deviation
         logger.info(f"Measuring uncertainties over {(radius * 2 + 1)}x{radius * 2 + 1} pixels...")
@@ -221,7 +239,7 @@ class SourceExtractor(object):
 
             # Compute moments and uncertainties, and add to new table
             try:
-                f, df, x, dx, y, dy = moment_2d(aperture, var=var)
+                f, df, x, dx, y, dy = moment_2d(aperture, var=var, weights=weighting, fwhm=self.fwhm)
                 if box.x_min is not None:
                     x += box.x_min
                 if box.y_min is not None:
