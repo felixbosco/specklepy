@@ -150,7 +150,7 @@ def desaturate_color(color, number_colors=1, saturation_values=None, saturation_
         raise SpecklepyTypeError('desaturate_color()', 'color', type(color), 'str')
 
     if not isinstance(number_colors, int):
-        raise SpecklepyTypeError('desaturate_color()', 'ncolors', type(number_colors), 'int')
+        raise SpecklepyTypeError('desaturate_color()', 'number_colors', type(number_colors), 'int')
 
     if not isinstance(saturation_min, float):
         raise SpecklepyTypeError('desaturate_color()', 'saturation_min', type(saturation_min), 'float')
@@ -171,81 +171,3 @@ def desaturate_color(color, number_colors=1, saturation_values=None, saturation_
         colors.append(color)
 
     return colors
-
-
-def psf_profile_plot(files, normalize=None, maximize=False):
-    """Plots the psf profile data from a file.
-
-    Args:
-        files (str):
-            Name of the file to extract the data from.
-        normalize (str, optional):
-            Normalization mode, can be None, 'peak' and 'last'. Default is None.
-        maximize (bool, optional:
-            Show plots on full screen. Default is False.
-    """
-
-    # Input parameters
-    if isinstance(files, str):
-        plt.title(files)
-        files = [files]
-    if not isinstance(files, list):
-        raise SpecklepyTypeError('psf_profile_plot()', 'files', type(files), 'list')
-
-    for file in files:
-        xdata, ydata = np.loadtxt(file).transpose()
-
-        plt.xlabel("Radius (pix)")
-        if normalize == 'peak':
-            plt.ylabel("Peak normalized flux")
-            ydata /= ydata[0]
-        elif normalize == 'last':
-            plt.ylabel("Sky normalized flux")
-            ydata /= ydata[-1]
-        else:
-            plt.ylabel("Flux")
-
-        plt.plot(xdata, ydata)
-    if maximize:
-        maximize_plot()
-    plt.show()
-    plt.close()
-
-
-def encircled_energy_plot(files, normalize=None, maximize=False):
-    """Plots the encircled energy data from a file.
-
-    Args:
-        files (str):
-            Name of the file to extract the data from.
-        normalize (str, optional):
-            Normalization mode, can be None, 'peak' and 'last'. Default is None.
-        maximize (bool, optional:
-            Show plots on full screen. Default is False.
-    """
-
-    # Input parameters
-    if isinstance(files, str):
-        plt.title(files)
-        files = [files]
-    if not isinstance(files, list):
-        raise SpecklepyTypeError('encircled_energy_plot()', 'files', type(files), 'list')
-
-    for file in files:
-        xdata, ydata = np.loadtxt(file).transpose()
-
-        plt.xlabel("Radius (pix)")
-        if normalize == 'peak':
-            plt.ylabel("Peak normalized flux")
-            ydata /= ydata[0]
-        elif normalize == 'last':
-            plt.ylabel("Sky normalized flux")
-            ydata /= ydata[-1]
-        else:
-            plt.ylabel("Flux")
-
-        plt.plot(xdata, ydata)
-    if maximize:
-        maximize_plot()
-    plt.show()
-    plt.close()
