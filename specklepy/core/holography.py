@@ -167,16 +167,14 @@ def holography(params, debug=False):
 
         # Compute uncertainty from bootstrap reconstructions
         if bootstrap_images is not None:
-            var = np.var(np.array(bootstrap_images), axis=0)
+            var = np.var(bootstrap_images, axis=0)
             out_file.set_data(data=var, extension=variance_extension)
             if params['BOOTSTRAP'].get('saveImages', False):
                 logger.info("Saving bootstrap images...")
                 bs_file = FileStream(file_name=out_file_name.replace('.fits', '_bs.fits'), path=in_dir)
-                bs_file.initialize(shape=(len(bootstrap_images), image.shape[1], image.shape[2]))
+                bs_file.initialize(data=bootstrap_images)
                 bs_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography',
                                                                insert=True)
-                for b, bootstrap_image in enumerate(bootstrap_images):
-                    bs_file.update_frame(frame_index=b, data=bootstrap_image)
 
         # Inspect the latest reconstruction
         # if debug:
