@@ -20,13 +20,13 @@ def random_draw_vectors(number_draws, number_frames, first_uniform=False):
 
     # Draw the frame indexes randomly
     shape = (number_draws, number_frames)
-    draw_indizes = np.random.randint(number_frames, size=shape)
+    draw_indexes = np.random.randint(number_frames, size=shape)
 
     # Combine into array of vectors with weights ("counts")
     sample_draw_vectors = np.zeros(shape=shape)
     for sample_draw_index, sample_draw_vector in enumerate(sample_draw_vectors):
-        unique_indizes, counts = np.unique(draw_indizes[sample_draw_index], return_counts=True)
-        sample_draw_vectors[sample_draw_index][unique_indizes] = counts
+        unique_indexes, counts = np.unique(draw_indexes[sample_draw_index], return_counts=True)
+        sample_draw_vectors[sample_draw_index][unique_indexes] = counts
 
     # Replace first draw vector with a homogeneous one
     if first_uniform:

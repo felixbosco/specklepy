@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 from astropy.io import fits
-from astropy.stats import sigma_clip, sigma_clipped_stats
+from astropy.stats import sigma_clipped_stats
 
 from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
@@ -15,7 +15,7 @@ class MasterDark(object):
     extensions = {'variance': 'VAR', 'mask': 'MASK'}
 
     def __init__(self, file_list, file_name='MasterDark.fits', file_path=None, out_dir=None, setup=None,
-                 sub_window=None, new=True):
+                 sub_window=None):
         self.files = file_list
         self.file_name = self.insert_setup_to_file_name(file_name=file_name, setup=setup)
         self.file_path = file_path if file_path is not None else ''
@@ -70,7 +70,7 @@ class MasterDark(object):
             base, ext = os.path.splitext(file_name)
             return f"{base}_{setup}{ext}"
 
-    def combine(self, max_number_frames=None, rejection_threshold=10):
+    def combine(self, rejection_threshold=10):
         logger.info("Combining master dark frame...")
         # if max_number_frames is not None:
         #     logger.debug(f"Using only the first {max_number_frames} frames of each cube")
