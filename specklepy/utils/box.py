@@ -65,15 +65,12 @@ class Box(object):
     def __repr__(self):
         return f"[[{self.x_min}, {self.x_max}], [{self.y_min}, {self.y_max}]]"
 
-    def __call__(self, array):  #, update=False):
+    def __call__(self, array):
 
         # Abort if Box is undefined
         if self.x_min is None and self.x_max is None and self.y_min is None and self.y_max is None:
-
             return array
-
         else:
-
             return array[self.y_min: self.y_max, self.x_min: self.x_max]
 
     def __copy__(self):
@@ -151,12 +148,10 @@ class Box3D(object):
     def __repr__(self):
         return f"[[{self.x_min}, {self.x_max}], [{self.y_min}, {self.y_max}], [{self.z_min}, {self.z_max}]]"
 
-    def __call__(self, array):  #, update=False):
-
+    def __call__(self, array):
         # Abort if Box is undefined
         if self.x_min is None and self.x_max is None and self.y_min is None and self.y_max is None:
             return array
-
         else:
             return array[self.z_min: self.z_max, self.y_min: self.y_max, self.x_min: self.x_max]
 
