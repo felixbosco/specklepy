@@ -15,9 +15,9 @@ class TestTransferFunctions(unittest.TestCase):
         self.aperture = amp * np.exp(1j * pha)
 
     def test_desaturate_color(self):
-        utils.desaturate_color('tab:blue', ncolors=3)
-        utils.desaturate_color('#00FF00', ncolors=3)
-        utils.desaturate_color((0, 1, 0), ncolors=3)
+        utils.desaturate_color('tab:blue', number_colors=3)
+        utils.desaturate_color('#00FF00', number_colors=3)
+        utils.desaturate_color((0, 1, 0), number_colors=3)
 
 
 if __name__ == "__main__":
