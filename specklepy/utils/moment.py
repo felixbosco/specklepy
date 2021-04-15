@@ -37,7 +37,7 @@ def moment_2d(array, var=None, weights=None):
     except TypeError:
         weighted_array = array
     try:
-        weighted_var = np.multiply(weights, var)
+        weighted_var = np.multiply(np.square(weights), var)
     except TypeError:
         weighted_var = var
 
@@ -47,7 +47,7 @@ def moment_2d(array, var=None, weights=None):
     # Compute zeroth moment
     moment0 = np.sum(weighted_array)
     try:
-        var_moment0 = np.sum(np.square(weighted_var))
+        var_moment0 = np.sum(weighted_var)
         std_moment0 = np.sqrt(var_moment0)
     except TypeError:
         std_moment0 = None
@@ -64,9 +64,9 @@ def moment_2d(array, var=None, weights=None):
 
     # Compute uncertainties
     try:
-        var_moment1_x = np.sum(np.square(np.multiply(weighted_var, np.subtract(x, moment1_x)))) / np.square(moment0)
+        var_moment1_x = np.sum(np.multiply(weighted_var, np.square(np.subtract(x, moment1_x)))) / np.square(moment0)
         std_moment1_x = np.sqrt(var_moment1_x)
-        var_moment1_y = np.sum(np.square(np.multiply(weighted_var, np.subtract(y, moment1_y)))) / np.square(moment0)
+        var_moment1_y = np.sum(np.multiply(weighted_var, np.square(np.subtract(y, moment1_y)))) / np.square(moment0)
         std_moment1_y = np.sqrt(var_moment1_y)
     except TypeError:
         std_moment1_x = None
