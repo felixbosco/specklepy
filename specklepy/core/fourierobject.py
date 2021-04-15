@@ -131,7 +131,7 @@ class FourierObject(object):
                 Number of bootstrap-resampled images to create in parallel.
 
         Returns:
-            fourier_image (np.ndarray, dtype=np.comlex128):
+            fourier_image (np.ndarray, dtype=np.complex128):
                 Fourier-transformed object reconstruction.
         """
 
