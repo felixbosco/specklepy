@@ -31,7 +31,7 @@ class TestAperture(unittest.TestCase):
 
     def test_encircled_energy(self):
         aperture = Aperture(8, 8, 4, file_name=self.test_data)
-        aperture.get_encircled_energy(saveto='specklepy/tests/files/analysis/example_encircled_energy.dat')
+        aperture.get_encircled_energy(save_to='specklepy/tests/files/analysis/example_encircled_energy.dat')
 
     def test_call(self):
         imshow(self.test_data)

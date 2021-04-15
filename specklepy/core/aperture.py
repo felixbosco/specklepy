@@ -75,7 +75,7 @@ class Aperture(object):
             self.data = fits.get_data(file_name)
             self.var = fits.get_data(file_name=file_name, path=path, extension=self.variance_extension,
                                      ignore_missing_extension=True)
-            data_mask = fits.get_data(file_name=file_name , path=path, extension=self.mask_extension, dtype=bool,
+            data_mask = fits.get_data(file_name=file_name, path=path, extension=self.mask_extension, dtype=bool,
                                       ignore_missing_extension=True)
             if data_mask is not None:
                 if self.data.ndim == 2:
@@ -138,12 +138,12 @@ class Aperture(object):
 
         if mode == 'circular':
             distance_map = self.make_radius_map()
-            mask2D = np.ma.masked_greater(distance_map, self.radius).mask
+            mask_2d = np.ma.masked_greater(distance_map, self.radius).mask
             if self.data.ndim == 2:
-                return mask2D
+                return mask_2d
             elif self.data.ndim == 3:
-                mask3D = np.expand_dims(mask2D, axis=0)
-                return np.repeat(mask3D, repeats=self.data.shape[0], axis=0)
+                mask_3d = np.expand_dims(mask_2d, axis=0)
+                return np.repeat(mask_3d, repeats=self.data.shape[0], axis=0)
         elif mode == 'rectangular':
             if self.cropped:
                 return np.zeros(self.data.shape, dtype=bool)
@@ -226,20 +226,20 @@ class Aperture(object):
 
         # Initialize output radii and array
         radius_map = self.make_radius_map()
-        rdata = np.unique(radius_map)
-        ydata = np.zeros(rdata.shape)
-        edata = np.zeros(rdata.shape)
+        r_data = np.unique(radius_map)
+        y_data = np.zeros(r_data.shape)
+        e_data = np.zeros(r_data.shape)
 
         # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            for index, radius in enumerate(rdata):
+            for index, radius in enumerate(r_data):
                 y, x = np.where(radius_map == radius)
                 subset = self.power_spectrum_cube[:, y, x]
-                ydata[index] = np.mean(subset)
-                edata[index] = np.std(subset)
+                y_data[index] = np.mean(subset)
+                e_data[index] = np.std(subset)
 
-        return rdata, ydata, edata
+        return r_data, y_data, e_data
 
     def get_psf_variance(self):
         """Extract a radial variance profile of the speckle PSFs."""
@@ -251,9 +251,9 @@ class Aperture(object):
 
         # Initialize output radii and array
         radius_map = self.make_radius_map()
-        rdata = np.unique(radius_map)
-        ydata = np.zeros(rdata.shape)
-        edata = np.zeros(rdata.shape)
+        r_data = np.unique(radius_map)
+        y_data = np.zeros(r_data.shape)
+        e_data = np.zeros(r_data.shape)
 
         # Extract 2D variance map
         var_map = np.var(self.data, axis=0)
@@ -261,49 +261,49 @@ class Aperture(object):
         # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            for index, radius in enumerate(rdata):
+            for index, radius in enumerate(r_data):
                 subset = var_map[np.where(radius_map == radius)]
-                ydata[index] = np.sqrt(np.mean(subset))
-                edata[index] = np.sqrt(np.var(subset))
+                y_data[index] = np.sqrt(np.mean(subset))
+                e_data[index] = np.sqrt(np.var(subset))
 
-        return rdata, ydata, edata
+        return r_data, y_data, e_data
 
-    def get_encircled_energy(self, saveto=None):
+    def get_encircled_energy(self, save_to=None):
         """Extracts the encircled energy from an aperture as a function of
         radius."""
 
         # Initialize output radii and array
         radius_map = self.make_radius_map()
-        rdata = np.unique(radius_map)
-        ydata = np.zeros(rdata.shape)
-        edata = np.zeros(rdata.shape)
+        r_data = np.unique(radius_map)
+        y_data = np.zeros(r_data.shape)
+        e_data = np.zeros(r_data.shape)
 
         # Extract 2D image
         image = self.get_integrated()
 
         # Iterate over aperture radii
-        for index, radius in enumerate(rdata):
+        for index, radius in enumerate(r_data):
             subset = image[np.where(radius_map <= radius)]
-            ydata[index] = np.sum(subset)
-            edata[index] = np.std(subset)
+            y_data[index] = np.sum(subset)
+            e_data[index] = np.std(subset)
 
         # Save results to file
-        if saveto is not None:
+        if save_to is not None:
             header = "radius_(pix) encircled_energy(data_unit)"
-            data = np.concatenate(([rdata], [ydata]), axis=0).transpose()
-            np.savetxt(saveto, data, header=header)
-            logger.info(f"Saved encircled energy data to file {saveto}")
+            data = np.concatenate(([r_data], [y_data]), axis=0).transpose()
+            np.savetxt(save_to, data, header=header)
+            logger.info(f"Saved encircled energy data to file {save_to}")
 
-        return rdata, ydata, edata
+        return r_data, y_data, e_data
 
     def get_psf_profile(self):
         """Computes the radial average of the PSF in the aperture."""
 
         # Initialize output radii and array
         radius_map = self.make_radius_map()
-        rdata = np.unique(radius_map)
-        ydata = np.zeros(rdata.shape)
-        edata = np.zeros(rdata.shape)
+        r_data = np.unique(radius_map)
+        y_data = np.zeros(r_data.shape)
+        e_data = np.zeros(r_data.shape)
 
         # Extract 2D image
         image = self.get_integrated()
@@ -311,12 +311,12 @@ class Aperture(object):
         # Iterate over aperture radii
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            for index, radius in enumerate(rdata):
+            for index, radius in enumerate(r_data):
                 subset = image[np.where(radius_map == radius)]
-                ydata[index] = np.mean(subset)
-                edata[index] = np.std(subset)
+                y_data[index] = np.mean(subset)
+                e_data[index] = np.std(subset)
 
-        return rdata, ydata, edata
+        return r_data, y_data, e_data
 
     def spatial_frequency(self, pixel_scale=1, profile=True):
         r = self.make_radius_map()

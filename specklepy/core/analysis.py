@@ -74,20 +74,20 @@ def get_psf_1d(file, index, radius, out_file=None, normalize=None, debug=False):
 
     # Extract PSF profile
     logger.info(f"Extracting PSF profile from file {file}")
-    xdata, ydata, edata = aperture.get_psf_profile()
+    x_data, y_data, e_data = aperture.get_psf_profile()
 
     # Normalize profile
     if normalize == 'peak':
-        ydata /= ydata[0]
-        edata /= ydata[0]
+        y_data /= y_data[0]
+        e_data /= y_data[0]
     elif normalize == 'aperture':
-        ydata /= ydata[-1]
-        edata /= ydata[-1]
+        y_data /= y_data[-1]
+        e_data /= y_data[-1]
     elif normalize is not None:
         raise ValueError("Normalize must be either 'peak', 'aperture, or None!'")
 
     # Save encircled energy data to outfile
-    out_table = Table(data=[xdata, ydata, edata], names=['Radius', 'Flux', 'dFlux'])
+    out_table = Table(data=[x_data, y_data, e_data], names=['Radius', 'Flux', 'dFlux'])
     logger.info(f"Store PSF profile to {out_file}")
     out_table.write(out_file, overwrite=True, format='ascii.fixed_width')
 
@@ -119,19 +119,19 @@ def get_psf_variation(file, index, radius, out_file=None, normalize=None, debug=
 
     # Extract PSF profile
     logger.info(f"Extracting PSF profile from file {file}")
-    xdata, ydata, edata = aperture.get_psf_variance()
+    x_data, y_data, e_data = aperture.get_psf_variance()
 
     # Normalize profile
     if normalize == 'peak':
-        ydata /= ydata[0]
-        edata /= ydata[0]
+        y_data /= y_data[0]
+        e_data /= y_data[0]
     elif normalize == 'aperture':
-        ydata /= ydata[-1]
-        edata /= ydata[-1]
+        y_data /= y_data[-1]
+        e_data /= y_data[-1]
     elif normalize is not None:
         raise ValueError("Normalize must be either 'peak', 'aperture, or None!'")
 
     # Save encircled energy data to outfile
-    out_table = Table(data=[xdata, ydata, edata], names=['Radius', 'Variance', 'dVariance'])
+    out_table = Table(data=[x_data, y_data, e_data], names=['Radius', 'Variance', 'dVariance'])
     logger.info(f"Store PSF profile to {out_file}")
     out_table.write(out_file, overwrite=True, format='ascii.fixed_width')
