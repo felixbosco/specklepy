@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def moment_2d(array, var=None, weights=None):
+def moment_2d(array, var=None, weights=None, fwhm=None):
     """Compute zeroth and first order moments of an array.
 
     Uncertainties are `None` if no variance is provided.
@@ -9,12 +9,14 @@ def moment_2d(array, var=None, weights=None):
     Arguments:
         array (array-like):
             .
-        var (array-like):
+        var (array-like, optional):
             Array of variances with the same shape as `array` argument. If not provided, all uncertainties will be
             `None`-type.
-        weights (array-like):
+        weights (array-like or str, optional):
             Weights to apply during the computation. If not provided, all entries of the `array` and `var` input are
-            weighted equally.
+            not weighted. Accepts also the two str-type values `'uniform'` and `'gaussian'`.
+        fwhm (float-like, optional):
+            Full width at half maximum of the Gaussian weights. Used only if `weights == 'gaussian'`.
 
     Returns:
         moment0 (float):
@@ -30,6 +32,12 @@ def moment_2d(array, var=None, weights=None):
         std_moment1_y (float):
             Uncertainty of `moment1_y`. Will be None if `var` is not provided.
     """
+
+    # Create weights
+    if weights == 'uniform':
+        weights = uniform_weights(array.shape)
+    elif weights == 'gaussian':
+        weights = gaussian_weights(array.shape, fwhm=fwhm)
 
     # Apply weights to array and variance map
     try:
@@ -95,7 +103,7 @@ def uniform_weights(shape, normalization='unity'):
     return normalize_weights(np.ones(shape=shape), normalization=normalization)
 
 
-def normalize_weights(weights, normalization=None):
+def normalize_weights(weights, normalization='unity'):
     """Normalize an array of weights.
 
     Args:
@@ -111,9 +119,6 @@ def normalize_weights(weights, normalization=None):
 
     # Compute number of pixels to normalize to this
     if normalization == 'unity':
-        normalization = weights.shape[0] * weights.shape[1]
-
-    try:
-        return weights * np.divide(normalization, np.sum(weights))
-    except TypeError:
-        return weights
+        return np.divide(weights, np.sum(weights))
+    else:
+        return np.divide(weights, np.sum(weights)) * normalization
