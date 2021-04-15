@@ -236,7 +236,7 @@ class ReferenceStars(object):
                     y += yoff
                     
                     epsf_oversampled[y, x] += aperture.data[frame_index]
-                    ivar_oversampled[y, x] += np.divide(1, aperture.vars)
+                    ivar_oversampled[y, x] += np.divide(1, aperture.var)
                 
                 if debug:
                     imshow(apertures[0].data[frame_index], maximize=True, title=f"Aperture {0}")
@@ -287,7 +287,7 @@ class ReferenceStars(object):
         for file in self.psf_files:
 
             # Start stream to file
-            logger.info(f"Thresholding file {file!r}")
+            logger.info(f"Thresholding the PSFs in file {file!r}")
             psf_file = FileStream(file_name=file)
 
             # Iterate through frames
