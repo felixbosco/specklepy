@@ -328,18 +328,11 @@ class ComplexRatioImage(object):
 
     @property
     def number_images(self):
-        if self.ndim == 2:
+        try:
+            return self.shape[-3]
+        except IndexError:
             return 1
-        elif self.ndim == 3:
-            return self.shape[0]
-        else:
-            raise ValueError
 
     @property
     def frame_shape(self):
-        if self.ndim == 2:
-            return self.shape
-        elif self.ndim == 3:
-            return self.shape[-2], self.shape[-1]
-        else:
-            raise ValueError
+        return self.shape[-2], self.shape[-1]
