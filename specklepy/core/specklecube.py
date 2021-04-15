@@ -144,9 +144,13 @@ class SpeckleCube(object):
         # Initialize output images
         aligned = np.zeros(self.frame_shape)
         aligned_var = np.zeros(self.frame_shape) if self.variance is not None else None
-        bootstrap_var = np.zeros(self.frame_shape) if bootstrap_number is not None else None
-        bootstrap_images = [np.zeros(self.frame_shape)] * bootstrap_number if bootstrap_number is not None else None
-        bootstrap_vector = random_draw_vectors(number_draws=bootstrap_number, number_frames=self.frame_number)
+
+        # Initialize bootstrap images
+        bootstrap_var, bootstrap_images, bootstrap_vector = None, None, None
+        if bootstrap_number is not None:
+            bootstrap_var = np.zeros(self.frame_shape)
+            bootstrap_images = np.zeros((bootstrap_number,) + self.frame_shape)
+            bootstrap_vector = random_draw_vectors(number_draws=bootstrap_number, number_frames=self.frame_number)
 
         # Shift frames and add to `aligned`
         alignment = FrameAlignment()
@@ -160,10 +164,9 @@ class SpeckleCube(object):
                 aligned_var += alignment.pad_array(self.variance, pad_vector_index=f, mode='same')
 
             # Co-add bootstrap frames
-            for b in range(bootstrap_number):
-                bootstrap_coefficient = bootstrap_vector[b, f]
-                if bootstrap_coefficient != 0:
-                    bootstrap_images[b] += bootstrap_coefficient * padded
+            if bootstrap_number is not None:
+                for b in range(bootstrap_number):
+                    bootstrap_images[b] += bootstrap_vector[b, f] * padded
 
         # Evaluate variance
         if bootstrap_var is None:
