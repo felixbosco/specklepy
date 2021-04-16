@@ -172,7 +172,7 @@ def holography(params, debug=False):
             out_file.set_data(data=var, extension=variance_extension)
             if params['BOOTSTRAP'].get('saveImages', False):
                 logger.info("Saving bootstrap images...")
-                bs_file = FileStream(file_name=out_file_name.replace('.fits', '_bs.fits'), path=in_dir)
+                bs_file = FileStream(file_name=out_file_name.replace('.fits', '_bs.fits'))
                 bs_file.initialize(data=bootstrap_images)
                 bs_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography',
                                                                insert=True)
