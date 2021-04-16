@@ -119,7 +119,7 @@ class FourierObject(object):
         else:
             return False
 
-    def coadd_fft(self, fill_value=0, mask_hot_pixels=False, bootstrap=None):
+    def coadd_fft(self, fill_value=0, mask_hot_pixels=False, bootstrap_number=None):
         """Co-add the Fourier transforms of the image and PSF frames.
 
         Arguments:
@@ -127,7 +127,7 @@ class FourierObject(object):
                 Value to fill masked pixels of the data cube, in case the file contains a mask extension.
             mask_hot_pixels (bool, optional):
                 Identify hot pixels in a cube if requested and fill them.
-            bootstrap (int, optional):
+            bootstrap_number (int, optional):
                 Number of bootstrap-resampled images to create in parallel.
 
         Returns:
@@ -136,8 +136,8 @@ class FourierObject(object):
         """
 
         # Prepare bootstrapping
-        if bootstrap is not None:
-            self.bootstrap_cube = ComplexRatioImage(shape=(bootstrap,) + self.shape)
+        if bootstrap_number is not None:
+            self.bootstrap_cube = ComplexRatioImage(shape=(bootstrap_number,) + self.shape)
 
             # Count total number of frames
             number_frames = 0
@@ -145,7 +145,8 @@ class FourierObject(object):
                 number_frames += get_frame_number(file=file, path=self.in_dir)
 
             # Draw bootstrap coefficients
-            bootstrap_draws = random_draw_vectors(number_draws=bootstrap, number_frames=number_frames)
+            bootstrap_draws = random_draw_vectors(number_draws=bootstrap_number, number_frames=number_frames,
+                                                  seed=bootstrap_number)
         else:
             bootstrap_draws = None
         frame_counter = 0

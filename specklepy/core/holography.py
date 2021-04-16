@@ -154,7 +154,7 @@ def holography(params, debug=False):
 
         # (ix) Estimate object, following Eq. 1 (Schoedel et al., 2013)
         f_object = FourierObject(in_files, psf_files, shifts=shifts, mode=mode, in_dir=in_dir, custom_mask=custom_mask)
-        f_object.coadd_fft(mask_hot_pixels=mask_hot_pixels, bootstrap=bootstrap_number)
+        f_object.coadd_fft(mask_hot_pixels=mask_hot_pixels, bootstrap_number=bootstrap_number)
 
         # (x) Apodization
         f_object.apodize(type=apodization.get('type'), radius=apodization.get('radius'))
