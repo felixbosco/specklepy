@@ -14,7 +14,7 @@ class TestGenerateExposure(unittest.TestCase):
         self.psf_source = 'specklepy/tests/files/psf_short_exposures.fits'
         self.outfile = 'specklepy/tests/files/mock/exposure.fits'
 
-        self.target = Target(band='H', star_table=self.star_table, sky_background=14.4)
+        self.target = Target(band='H', star_table_file=self.star_table, sky_background=14.4)
         self.telescope = Telescope(8.2 * u.m, central_obscuration=0.14, name="VLT Unit Telescope",
                                    psf_source=self.psf_source)
         self.detector = Detector((1024, 1024),

@@ -1,5 +1,4 @@
 from copy import copy
-from IPython import embed
 import numpy as np
 
 from astropy.units import Unit, Quantity
@@ -10,6 +9,8 @@ from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
 from specklepy.io.table import read_table
 from specklepy.logging import logger
+from specklepy.mock.photometricsystem import PhotometricSystem
+from specklepy.mock.startable import StarTable
 from specklepy.utils.scaledtuple import Position, ScaledTuple
 
 
@@ -50,13 +51,13 @@ class Target(object):
                        'i': {'wavelength': 0.79, 'FWHM': 0.16, 'Flux': 4760.0},
                        'z': {'wavelength': 0.91, 'FWHM': 0.13, 'Flux': 4810.0}}
 
-    def __init__(self, band, star_table=None, sky_background=None, photometry_file=None):
+    def __init__(self, band, star_table_file=None, sky_background=None, photometry_file='default'):
         """Instantiate Target class.
 
         Args:
             band (str):
                 Name of the band. Used for extracting the band specific reference flux for magnitude 0.
-            star_table (str, optional):
+            star_table_file (str, optional):
                 Name of the file with the data of all stars.
             sky_background (Quantity, optional):
                 Sky background. Int and float inputs will be interpreted as mag / arcsec**2.
@@ -73,11 +74,11 @@ class Target(object):
         else:
             raise SpecklepyTypeError('Target', 'band', type(band), 'str')
 
-        if star_table is None or isinstance(star_table, str):
-            self.star_table = star_table
+        if star_table_file is None or isinstance(star_table_file, str):
+            self.star_table = star_table_file
             # Read star table already here?
         else:
-            raise SpecklepyTypeError('Target', 'star_table', type(star_table), 'str')
+            raise SpecklepyTypeError('Target', 'star_table', type(star_table_file), 'str')
 
         if photometry_file is None or isinstance(photometry_file, str):
             self.photometry_file = photometry_file
