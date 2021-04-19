@@ -11,12 +11,14 @@ class StarTable(object):
     def __init__(self):
         self.table = None
 
-    @property
-    def length(self):
+    def __len__(self):
         return len(self.table)
 
     def __getitem__(self, item):
         return self.table.__getitem__(item)
+
+    def __repr__(self):
+        return self.table.__repr__()
 
     @staticmethod
     def sample_magnitudes_from_table(number_stars, table_file, table_format='ascii'):
@@ -49,6 +51,21 @@ class StarTable(object):
         return to_magnitude(draws)
 
     def generate_table(self, number_stars, iso_table_file, lf_table_file, lf_band, table_format='ascii'):
+        """Generate a complete table for all the quantities represented in a given isochrone file.
+
+        Args:
+            number_stars (int):
+                Number of stars to generate.
+            iso_table_file (str):
+                Name of or path to the file containing tabulated isochrones.
+            lf_table_file (str):
+                Name of or path to the file containing tabulated luminosity functions.
+            lf_band (str):
+                Name of the filter band, which is represented in the luminosity function file. This is used for linking
+                these magnitudes to the other quantities from the isochrone table.
+            table_format (str, optional):
+                 Format string for encoding the tabulated luminosity function.
+        """
 
         # Initialize aliases
         bad_columns = ['EEP', 'D51']
@@ -84,3 +101,37 @@ class StarTable(object):
                 column = Column(data=to_quantity(magnitudes), name=column_name, unit=units[column_name])
             logger.info(f"Inserting column for {column_name!r}")
             self.table.add_column(column)
+
+    def add_spatial_columns(self, half_light_radius, half_light_radius_unit='pc'):
+        """Add three spatial coordinates to the stars that are normally distributed about the cluster center.
+
+        Args:
+            half_light_radius (float-like):
+                Value of the star clusters half light radius. The units can be set via the argument.
+            half_light_radius_unit (str, optional):
+                Str-type representation of a unit.
+        """
+        
+        # Derive standard deviation in radial direction from half-light radius
+        radial_scale = half_light_radius * 2 / 2.35
+
+        # Iterate through spatial axes
+        for column_name in ['x', 'y', 'z']:
+            pos = np.random.normal(loc=0.0, scale=radial_scale, size=len(self))
+            column = Column(name=column_name, data=pos, unit=half_light_radius_unit)
+            logger.info(f"Inserting column for {column_name!r}")
+            self.table.add_column(column)
+
+    def write(self, file_name, table_format='ascii.fixed_width', overwrite=True):
+        """Save the table to an ASCII or FITS file.
+
+        Args:
+            file_name (str):
+                Name or path of the file to save the table to
+            table_format (str, optional):
+                Format of the
+            overwrite (bool, optional):
+                Allow to overwrite existing files. Default is True.
+        """
+        logger.info(f"Writing table data to file {file_name!r}")
+        self.table.write(file_name, format=table_format, overwrite=overwrite)
