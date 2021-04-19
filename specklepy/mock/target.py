@@ -3,7 +3,7 @@ import numpy as np
 
 from astropy.units import Unit, Quantity
 # import astropy.constants as const
-# from astropy.table import Table
+from astropy.table import Column
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
@@ -273,9 +273,9 @@ class Target(object):
         if self.star_table.table is not None:
 
             distance = 10 * Unit('kpc')
-            star_table = self.star_table.observe_at_distance(distance=distance)
+            star_table = self.star_table.observe_at_distance(distance=distance, filter_band=self.band)
             magnitudes = self.photometric_system.to_photon_flux(star_table[self.band], band=self.band)
-            star_table.add_column(name='flux', data=magnitudes.value)
+            star_table.add_column(Column(name='flux', data=magnitudes.value))
 
             for row in star_table:
                 position = Position(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=True)
