@@ -31,8 +31,8 @@ class PhotometricSystem(object):
     def read_reference_photon_flux(self, band, **kwargs):
         table = Table.read(self.data_file, **kwargs)
         row_index = np.where(table["Band"] == band)
-        fwhm = table['FWHM'][row_index][0]
-        flux = table['Flux'][row_index][0] * Unit('Jy')
+        fwhm = table['FWHM'][row_index]
+        flux = table['Flux'][row_index]
         return (flux / PLANCK * fwhm * Unit('photon')).decompose()
 
     def to_photon_flux(self, magnitudes, band=None):
