@@ -2,12 +2,12 @@ from copy import copy
 import numpy as np
 
 from astropy.units import Unit, Quantity
-import astropy.constants as const
-from astropy.table import Table
+# import astropy.constants as const
+# from astropy.table import Table
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import config
-from specklepy.io.table import read_table
+# from specklepy.io.table import read_table
 from specklepy.logging import logger
 from specklepy.mock.photometricsystem import PhotometricSystem
 from specklepy.mock.startable import StarTable
@@ -35,21 +35,21 @@ class Target(object):
     """
 
     __name__ = 'target'
-    # Credit https://en.wikipedia.org/wiki/Apparent_magnitude
-    # Central wavelength (mum) | Bandpass (mum) |
-    photometry_dict = {'U': {'wavelength': 0.36, 'FWHM': 0.15, 'Flux': 1810.0},
-                       'B': {'wavelength': 0.44, 'FWHM': 0.22, 'Flux': 4260.0},
-                       'V': {'wavelength': 0.55, 'FWHM': 0.16, 'Flux': 3640.0},
-                       'R': {'wavelength': 0.64, 'FWHM': 0.23, 'Flux': 3080.0},
-                       'I': {'wavelength': 0.79, 'FWHM': 0.19, 'Flux': 2550.0},
-                       'J': {'wavelength': 1.26, 'FWHM': 0.16, 'Flux': 1600.0},
-                       'H': {'wavelength': 1.6,  'FWHM': 0.23, 'Flux': 1080.0},
-                       'K': {'wavelength': 2.22, 'FWHM': 0.23, 'Flux': 670.0},
-                       # 'L': {'wavelength': 3.5,  'FWHM': np.nan, 'Flux': np.nan},
-                       'g': {'wavelength': 0.52, 'FWHM': 0.14, 'Flux': 3730.0},
-                       'r': {'wavelength': 0.67, 'FWHM': 0.14, 'Flux': 4490.0},
-                       'i': {'wavelength': 0.79, 'FWHM': 0.16, 'Flux': 4760.0},
-                       'z': {'wavelength': 0.91, 'FWHM': 0.13, 'Flux': 4810.0}}
+    # # Credit https://en.wikipedia.org/wiki/Apparent_magnitude
+    # # Central wavelength (mum) | Bandpass (mum) |
+    # photometry_dict = {'U': {'wavelength': 0.36, 'FWHM': 0.15, 'Flux': 1810.0},
+    #                    'B': {'wavelength': 0.44, 'FWHM': 0.22, 'Flux': 4260.0},
+    #                    'V': {'wavelength': 0.55, 'FWHM': 0.16, 'Flux': 3640.0},
+    #                    'R': {'wavelength': 0.64, 'FWHM': 0.23, 'Flux': 3080.0},
+    #                    'I': {'wavelength': 0.79, 'FWHM': 0.19, 'Flux': 2550.0},
+    #                    'J': {'wavelength': 1.26, 'FWHM': 0.16, 'Flux': 1600.0},
+    #                    'H': {'wavelength': 1.6,  'FWHM': 0.23, 'Flux': 1080.0},
+    #                    'K': {'wavelength': 2.22, 'FWHM': 0.23, 'Flux': 670.0},
+    #                    # 'L': {'wavelength': 3.5,  'FWHM': np.nan, 'Flux': np.nan},
+    #                    'g': {'wavelength': 0.52, 'FWHM': 0.14, 'Flux': 3730.0},
+    #                    'r': {'wavelength': 0.67, 'FWHM': 0.14, 'Flux': 4490.0},
+    #                    'i': {'wavelength': 0.79, 'FWHM': 0.16, 'Flux': 4760.0},
+    #                    'z': {'wavelength': 0.91, 'FWHM': 0.13, 'Flux': 4810.0}}
 
     def __init__(self, band, star_table_file=None, sky_background=None, photometry_file='default'):
         """Instantiate Target class.
@@ -74,17 +74,18 @@ class Target(object):
         else:
             raise SpecklepyTypeError('Target', 'band', type(band), 'str')
 
-        if star_table_file is None or isinstance(star_table_file, str):
-            self.star_table = star_table_file
-            # Read star table already here?
-        else:
-            raise SpecklepyTypeError('Target', 'star_table', type(star_table_file), 'str')
+        # if star_table_file is None or isinstance(star_table_file, str):
+        #     self.star_table_file = star_table_file
+        #     # Read star table already here?
+        # else:
+        #     raise SpecklepyTypeError('Target', 'star_table', type(star_table_file), 'str')
 
-        if photometry_file is None or isinstance(photometry_file, str):
-            self.photometry_file = photometry_file
-        else:
-            raise SpecklepyTypeError('Target', 'photometry_file', type(photometry_file), 'str')
-        self.band_reference_flux = self.get_reference_flux(self.photometry_file, self.band)
+        # if photometry_file is None or isinstance(photometry_file, str):
+        #     self.photometry_file = photometry_file
+        # else:
+        #     raise SpecklepyTypeError('Target', 'photometry_file', type(photometry_file), 'str')
+        # self.band_reference_flux = self.get_reference_flux(self.photometry_file, self.band)
+        self.photometric_system = PhotometricSystem(photometry_file)
 
         if isinstance(sky_background, str):
             sky_background = eval(sky_background)
@@ -93,10 +94,11 @@ class Target(object):
         elif isinstance(sky_background, Quantity):
             # Interpreting as mag / arcsec**2
             logger.warning("Interpreting sky_background as in units of mag per arcsec**2.")
-            self.sky_background_flux = self.magnitude_to_flux(sky_background.value) / Unit('arcsec')**2
+            self.sky_background_flux = self.photometric_system.to_photon_flux(sky_background.value, band=self.band) / \
+                                       Unit('arcsec')**2
         elif isinstance(sky_background, (int, float)):
             logger.warning(f"Interpreting scalar type sky_background as {sky_background * Unit('mag') / Unit('arcsec')**2}")
-            self.sky_background_flux = self.magnitude_to_flux(sky_background) / Unit('arcsec')**2
+            self.sky_background_flux = self.photometric_system.to_photon_flux(sky_background) / Unit('arcsec')**2
         else:
             raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'Quantity')
 
@@ -106,7 +108,11 @@ class Target(object):
         self.pixel_scale = None
         self.resolution = None
         self.flux_per_pixel = None
-        self.stars = self.read_star_table(self.star_table)
+
+        self.star_table = None
+        if star_table_file is not None:
+            self.star_table = StarTable.from_file(star_table_file)
+        # self.star_table = self.read_star_table(self.star_table_file)
 
     @staticmethod
     def from_file(par_file):
@@ -135,77 +141,77 @@ class Target(object):
             tmp += f"\n{key}: {self.__dict__[key]}"
         return tmp
 
-    def get_reference_flux(self, photometry_file, band, format='ascii'):
-        if photometry_file is None:
-            fwhm = self.photometry_dict[band]['FWHM']
-            flux = self.photometry_dict[band]['Flux'] * Unit('Jy')
-        else:
-            table = Table.read(photometry_file, format=format)
-            row_index = np.where(table["Band"] == band)
-            fwhm = table['FWHM'][row_index][0]
-            flux = table['Flux'][row_index][0] *Unit('Jy')
-        return (flux / const.h * fwhm * Unit('photon')).decompose()
-
-    def magnitude_to_flux(self, magnitude):
-        """Convert magnitudes to flux values.
-
-        Args:
-            magnitude (int, float, or Quantity):
-                Magnitude value
-
-        Returns:
-            flux (Quantity):
-                Brightness converted into flux units.
-        """
-        if isinstance(magnitude, (int, float, np.ndarray)):
-            return 10**(magnitude/-2.5) * self.band_reference_flux
-        elif isinstance(magnitude, Quantity):
-            if magnitude.unit != Unit('mag'):
-                raise SpecklepyValueError('magnitude_to_flux()', 'magnitude unit', magnitude.unit, 'mag')
-            else:
-                return 10**(magnitude.value/-2.5) * self.band_reference_flux
-
-    def read_star_table(self, file, format='ascii', table_keys=None):
-        """Reads a table file and extracts the position and flux of stars.
-
-        Args:
-            file (str):
-                Name of the file to read in.
-            format (str, optional):
-                Format of the table file to read. Default is `None`.
-            table_keys (dict, optional):
-                Keyword dict for 'x' and 'y' position, and 'flux'. Default is `None` and is replaced in the function.
-
-        ToDo:
-            * Implemented reading of tables with units.
-            * Pass keywords from get_photon_rate_density call to this function.
-        """
-
-        # Apply fall bakc values
-        if table_keys is None:
-            table_keys = {'x': 'x', 'y': 'y', 'flux': 'flux', 'mag': 'mag'}
-
-        # Read table data
-        table = read_table(file, format=format)
-
-        # Get data from table columns
-        xx = table[table_keys['x']]
-        if isinstance(xx, Quantity):
-            xx = xx.to('arcsec').value
-
-        yy = table[table_keys['y']]
-        if isinstance(yy, Quantity):
-            yy = yy.to('arcsec').value
-
-        if 'mag' in table_keys.keys():
-            # Take magnitudes and convert to flux
-            magnitudes = table[table_keys['mag']]
-            magnitudes = magnitudes.data
-            flux = self.magnitude_to_flux(magnitudes)
-        else:
-            flux = table[table_keys['flux']]
-
-        return Table([xx, yy, flux], names=['x', 'y', 'flux'])
+    # def get_reference_flux(self, photometry_file, band, format='ascii'):
+    #     if photometry_file is None:
+    #         fwhm = self.photometry_dict[band]['FWHM']
+    #         flux = self.photometry_dict[band]['Flux'] * Unit('Jy')
+    #     else:
+    #         table = Table.read(photometry_file, format=format)
+    #         row_index = np.where(table["Band"] == band)
+    #         fwhm = table['FWHM'][row_index][0]
+    #         flux = table['Flux'][row_index][0] *Unit('Jy')
+    #     return (flux / const.h * fwhm * Unit('photon')).decompose()
+    #
+    # def magnitude_to_flux(self, magnitude):
+    #     """Convert magnitudes to flux values.
+    #
+    #     Args:
+    #         magnitude (int, float, or Quantity):
+    #             Magnitude value
+    #
+    #     Returns:
+    #         flux (Quantity):
+    #             Brightness converted into flux units.
+    #     """
+    #     if isinstance(magnitude, (int, float, np.ndarray)):
+    #         return 10**(magnitude/-2.5) * self.band_reference_flux
+    #     elif isinstance(magnitude, Quantity):
+    #         if magnitude.unit != Unit('mag'):
+    #             raise SpecklepyValueError('magnitude_to_flux()', 'magnitude unit', magnitude.unit, 'mag')
+    #         else:
+    #             return 10**(magnitude.value/-2.5) * self.band_reference_flux
+    #
+    # def read_star_table(self, file, format='ascii', table_keys=None):
+    #     """Reads a table file and extracts the position and flux of stars.
+    #
+    #     Args:
+    #         file (str):
+    #             Name of the file to read in.
+    #         format (str, optional):
+    #             Format of the table file to read. Default is `None`.
+    #         table_keys (dict, optional):
+    #             Keyword dict for 'x' and 'y' position, and 'flux'. Default is `None` and is replaced in the function.
+    #
+    #     ToDo:
+    #         * Implemented reading of tables with units.
+    #         * Pass keywords from get_photon_rate_density call to this function.
+    #     """
+    #
+    #     # Apply fall back values
+    #     if table_keys is None:
+    #         table_keys = {'x': 'x', 'y': 'y', 'flux': 'flux', 'mag': 'mag'}
+    #
+    #     # Read table data
+    #     table = read_table(file, format=format)
+    #
+    #     # Get data from table columns
+    #     xx = table[table_keys['x']]
+    #     if isinstance(xx, Quantity):
+    #         xx = xx.to('arcsec').value
+    #
+    #     yy = table[table_keys['y']]
+    #     if isinstance(yy, Quantity):
+    #         yy = yy.to('arcsec').value
+    #
+    #     if 'mag' in table_keys.keys():
+    #         # Take magnitudes and convert to flux
+    #         magnitudes = table[table_keys['mag']]
+    #         magnitudes = magnitudes.data
+    #         flux = self.magnitude_to_flux(magnitudes)
+    #     else:
+    #         flux = table[table_keys['flux']]
+    #
+    #     return Table([xx, yy, flux], names=['x', 'y', 'flux'])
 
     def get_photon_rate_density(self, field_of_view, resolution, dither=None):
         """Creates an image of the field of view.
@@ -249,7 +255,7 @@ class Target(object):
             phase_center = (0, 0)
         elif isinstance(dither, (tuple, list)):
             if not (isinstance(dither[0], (int, float))):
-                raise TypeError("Dithers should be provided as int or float. These are then interpreted as arcseconds.")
+                raise TypeError("Dithers should be provided as int or float. These are then interpreted as arcsec.")
             else:
                 phase_center = dither
         else:
@@ -263,15 +269,24 @@ class Target(object):
         photon_rate_density = np.ones(shape=self.field_of_view.index) * self.flux_per_pixel
 
         # Add stars from star_table to photon_rate_density
-        for row in self.stars:
-            position = Position(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=True)
-            position.offset(center)
-            position.offset(phase_center, scaled=True)
-            flux = row['flux']
-            try:
-                photon_rate_density.value[position.index] = np.maximum(photon_rate_density.value[position.index], flux)
-            except IndexError:
-                # Star is placed outside the field of view
-                pass
+        if self.star_table.table is not None:
+
+            distance = 10 * Unit('kpc')
+            star_table = self.star_table.observe_at_distance(distance=distance)
+            magnitudes = self.photometric_system.to_photon_flux(star_table[self.band], band=self.band)
+            star_table.add_column(name='flux', data=magnitudes.value)
+
+            for row in star_table:
+                position = Position(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=True)
+                position.offset(center)
+                position.offset(phase_center, scaled=True)
+                flux = row['flux']
+                try:
+                    # photon_rate_density.value[position.index] = np.maximum(photon_rate_density.value[position.index],
+                    # flux)
+                    photon_rate_density.value[position.index] = photon_rate_density.value[position.index] + flux
+                except IndexError:
+                    # Star is placed outside the field of view
+                    pass
 
         return photon_rate_density

@@ -18,7 +18,7 @@ class StarTable(object):
 
         Args:
             file_name (str):
-                Name of or path to the file containing the steller parameters.
+                Name of or path to the file containing the stellar parameters.
             table_format (str, optional):
                  Format string for encoding the tabulated luminosity function.
 
@@ -26,7 +26,7 @@ class StarTable(object):
             obj (StarTable):
                 StarTable object as initialized from the table file.
         """
-        obj = cls.__init__()
+        obj = cls()
         obj.table = Table.read(file_name, format=table_format)
         return obj
 
