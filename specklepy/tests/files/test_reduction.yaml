@@ -1,5 +1,5 @@
 paths:
-  filePath: specklepy/tests/files/synthetic/
+  filePath: specklepy/tests/files/mock/
   fileList: specklepy/tests/files/reduction/test_file_list.tab
   tmpDir: specklepy/tests/files/reduction/tmp/
 

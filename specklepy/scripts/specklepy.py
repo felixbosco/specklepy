@@ -14,7 +14,7 @@ from specklepy.plotting.plot import Plot
 from specklepy.reduction import diff
 from specklepy.reduction import run
 from specklepy.reduction.datareduction import DataReduction
-from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
+from specklepy.mock.generate_exposure import generate_exposure, get_objects
 from specklepy.utils.resolution import get_resolution_parameters
 from specklepy.gui.window import start
 

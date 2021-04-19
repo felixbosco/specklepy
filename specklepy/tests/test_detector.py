@@ -1,14 +1,14 @@
 import unittest
 import numpy as np
 import astropy.units as u
-from specklepy.synthetic.detector import Detector
+from specklepy.mock.detector import Detector
 
 
 class TestDetector(unittest.TestCase):
 
     def setUp(self):
         self.photon_rate_array = np.ones((128, 128)) * u.ph / u.s
-        self.par_file = 'specklepy/tests/files/synthetic/airy_200ms.par'
+        self.par_file = 'specklepy/tests/files/mock/airy_200ms.par'
 
     def test_init(self):
         det = Detector((64, 64), pixel_scale=0.01*u.arcsec)

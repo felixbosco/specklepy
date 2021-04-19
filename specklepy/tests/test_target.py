@@ -1,6 +1,6 @@
 import unittest
 import astropy.units as u
-from specklepy.synthetic.target import Target
+from specklepy.mock.target import Target
 from specklepy.plotting.utils import imshow
 
 
@@ -8,7 +8,7 @@ class TestTarget(unittest.TestCase):
 
     def setUp(self):
         self.star_table = 'specklepy/tests/files/example_star_table_29mas296875.dat'
-        self.par_file = 'specklepy/tests/files/synthetic/airy_200ms.par'
+        self.par_file = 'specklepy/tests/files/mock/airy_200ms.par'
 
     def test_init(self):
         Target(band='H')

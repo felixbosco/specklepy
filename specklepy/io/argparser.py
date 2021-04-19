@@ -15,7 +15,7 @@ class GeneralArgParser(object):
     def __init__(self):
         self.parser = argparse.ArgumentParser(
             description='Specklepy is a program for the analysis of astronomical short-exposure '
-                        '("speckle") data. The program is able to generate synthetic images, '
+                        '("speckle") data. The program is able to generate mock images, '
                         'reduce data, reconstruct images and to analyse the final images. Two '
                         'algorithms are implemented for image reconstruction: the SSA and '
                         'Holography algorithm.',
@@ -25,8 +25,8 @@ class GeneralArgParser(object):
         self.parser.add_argument('-d', '--debug', action='store_true', help='Show debugging information.')
         subparsers = self.parser.add_subparsers(help='Available commands in Specklepy:')
 
-        # Parser for generating synthetic images
-        parser_generate = subparsers.add_parser('generate', help='Generate synthetic exposures.')
+        # Parser for generating mock images
+        parser_generate = subparsers.add_parser('generate', help='Generate mock exposures.')
         parser_generate.set_defaults(command='generate')
         parser_generate.add_argument('parfile', type=str, help='Path to a parameter file.')
         parser_generate.add_argument('-d', '--debug', action='store_true', help='show debugging information.')

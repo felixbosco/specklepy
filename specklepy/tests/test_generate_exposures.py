@@ -11,7 +11,7 @@ class TestGenerateExposures(unittest.TestCase):
         os.system('python specklepy/scripts/generate_exposures.py -p {}'.format(self.parameter_file))
 
     def test_study_data(self):
-        path = 'specklepy/tests/files/synthetic/'
+        path = 'specklepy/tests/files/mock/'
         for mode in ['airy']:#, 'dark', 'sky', 'noao', 'glao']:
             for time in ['600']:#['200', '600', '1200']:
                 parameter_file = "{}{}_{}ms.par".format(path, mode, time)

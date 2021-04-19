@@ -4,9 +4,9 @@ import configparser
 from specklepy.exceptions import SpecklepyTypeError
 from specklepy.logging import logger
 from specklepy.io.filearchive import FileArchive
-from specklepy.synthetic.target import Target
-from specklepy.synthetic.telescope import Telescope
-from specklepy.synthetic.detector import Detector
+from specklepy.mock.target import Target
+from specklepy.mock.telescope import Telescope
+from specklepy.mock.detector import Detector
 
 
 class ParameterSet(object):

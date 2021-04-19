@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import astropy.units as u
-from specklepy.synthetic.telescope import Telescope
+from specklepy.mock.telescope import Telescope
 from specklepy.plotting.utils import imshow
 
 
@@ -11,7 +11,7 @@ class TestTelescope(unittest.TestCase):
         self.visual = 1
         self.scao_long_exposure_psf_file = 'specklepy/tests/files/psf_long_exposure.fits'
         self.scao_short_exposure_psfs_file = 'specklepy/tests/files/psf_short_exposures.fits'
-        self.par_file = 'specklepy/tests/files/synthetic/airy_200ms.par'
+        self.par_file = 'specklepy/tests/files/mock/airy_200ms.par'
 
     def test_init(self):
         telescope_static_psf = Telescope(8.0*u.m, central_obscuration=0.14, name="VLT Unit Telescope", psf_source=self.scao_long_exposure_psf_file )

@@ -1,9 +1,9 @@
 import unittest
 import astropy.units as u
-from specklepy.synthetic.target import Target
-from specklepy.synthetic.telescope import Telescope
-from specklepy.synthetic.detector import Detector
-from specklepy.synthetic.generate_exposure import generate_exposure, get_objects
+from specklepy.mock.target import Target
+from specklepy.mock.telescope import Telescope
+from specklepy.mock.detector import Detector
+from specklepy.mock.generate_exposure import generate_exposure, get_objects
 
 
 class TestGenerateExposure(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestGenerateExposure(unittest.TestCase):
         self.parameterfile = 'specklepy/tests/files/test_synthetic_exposures.par'
         self.star_table = 'specklepy/tests/files/example_star_table_arcsec.dat'
         self.psf_source = 'specklepy/tests/files/psf_short_exposures.fits'
-        self.outfile = 'specklepy/tests/files/synthetic/exposure.fits'
+        self.outfile = 'specklepy/tests/files/mock/exposure.fits'
 
         self.target = Target(band='H', star_table=self.star_table, sky_background=14.4)
         self.telescope = Telescope(8.2 * u.m, central_obscuration=0.14, name="VLT Unit Telescope",

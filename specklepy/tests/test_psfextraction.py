@@ -8,8 +8,8 @@ class TestPSFExtraction(unittest.TestCase):
     def setUp(self):
         self.psf_radius = 10
         self.reference_source_file = "specklepy/tests/files/example_ref_sources.dat"
-        self.in_files = ["specklepy/tests/files/synthetic/airy_200ms_1.fits",
-                         "specklepy/tests/files/synthetic/airy_200ms_2.fits"]
+        self.in_files = ["specklepy/tests/files/mock/airy_200ms_1.fits",
+                         "specklepy/tests/files/mock/airy_200ms_2.fits"]
         self.tmp_dir = "specklepy/tests/files/tmp/"
         self.params = {'psf_radius': self.psf_radius, 'reference_source_file': self.reference_source_file,
                        'in_files': self.in_files, 'save_dir': self.tmp_dir}

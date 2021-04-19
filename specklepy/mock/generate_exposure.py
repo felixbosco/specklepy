@@ -8,28 +8,28 @@ from astropy.units import Quantity
 from specklepy.io import config
 from specklepy.io import FileStream
 from specklepy.logging import logger
-from specklepy.synthetic.target import Target
-from specklepy.synthetic.telescope import Telescope
-from specklepy.synthetic.detector import Detector
+from specklepy.mock.target import Target
+from specklepy.mock.telescope import Telescope
+from specklepy.mock.detector import Detector
 from specklepy.utils.time import default_time_stamp
 
 
 def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_frames_limit=100, dithers=None,
                       outfile='exposure.fits', time_stamp=None, debug=False, **kwargs):
-    """Generate synthetic exposures from target, telescope and detector objects.
+    """Generate mock exposures from target, telescope and detector objects.
 
-    The function generate_exposure() is the central function of the synthetic module. It takes one instance each  of
+    The function generate_exposure() is the central function of the mock module. It takes one instance each  of
     the classes Target, Telescope, and Detector and the discrete exposure time. Then, it creates a number of files
     depending on the number of requested frames ('n_frames') and frame limit per file ('n_frames_limit'). To distribute
-    the synthetic exposures to multiple files, for instance if the size of the individual file would become too large,
+    the mock exposures to multiple files, for instance if the size of the individual file would become too large,
     just set 'n_frames_limit' to a smaller value (default is 100).
 
     Args:
-        target (specklepy.synthetic.Target):
+        target (specklepy.mock.Target):
             Target instance that will be 'observed'.
-        telescope (specklepy.synthetic.Telescope):
+        telescope (specklepy.mock.Telescope):
             Telescope instance that will 'observe'.
-        detector (specklepy.synthetic.Detector):
+        detector (specklepy.mock.Detector):
             Detector instance that will be 'exposed'.
         exposure_time (astropy.units.Quantity):
             Discrete integration time for each exposure.
@@ -53,10 +53,10 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
     n_files = n_frames // n_frames_limit
     n_frames_left = n_frames % n_frames_limit
     if n_frames_left:
-        logger.info(f"Creating {n_files} files with {n_frames_limit} synthetic exposures and adding {n_frames_left} "
+        logger.info(f"Creating {n_files} files with {n_frames_limit} mock exposures and adding {n_frames_left} "
                     f"frames to an additional file")
     else:
-        logger.info(f"Creating {n_files} files with {n_frames_limit} synthetic exposures")
+        logger.info(f"Creating {n_files} files with {n_frames_limit} mock exposures")
 
     # Add a time stamp to file name, if not None
     out_dir, outfile = os.path.split(outfile)
