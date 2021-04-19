@@ -40,4 +40,4 @@ class PhotometricSystem(object):
             if magnitudes.unit == 'mag':
                 magnitudes = magnitudes.value
 
-        return 10**(magnitudes/-2.5) * self.reference_photon_flux(band=band)
+        return np.power(10, np.divide(magnitudes, -2.5)) * self.reference_photon_flux(band=band)
