@@ -2,6 +2,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 from astropy.table import Table, QTable, Column
+from astropy.units import Unit, UnitConversionError, Quantity
 
 from specklepy.logging import logger
 
@@ -139,6 +140,74 @@ class StarTable(object):
             column = Column(name=column_name, data=pos, unit=half_light_radius_unit)
             logger.info(f"Inserting column for {column_name!r}")
             self.table.add_column(column)
+
+    def transfer_column_to_angles(self, key, distance, new_name=None, default_linear_unit='pc', output_unit='arcsec'):
+
+        # Get column from table
+        column_data = self.table[key]
+
+        # Assign default unit
+        if column_data.unit is None:
+            logger.warning(f"Assuming that x-axis data are provided in units of parsecs!")
+            column_data.unit = default_linear_unit
+
+        # Try to convert units
+        try:
+            column_data = np.arctan(np.divide(column_data, distance))
+        except UnitConversionError:
+            logger.warning(f"Unable to convert from units of {column_data.unit!r} to {default_linear_unit!r}!")
+
+        # Assign default to `new_name`
+        if new_name is None:
+            new_name = key
+
+        return Column(name=new_name, data=column_data.to(output_unit))
+
+    @staticmethod
+    def distance_modulus(distance):
+        return 5 * np.log10(np.divide(distance, Quantity('10 pc'))) * Unit('mag')
+
+    def apply_distance_modulus(self, key, distance, new_name=None, data_unit='mag', output_unit='mag'):
+
+        # Get column from table
+        column_data = self.table[key]
+
+        # Transform from any units to magnitudes
+        if data_unit != 'mag':
+            raise NotImplementedError(f"Handling of units other 'mag' is not implemented yet! (Received {data_unit})")
+
+        # Add distance modulus
+        try:
+            column_data += self.distance_modulus(distance=distance)
+        except UnitConversionError:
+            column_data = column_data * Unit('mag') + self.distance_modulus(distance=distance)
+
+        # Assign default to `new_name`
+        if new_name is None:
+            new_name = key
+
+        return Column(name=new_name, data=column_data.to(output_unit))
+
+    def observe_at_distance(self, distance, filter_band, x_key='x', y_key='y', filter_band_unit='mag',
+                            distance_unit='pc'):
+
+        # Add default unit to distance parameters
+        if not hasattr(distance, 'unit'):
+            logger.warning(f"Assuming default unit of {distance_unit!r} for distance without unit!")
+            distance = distance * Unit(distance_unit)
+
+        # Initialize output table
+        out_table = Table()
+
+        # Scale positional coordinates
+        out_table.add_column(self.transfer_column_to_angles(key=x_key, distance=distance))
+        out_table.add_column(self.transfer_column_to_angles(key=y_key, distance=distance))
+
+        # Scale photometry
+        out_table.add_column(self.apply_distance_modulus(key=filter_band, distance=distance,
+                                                         data_unit=filter_band_unit))
+
+        return out_table
 
     def write(self, file_name, table_format='ascii.fixed_width', overwrite=True):
         """Save the table to an ASCII or FITS file.
