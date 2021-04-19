@@ -98,9 +98,11 @@ class Target(object):
                                        Unit('arcsec')**2
         elif isinstance(sky_background, (int, float)):
             logger.warning(f"Interpreting scalar type sky_background as {sky_background * Unit('mag') / Unit('arcsec')**2}")
-            self.sky_background_flux = self.photometric_system.to_photon_flux(sky_background) / Unit('arcsec')**2
+            self.sky_background_flux = self.photometric_system.to_photon_flux(sky_background, band=self.band) / \
+                                       Unit('arcsec')**2
         else:
             raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'Quantity')
+        from IPython import embed; embed()
 
         # Initialize class attributes
         self.shape = None
