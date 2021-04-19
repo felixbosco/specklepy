@@ -32,7 +32,7 @@ class PhotometricSystem(object):
         table = Table.read(self.data_file, **kwargs)
         row = table["Band"] == band
         fwhm = table['FWHM'][row][0]
-        flux = table['Flux'][row][0]
+        flux = table['Flux'][row][0] * table['Flux'].unit
         return (flux / PLANCK * fwhm * Unit('photon')).decompose()
 
     def to_photon_flux(self, magnitudes, band=None):
