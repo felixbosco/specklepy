@@ -102,7 +102,6 @@ class Target(object):
                                        Unit('arcsec')**2
         else:
             raise SpecklepyTypeError('Target', 'sky_background', type(sky_background), 'Quantity')
-        from IPython import embed; embed()
 
         # Initialize class attributes
         self.shape = None

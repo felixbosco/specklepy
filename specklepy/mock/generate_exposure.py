@@ -81,7 +81,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
         for key in kwargs['cards']:
             hdu.header.set(key, kwargs['cards'][key])
     # Add object attributes to header information
-    skip_attributes = {'target': ['data', 'stars'],
+    skip_attributes = {'target': ['data', 'star_table', 'photometric_system'],
                        'telescope': ['psf', 'psf_frame'],
                        'detector': ['shape', 'array']}
     for _object in [target, telescope, detector]:
