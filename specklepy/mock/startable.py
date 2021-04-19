@@ -178,7 +178,7 @@ class StarTable(object):
 
         # Add distance modulus
         try:
-            column_data += self.distance_modulus(distance=distance)
+            column_data = column_data + self.distance_modulus(distance=distance)
         except UnitConversionError:
             column_data = column_data * Unit('mag') + self.distance_modulus(distance=distance)
 
