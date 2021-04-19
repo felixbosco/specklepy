@@ -11,6 +11,24 @@ class StarTable(object):
     def __init__(self):
         self.table = None
 
+    @classmethod
+    def from_file(cls, file_name, table_format=None):
+        """Initialize a StarTable instance from a table file.
+
+        Args:
+            file_name (str):
+                Name of or path to the file containing the steller parameters.
+            table_format (str, optional):
+                 Format string for encoding the tabulated luminosity function.
+
+        Returns:
+            obj (StarTable):
+                StarTable object as initialized from the table file.
+        """
+        obj = cls.__init__()
+        obj.table = Table.read(file_name, format=table_format)
+        return obj
+
     def __len__(self):
         return len(self.table)
 
