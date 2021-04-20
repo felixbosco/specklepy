@@ -14,15 +14,13 @@ from specklepy.mock.detector import Detector
 from specklepy.utils.time import default_time_stamp
 
 
-def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_frames_limit=100, dithers=None,
-                      outfile='exposure.fits', time_stamp=None, debug=False, **kwargs):
+def generate_exposure(target, telescope, detector, exposure_time, number_files=1, number_frames=1, dithers=None,
+                      out_file_name='exposure.fits', time_stamp=None, debug=False, **kwargs):
     """Generate mock exposures from target, telescope and detector objects.
 
     The function generate_exposure() is the central function of the mock module. It takes one instance each  of
-    the classes Target, Telescope, and Detector and the discrete exposure time. Then, it creates a number of files
-    depending on the number of requested frames ('n_frames') and frame limit per file ('n_frames_limit'). To distribute
-    the mock exposures to multiple files, for instance if the size of the individual file would become too large,
-    just set 'n_frames_limit' to a smaller value (default is 100).
+    the classes Target, Telescope, and Detector and the discrete exposure time. Then, it creates `number_files` files
+    with `number_frames` frame each.
 
     Args:
         target (specklepy.mock.Target):
@@ -33,13 +31,13 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
             Detector instance that will be 'exposed'.
         exposure_time (astropy.units.Quantity):
             Discrete integration time for each exposure.
-        n_frames (int, optional):
-            Number of frames that will be generated. Default is 1.
-        n_frames_limit (int, optional):
-            Maximum number of frames per outfile. Default is 100.
+        number_files (int, optional):
+            Number of files that will be generated. Default is 1.
+        number_frames (int, optional):
+            Number of frames per created file. Default is 1.
         dithers (list, optional):
             List of dither positions, offsets from the Target instance center. Default is None.
-        outfile (str, optional):
+        out_file_name (str, optional):
             Base name of the output file. If multiple files are requested, the frame_index will be appended. Default is
             'exposure.fits'.
         time_stamp (str, optional):
@@ -49,31 +47,29 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
             Show debugging information. Default is False.
     """
 
-    # Compute number of files
-    n_files = n_frames // n_frames_limit
-    n_frames_left = n_frames % n_frames_limit
-    if n_frames_left:
-        logger.info(f"Creating {n_files} files with {n_frames_limit} mock exposures and adding {n_frames_left} "
-                    f"frames to an additional file")
-    else:
-        logger.info(f"Creating {n_files} files with {n_frames_limit} mock exposures")
+    # # Compute number of files
+    # number_files = n_frames // n_frames_limit
+    # n_frames_left = n_frames % n_frames_limit
+    # if n_frames_left:
+    #     logger.info(f"Creating {number_files} files with {n_frames_limit} mock exposures and adding {n_frames_left} "
+    #                 f"frames to an additional file")
+    # else:
+    logger.info(f"Creating {number_files} files with {number_frames} mock exposures")
 
     # Add a time stamp to file name, if not None
-    out_dir, outfile = os.path.split(outfile)
-    # now = datetime.now()
-    # time_str = now.strftime('%Y%m%d_%H%M%S')
+    out_dir, out_file_name = os.path.split(out_file_name)
     time_str = default_time_stamp()
     if time_stamp == 'end':
-        outfile = outfile.replace('.fits', f"_{time_str}.fits")
+        out_file_name = out_file_name.replace('.fits', f"_{time_str}.fits")
     elif time_stamp == 'start':
-        outfile = f"{time_str}_{outfile}"
+        out_file_name = f"{time_str}_{out_file_name}"
     elif time_stamp is None:
         pass
-    outfile = os.path.join(out_dir, outfile)
+    out_file_name = os.path.join(out_dir, out_file_name)
 
     # Initialize fits header
     hdu = fits.PrimaryHDU()
-    hdu.data = np.zeros((n_frames_limit,) + detector.shape)
+    hdu.data = np.zeros((number_frames,) + detector.shape)
     hdu.header.set('EXPTIME', exposure_time.value, exposure_time.unit)
     # hdu.header.set('DATE', str(datetime.now()))
     hdu.header.set('DATE', default_time_stamp())
@@ -103,17 +99,11 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
             else:
                 hdu.header.set(card, object_dict[key])
 
-    # Write header to one or more files, depending on 'n_frames' and 'n_frames_limit'
-    outfiles = []
-    for n in range(n_files):
-        filename = outfile.replace('.fits', f"_{n + 1}.fits")
-        outfiles.append(filename)
-        hdu.writeto(filename, overwrite=True)
-    # Create file for the left over frames
-    if n_frames_left > 0:
-        filename = outfile.replace('.fits', f"_{n_files + 1}.fits")
-        outfiles.append(filename)
-        hdu.data = np.zeros((n_frames_left,) + detector.shape)
+    # Write header to one or more files, depending on `number_files`
+    out_files = []
+    for n in range(number_files):
+        filename = out_file_name.replace('.fits', f"_{n + 1}.fits")
+        out_files.append(filename)
         hdu.writeto(filename, overwrite=True)
 
     # Initialize parameters for frame computation
@@ -124,16 +114,16 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
 
     # Computation of frames
     frame_counter = 0
-    for outfile_index, outfile in enumerate(outfiles):
-        file_stream = FileStream(outfile)
+    for out_file_index, out_file_name in enumerate(out_files):
+        file_stream = FileStream(out_file_name)
         # with fits.open(outfile, mode='update') as hdu_list:
 
         # Get a new field of view for each file to enable dithering between files
         if dithers is not None:
             try:
-                dither = dithers[outfile_index]
+                dither = dithers[out_file_index]
             except IndexError:
-                raise RuntimeError(f"Expected {len(outfiles)} dither positions but received only {len(dithers)}!")
+                raise RuntimeError(f"Expected {len(out_files)} dither positions but received only {len(dithers)}!")
         else:
             dither = None
         photon_rate_density = target.get_photon_rate_density(field_of_view=detector.field_of_view,
@@ -141,7 +131,7 @@ def generate_exposure(target, telescope, detector, exposure_time, n_frames=1, n_
                                                              dither=dither)
 
         # Generate individual frames
-        for frame_index in trange(file_stream.frame_number, desc=f"Generating exposures for file {outfile}"):
+        for frame_index in trange(file_stream.frame_number, desc=f"Generating exposures for file {out_file_name}"):
             photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=exposure_time,
                                                     debug=debug)
             counts = detector.get_counts(photon_rate=photon_rate,

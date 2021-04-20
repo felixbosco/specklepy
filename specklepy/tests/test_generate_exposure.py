@@ -30,8 +30,8 @@ class TestGenerateExposure(unittest.TestCase):
         get_objects(self.parameterfile, debug=True)
 
     def test_generate_exposure(self):
-        generate_exposure(self.target, self.telescope, self.detector, self.DIT, n_frames=15, n_frames_limit=10,
-                          outfile=self.outfile, debug=False, dithers=[(10, 0), (-10, 0)], cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'})
+        generate_exposure(self.target, self.telescope, self.detector, self.DIT, number_files=15, n_frames_limit=10,
+                          out_file_name=self.outfile, debug=False, dithers=[(10, 0), (-10, 0)], cards={'OBJECT': 'SYNTHETIC', 'OBSTYPE': 'SCIENCE'})
 
 
 if __name__ == "__main__":
