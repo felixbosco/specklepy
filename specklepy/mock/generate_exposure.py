@@ -15,7 +15,7 @@ from specklepy.utils.time import default_time_stamp
 
 
 def generate_exposure(target, telescope, detector, exposure_time, number_files=1, number_frames=1, dithers=None,
-                      out_file_name='exposure.fits', time_stamp=None, debug=False, **kwargs):
+                      out_file='exposure.fits', time_stamp=None, debug=False, **kwargs):
     """Generate mock exposures from target, telescope and detector objects.
 
     The function generate_exposure() is the central function of the mock module. It takes one instance each  of
@@ -37,7 +37,7 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
             Number of frames per created file. Default is 1.
         dithers (list, optional):
             List of dither positions, offsets from the Target instance center. Default is None.
-        out_file_name (str, optional):
+        out_file (str, optional):
             Base name of the output file. If multiple files are requested, the frame_index will be appended. Default is
             'exposure.fits'.
         time_stamp (str, optional):
@@ -57,25 +57,25 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
     logger.info(f"Creating {number_files} files with {number_frames} mock exposures")
 
     # Add a time stamp to file name, if not None
-    out_dir, out_file_name = os.path.split(out_file_name)
+    out_dir, out_file = os.path.split(out_file)
     time_str = default_time_stamp()
     if time_stamp == 'end':
-        out_file_name = out_file_name.replace('.fits', f"_{time_str}.fits")
+        out_file = out_file.replace('.fits', f"_{time_str}.fits")
     elif time_stamp == 'start':
-        out_file_name = f"{time_str}_{out_file_name}"
+        out_file = f"{time_str}_{out_file}"
     elif time_stamp is None:
         pass
-    out_file_name = os.path.join(out_dir, out_file_name)
+    out_file = os.path.join(out_dir, out_file)
 
     # Initialize fits header
-    hdu = fits.PrimaryHDU()
-    hdu.data = np.zeros((number_frames,) + detector.shape)
-    hdu.header.set('EXPTIME', exposure_time.value, exposure_time.unit)
-    # hdu.header.set('DATE', str(datetime.now()))
-    hdu.header.set('DATE', default_time_stamp())
+    logger.info("Building FITS header...")
+    header = fits.Header()
+    header.set('EXPTIME', exposure_time.value, exposure_time.unit)
+    # header.set('DATE', str(datetime.now()))
+    header.set('DATE', default_time_stamp())
     if 'cards' in kwargs:
         for key in kwargs['cards']:
-            hdu.header.set(key, kwargs['cards'][key])
+            header.set(key, kwargs['cards'][key])
     # Add object attributes to header information
     skip_attributes = {'target': ['data', 'star_table', 'photometric_system'],
                        'telescope': ['psf', 'psf_frame'],
@@ -90,21 +90,21 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
             card = f"HIERARCH SPECKLEPY {object_name.upper()} {key.upper()}"
             if isinstance(object_dict[key], Quantity):
                 # Appending the unit of a Quantity to the comment
-                hdu.header.set(card, f"{object_dict[key].value:.3e}", object_dict[key].unit)
+                header.set(card, f"{object_dict[key].value:.3e}", object_dict[key].unit)
             elif isinstance(object_dict[key], str):
-                hdu.header.set(card, os.path.basename(object_dict[key]))  # Suppress (long) relative paths
+                header.set(card, os.path.basename(object_dict[key]))  # Suppress (long) relative paths
             elif isinstance(object_dict[key], tuple):
                 _tuple = tuple([x.value for x in object_dict[key]])  # Separating tuple unit from values
-                hdu.header.set(card, str(_tuple), object_dict[key][0].unit)
+                header.set(card, str(_tuple), object_dict[key][0].unit)
             else:
-                hdu.header.set(card, object_dict[key])
+                header.set(card, object_dict[key])
 
     # Write header to one or more files, depending on `number_files`
-    out_files = []
-    for n in range(number_files):
-        filename = out_file_name.replace('.fits', f"_{n + 1}.fits")
-        out_files.append(filename)
-        hdu.writeto(filename, overwrite=True)
+    # out_files = []
+    # for n in range(number_files):
+    #     filename = out_file_name.replace('.fits', f"_{n + 1}.fits")
+    #     out_files.append(filename)
+    #     writeto(filename, overwrite=True)
 
     # Initialize parameters for frame computation
     if 'readout_time' in kwargs:
@@ -112,26 +112,31 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
     else:
         skip_frames = 0
 
-    # Computation of frames
-    frame_counter = 0
-    for out_file_index, out_file_name in enumerate(out_files):
+    # Iterate through requested number of files
+    for out_file_index in range(number_files):
+        if number_files > 1:
+            out_file_name = out_file.replace('.fits', f"_{out_file_index + 1}.fits")
+        else:
+            out_file_name = out_file
         file_stream = FileStream(out_file_name)
-        # with fits.open(outfile, mode='update') as hdu_list:
+        file_stream.initialize(shape=(number_frames,) + detector.shape, header=header)
 
         # Get a new field of view for each file to enable dithering between files
         if dithers is not None:
             try:
                 dither = dithers[out_file_index]
             except IndexError:
-                raise RuntimeError(f"Expected {len(out_files)} dither positions but received only {len(dithers)}!")
+                raise RuntimeError(f"Expected {number_files} dither positions but received only {len(dithers)}!")
         else:
             dither = None
+        logger.info("Computing photon rate density...")
         photon_rate_density = target.get_photon_rate_density(field_of_view=detector.field_of_view,
                                                              resolution=telescope.psf_resolution,
                                                              dither=dither)
 
         # Generate individual frames
-        for frame_index in trange(file_stream.frame_number, desc=f"Generating exposures for file {out_file_name}"):
+        logger.info(f"Create {number_frames} exposures")
+        for frame_index in trange(number_frames, desc=f"Generating exposures for file {out_file_name}"):
             photon_rate = telescope.get_photon_rate(photon_rate_density, integration_time=exposure_time,
                                                     debug=debug)
             counts = detector.get_counts(photon_rate=photon_rate,
@@ -139,17 +144,12 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
                                          photon_rate_resolution=target.resolution, debug=debug)
             counts = counts.decompose()
             file_stream.update_frame(frame_index=frame_index, data=counts.value)
-            # hdu_list[0].data[frame_index] = counts.value
 
             try:
                 telescope.psf_frame += skip_frames
             except TypeError:
                 pass
 
-            frame_counter += 1
-
-        # Update header entry DATE
-        # hdu_list[0].header.set('DATE', str(datetime.now()))
 
 
 def get_objects(parameter_file, debug=False):
