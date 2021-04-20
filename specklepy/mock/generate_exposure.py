@@ -70,7 +70,8 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
     # Initialize fits header
     logger.info("Building FITS header...")
     header = fits.Header()
-    header.set('EXPTIME', exposure_time.value, exposure_time.unit)
+    header.set('FEXPTIME', exposure_time.value, exposure_time.unit)
+    header.set('EXPTIME', exposure_time.value * number_frames, exposure_time.unit)
     # header.set('DATE', str(datetime.now()))
     header.set('DATE', default_time_stamp())
     if 'cards' in kwargs:
@@ -98,13 +99,6 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
                 header.set(card, str(_tuple), object_dict[key][0].unit)
             else:
                 header.set(card, object_dict[key])
-
-    # Write header to one or more files, depending on `number_files`
-    # out_files = []
-    # for n in range(number_files):
-    #     filename = out_file_name.replace('.fits', f"_{n + 1}.fits")
-    #     out_files.append(filename)
-    #     writeto(filename, overwrite=True)
 
     # Initialize parameters for frame computation
     if 'readout_time' in kwargs:
