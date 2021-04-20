@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 from astropy.constants import h as PLANCK
-from astropy.table import Table
+from astropy.table import Column, Table
 from astropy.units import Unit, Quantity
 
 
@@ -39,5 +39,8 @@ class PhotometricSystem(object):
         if isinstance(magnitudes, Quantity):
             if magnitudes.unit == 'mag':
                 magnitudes = magnitudes.value
+        if isinstance(magnitudes, Column):
+            if magnitudes.unit == 'mag':
+                magnitudes = magnitudes.data
 
         return np.power(10, np.divide(magnitudes, -2.5)) * self.reference_photon_flux(band=band)
