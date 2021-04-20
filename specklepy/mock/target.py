@@ -2,12 +2,10 @@ from copy import copy
 import numpy as np
 
 from astropy.units import Unit, Quantity
-# import astropy.constants as const
 from astropy.table import Column
 
-from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.exceptions import SpecklepyTypeError
 from specklepy.io import config
-# from specklepy.io.table import read_table
 from specklepy.logging import logger
 from specklepy.mock.photometricsystem import PhotometricSystem
 from specklepy.mock.startable import StarTable
@@ -274,11 +272,11 @@ class Target(object):
 
             distance = 10 * Unit('kpc')
             star_table = self.star_table.observe_at_distance(distance=distance, filter_band=self.band)
-            magnitudes = self.photometric_system.to_photon_flux(star_table[self.band], band=self.band)
-            star_table.add_column(Column(name='flux', data=magnitudes.value))
+            flux_values = self.photometric_system.to_photon_flux(star_table[self.band], band=self.band)
+            star_table.add_column(Column(name='flux', data=flux_values))
 
             for row in star_table:
-                position = Position(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=True)
+                position = Position(row['x'], row['y'], scale=self.resolution.to('arcsec').value, scaled=False)
                 position.offset(center)
                 position.offset(phase_center, scaled=True)
                 flux = row['flux']
