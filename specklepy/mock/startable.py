@@ -69,7 +69,7 @@ class StarTable(object):
         draws = np.random.uniform(np.min(number_per_bin), np.max(number_per_bin), size=number_stars)
         return to_magnitude(draws)
 
-    def generate_table(self, number_stars, iso_table_file, lf_table_file, lf_band, table_format='ascii'):
+    def generate_table(self, number_stars, iso_table_file, lf_table_file, lf_band, append=False, table_format='ascii'):
         """Generate a complete table for all the quantities represented in a given isochrone file.
 
         Args:
@@ -82,6 +82,8 @@ class StarTable(object):
             lf_band (str):
                 Name of the filter band, which is represented in the luminosity function file. This is used for linking
                 these magnitudes to the other quantities from the isochrone table.
+            append (bool, optional):
+                Choose whether the new table shall overwrite the existing table or whether it shall be attached.
             table_format (str, optional):
                  Format string for encoding the tabulated luminosity function.
         """
