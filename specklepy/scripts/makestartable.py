@@ -68,7 +68,9 @@ def make_star_table(number_stars, iso_files, lf_files, lf_band, half_light_radiu
 
     # Write result to file
     if out_file is not None:
-        if not out_file.endswith('.fits') and table_format is None:
+        if out_file.endswith('.fits'):
+            table_format = 'fits'
+        if table_format is None:
             table_format = 'ascii.fixed_width'
         star_table.write(out_file, table_format=table_format, overwrite=overwrite)
 
