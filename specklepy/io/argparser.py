@@ -25,12 +25,6 @@ class GeneralArgParser(object):
         self.parser.add_argument('-d', '--debug', action='store_true', help='Show debugging information.')
         subparsers = self.parser.add_subparsers(help='Available commands in Specklepy:')
 
-        # Parser for generating mock images
-        parser_generate = subparsers.add_parser('generate', help='Generate mock exposures.')
-        parser_generate.set_defaults(command='generate')
-        parser_generate.add_argument('parfile', type=str, help='Path to a parameter file.')
-        parser_generate.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
-
         # Parser for data reduction
         parser_reduction = subparsers.add_parser('reduce', help='Data reduction.')
         parser_reduction.set_defaults(command='reduce')
@@ -185,6 +179,33 @@ class GeneralArgParser(object):
                                        help='Provide a file name to visually select identified stars and save them to '
                                             'this file.')
         parser_extraction.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+
+        # Parser for generating mock images
+        parser_generate = subparsers.add_parser('generate', help='Generate mock exposures.')
+        parser_generate.set_defaults(command='generate')
+        parser_generate.add_argument('parfile', type=str, help='Path to a parameter file.')
+        parser_generate.add_argument('-d', '--debug', action='store_true', help='show debugging information.')
+
+        # Parser for generating star tables
+        parser_star_table = subparsers.add_parser('startable', help='Generate a star table')
+        parser_star_table.set_defaults(command='startable')
+        parser_star_table.add_argument('number_stars', dtype=int, help='Number of stars that shall be simulated.')
+        parser_star_table.add_argument('out_file', dtype=str, help='Name of the file to store the table in.')
+        parser_star_table.add_argument('-i', '--iso_files', nargs='+', type=str, help='Name(s) of the isochrone files.')
+        parser_star_table.add_argument('-l', '--lf_files', nargs='+', type=str,
+                                       help='Name(s) of the luminosity function files.')
+        parser_star_table.add_argument('-b', '--lf_band', type=str,
+                                       help='Name of the spectral band that is represented in the luminosity files.')
+        parser_star_table.add_argument('-r', '--half_light_radius', dtype=str,
+                                       help='Half-light radius of the generated cluster in units of parsecs.')
+        parser_star_table.add_argument('-w', '--population_weights', nargs='+', dtype=float, default=None,
+                                       help='Fractions of the total number of stars that shall be allocated to a given '
+                                            'stellar population, represented by an isochrone and luminosity function'
+                                            'file.')
+        parser_star_table.add_argument('-f', '--table_format', dtype=str, default=None,
+                                       help='Format string for formatting ASCII table files.')
+        parser_star_table.add_argument('-o', '--overwrite', action='store_true',
+                                       help='Allow for overwriting existing files.')
 
     def parse_args(self, *args, **kwargs):
         """Parse command line arguments.

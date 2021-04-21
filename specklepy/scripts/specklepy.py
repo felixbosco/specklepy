@@ -14,6 +14,7 @@ from specklepy.plotting.plot import Plot
 from specklepy.reduction import diff
 from specklepy.reduction import run
 from specklepy.reduction.datareduction import DataReduction
+from specklepy.scripts.makestartable import make_star_table
 from specklepy.mock.generate_exposure import generate_exposure, get_objects
 from specklepy.utils.resolution import get_resolution_parameters
 from specklepy.gui.window import start
@@ -117,3 +118,9 @@ def main():
             aperture_radius=args.aperture_radius, integration_method=args.integration_method,
             alignment_method=args.alignment_method, mask_hot_pixels=args.mask, mask_file=args.mask_file,
             debug=args.debug)
+
+    elif args.command == 'startable':
+        make_star_table(number_stars=args.number_stars, iso_files=args.iso_files, lf_files=args.lf_files,
+                        lf_band=args.lf_band, half_light_radius=args.half_light_radius,
+                        population_weights=args.population_weights,
+                        out_file=args.out_file, table_format=args.table_format, overwrite=args.overwrite)
