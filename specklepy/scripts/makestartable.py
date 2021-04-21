@@ -5,7 +5,7 @@ from astropy.units import Quantity
 from specklepy.mock.startable import StarTable
 
 
-def make_star_table(number_stars, iso_files, lf_files, lf_band, half_light_radius, population_weights=None,
+def make_star_table(number_stars, iso_files, lf_files, lf_band, half_light_radius, population_weights=None, seed=None,
                     out_file=None, table_format=None, overwrite=False):
     """Create a table of stars and write it to file
 
@@ -26,6 +26,8 @@ def make_star_table(number_stars, iso_files, lf_files, lf_band, half_light_radiu
             List of population weights, i.e. fraction of `number_stars` that is generated for the corresponding
             population, defined by the isochrone and luminosity function files. The weights are automatically normalized
             to unity. If not provided, all populations share the equal fraction of `number_stars`.
+        seed (int, optional):
+            Seed for the random number generator.
         out_file (str, optional):
             Name of a file, to which the star table shall be written.
         table_format (str, optional):
@@ -55,7 +57,7 @@ def make_star_table(number_stars, iso_files, lf_files, lf_band, half_light_radiu
     # Initialize star table and generate the stellar populations
     star_table = StarTable()
     for population_size, iso_file, lf_file in zip(population_sizes, iso_files, lf_files):
-        star_table.generate_table(population_size, iso_file, lf_file, lf_band, append=True)
+        star_table.generate_table(population_size, iso_file, lf_file, lf_band, append=True, seed=seed)
 
     # Distribute stars in the field
     if isinstance(half_light_radius, str):
@@ -64,7 +66,7 @@ def make_star_table(number_stars, iso_files, lf_files, lf_band, half_light_radiu
     if isinstance(half_light_radius, Quantity):
         half_light_radius_unit = half_light_radius.unit
         half_light_radius = half_light_radius.value
-    star_table.add_spatial_columns(half_light_radius, half_light_radius_unit)
+    star_table.add_spatial_columns(half_light_radius, half_light_radius_unit, seed=seed)
 
     # Write result to file
     if out_file is not None:

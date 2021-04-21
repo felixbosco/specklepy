@@ -122,5 +122,5 @@ def main():
     elif args.command == 'startable':
         make_star_table(number_stars=args.number_stars, iso_files=args.iso_files, lf_files=args.lf_files,
                         lf_band=args.lf_band, half_light_radius=args.half_light_radius,
-                        population_weights=args.population_weights,
+                        population_weights=args.population_weights, seed=args.seed,
                         out_file=args.out_file, table_format=args.table_format, overwrite=args.overwrite)

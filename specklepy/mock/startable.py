@@ -40,7 +40,7 @@ class StarTable(object):
         return self.table.__repr__()
 
     @staticmethod
-    def sample_magnitudes_from_table(number_stars, table_file, table_format='ascii'):
+    def sample_magnitudes_from_table(number_stars, table_file, table_format='ascii', seed=None):
         """Create samples of stellar magnitudes from a luminosity function table.
 
         Args:
@@ -50,6 +50,8 @@ class StarTable(object):
                 Name of the file that contains the tabulated luminosity function.
             table_format (str, optional):
                 Format string for encoding the tabulated luminosity function.
+            seed (int, optional):
+                Seed for the random number generator.
 
         Returns:
             magnitudes (np.ndarray):
@@ -66,10 +68,12 @@ class StarTable(object):
         to_magnitude = interp1d(x=number_per_bin, y=table['col2'], kind='cubic')
 
         # Draw random numbers from uniform distribution and translate into magnitude space
+        np.random.seed(seed)
         draws = np.random.uniform(np.min(number_per_bin), np.max(number_per_bin), size=number_stars)
         return to_magnitude(draws)
 
-    def generate_table(self, number_stars, iso_table_file, lf_table_file, lf_band, append=False, table_format='ascii'):
+    def generate_table(self, number_stars, iso_table_file, lf_table_file, lf_band, append=False, table_format='ascii',
+                       seed=None):
         """Generate a complete table for all the quantities represented in a given isochrone file.
 
         Args:
@@ -86,6 +90,8 @@ class StarTable(object):
                 Choose whether the new table shall overwrite the existing table or whether it shall be attached.
             table_format (str, optional):
                  Format string for encoding the tabulated luminosity function.
+            seed (int, optional):
+                Seed for the random number generator.
         """
 
         # Initialize aliases
@@ -101,7 +107,7 @@ class StarTable(object):
 
         # Draw samples of magnitudes in a given band
         magnitudes = self.sample_magnitudes_from_table(number_stars=number_stars, table_file=lf_table_file,
-                                                       table_format=table_format)
+                                                       table_format=table_format, seed=seed)
 
         # Load data from iso-file
         logger.info(f"Loading tabulated isochrone data from file {iso_table_file!r}")
@@ -132,7 +138,7 @@ class StarTable(object):
             else:
                 self.table = vstack([self.table, table])
 
-    def add_spatial_columns(self, half_light_radius, half_light_radius_unit='pc'):
+    def add_spatial_columns(self, half_light_radius, half_light_radius_unit='pc', seed=None):
         """Add three spatial coordinates to the stars that are normally distributed about the cluster center.
 
         Args:
@@ -140,12 +146,15 @@ class StarTable(object):
                 Value of the star clusters half light radius. The units can be set via the argument.
             half_light_radius_unit (str, optional):
                 Str-type representation of a unit.
+            seed (int, optional):
+                Seed for the random number generator.
         """
         
         # Derive standard deviation in radial direction from half-light radius
         radial_scale = half_light_radius * 2 / 2.35
 
         # Iterate through spatial axes
+        np.random.seed(seed)
         for column_name in ['x', 'y', 'z']:
             pos = np.random.normal(loc=0.0, scale=radial_scale, size=len(self))
             column = Column(name=column_name, data=pos, unit=half_light_radius_unit)

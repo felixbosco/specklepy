@@ -202,6 +202,8 @@ class GeneralArgParser(object):
                                        help='Fractions of the total number of stars that shall be allocated to a given '
                                             'stellar population, represented by an isochrone and luminosity function'
                                             'file.')
+        parser_star_table.add_argument('-s', '--seed', type=int, default=None,
+                                       help='Seed for the random number generator.')
         parser_star_table.add_argument('-f', '--table_format', type=str, default=None,
                                        help='Format string for formatting ASCII table files.')
         parser_star_table.add_argument('-o', '--overwrite', action='store_true',
