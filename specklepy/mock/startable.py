@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.interpolate import interp1d
 
-from astropy.table import Table, QTable, Column
+from astropy.table import Column, Table, QTable, vstack
 from astropy.units import Unit, UnitConversionError, Quantity
 
 from specklepy.logging import logger
@@ -97,7 +97,7 @@ class StarTable(object):
                  'D51': None}
 
         # Initialize table
-        self.table = QTable()
+        table = QTable()
 
         # Draw samples of magnitudes in a given band
         magnitudes = self.sample_magnitudes_from_table(number_stars=number_stars, table_file=lf_table_file,
@@ -121,7 +121,16 @@ class StarTable(object):
                 # Insert transformed column of magnitudes into the current quantity
                 column = Column(data=to_quantity(magnitudes), name=column_name, unit=units[column_name])
             logger.info(f"Inserting column for {column_name!r}")
-            self.table.add_column(column)
+            table.add_column(column)
+
+        # Store resulting table
+        if not append:
+            self.table = table
+        else:
+            if self.table is None:
+                self.table = table
+            else:
+                self.table = vstack([self.table, table])
 
     def add_spatial_columns(self, half_light_radius, half_light_radius_unit='pc'):
         """Add three spatial coordinates to the stars that are normally distributed about the cluster center.
