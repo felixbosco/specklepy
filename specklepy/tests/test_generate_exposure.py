@@ -3,7 +3,7 @@ import astropy.units as u
 from specklepy.mock.target import Target
 from specklepy.mock.telescope import Telescope
 from specklepy.mock.detector import Detector
-from specklepy.mock.generate_exposure import generate_exposure, get_objects
+from specklepy.scripts.generate import generate_exposure, get_objects
 
 
 class TestGenerateExposure(unittest.TestCase):
