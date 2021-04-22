@@ -1,7 +1,7 @@
 import os
 from tqdm import trange
 
-from astropy.io import fits
+from astropy.io.fits import Header
 from astropy.units import Quantity
 
 from specklepy.io import FileStream, Config
@@ -67,7 +67,7 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
 
     # Initialize fits header
     logger.info("Building FITS header...")
-    header = fits.Header()
+    header = Header()
     header.set('FEXPTIME', exposure_time.value, exposure_time.unit)
     header.set('EXPTIME', exposure_time.value * number_frames, exposure_time.unit)
     # header.set('DATE', str(datetime.now()))
