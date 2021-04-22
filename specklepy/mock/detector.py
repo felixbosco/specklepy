@@ -73,72 +73,47 @@ class Detector(object):
 		else:
 			raise SpecklepyTypeError('Detector', 'shape', type(shape), 'tuple')
 
-		if isinstance(pixel_scale, Quantity):
-			self.pixel_scale = pixel_scale
-		elif isinstance(pixel_scale, (int, float)):
-			logger.warning(f"Interpreting float type pixel_scale as {pixel_scale} arcsec")
-			self.pixel_scale = pixel_scale * Unit('arcsec')
-		elif isinstance(pixel_scale, str):
-			self.pixel_scale = Quantity(pixel_scale)
-		else:
-			raise SpecklepyTypeError('Detector', 'pixel_scale', type(pixel_scale), 'Quantity')
+		# Fill required attributes
+		self.pixel_scale = Quantity(pixel_scale)
+		if not self.pixel_scale.unit.is_euivalent('arcsec'):
+			logger.warning(f"Setting unit of pixel_scale to 'arcsec' (was {pixel_scale!r})")
+			self.pixel_scale = self.pixel_scale.value * Unit('arcsec')
 
-		if isinstance(optics_transmission, (int, float)):
-			self.optics_transmission = optics_transmission
-		elif isinstance(optics_transmission, str):
-			self.optics_transmission = float(optics_transmission)
-		else:
-			raise SpecklepyTypeError('Detector', 'optics_transmission', type(optics_transmission), 'float')
+		self.optics_transmission = Quantity(optics_transmission).value
 
-		if isinstance(quantum_efficiency, Quantity):
-			self.quantum_efficiency = quantum_efficiency
-		elif isinstance(quantum_efficiency, (int, float)):
-			logger.warning(f"Interpreting scalar type quantum_efficiency as {quantum_efficiency} electron/ photon")
-			self.quantum_efficiency = quantum_efficiency * Unit('electron / ph')
-		elif isinstance(quantum_efficiency, str):
-			self.quantum_efficiency = Quantity(quantum_efficiency)
-		else:
-			raise SpecklepyTypeError('Detector', 'quantum_efficiency', type(quantum_efficiency), 'Quantity')
+		self.quantum_efficiency = Quantity(quantum_efficiency)
+		if not self.quantum_efficiency.unit.is_equivalent('electron / ph'):
+			logger.warning(f"Setting unit of quantum_efficiency to 'electron / ph' (was {quantum_efficiency!r})")
+			self.quantum_efficiency = self.quantum_efficiency.value * Unit('electron / ph')
 
-		if isinstance(system_gain, Quantity):
-			self.system_gain = system_gain
-		elif isinstance(system_gain, (int, float)):
-			logger.warning(f"Interpreting scalar type system_gain as {system_gain} electron/ ADU")
-			self.system_gain = system_gain * Unit('electron / adu')
-		elif isinstance(system_gain, str):
-			self.system_gain = Quantity(system_gain)
-		else:
-			raise SpecklepyTypeError('Detector', 'system_gain', type(system_gain), 'Quantity')
+		self.system_gain = Quantity(system_gain)
+		if not self.system_gain.unit.is_equivalent('electron / adu'):
+			logger.warning(f"Setting unit of system_gain to 'electron / adu' (was {system_gain!r})")
+			self.system_gain = self.system_gain.value * Unit('electron / adu')
 
-		if dark_current is None or isinstance(dark_current, Quantity):
-			self.dark_current = dark_current
-		elif isinstance(dark_current, (int, float)):
-			logger.warning(f"Interpreting scalar type dark_current as {dark_current} electron/ s")
-			self.dark_current = dark_current * Unit('electron / s')
-		elif isinstance(dark_current, str):
+		# Initialize optional attributes
+		self.dark_current = None
+		self.readout_noise = None
+		self.saturation_level = None
+
+		# Fill optional attributes if provided
+		if dark_current is not None:
 			self.dark_current = Quantity(dark_current)
-		else:
-			raise SpecklepyTypeError('Detector', 'dark_current', type(dark_current), 'Quantity')
+			if not self.dark_current.unit.is_equivalent('electron / s'):
+				logger.warning(f"Setting unit of dark_current to 'electron / s' (was {dark_current!r})")
+				self.dark_current = self.dark_current.value * Unit('electron / s')
 
-		if readout_noise is None or isinstance(readout_noise, Quantity):
-			self.readout_noise = readout_noise
-		elif isinstance(readout_noise, (int, float)):
-			logger.warning(f"Interpreting scalar type readout_noise as {readout_noise} electron")
-			self.readout_noise = readout_noise * Unit('electron')
-		elif isinstance(readout_noise, str):
+		if readout_noise is not None:
 			self.readout_noise = Quantity(readout_noise)
-		else:
-			raise SpecklepyTypeError('Detector', 'readout_noise', type(readout_noise), 'Quantity')
+			if not self.readout_noise.unit.is_equivalent('electron'):
+				logger.warning(f"Setting unit of readout_noise to 'electron' (was {readout_noise!r})")
+				self.readout_noise = self.readout_noise.value * Unit('electron')
 
-		if isinstance(saturation_level, Quantity) or saturation_level is None:
-			self.saturation_level = saturation_level
-		elif isinstance(saturation_level, (int, float)):
-			logger.warning(f"Interpreting scalar type saturation_level as {saturation_level} electron")
-			self.saturation_level = saturation_level * Unit('electron')
-		elif isinstance(saturation_level, str):
+		if saturation_level is not None:
 			self.saturation_level = Quantity(saturation_level)
-		else:
-			raise SpecklepyTypeError('Detector', 'saturation_level', type(saturation_level), 'Quantity')
+			if not self.saturation_level.unit.is_equivalent('electron'):
+				logger.warning(f"Setting unit of saturation_level to 'electron' (was {saturation_level!r})")
+				self.saturation_level = self.saturation_level.value * Unit('electron')
 
 		# Derive secondary parameters
 		self.array = np.zeros(self.shape)

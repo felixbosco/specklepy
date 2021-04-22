@@ -48,15 +48,10 @@ class Telescope(object):
 		"""
 
 		# Input parameters
-		if isinstance(diameter, Quantity):
-			self.diameter = diameter
-		elif isinstance(diameter, (int, float)):
-			logger.warning(f"Interpreting scalar type diameter as {diameter} m")
-			self.diameter = Quantity(f"{diameter} m")
-		elif isinstance(diameter, str):
-			self.diameter = Quantity(diameter)
-		else:
-			raise SpecklepyTypeError('Telescope', 'diameter', type(diameter), 'Quantity')
+		self.diameter = Quantity(diameter)
+		if not self.diameter.unit.is_equivalent('m'):
+			logger.warning(f"Setting unit of diameter to 'm' (was {diameter!r})")
+			self.diameter = self.diameter.value * Unit('m')
 
 		if isinstance(psf_source, str):
 			self.psf_source = psf_source
