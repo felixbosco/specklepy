@@ -1,12 +1,10 @@
 import os
-import numpy as np
 from tqdm import trange
 
 from astropy.io import fits
 from astropy.units import Quantity
 
-from specklepy.io import config
-from specklepy.io import FileStream
+from specklepy.io import FileStream, Config
 from specklepy.logging import logger
 from specklepy.mock.target import Target
 from specklepy.mock.telescope import Telescope
@@ -172,7 +170,7 @@ def get_objects(parameter_file, debug=False):
         raise FileNotFoundError(f"Parameter file {parameter_file} not found!")
 
     # Read parameter file
-    params = config.read(parameter_file)
+    params = Config.read(parameter_file).params
 
     # Create objects from the parameters
     target = Target(**params['TARGET'])

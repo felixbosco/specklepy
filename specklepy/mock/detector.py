@@ -5,7 +5,7 @@ import warnings
 from astropy.units import Unit, Quantity
 
 from specklepy.exceptions import SpecklepyTypeError
-from specklepy.io import config
+from specklepy.io import Config
 from specklepy.logging import logger
 from specklepy.plotting.utils import imshow
 from specklepy.utils.scaledtuple import ScaledTuple
@@ -146,7 +146,7 @@ class Detector(object):
 
 	@staticmethod
 	def from_file(par_file):
-		params = config.read(par_file)
+		params = Config.read(par_file).params
 
 		# Try known first-level keys
 		for key in ['DETECTOR', 'Detector', 'detector']:

@@ -2,8 +2,7 @@ import glob
 import numpy as np
 import os
 
-from specklepy.io import config, FileStream, ReductionFileArchive
-from specklepy.io.config import Config
+from specklepy.io import Config, FileStream, ReductionFileArchive
 from specklepy.logging import logger
 from specklepy.reduction import dark, flat, sky
 from specklepy.utils.time import default_time_stamp
@@ -90,8 +89,8 @@ class DataReduction(object):
         instrument_config_file = os.path.join(os.path.dirname(__file__), '../config/instruments.cfg')
 
         # Read config
-        configs = config.read(instrument_config_file)
-        instrument_cards = configs[instrument.upper()]
+        configs = Config.read(instrument_config_file)
+        instrument_cards = configs.params[instrument.upper()]
 
         # Double check whether all aliases are defined
         cards = []

@@ -3,8 +3,7 @@
 import os
 import sys
 
-from specklepy.io.argparser import GeneralArgParser
-from specklepy.io.config import Config
+from specklepy.io import Config, GeneralArgParser
 from specklepy.logging import logger
 from specklepy.plotting.plot import Plot
 from specklepy.reduction import diff

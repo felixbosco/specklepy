@@ -4,8 +4,7 @@ from specklepy import imshow
 from specklepy.core import ReferenceStars, Reconstruction
 from specklepy.core.fourierobject import FourierObject
 from specklepy.scripts.extract import extract_sources
-from specklepy.io import FileArchive, FileStream
-from specklepy.io.config import dict_to_cards
+from specklepy.io import Config, FileArchive, FileStream
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger
 
@@ -29,6 +28,9 @@ def holography(params, debug=False):
     """
 
     logger.info(f"Starting holographic reconstruction...")
+
+    #
+    config = Config(params)
 
     # Extract individual parameter dictionaries
     paths = params.get('PATHS', {})
@@ -73,7 +75,7 @@ def holography(params, debug=False):
 
     # Initialize the outfile
     out_file = FileStream(file_name=out_file_name)
-    out_file.initialize(cards=dict_to_cards(params=params))
+    out_file.initialize(cards=config.to_cards())
     out_file.build_reconstruction_file_header_cards(files=in_files, path=in_dir, algorithm='Holography', insert=True)
 
     # Initialize reconstruction
