@@ -3,10 +3,7 @@
 import os
 import sys
 
-from specklepy.core.analysis import aperture_analysis
-from specklepy.scripts.holography import holography
 from specklepy.core.sourceextraction import extract_sources
-from specklepy.scripts.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
 from specklepy.logging import logger
@@ -14,8 +11,11 @@ from specklepy.plotting.plot import Plot
 from specklepy.reduction import diff
 from specklepy.reduction import run
 from specklepy.reduction.datareduction import DataReduction
-from specklepy.scripts.startable import make_star_table
+from specklepy.scripts.aperture import aperture_analysis
 from specklepy.scripts.generate import generate_exposure, get_objects
+from specklepy.scripts.holography import holography
+from specklepy.scripts.ssa import ssa
+from specklepy.scripts.startable import make_star_table
 from specklepy.utils.resolution import get_resolution_parameters
 from specklepy.gui.window import start
 
