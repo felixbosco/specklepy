@@ -67,18 +67,13 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
     if 'cards' in kwargs:
         for key in kwargs['cards']:
             header.set(key, kwargs['cards'][key])
+
     # Add object attributes to header information
-    skip_attributes = {'target': ['data', 'star_table', 'photometric_system'],
-                       'telescope': ['psf', 'psf_frame'],
-                       'detector': ['shape', 'array']}
-    for _object in [target, telescope, detector]:
-        object_dict = _object.__dict__
-        object_name = _object.__name__
+    for obj in [target, telescope, detector]:
+        object_dict = obj.as_dict()
 
         for key in object_dict:
-            if key in skip_attributes[object_name] or object_dict[key] is None:
-                continue
-            card = f"HIERARCH SPECKLEPY {object_name.upper()} {key.upper()}"
+            card = f"HIERARCH SPECKLEPY {obj.__name__.upper()} {key.upper()}"
             if isinstance(object_dict[key], Quantity):
                 # Appending the unit of a Quantity to the comment
                 header.set(card, f"{object_dict[key].value:.3e}", object_dict[key].unit)
@@ -92,7 +87,7 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
 
     # Initialize parameters for frame computation
     if 'readout_time' in kwargs:
-        skip_frames = int(kwargs['readout_time'] / telescope.psf_timestep)
+        skip_frames = int(kwargs['readout_time'] / telescope.timestep)
     else:
         skip_frames = 0
 

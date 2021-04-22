@@ -117,6 +117,12 @@ class Telescope(object):
 			tmp += f"{key}: {self.__dict__[key]}\n"
 		return tmp
 
+	def as_dict(self):
+		d = {}
+		for attr in ['diameter', 'psf_source']:
+			d[attr] = self.__getattribute__(attr)
+		return d
+
 	def model_psf(self, model, radius, psf_resolution, shape=256, **kwargs):
 		"""Models the PSF given the desired model function and kwargs.
 

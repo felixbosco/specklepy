@@ -17,13 +17,11 @@ class Target(object):
     """ Class carrying information of an astronomical target.
 
     Long description...
-    Note that Target accepts only two out of the three 'shape', 'FoV', and
-    'pixel_scale'.
+    Note that Target accepts only two out of the three 'shape', 'FoV'
 
     Attributes:
         shape (tuple, dtype=int):
         field_of_view (tuple, dtype=astropy.units.Quantity):
-        pixel_scale (astropy.Unit):
 
     Optional attributes:
         sky_background (int or astropy.units.Quantity, optional):
@@ -57,7 +55,8 @@ class Target(object):
         else:
             raise SpecklepyTypeError('Target', 'band', type(band), 'str')
 
-        self.photometric_system = PhotometricSystem(photometry_file)
+        self.photometry_file = photometry_file
+        self.photometric_system = PhotometricSystem(self.photometry_file)
 
         if isinstance(sky_background, str):
             sky_background = eval(sky_background)
@@ -78,14 +77,13 @@ class Target(object):
         # Initialize class attributes
         self.shape = None
         self.field_of_view = None
-        self.pixel_scale = None
         self.resolution = None
         self.flux_per_pixel = None
 
+        self.star_table_file = star_table_file
         self.star_table = None
-        if star_table_file is not None:
-            self.star_table = StarTable.from_file(star_table_file)
-        # self.star_table = self.read_star_table(self.star_table_file)
+        if self.star_table_file is not None:
+            self.star_table = StarTable.from_file(self.star_table_file)
 
     @staticmethod
     def from_file(par_file):
@@ -103,9 +101,6 @@ class Target(object):
             raise RuntimeError(f"Could not identify parameters for initializing a Target instance in parameter "
                                f"file {par_file}")
 
-    def __call__(self, *args, **kwargs):
-        return self.get_photon_rate_density(*args, **kwargs)
-
     def __str__(self):
         tmp = "Target:"
         for key in self.__dict__:
@@ -113,6 +108,12 @@ class Target(object):
                 continue
             tmp += f"\n{key}: {self.__dict__[key]}"
         return tmp
+
+    def as_dict(self):
+        d = {}
+        for attr in ['band', 'shape', 'field_of_view', 'resolution', 'photometry_file', 'star_table_file']:
+            d[attr] = self.__getattribute__(attr)
+        return d
 
     def get_photon_rate_density(self, field_of_view, resolution, dither=None):
         """Creates an image of the field of view.

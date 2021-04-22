@@ -179,6 +179,13 @@ class Detector(object):
 			tmp += f"\n{key}: {self.__dict__[key]}"
 		return tmp
 
+	def as_dict(self):
+		d = {}
+		for attr in ['shape', 'pixel_scale', 'field_of_view', 'optics_transmission', 'quantum_efficiency',
+					 'system_gain', 'dark_current', 'readout_noise', 'saturation_level']:
+			d[attr] = self.__getattribute__(attr)
+		return d
+
 	def get_counts(self, photon_rate, integration_time, photon_rate_resolution, debug=False):
 		"""Computes the counts array from the photon rate.
 
