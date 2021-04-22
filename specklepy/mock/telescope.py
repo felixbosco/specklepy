@@ -7,6 +7,7 @@ from astropy.modeling import models
 from astropy.units import Unit, Quantity
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
+from specklepy.core import PSFModel
 from specklepy.io import Config, fits
 from specklepy.logging import logger
 
@@ -77,7 +78,7 @@ class Telescope(object):
 			self.area = np.pi * (self.diameter / 2)**2
 
 		if psf_source.lower() in ['airydisk', 'gaussian']:
-			self.model_psf(psf_source, **kwargs)
+			self.psf = self.model_psf(psf_source, **kwargs)
 		else:
 			psf, time_resolution, angular_resolution = self.read_psf_file(psf_source)
 			self.psf = psf
@@ -118,7 +119,7 @@ class Telescope(object):
 			d[attr] = self.__getattribute__(attr)
 		return d
 
-	def model_psf(self, model, radius, psf_resolution, shape=256, **kwargs):
+	def model_psf(self, model, radius, psf_resolution, shape=None):
 		"""Models the PSF given the desired model function and kwargs.
 
 		Args:
@@ -132,52 +133,70 @@ class Telescope(object):
 				interpreted in units of arcseconds.
 			shape (int, optional):
 				Size of the model PSF along both axes.
-			kwargs are forwarded to the model function.
 		"""
 
 		# Check input parameters
 		if not isinstance(model, str):
 			raise SpecklepyTypeError('model_psf', 'model', type(model), 'str')
 
-		if isinstance(radius, Quantity):
-			self.radius = radius
-		elif isinstance(radius, (int, float)):
-			logger.warning(f"Interpreting scalar type radius as {radius} arcsec")
-			self.radius = Quantity(f"{radius} arcsec")
-		elif isinstance(radius, str):
-			self.radius = Quantity(radius)
-		else:
-			raise SpecklepyTypeError('model_psf', 'radius', type(radius), 'Quantity')
+		# if isinstance(radius, Quantity):
+		# 	self.radius = radius
+		# elif isinstance(radius, (int, float)):
+		# 	logger.warning(f"Interpreting scalar type radius as {radius} arcsec")
+		# 	self.radius = Quantity(f"{radius} arcsec")
+		# elif isinstance(radius, str):
+		# 	self.radius = Quantity(radius)
+		# else:
+		# 	raise SpecklepyTypeError('model_psf', 'radius', type(radius), 'Quantity')
 
-		if isinstance(psf_resolution, Quantity):
-			self.psf_resolution = psf_resolution
-		elif isinstance(psf_resolution, (int, float)):
-			logger.warning(f"Interpreting scalar type psf_resolution as {psf_resolution} arcsec")
-			self.psf_resolution = Quantity(f"{psf_resolution} arcsec")
-		elif isinstance(psf_resolution, str):
-			self.psf_resolution = Quantity(psf_resolution)
-		else:
-			raise SpecklepyTypeError('model_psf', 'psf_resolution', type(psf_resolution), 'Quantity')
+		radius = Quantity(radius)
+		if not radius.unit.is_equivalent('arcsec'):
+			logger.warning(f"Setting unit of radius to 'arcsec' (was {radius!r})")
+			radius = radius.value * Unit('arcsec')
 
-		if isinstance(shape, int):
-			center = (shape / 2, shape / 2)
-			shape = (shape, shape)
-		elif isinstance(shape, tuple):
-			center = (shape[0] / 2, shape[1] / 2)
-		else:
-			raise SpecklepyTypeError('model_psf', 'shape', type(shape), 'int or tuple')
+		self.psf_resolution = Quantity(psf_resolution)
+		if not self.psf_resolution.unit.is_equivalent('arcsec'):
+			logger.warning(f"Setting unit of psf_resolution to 'arcsec' (was {psf_resolution!r})")
+			self.psf_resolution = self.psf_resolution.value * Unit('arcsec')
 
-		if model.lower() == 'airydisk':
-			model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(self.radius / self.psf_resolution))
-		elif model.lower() == 'gaussian':
-			stddev = float(self.radius / self.psf_resolution)
-			model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=stddev, y_stddev=stddev)
-		else:
-			raise SpecklepyValueError('model_psf', 'model', model, 'either AiryDisk or Gaussian')
+		if shape is None:
+			shape = (128, 128)
+			logger.debug(f"Setting PSF model shape to {shape}")
 
-		y, x = np.mgrid[0:shape[0], 0:shape[1]]
-		self.psf = model(x, y)
-		self.psf = self.normalize(self.psf)
+		# if isinstance(psf_resolution, Quantity):
+		# 	self.psf_resolution = psf_resolution
+		# elif isinstance(psf_resolution, (int, float)):
+		# 	logger.warning(f"Interpreting scalar type psf_resolution as {psf_resolution} arcsec")
+		# 	self.psf_resolution = Quantity(f"{psf_resolution} arcsec")
+		# elif isinstance(psf_resolution, str):
+		# 	self.psf_resolution = Quantity(psf_resolution)
+		# else:
+		# 	raise SpecklepyTypeError('model_psf', 'psf_resolution', type(psf_resolution), 'Quantity')
+		#
+		# if isinstance(shape, int):
+		# 	center = (shape / 2, shape / 2)
+		# 	shape = (shape, shape)
+		# elif isinstance(shape, tuple):
+		# 	center = (shape[0] / 2, shape[1] / 2)
+		# else:
+		# 	raise SpecklepyTypeError('model_psf', 'shape', type(shape), 'int or tuple')
+		#
+		# if model.lower() == 'airydisk':
+		# 	model = models.AiryDisk2D(x_0=center[0], y_0=center[1], radius=float(self.radius / self.psf_resolution))
+		# elif model.lower() == 'gaussian':
+		# 	stddev = float(self.radius / self.psf_resolution)
+		# 	model = models.Gaussian2D(x_mean=center[0], y_mean=center[1], x_stddev=stddev, y_stddev=stddev)
+		# else:
+		# 	raise SpecklepyValueError('model_psf', 'model', model, 'either AiryDisk or Gaussian')
+		#
+		# y, x = np.mgrid[0:shape[0], 0:shape[1]]
+		# self.psf = model(x, y)
+		# self.psf = self.normalize(self.psf)
+
+		radius = float(radius / self.psf_resolution)
+		psf_model = PSFModel(kind=model, radius=radius, shape=shape)
+		psf = psf_model(shape=shape)
+		return self.normalize(psf)
 
 	def read_psf_file(self, filename, hdu=None):
 		"""Read PSF information from a FITS file.
