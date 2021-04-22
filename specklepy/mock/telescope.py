@@ -7,8 +7,7 @@ from astropy.modeling import models
 from astropy.units import Unit, Quantity
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io import Config
-from specklepy.io import fits
+from specklepy.io import Config, fits
 from specklepy.logging import logger
 
 
