@@ -3,17 +3,17 @@
 import os
 import sys
 
-from specklepy.scripts.extract import extract_sources
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
 from specklepy.logging import logger
 from specklepy.plotting.plot import Plot
 from specklepy.reduction import diff
-from specklepy.reduction import run
 from specklepy.reduction.datareduction import DataReduction
 from specklepy.scripts.aperture import aperture_analysis
+from specklepy.scripts.extract import extract_sources
 from specklepy.scripts.generate import generate_exposure, get_objects
 from specklepy.scripts.holography import holography
+from specklepy.scripts.inspect import inspect
 from specklepy.scripts.ssa import ssa
 from specklepy.scripts.startable import make_star_table
 from specklepy.utils.resolution import get_resolution_parameters
@@ -86,8 +86,7 @@ def main():
         holography(params, debug=args.debug)
 
     elif args.command == 'inspect':
-        run.inspect(files=args.files, keywords=args.keywords, save=args.save, recursive=args.recursive,
-                    debug=args.debug)
+        inspect(files=args.files, keywords=args.keywords, save=args.save, recursive=args.recursive, debug=args.debug)
 
     elif args.command == 'plot':
         plot = Plot.from_file(file_name=args.file, extension=args.extension, columns=args.columns, format=args.format,
@@ -104,8 +103,6 @@ def main():
                                  list_file=args.filelist, sort_by=args.sortby, recursive=args.recursive)
         # Else start reduction following the parameter file
         else:
-            # params = config.read(args.parfile)
-            # run.full_reduction(params, debug=args.debug)
             data_reduction = DataReduction.from_file(args.parfile)
             data_reduction.run()
 
