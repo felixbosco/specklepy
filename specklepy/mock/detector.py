@@ -75,7 +75,7 @@ class Detector(object):
 
 		# Fill required attributes
 		self.pixel_scale = Quantity(pixel_scale)
-		if not self.pixel_scale.unit.is_euivalent('arcsec'):
+		if not self.pixel_scale.unit.is_equivalent('arcsec'):
 			logger.warning(f"Setting unit of pixel_scale to 'arcsec' (was {pixel_scale!r})")
 			self.pixel_scale = self.pixel_scale.value * Unit('arcsec')
 
