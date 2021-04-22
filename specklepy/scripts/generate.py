@@ -6,9 +6,7 @@ from astropy.units import Quantity
 
 from specklepy.io import FileStream, Config
 from specklepy.logging import logger
-from specklepy.mock.target import Target
-from specklepy.mock.telescope import Telescope
-from specklepy.mock.detector import Detector
+from specklepy.mock import Detector, Target, Telescope
 from specklepy.utils.time import default_time_stamp
 
 
