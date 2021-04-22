@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 from specklepy.io import config, FileStream, ReductionFileArchive
-from specklepy.io.config import read
+from specklepy.io.config import Config
 from specklepy.logging import logger
 from specklepy.reduction import dark, flat, sky
 from specklepy.utils.time import default_time_stamp
@@ -34,12 +34,12 @@ class DataReduction(object):
     @classmethod
     def from_file(cls, file_name):
         logger.info(f"Configuring data reduction from config file {cls.config_file!r}")
-        config = read(par_file=cls.config_file)
+        config = Config.read(par_file=cls.config_file)
         logger.info(f"Updating data reduction configuration from parameter file {file_name!r}")
-        params = read(par_file=file_name)
-        for section in params:
-            config[section].update(**params[section])
-        return cls(**config)
+        params = config.update_from_file(par_file=file_name)
+        # for section in params:
+        #     config[section].update(**params[section])
+        return cls(**params)
 
     def run(self):
         self.initialize_directories()

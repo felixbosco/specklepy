@@ -4,7 +4,7 @@ import os
 import sys
 
 from specklepy.io.argparser import GeneralArgParser
-from specklepy.io import config
+from specklepy.io.config import Config
 from specklepy.logging import logger
 from specklepy.plotting.plot import Plot
 from specklepy.reduction import diff
@@ -80,10 +80,9 @@ def main():
 
         # Read parameters from file and execute reconstruction
         defaults_file = os.path.join(os.path.dirname(__file__), '../config/holography.cfg')
-        defaults_file = os.path.abspath(defaults_file)
-        params = config.read(defaults_file)
-        params = config.update_from_file(params, args.parfile)
-        holography(params, debug=args.debug)
+        config = Config.read(os.path.abspath(defaults_file))
+        config = config.update_from_file(args.parfile)
+        holography(config.params, debug=args.debug)
 
     elif args.command == 'inspect':
         inspect(files=args.files, keywords=args.keywords, save=args.save, recursive=args.recursive, debug=args.debug)
