@@ -3,7 +3,7 @@ import os
 import sys
 
 from specklepy.core.alignment import FrameAlignment
-from specklepy.core.sourceextraction import extract_sources
+from specklepy.scripts.extract import extract_sources
 from specklepy.core.specklecube import SpeckleCube
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.filestream import FileStream

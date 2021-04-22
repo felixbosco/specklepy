@@ -3,7 +3,7 @@
 import os
 import sys
 
-from specklepy.core.sourceextraction import extract_sources
+from specklepy.scripts.extract import extract_sources
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
 from specklepy.logging import logger

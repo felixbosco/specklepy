@@ -3,7 +3,7 @@ import numpy as np
 from specklepy import imshow
 from specklepy.core import ReferenceStars, Reconstruction
 from specklepy.core.fourierobject import FourierObject
-from specklepy.core.sourceextraction import extract_sources
+from specklepy.scripts.extract import extract_sources
 from specklepy.io import FileArchive, FileStream
 from specklepy.io.config import dict_to_cards
 from specklepy.exceptions import SpecklepyValueError
