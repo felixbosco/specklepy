@@ -45,14 +45,8 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
             Show debugging information. Default is False.
     """
 
-    # # Compute number of files
-    # number_files = n_frames // n_frames_limit
-    # n_frames_left = n_frames % n_frames_limit
-    # if n_frames_left:
-    #     logger.info(f"Creating {number_files} files with {n_frames_limit} mock exposures and adding {n_frames_left} "
-    #                 f"frames to an additional file")
-    # else:
-    logger.info(f"Creating {number_files} files with {number_frames} mock exposures")
+    #
+    logger.info(f"Generating {number_files} files with {number_frames} mock exposure frames")
 
     # Add a time stamp to file name, if not None
     out_dir, out_file = os.path.split(out_file)
@@ -141,7 +135,6 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
                 telescope.psf_frame += skip_frames
             except TypeError:
                 pass
-
 
 
 def get_objects(parameter_file, debug=False):
