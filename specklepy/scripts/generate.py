@@ -76,12 +76,18 @@ def generate_exposure(target, telescope, detector, exposure_time, number_files=1
             card = f"HIERARCH SPECKLEPY {obj.__name__.upper()} {key.upper()}"
             if isinstance(object_dict[key], Quantity):
                 # Appending the unit of a Quantity to the comment
-                header.set(card, f"{object_dict[key].value:.3e}", object_dict[key].unit)
+                header.set(card, object_dict[key].value, object_dict[key].unit)
             elif isinstance(object_dict[key], str):
                 header.set(card, os.path.basename(object_dict[key]))  # Suppress (long) relative paths
             elif isinstance(object_dict[key], tuple):
-                _tuple = tuple([x.value for x in object_dict[key]])  # Separating tuple unit from values
-                header.set(card, str(_tuple), object_dict[key][0].unit)
+                tup = object_dict[key]
+                try:
+                    # Separate tuple unit from values
+                    tup_unit = tup[0].unit
+                    tup = tuple([x.value for x in tup])
+                    header.set(card, str(tup), tup_unit)
+                except AttributeError:
+                    header.set(card, str(tup))
             else:
                 header.set(card, object_dict[key])
 
