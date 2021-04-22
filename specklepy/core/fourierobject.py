@@ -250,7 +250,7 @@ class FourierObject(object):
             return self.fourier_image
 
         # Interpret function input and compute apodization PSF
-        psf_model = PSFModel(type=type, radius=radius)
+        psf_model = PSFModel(kind=type, radius=radius)
         apodization_psf = psf_model(self.fourier_image.shape)
 
         # Crop corners of the PSF

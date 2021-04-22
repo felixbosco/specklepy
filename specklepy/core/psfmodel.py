@@ -7,10 +7,10 @@ from specklepy.exceptions import SpecklepyValueError
 
 class PSFModel(object):
 
-    def __init__(self, type, radius, shape=None):
+    def __init__(self, kind, radius, shape=None):
 
         # Store input
-        self.type = type
+        self.kind = kind
         self.shape = shape
 
         # Derive center of model shape
@@ -20,14 +20,14 @@ class PSFModel(object):
             self.center = ((self.shape[0] + 1) / 2, (self.shape[1] + 1) / 2)
 
         # Initialize model
-        if 'gauss' in self.type.lower():
+        if 'gauss' in self.kind.lower():
             self.model = Gaussian2D(x_mean=self.center[0], y_mean=self.center[1], x_stddev=radius, y_stddev=radius)
 
-        elif 'airy' in self.type.lower():
+        elif 'airy' in self.kind.lower():
             self.model = AiryDisk2D(x_0=self.center[0], y_0=self.center[1], radius=radius)
 
         else:
-            raise SpecklepyValueError('PSFModel', argname='type', argvalue=type, expected="either 'Gaussian' or 'Airy'")
+            raise SpecklepyValueError('PSFModel', argname='type', argvalue=kind, expected="either 'Gaussian' or 'Airy'")
 
     def __call__(self, shape):
 
