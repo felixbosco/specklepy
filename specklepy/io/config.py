@@ -110,7 +110,7 @@ class Config(object):
         """
 
         # Read config parameters to update from
-        update = read(par_file=par_file)
+        update = self.read(par_file=par_file).params
 
         # Overwrite entries in the input dictionary
         for key in update.items():
