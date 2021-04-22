@@ -111,7 +111,8 @@ class Target(object):
 
     def as_dict(self):
         d = {}
-        for attr in ['band', 'shape', 'field_of_view', 'resolution', 'photometry_file', 'star_table_file']:
+        for attr in ['band', 'shape', 'field_of_view', 'resolution', 'sky_background_flux', 'photometry_file',
+                     'star_table_file']:
             d[attr] = self.__getattribute__(attr)
         return d
 
