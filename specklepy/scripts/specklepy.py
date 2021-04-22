@@ -4,9 +4,9 @@ import os
 import sys
 
 from specklepy.core.analysis import aperture_analysis
-from specklepy.core.holography import holography
+from specklepy.scripts.holography import holography
 from specklepy.core.sourceextraction import extract_sources
-from specklepy.core.ssa import ssa
+from specklepy.scripts.ssa import ssa
 from specklepy.io.argparser import GeneralArgParser
 from specklepy.io import config
 from specklepy.logging import logger

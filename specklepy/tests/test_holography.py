@@ -1,5 +1,5 @@
 import unittest
-from specklepy.core import holography as holo
+from specklepy.scripts import holography as holo
 from specklepy.io.parameterset import ParameterSet
 
 
