@@ -64,9 +64,15 @@ class DiffCube(object):
         if extension is not None:
             self.extension = extension
 
+        # Evaluate the data type
+        try:
+            dtype = eval(dtype)
+        except TypeError:
+            pass
+
         # Load original data and difference
         file = FileStream(self.file)
-        cube = file.get_data(extension=self.extension, dtype=save_eval(dtype))
+        cube = file.get_data(extension=self.extension, dtype=dtype)
         logger.info("Differencing frames...")
         cube = np.diff(cube[::delta], axis=0)
         logger.info(f"New cube has shape {cube.shape}")
