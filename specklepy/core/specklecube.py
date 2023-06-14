@@ -3,7 +3,7 @@ import os
 import sys
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.core import FrameAlignment
+from specklepy.core.alignment import FrameAlignment
 from specklepy.io import FileStream
 from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger

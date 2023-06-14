@@ -1,6 +1,6 @@
 import os
 
-from specklepy.core import Reconstruction
+from specklepy.core.reconstruction import Reconstruction
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io import FileArchive
 from specklepy.logging import logger

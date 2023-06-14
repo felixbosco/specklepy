@@ -5,7 +5,7 @@ from astropy.io import fits
 from astropy.table import Table, Column
 
 from specklepy import imshow
-from specklepy.core import Aperture
+from specklepy.core.aperture import Aperture
 from specklepy.logging import logger
 
 
