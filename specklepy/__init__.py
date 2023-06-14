@@ -1,6 +1,6 @@
 from astropy.utils import iers
 
-from specklepy.plotting.utils import imshow
+# from specklepy.plotting.utils import imshow
 
 
 # Disable automatic IERS download
