@@ -51,6 +51,7 @@ setup(name='specklepy',
           'photutils',
           'python-dateutil',
           'PyQt5',
+          'IPython'
       ],
       packages=find_packages(),
       scripts=find_scripts(),
