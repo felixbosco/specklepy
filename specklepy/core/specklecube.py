@@ -4,7 +4,7 @@ import sys
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.core.alignment import FrameAlignment
-from specklepy.io import FileStream
+from specklepy.io.filestream import FileStream
 from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
 from specklepy.reduction.filter import bad_pixel_mask, fill_hot_pixels, mask_hot_pixels

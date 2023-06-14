@@ -6,7 +6,7 @@ from astropy.table import Table
 from astropy.stats import sigma_clip, sigma_clipped_stats
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
-from specklepy.io import FileStream
+from specklepy.io.filestream import FileStream
 from specklepy.io.fits import get_data, get_header
 from specklepy.logging import logger
 from specklepy.reduction.subwindow import SubWindow

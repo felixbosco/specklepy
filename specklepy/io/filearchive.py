@@ -10,7 +10,7 @@ from astropy.table import Column, Table
 
 from specklepy.exceptions import SpecklepyTypeError, SpecklepyValueError
 from specklepy.io.fits import get_header
-from specklepy.io import FileStream
+from specklepy.io.filestream import FileStream
 from specklepy.logging import logger
 from specklepy.reduction.sequence import Sequence
 from specklepy.utils.time import default_time_stamp

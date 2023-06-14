@@ -5,7 +5,8 @@ from specklepy.core.fourierobject import FourierObject
 from specklepy.core.psfextraction import ReferenceStars
 from specklepy.core.reconstruction import Reconstruction
 from specklepy.core.sourceextraction import extract_sources
-from specklepy.io import FileArchive, FileStream
+from specklepy.io.filearchive import FileArchive
+from specklepy.io.filestream import FileStream
 from specklepy.io.config import dict_to_cards
 from specklepy.exceptions import SpecklepyValueError
 from specklepy.logging import logger

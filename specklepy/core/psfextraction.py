@@ -9,7 +9,7 @@ from astropy.io import fits
 from specklepy.core.aperture import Aperture
 from specklepy.core.segmentation import Segmentation
 from specklepy.logging import logger
-from specklepy.io import FileStream
+from specklepy.io.filestream import FileStream
 from specklepy.io.fits import get_frame_number
 from specklepy.io.table import read_table
 from specklepy.utils.combine import weighted_mean

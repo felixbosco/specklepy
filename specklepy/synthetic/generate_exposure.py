@@ -6,7 +6,7 @@ from astropy.io import fits
 from astropy.units import Quantity
 
 from specklepy.io import config
-from specklepy.io import FileStream
+from specklepy.io.filestream import FileStream
 from specklepy.logging import logger
 from specklepy.synthetic.target import Target
 from specklepy.synthetic.telescope import Telescope
