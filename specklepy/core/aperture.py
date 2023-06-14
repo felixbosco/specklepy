@@ -4,7 +4,7 @@ import warnings
 
 from specklepy.io import fits
 from specklepy.logging import logger
-from specklepy.utils import Box, Box3D
+from specklepy.utils.box import Box, Box3D
 from specklepy.utils import transferfunctions as tf
 
 
